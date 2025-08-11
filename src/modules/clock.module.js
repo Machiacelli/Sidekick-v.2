@@ -31,6 +31,8 @@
             showPoints: false,
             apiKey: null,
             updateTimeout: null,
+            clickHandlerSetup: false,
+            initialized: false,
 
             init() {
                 console.log('🕐 Initializing Clock Module...');
@@ -137,20 +139,31 @@
             },
 
             setupClockClickHandler() {
+                // Prevent multiple event listeners
+                if (this.clickHandlerSetup) {
+                    console.log('⚠️ Clock click handler already set up, skipping...');
+                    return;
+                }
+                
                 // Wait for clock element to be available
                 const checkForClock = () => {
                     const clockContainer = document.getElementById('sidekick-clock');
                     if (clockContainer) {
-                        clockContainer.addEventListener('click', () => {
-                            this.togglePointsDisplay();
-                        });
+                        // Remove any existing listeners first
+                        clockContainer.removeEventListener('click', this.boundToggle);
+                        clockContainer.removeEventListener('contextmenu', this.boundRightClick);
                         
-                        // Right-click to manually set points price
-                        clockContainer.addEventListener('contextmenu', (e) => {
+                        // Create bound functions to allow proper removal
+                        this.boundToggle = () => this.togglePointsDisplay();
+                        this.boundRightClick = (e) => {
                             e.preventDefault();
                             this.promptForManualPrice();
-                        });
+                        };
                         
+                        clockContainer.addEventListener('click', this.boundToggle);
+                        clockContainer.addEventListener('contextmenu', this.boundRightClick);
+                        
+                        this.clickHandlerSetup = true;
                         console.log('✅ Clock click handler set up');
                     } else {
                         setTimeout(checkForClock, 100);
@@ -295,25 +308,6 @@
                     return (amount / 1000).toFixed(0) + 'K';
                 } else {
                     return amount.toString();
-                }
-            },
-
-            togglePointsDisplay() {
-                this.showPoints = !this.showPoints;
-                saveState('sidekick_show_points', this.showPoints);
-                
-                // Force immediate update of display
-                this.updateClock();
-                
-                if (this.showPoints) {
-                    // Enable points display and fetch fresh data
-                    if (this.apiKey) {
-                        this.fetchPointsPricing();
-                    }
-                    NotificationSystem.show('Points Display', 'Points pricing enabled', 'info', 2000);
-                } else {
-                    // Disable points display - clock will show time instead
-                    NotificationSystem.show('Points Display', 'Points pricing disabled', 'info', 2000);
                 }
             },
 
