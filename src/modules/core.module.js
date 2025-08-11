@@ -164,6 +164,8 @@
             const addBtn = document.getElementById('sidekick-add-btn');
             const hamburger = document.getElementById('sidekick-hamburger');
             
+            console.log('🔄 Applying sidebar state:', state);
+            
             // Apply body class for CSS targeting
             if (state.hidden) {
                 document.body.classList.add('sidekick-sidebar-hidden');
@@ -175,6 +177,7 @@
             
             if (sidebar) {
                 sidebar.classList.toggle('hidden', state.hidden);
+                console.log('📊 Sidebar element state applied - hidden:', state.hidden);
             }
             
             if (addBtn) {
@@ -185,6 +188,7 @@
             if (hamburger) {
                 hamburger.innerHTML = state.hidden ? '☰' : '✕';
                 hamburger.title = state.hidden ? 'Show Sidebar' : 'Hide Sidebar';
+                console.log('🍔 Hamburger updated - showing:', state.hidden ? 'show button' : 'hide button');
             }
         }
     };

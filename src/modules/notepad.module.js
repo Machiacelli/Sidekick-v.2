@@ -111,33 +111,49 @@
                     placeholder.remove();
                 }
 
-                // Create notepad element with enhanced design
+                // Create simplified notepad element with single border
                 const notepadElement = document.createElement('div');
                 notepadElement.id = `notepad-${notepad.id}`;
-                notepadElement.className = 'sidebar-item enhanced-notepad';
+                notepadElement.className = 'sidebar-item simplified-notepad';
                 notepadElement.style.cssText = `
                     background: transparent !important;
                     border: none !important;
-                    border-radius: 8px !important;
                     padding: 0px !important;
                     margin-bottom: 12px !important;
-                    transition: background 0.2s ease, border-color 0.2s ease !important;
                     resize: both !important;
                     overflow: hidden !important;
                     min-width: 200px !important;
-                    min-height: 60px !important;
+                    min-height: 80px !important;
                     max-width: calc(100% - 8px) !important;
                     width: 280px !important;
-                    height: 90px !important;
+                    height: 120px !important;
                     position: relative !important;
                 `;
 
+                // Create single textarea that fills the entire notepad area
                 notepadElement.innerHTML = `
                     <textarea placeholder="Write your notes here..." data-notepad-id="${notepad.id}"
-                              style="width: 100%; height: 100%; background: #2a2a2a; border: 1px solid #444; color: #fff; padding: 8px; border-radius: 8px; font-size: 13px; resize: both; font-family: inherit; box-sizing: border-box; outline: none; margin: 0;">${notepad.content}</textarea>
+                              style="
+                                width: 100%; 
+                                height: 100%; 
+                                background: #2a2a2a; 
+                                border: 1px solid #444; 
+                                color: #fff; 
+                                padding: 12px; 
+                                border-radius: 8px; 
+                                font-size: 13px; 
+                                resize: both; 
+                                font-family: inherit; 
+                                box-sizing: border-box; 
+                                outline: none; 
+                                margin: 0;
+                                line-height: 1.4;
+                                overflow-y: auto;
+                                transition: border-color 0.2s ease;
+                              ">${notepad.content}</textarea>
                 `;
 
-                // Add enhanced functionality
+                // Add enhanced functionality with simplified controls
                 this.setupNotepadHandlers(notepadElement, notepad);
 
                 contentArea.appendChild(notepadElement);
@@ -146,8 +162,20 @@
             setupNotepadHandlers(notepadElement, notepad) {
                 const contentTextarea = notepadElement.querySelector('textarea');
                 
-                // Auto-save content on input
+                // Add enhanced styling and focus effects
                 if (contentTextarea) {
+                    // Enhanced focus and blur effects
+                    contentTextarea.addEventListener('focus', () => {
+                        contentTextarea.style.borderColor = '#66BB6A';
+                        contentTextarea.style.boxShadow = '0 0 0 2px rgba(102, 187, 106, 0.2)';
+                    });
+                    
+                    contentTextarea.addEventListener('blur', () => {
+                        contentTextarea.style.borderColor = '#444';
+                        contentTextarea.style.boxShadow = 'none';
+                    });
+                    
+                    // Auto-save content on input
                     contentTextarea.addEventListener('input', () => {
                         this.updateNotepad(notepad.id, notepad.title, contentTextarea.value);
                     });
