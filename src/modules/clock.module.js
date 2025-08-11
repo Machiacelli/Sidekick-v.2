@@ -36,6 +36,12 @@
                 this.loadSettings();
                 this.startClock();
                 
+                // Load manual price if set
+                const manualPrice = loadState('sidekick_manual_points_price', null);
+                if (manualPrice) {
+                    this.pointsData = [{ cost: manualPrice }];
+                }
+                
                 // Only fetch points if API key exists
                 if (this.apiKey) {
                     this.fetchPointsPricing();
@@ -67,18 +73,34 @@
                 
                 if (!timeElement || !dateElement) return;
 
-                const now = new Date();
-                
-                // UTC Time
-                const utcTime = now.toUTCString().split(' ')[4]; // HH:MM:SS
-                const utcDate = now.toUTCString().split(' ').slice(0, 4).join(' ');
-                
-                timeElement.textContent = utcTime;
-                dateElement.textContent = utcDate.split(',')[1].trim(); // Remove day name
-                
-                // Add points pricing if available and enabled
-                if (this.showPoints && this.pointsData) {
-                    this.updatePointsDisplay();
+                if (this.showPoints && this.pointsData && this.pointsData.length > 0) {
+                    // Show points price - find cheapest offer
+                    const cheapestOffer = Math.min(...this.pointsData.map(offer => offer.cost));
+                    timeElement.textContent = `$${cheapestOffer.toLocaleString()}`;
+                    timeElement.style.color = '#4CAF50';
+                    dateElement.textContent = 'Points';
+                    dateElement.style.color = '#4CAF50';
+                } else {
+                    // Show current UTC time (Torn time)
+                    const now = new Date();
+                    
+                    // Format time as HH:MM:SS using UTC
+                    const hours = String(now.getUTCHours()).padStart(2, '0');
+                    const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+                    const seconds = String(now.getUTCSeconds()).padStart(2, '0');
+                    const timeStr = `${hours}:${minutes}:${seconds}`;
+                    
+                    // Format date as "11 Aug"
+                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    const day = now.getUTCDate();
+                    const month = months[now.getUTCMonth()];
+                    const dateStr = `${day} ${month}`;
+                    
+                    timeElement.textContent = timeStr;
+                    timeElement.style.color = '#fff';
+                    dateElement.textContent = dateStr;
+                    dateElement.style.color = '#aaa';
                 }
             },
 
@@ -87,18 +109,56 @@
                 const checkForClock = () => {
                     const clockContainer = document.getElementById('sidekick-clock');
                     if (clockContainer) {
-                        clockContainer.addEventListener('click', (e) => {
-                            // Don't trigger if clicking on points display
-                            if (e.target.id === 'clock-points') return;
-                            
+                        clockContainer.addEventListener('click', () => {
                             this.togglePointsDisplay();
                         });
+                        
+                        // Right-click to manually set points price
+                        clockContainer.addEventListener('contextmenu', (e) => {
+                            e.preventDefault();
+                            this.promptForManualPrice();
+                        });
+                        
                         console.log('✅ Clock click handler set up');
                     } else {
                         setTimeout(checkForClock, 100);
                     }
                 };
                 checkForClock();
+            },
+
+            togglePointsDisplay() {
+                this.showPoints = !this.showPoints;
+                saveState('sidekick_show_points', this.showPoints);
+                this.updateClock();
+                
+                if (this.showPoints && (!this.pointsData || this.pointsData.length === 0)) {
+                    NotificationSystem.show('Info', 'No points data available. Right-click to set manually.', 'warning', 3000);
+                }
+            },
+
+            promptForManualPrice() {
+                const currentPrice = this.pointsData && this.pointsData.length > 0 
+                    ? Math.min(...this.pointsData.map(offer => offer.cost)) 
+                    : '';
+                
+                const newPrice = prompt(`Enter current points price per dollar:\n(Current: $${currentPrice || 'Not set'})`, currentPrice);
+                
+                if (newPrice !== null && newPrice.trim() !== '') {
+                    const price = parseFloat(newPrice.trim().replace(/[^\d.]/g, ''));
+                    if (!isNaN(price) && price > 0) {
+                        // Create manual price data
+                        this.pointsData = [{ cost: price }];
+                        saveState('sidekick_manual_points_price', price);
+                        
+                        if (this.showPoints) {
+                            this.updateClock();
+                        }
+                        NotificationSystem.show('Price Updated', `Points price set to $${price.toLocaleString()}`, 'info');
+                    } else {
+                        NotificationSystem.show('Error', 'Please enter a valid positive number', 'error');
+                    }
+                }
             },
 
             async fetchPointsPricing() {
@@ -108,7 +168,7 @@
                 }
 
                 try {
-                    const response = await fetch(`https://api.torn.com/market/pointsmarket?selections=pointsmarket&key=${this.apiKey}`);
+                    const response = await fetch(`https://api.torn.com/market/?selections=pointsmarket&key=${this.apiKey}`);
                     
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}`);
@@ -122,8 +182,11 @@
                         return;
                     }
 
-                    this.pointsData = data.pointsmarket;
-                    console.log('✅ Points pricing updated');
+                    if (data.pointsmarket && Object.keys(data.pointsmarket).length > 0) {
+                        // Convert object to array and extract costs
+                        this.pointsData = Object.values(data.pointsmarket);
+                        console.log('✅ Points pricing updated:', this.pointsData.length, 'offers');
+                    }
                     
                 } catch (error) {
                     console.error('Failed to fetch points pricing:', error);

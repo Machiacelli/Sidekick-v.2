@@ -170,10 +170,10 @@
             /* TOP BAR STYLES */
             .sidekick-topbar {
                 background: linear-gradient(135deg, #333, #2a2a2a) !important;
-                padding: 8px 16px !important;
+                padding: 6px 16px !important;
                 border-bottom: 2px solid #444 !important;
                 color: #fff !important;
-                min-height: 50px !important;
+                min-height: 40px !important;
                 display: flex !important;
                 align-items: center !important;
             }
@@ -209,6 +209,51 @@
                 padding: 12px 16px !important;
                 background: linear-gradient(180deg, transparent 0%, #1a1a1a 50%) !important;
                 border-top: 1px solid #333 !important;
+            }
+
+            .sidekick-page-navigation {
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                gap: 8px !important;
+                flex: 1 !important;
+            }
+
+            .sidekick-component-controls {
+                position: absolute !important;
+                left: 16px !important;
+                display: flex !important;
+                align-items: center !important;
+                gap: 4px !important;
+            }
+
+            .sidekick-add-component-btn {
+                width: 28px !important;
+                height: 28px !important;
+                border-radius: 6px !important;
+                background: linear-gradient(135deg, #4CAF50, #45a049) !important;
+                border: none !important;
+                color: white !important;
+                font-size: 16px !important;
+                font-weight: bold !important;
+                cursor: pointer !important;
+                transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3) !important;
+                user-select: none !important;
+                outline: none !important;
+            }
+
+            .sidekick-add-component-btn:hover {
+                transform: scale(1.1) !important;
+                background: linear-gradient(135deg, #66BB6A, #388E3C) !important;
+                box-shadow: 0 4px 12px rgba(76, 175, 80, 0.5) !important;
+            }
+
+            .sidekick-add-component-btn:active {
+                transform: scale(0.95) !important;
             }
 
             .sidekick-page-dot {
@@ -339,11 +384,34 @@
                 topBar.className = 'sidekick-topbar';
                 topBar.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <div>
-                            <h3 style="margin: 0; font-size: 16px; color: #fff;">Sidewinder v2.0</h3>
-                            <p style="margin: 2px 0 0 0; font-size: 11px; color: #ccc;">Complete Modular Suite</p>
+                        <div style="display: flex; align-items: center; margin-left: 15px;">
+                            <svg width="160" height="35" viewBox="0 0 600 160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sidekick logo">
+                              <defs>
+                                <!-- Gradient for text -->
+                                <linearGradient id="grad" gradientTransform="rotate(135)">
+                                  <stop offset="0%" stop-color="#66BB6A"/>
+                                  <stop offset="100%" stop-color="#ffad5a"/>
+                                </linearGradient>
+
+                                <!-- Text shadow -->
+                                <filter id="textShadow" x="-20%" y="-20%" width="140%" height="140%">
+                                  <feDropShadow dx="2" dy="2" stdDeviation="1.5" flood-color="black" flood-opacity="0.7"/>
+                                </filter>
+                              </defs>
+
+                              <!-- Sidekick text only -->
+                              <text x="20" y="110" font-family="Impact, sans-serif" font-size="64" fill="url(#grad)" filter="url(#textShadow)">
+                                Sidekick
+                              </text>
+                            </svg>
                         </div>
-                        <button id="settings-button" style="background: none; border: 1px solid #555; color: #ccc; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">⚙️ Settings</button>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <div id="sidekick-clock" style="font-family: monospace; font-size: 13px; text-align: center; line-height: 1.2; cursor: pointer;" title="Click to toggle points pricing">
+                                <div id="clock-time">--:--:--</div>
+                                <div id="clock-date" style="font-size: 10px; color: #aaa;">-- ---</div>
+                            </div>
+                            <button id="settings-button" style="background: none; border: 1px solid #555; color: #ccc; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">⚙️</button>
+                        </div>
                     </div>
                 `;
 
@@ -512,6 +580,26 @@
                 const nav = document.createElement('div');
                 nav.className = 'sidekick-page-dots';
                 
+                // Create component controls (add button)
+                const componentControls = document.createElement('div');
+                componentControls.className = 'sidekick-component-controls';
+                
+                const addComponentBtn = document.createElement('button');
+                addComponentBtn.innerHTML = '+';
+                addComponentBtn.className = 'sidekick-add-component-btn';
+                addComponentBtn.title = 'Add component (notepad, todo, etc.)';
+                addComponentBtn.addEventListener('click', () => {
+                    if (window.SidekickModules?.Content?.showAddMenu) {
+                        window.SidekickModules.Content.showAddMenu();
+                    }
+                });
+                
+                componentControls.appendChild(addComponentBtn);
+                
+                // Create page navigation container
+                const pageNavigation = document.createElement('div');
+                pageNavigation.className = 'sidekick-page-navigation';
+                
                 const pages = loadState(STORAGE_KEYS.SIDEBAR_PAGES, [{ notepads: [], todoLists: [], attackLists: [] }]);
                 const currentPage = loadState(STORAGE_KEYS.CURRENT_PAGE, 0);
                 
@@ -524,16 +612,25 @@
                     dot.dataset.page = index;
                     dot.title = `Page ${index + 1}`;
                     
-                    // Right-click to delete page (if more than one page exists)
-                    dot.addEventListener('contextmenu', (e) => {
-                        e.preventDefault();
+                    // Press and hold to delete page
+                    let pressTimer = null;
+                    dot.addEventListener('mousedown', (e) => {
                         if (pages.length > 1) {
-                            if (confirm(`Delete page ${index + 1}?`)) {
-                                this.removePage(index);
-                            }
-                        } else {
-                            NotificationSystem.show('Info', 'Cannot delete the last page', 'warning');
+                            pressTimer = setTimeout(() => {
+                                if (confirm(`Delete page ${index + 1}?`)) {
+                                    this.removePage(index);
+                                }
+                            }, 1000);
                         }
+                    });
+                    
+                    ['mouseup', 'mouseleave'].forEach(event => {
+                        dot.addEventListener(event, () => {
+                            if (pressTimer) {
+                                clearTimeout(pressTimer);
+                                pressTimer = null;
+                            }
+                        });
                     });
                     
                     // Left-click to switch page
@@ -543,10 +640,10 @@
                         }
                     });
                     
-                    nav.appendChild(dot);
+                    pageNavigation.appendChild(dot);
                 });
                 
-                // Add new page button - smaller and more subtle
+                // Add new page button
                 const addPageBtn = document.createElement('button');
                 addPageBtn.innerHTML = '+';
                 addPageBtn.className = 'sidekick-add-page-btn';
@@ -557,9 +654,106 @@
                     }
                 });
                 
-                nav.appendChild(addPageBtn);
+                pageNavigation.appendChild(addPageBtn);
+                
+                // Assemble navigation
+                nav.appendChild(componentControls);
+                nav.appendChild(pageNavigation);
                 
                 return nav;
+            },
+
+            updatePageDots() {
+                const pageNavigation = document.querySelector('.sidekick-page-navigation');
+                if (!pageNavigation) return;
+
+                // Clear existing dots (but keep add page button)
+                const addPageBtn = pageNavigation.querySelector('.sidekick-add-page-btn');
+                pageNavigation.innerHTML = '';
+
+                const pages = loadState(STORAGE_KEYS.SIDEBAR_PAGES, [{ notepads: [], todoLists: [], attackLists: [] }]);
+                const currentPage = loadState(STORAGE_KEYS.CURRENT_PAGE, 0);
+
+                // Recreate page dots
+                pages.forEach((page, index) => {
+                    const dot = document.createElement('div');
+                    dot.className = 'sidekick-page-dot';
+                    if (index === currentPage) {
+                        dot.classList.add('active');
+                    }
+                    dot.dataset.page = index;
+                    dot.title = `Page ${index + 1}`;
+                    
+                    // Press and hold to delete page
+                    let pressTimer = null;
+                    dot.addEventListener('mousedown', (e) => {
+                        if (pages.length > 1) {
+                            pressTimer = setTimeout(() => {
+                                if (confirm(`Delete page ${index + 1}?`)) {
+                                    this.removePage(index);
+                                }
+                            }, 1000);
+                        }
+                    });
+                    
+                    ['mouseup', 'mouseleave'].forEach(event => {
+                        dot.addEventListener(event, () => {
+                            if (pressTimer) {
+                                clearTimeout(pressTimer);
+                                pressTimer = null;
+                            }
+                        });
+                    });
+                    
+                    // Left-click to switch page
+                    dot.addEventListener('click', () => {
+                        if (window.SidekickModules?.Content?.switchToPage) {
+                            window.SidekickModules.Content.switchToPage(index);
+                        }
+                    });
+                    
+                    pageNavigation.appendChild(dot);
+                });
+                
+                // Re-add the add page button
+                if (addPageBtn) {
+                    pageNavigation.appendChild(addPageBtn);
+                }
+            },
+
+            removePage(pageIndex) {
+                const pages = loadState(STORAGE_KEYS.SIDEBAR_PAGES, []);
+                const currentPage = loadState(STORAGE_KEYS.CURRENT_PAGE, 0);
+                
+                // Don't allow removing the last page
+                if (pages.length <= 1) {
+                    NotificationSystem.show('Error', 'Cannot remove the last page', 'error');
+                    return;
+                }
+                
+                // Remove the page
+                pages.splice(pageIndex, 1);
+                
+                // Adjust current page if necessary
+                let newCurrentPage = currentPage;
+                if (pageIndex <= currentPage) {
+                    newCurrentPage = Math.max(0, currentPage - 1);
+                }
+                if (newCurrentPage >= pages.length) {
+                    newCurrentPage = pages.length - 1;
+                }
+                
+                // Save changes
+                saveState(STORAGE_KEYS.SIDEBAR_PAGES, pages);
+                saveState(STORAGE_KEYS.CURRENT_PAGE, newCurrentPage);
+                
+                // Update UI
+                this.updatePageDots();
+                if (window.SidekickModules?.Content?.switchToPage) {
+                    window.SidekickModules.Content.switchToPage(newCurrentPage);
+                }
+                
+                NotificationSystem.show('Success', `Page ${pageIndex + 1} removed`, 'info');
             },
 
             createPanelButton() {
