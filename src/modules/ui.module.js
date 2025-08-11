@@ -85,6 +85,64 @@
             #sidekick-sidebar.hidden {
                 transform: translateX(-100%) !important;
             }
+            /* COMPACT HAMBURGER BUTTON - SMALLER AND MORE CORNER POSITIONED */
+            #sidekick-hamburger {
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                position: fixed !important;
+                top: 10px !important;
+                left: 10px !important;
+                z-index: 2147483647 !important;
+                background: linear-gradient(135deg, #262626, #5e5c5cff) !important;
+                color: white !important;
+                border: 1px solid rgba(255,255,255,0.6) !important;
+                width: 32px !important;
+                height: 32px !important;
+                border-radius: 8px !important;
+                cursor: pointer !important;
+                font-size: 16px !important;
+                font-weight: bold !important;
+                text-align: center !important;
+                line-height: 30px !important;
+                box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5) !important;
+                transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+                pointer-events: auto !important;
+                outline: none !important;
+                user-select: none !important;
+            }
+
+            #sidekick-hamburger:hover {
+                transform: scale(1.15) !important;
+                box-shadow: 0 4px 16px #000000ff !important;
+                background: linear-gradient(135deg, #66BB6A, #ffad5a) !important;
+            }
+
+            #sidekick-hamburger:active {
+                transform: scale(0.9) !important;
+            }
+
+            /* SIDEBAR STYLES */
+            #sidekick-sidebar {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 380px !important;
+                height: 100vh !important;
+                background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+                border-right: 2px solid #444 !important;
+                z-index: 999999 !important;
+                overflow: hidden !important;
+                transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+                box-shadow: 4px 0 20px rgba(0,0,0,0.3) !important;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+                display: flex !important;
+                flex-direction: column !important;
+            }
+
+            #sidekick-sidebar.hidden {
+                transform: translateX(-100%) !important;
+            }
 
             /* ADD BUTTON STYLES */
             #sidekick-add-btn {
@@ -374,7 +432,73 @@
         const UIManager = {
             init() {
                 console.log('🎨 Initializing UI Manager...');
+                
+                // Create the main sidebar structure first
+                this.createHamburgerButton();
+                this.createSidebar();
                 this.createTopBar();
+                this.createContentArea();
+                this.createPageNavigation();
+                
+                console.log('✅ UI Manager initialized successfully');
+            },
+
+            createHamburgerButton() {
+                console.log("🍔 Creating hamburger button...");
+                
+                // Remove any existing hamburger button
+                const existing = document.getElementById('sidekick-hamburger');
+                if (existing) existing.remove();
+                
+                const hamburger = document.createElement('button');
+                hamburger.id = 'sidekick-hamburger';
+                hamburger.innerHTML = '☰';
+                hamburger.title = 'Toggle Sidebar';
+                
+                hamburger.addEventListener('click', () => {
+                    if (window.SidekickModules?.Core?.SidebarStateManager) {
+                        window.SidekickModules.Core.SidebarStateManager.toggle();
+                    }
+                });
+                
+                document.body.appendChild(hamburger);
+                console.log("✅ Hamburger button created");
+                return hamburger;
+            },
+
+            createSidebar() {
+                console.log("📋 Creating sidebar...");
+                
+                // Remove any existing sidebar
+                const existing = document.getElementById('sidekick-sidebar');
+                if (existing) existing.remove();
+                
+                const sidebar = document.createElement('div');
+                sidebar.id = 'sidekick-sidebar';
+                
+                document.body.appendChild(sidebar);
+                console.log("✅ Sidebar structure created");
+                return sidebar;
+            },
+
+            createContentArea() {
+                const sidebar = document.getElementById('sidekick-sidebar');
+                if (!sidebar || sidebar.querySelector('#sidekick-content')) return;
+
+                const contentArea = document.createElement('div');
+                contentArea.id = 'sidekick-content';
+                contentArea.style.cssText = `
+                    flex: 1;
+                    padding: 16px;
+                    padding-bottom: 80px;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    max-height: calc(100vh - 140px);
+                `;
+                
+                sidebar.appendChild(contentArea);
+                console.log("✅ Content area created");
+                return contentArea;
             },
 
             createTopBar() {
