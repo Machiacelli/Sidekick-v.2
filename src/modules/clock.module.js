@@ -104,8 +104,8 @@
             },
 
             updateClock() {
-                const timeElement = document.getElementById('clock-time');
-                const dateElement = document.getElementById('clock-date');
+                const timeElement = document.getElementById('sidekick-clock-time');
+                const dateElement = document.getElementById('sidekick-clock-date');
                 
                 if (!timeElement || !dateElement) return;
 
@@ -185,7 +185,7 @@
                 
                 // Wait for clock element to be available
                 const checkForClock = () => {
-                    const clockContainer = document.getElementById('sidekick-clock');
+                    const clockContainer = document.getElementById('sidekick-custom-clock');
                     if (clockContainer) {
                         // Remove any existing listeners first
                         clockContainer.removeEventListener('click', this.boundToggle);

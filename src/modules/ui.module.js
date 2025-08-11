@@ -435,9 +435,9 @@
                             </svg>
                         </div>
                         <div style="display: flex; gap: 6px; align-items: center; margin-right: 2px;">
-                            <div id="sidekick-clock" style="font-family: monospace; font-size: 12px; text-align: center; line-height: 1.1; cursor: pointer; min-width: 70px;" title="Click to toggle points pricing">
-                                <div id="clock-time">--:--:--</div>
-                                <div id="clock-date" style="font-size: 10px; color: #aaa;">-- ---</div>
+                            <div id="sidekick-custom-clock" style="font-family: monospace; font-size: 12px; text-align: center; line-height: 1.1; cursor: pointer; min-width: 70px;" title="Click to toggle points pricing">
+                                <div id="sidekick-clock-time">--:--:--</div>
+                                <div id="sidekick-clock-date" style="font-size: 10px; color: #aaa;">-- ---</div>
                             </div>
                             <button id="settings-button" style="background: none; border: 1px solid #555; color: #ccc; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 14px;">⚙️</button>
                         </div>
