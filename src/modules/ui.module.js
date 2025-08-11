@@ -33,7 +33,7 @@
                 visibility: visible !important;
                 opacity: 1 !important;
                 position: fixed !important;
-                top: 10px !important;
+                top: 20px !important;
                 left: 10px !important;
                 z-index: 2147483647 !important;
                 background: linear-gradient(135deg, #262626, #5e5c5cff) !important;
@@ -207,7 +207,7 @@
                 justify-content: center !important;
                 align-items: center !important;
                 gap: 8px !important;
-                padding: 12px 16px !important;
+                padding: 6px 16px !important;
                 background: linear-gradient(180deg, transparent 0%, #1a1a1a 50%) !important;
                 border-top: 1px solid #333 !important;
             }
@@ -420,7 +420,7 @@
                 topBar.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 4px 8px;">
                         <div style="display: flex; align-items: center; margin-left: 8px;">
-                            <svg width="180" height="32" viewBox="0 0 600 160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sidekick logo">
+                            <svg width="240" height="28" viewBox="0 0 600 160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sidekick logo">
                               <defs>
                                 <linearGradient id="grad" gradientTransform="rotate(135)">
                                   <stop offset="0%" stop-color="#66BB6A"/>

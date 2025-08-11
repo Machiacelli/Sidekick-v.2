@@ -137,10 +137,6 @@
                 this.showPoints = !this.showPoints;
                 saveState('sidekick_show_points', this.showPoints);
                 this.updateClock();
-                
-                if (this.showPoints && (!this.pointsData || this.pointsData.length === 0)) {
-                    NotificationSystem.show('Info', 'No points data available. Right-click to set manually.', 'warning', 3000);
-                }
             },
 
             promptForManualPrice() {
