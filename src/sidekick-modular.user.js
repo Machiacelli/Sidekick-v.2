@@ -34,6 +34,38 @@
 
     // Inject critical CSS immediately for maximum visibility
     GM_addStyle(`
+        /* CRITICAL FIXES - HIGH PRIORITY */
+        .sidekick-topbar {
+            border-bottom: none !important;
+        }
+        
+        .simplified-notepad {
+            background: transparent !important;
+            border: none !important;
+            padding: 0px !important;
+        }
+        
+        .simplified-notepad textarea {
+            width: 100% !important; 
+            height: 100% !important; 
+            background: #2a2a2a !important; 
+            border: 1px solid #444 !important; 
+            color: #fff !important; 
+            padding: 12px !important; 
+            border-radius: 8px !important; 
+            font-size: 13px !important; 
+            resize: both !important; 
+            font-family: inherit !important; 
+            box-sizing: border-box !important; 
+            outline: none !important; 
+            margin: 0 !important;
+        }
+        
+        .simplified-notepad textarea:focus {
+            border-color: #66BB6A !important;
+            box-shadow: 0 0 0 2px rgba(102, 187, 106, 0.2) !important;
+        }
+
         /* COMPACT HAMBURGER BUTTON - SMALLER AND MORE CORNER POSITIONED */
         #sidekick-hamburger {
             display: block !important;

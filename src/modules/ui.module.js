@@ -397,7 +397,6 @@
                 
                 hamburger.addEventListener('click', () => {
                     SidebarStateManager.toggle();
-                    console.log('🔧 Sidebar toggled');
                 });
                 
                 document.body.appendChild(hamburger);

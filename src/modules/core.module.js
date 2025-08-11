@@ -161,10 +161,7 @@
         applyState() {
             const state = this.getState();
             const sidebar = document.getElementById('sidekick-sidebar');
-            const addBtn = document.getElementById('sidekick-add-btn');
             const hamburger = document.getElementById('sidekick-hamburger');
-            
-            console.log('🔄 Applying sidebar state:', state);
             
             // Apply body class for CSS targeting
             if (state.hidden) {
@@ -177,43 +174,18 @@
             
             if (sidebar) {
                 sidebar.classList.toggle('hidden', state.hidden);
-                console.log('📊 Sidebar element state applied - hidden:', state.hidden);
-            }
-            
-            if (addBtn) {
-                // Don't hide the add button anymore, just reposition it
-                // addBtn.classList.toggle('hidden', state.hidden);
             }
             
             if (hamburger) {
                 hamburger.innerHTML = state.hidden ? '☰' : '✕';
                 hamburger.title = state.hidden ? 'Show Sidebar' : 'Hide Sidebar';
-                console.log('🍔 Hamburger updated - showing:', state.hidden ? 'show button' : 'hide button');
-            }
-            
-            // Also update the UI module to make sure it knows about the state change
-            if (window.SidekickModules?.UI?.updateSidebarVisibility) {
-                window.SidekickModules.UI.updateSidebarVisibility(state.hidden);
             }
         },
         
-        // Auto-apply state on page load
+        // Simple initialization without mutation observer
         init() {
             console.log('🏗️ Initializing sidebar state manager...');
-            
-            // Apply state immediately
             this.applyState();
-            
-            // Also observe for DOM changes to ensure state persistence
-            const observer = new MutationObserver(() => {
-                setTimeout(() => this.applyState(), 100);
-            });
-            
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
-            
             console.log('✅ Sidebar state manager initialized');
         }
     };
