@@ -427,10 +427,10 @@
                                   <stop offset="100%" stop-color="#ffad5a"/>
                                 </linearGradient>
                                 <filter id="textShadow" x="-20%" y="-20%" width="140%" height="140%">
-                                  <feDropShadow dx="1" dy="1" stdDeviation="1" flood-color="black" flood-opacity="0.6"/>
+                                  <feDropShadow dx="3" dy="3" stdDeviation="2" flood-color="black" flood-opacity="0.8"/>
                                 </filter>
                               </defs>
-                              <text x="20" y="110" font-family="Impact, sans-serif" font-size="64" fill="url(#grad)" filter="url(#textShadow)">
+                              <text x="20" y="120" font-family="Impact, sans-serif" font-size="72" fill="url(#grad)" filter="url(#textShadow)">
                                 Sidekick
                               </text>
                             </svg>

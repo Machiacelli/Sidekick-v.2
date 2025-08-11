@@ -117,7 +117,7 @@
                 notepadElement.className = 'sidebar-item enhanced-notepad';
                 notepadElement.style.cssText = `
                     background: #2a2a2a !important;
-                    border: 1px solid #444 !important;
+                    border: none !important;
                     border-radius: 8px !important;
                     padding: 0px !important;
                     margin-bottom: 12px !important;
@@ -149,7 +149,7 @@
                         </div>
                     </div>
                     <textarea placeholder="Write your notes here..."
-                              style="width: 100%; height: 100%; background: transparent; border: none; color: #fff; padding: 20px 8px 8px 8px; border-radius: 8px; font-size: 13px; resize: none; font-family: inherit; box-sizing: border-box; outline: none; margin: 0;">${notepad.content}</textarea>
+                              style="width: 100%; height: 100%; background: #2a2a2a; border: 1px solid #444; color: #fff; padding: 20px 8px 8px 8px; border-radius: 8px; font-size: 13px; resize: none; font-family: inherit; box-sizing: border-box; outline: none; margin: 0;">${notepad.content}</textarea>
                 `;
 
                 // Add enhanced functionality

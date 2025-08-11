@@ -1984,7 +1984,7 @@
                 }
                 
                 console.log('✅ Sidekick Modular initialization complete!');
-                window.SidekickModules.Core.NotificationSystem.show('Sidekick', 'Modular system loaded successfully!', 'info');
+                // Removed notification to avoid showing on every page refresh
             }, 500);
             
         } catch (error) {
