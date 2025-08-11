@@ -33,14 +33,18 @@
             updateTimeout: null,
             clickHandlerSetup: false,
             initialized: false,
+            toggleInProgress: false,
 
             init() {
                 console.log('🕐 Initializing Clock Module...');
                 
+                // Destroy any existing instance first
+                this.destroy();
+                
                 // Ensure single instance
                 if (window.SidekickModules?.Clock?.initialized) {
-                    console.log('⚠️ Clock module already initialized, skipping...');
-                    return;
+                    console.log('⚠️ Clock module already initialized, cleaning up first...');
+                    window.SidekickModules.Clock.destroy();
                 }
                 
                 this.loadSettings();
@@ -66,6 +70,7 @@
                 
                 // Mark as initialized
                 this.initialized = true;
+                console.log('✅ Clock module initialized successfully');
             },
 
             loadSettings() {
@@ -76,10 +81,17 @@
             },
 
             startClock() {
+                // Clear any existing interval first
+                if (this.clockInterval) {
+                    clearInterval(this.clockInterval);
+                    this.clockInterval = null;
+                }
+                
                 this.updateClock();
                 this.clockInterval = setInterval(() => {
                     this.updateClock();
                 }, 1000);
+                console.log('⏰ Clock interval started');
             },
 
             updateClock() {
@@ -166,22 +178,36 @@
             },
 
             togglePointsDisplay() {
+                // Prevent rapid successive toggles
+                if (this.toggleInProgress) {
+                    console.log('⚠️ Toggle already in progress, ignoring...');
+                    return;
+                }
+                
+                this.toggleInProgress = true;
                 console.log('🔄 TOGGLE CALLED - Current showPoints:', this.showPoints, 'Will change to:', !this.showPoints);
                 console.trace('Toggle called from:'); // This will show the call stack
                 
+                // Toggle the state
                 this.showPoints = !this.showPoints;
+                
+                // Save state immediately
                 saveState('sidekick_show_points', this.showPoints);
                 
                 // Clear any pending updates to prevent race conditions
                 if (this.updateTimeout) {
                     clearTimeout(this.updateTimeout);
+                    this.updateTimeout = null;
                 }
                 
-                // Immediate update with slight delay to ensure state is saved
-                this.updateTimeout = setTimeout(() => {
-                    this.updateClock();
-                    console.log('✅ Toggle complete, showing points:', this.showPoints);
-                }, 10);
+                // Immediate update
+                this.updateClock();
+                console.log('✅ Toggle complete, showing points:', this.showPoints);
+                
+                // Release the toggle lock after a short delay
+                setTimeout(() => {
+                    this.toggleInProgress = false;
+                }, 100);
             },
 
             promptForManualPrice() {
@@ -312,10 +338,26 @@
             },
 
             destroy() {
+                console.log('🧹 Destroying clock module...');
+                
+                // Clear interval
                 if (this.clockInterval) {
                     clearInterval(this.clockInterval);
                     this.clockInterval = null;
                 }
+                
+                // Clear timeout
+                if (this.updateTimeout) {
+                    clearTimeout(this.updateTimeout);
+                    this.updateTimeout = null;
+                }
+                
+                // Reset flags
+                this.initialized = false;
+                this.clickHandlerSetup = false;
+                this.toggleInProgress = false;
+                
+                console.log('✅ Clock module destroyed');
             }
         };
 
