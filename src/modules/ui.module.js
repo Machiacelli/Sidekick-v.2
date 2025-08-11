@@ -206,7 +206,7 @@
                 display: flex !important;
                 justify-content: center !important;
                 align-items: center !important;
-                gap: 6px !important;
+                gap: 8px !important;
                 padding: 12px 16px !important;
                 background: linear-gradient(180deg, transparent 0%, #1a1a1a 50%) !important;
                 border-top: 1px solid #333 !important;
@@ -217,44 +217,42 @@
                 justify-content: center !important;
                 align-items: center !important;
                 gap: 4px !important;
-                flex: 1 !important;
+                flex: none !important;
             }
 
             .sidekick-component-controls {
-                position: absolute !important;
-                left: 16px !important;
                 display: flex !important;
                 align-items: center !important;
-                gap: 4px !important;
+                gap: 8px !important;
             }
 
             .sidekick-add-component-btn {
                 width: 32px !important;
                 height: 32px !important;
-                border-radius: 6px !important;
-                background: linear-gradient(135deg, #4CAF50, #45a049) !important;
-                border: none !important;
+                border-radius: 8px !important;
+                background: linear-gradient(135deg, #262626, #5e5c5cff) !important;
+                border: 1px solid rgba(255,255,255,0.6) !important;
                 color: white !important;
-                font-size: 18px !important;
+                font-size: 16px !important;
                 font-weight: bold !important;
                 cursor: pointer !important;
                 transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
-                box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3) !important;
+                box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5) !important;
                 user-select: none !important;
                 outline: none !important;
             }
 
             .sidekick-add-component-btn:hover {
-                transform: scale(1.1) !important;
-                background: linear-gradient(135deg, #66BB6A, #388E3C) !important;
-                box-shadow: 0 4px 12px rgba(76, 175, 80, 0.5) !important;
+                transform: scale(1.15) !important;
+                box-shadow: 0 4px 16px #000000ff !important;
+                background: linear-gradient(135deg, #66BB6A, #ffad5a) !important;
             }
 
             .sidekick-add-component-btn:active {
-                transform: scale(0.95) !important;
+                transform: scale(0.9) !important;
             }
 
             .sidekick-page-dot {
@@ -378,7 +376,7 @@
                 // Create the complete sidebar structure
                 this.createHamburgerButton();
                 this.createSidebar();
-                this.createAddButton();
+                // Remove createAddButton() since add button is now in the bottom bar
                 
                 console.log('✅ UI Manager initialization complete!');
             },
@@ -547,6 +545,14 @@
                 const nav = document.createElement('div');
                 nav.className = 'sidekick-page-dots';
                 
+                // Create a centered container for all navigation elements
+                const centeredContainer = document.createElement('div');
+                centeredContainer.style.cssText = `
+                    display: flex !important;
+                    align-items: center !important;
+                    gap: 8px !important;
+                `;
+                
                 // Create component controls (add button)
                 const componentControls = document.createElement('div');
                 componentControls.className = 'sidekick-component-controls';
@@ -623,9 +629,10 @@
                 
                 pageNavigation.appendChild(addPageBtn);
                 
-                // Assemble navigation
-                nav.appendChild(componentControls);
-                nav.appendChild(pageNavigation);
+                // Assemble navigation - put everything in the centered container
+                centeredContainer.appendChild(componentControls);
+                centeredContainer.appendChild(pageNavigation);
+                nav.appendChild(centeredContainer);
                 
                 return nav;
             },
