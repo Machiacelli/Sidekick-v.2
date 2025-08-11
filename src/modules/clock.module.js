@@ -123,6 +123,16 @@
                     'currentDateText': dateElement.textContent
                 });
 
+                // DEEP DIVE: Check pointsData structure and condition evaluation
+                console.log('🧪 DETAILED CONDITION TEST:', {
+                    'this.showPoints': this.showPoints,
+                    'this.pointsData exists': !!this.pointsData,
+                    'this.pointsData': this.pointsData,
+                    'this.pointsData.length': this.pointsData ? this.pointsData.length : 'null/undefined',
+                    'this.pointsData.length > 0': this.pointsData && this.pointsData.length > 0,
+                    'FULL CONDITION RESULT': this.showPoints && this.pointsData && this.pointsData.length > 0
+                });
+
                 // If state is inconsistent, log a warning but DON'T auto-correct
                 if (!stateConsistent) {
                     console.warn('⚠️ STATE MISMATCH DETECTED - Internal:', this.showPoints, 'Saved:', savedState);
