@@ -69,7 +69,7 @@
                 position: fixed !important;
                 top: 0 !important;
                 left: 0 !important;
-                width: 420px !important;
+                width: 360px !important;
                 height: 100vh !important;
                 background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%) !important;
                 border-right: 2px solid #444 !important;
@@ -208,7 +208,7 @@
                 justify-content: center !important;
                 align-items: center !important;
                 gap: 8px !important;
-                padding: 4px 16px !important;
+                padding: 2px 16px !important;
                 background: linear-gradient(180deg, transparent 0%, #1a1a1a 50%) !important;
                 border-top: 1px solid #333 !important;
             }
@@ -421,17 +421,14 @@
                 topBar.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0px 4px;">
                         <div style="display: flex; align-items: center; margin-left: 2px;">
-                            <svg width="280" height="24" viewBox="0 0 600 160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sidekick logo">
+                            <svg width="120" height="24" viewBox="0 0 120 24" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sidekick logo">
                               <defs>
-                                <linearGradient id="grad" gradientTransform="rotate(135)">
+                                <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                                   <stop offset="0%" stop-color="#66BB6A"/>
                                   <stop offset="100%" stop-color="#ffad5a"/>
                                 </linearGradient>
-                                <filter id="textShadow" x="-20%" y="-20%" width="140%" height="140%">
-                                  <feDropShadow dx="3" dy="3" stdDeviation="2" flood-color="black" flood-opacity="0.8"/>
-                                </filter>
                               </defs>
-                              <text x="20" y="120" font-family="Impact, sans-serif" font-size="72" fill="url(#grad)" filter="url(#textShadow)">
+                              <text x="2" y="17" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="url(#logoGrad)">
                                 Sidekick
                               </text>
                             </svg>
