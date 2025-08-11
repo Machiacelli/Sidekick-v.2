@@ -139,11 +139,22 @@
     // === SIDEBAR STATE MANAGER ===
     const SidebarStateManager = {
         getState() {
-            return loadState(STORAGE_KEYS.SIDEBAR_STATE, { hidden: false });
+            // Use global storage for sidebar state (not profile-specific)
+            try {
+                const state = localStorage.getItem(STORAGE_KEYS.SIDEBAR_STATE);
+                return state ? JSON.parse(state) : { hidden: false };
+            } catch (error) {
+                return { hidden: false };
+            }
         },
         
         setState(state) {
-            saveState(STORAGE_KEYS.SIDEBAR_STATE, state);
+            // Use global storage for sidebar state (not profile-specific)
+            try {
+                localStorage.setItem(STORAGE_KEYS.SIDEBAR_STATE, JSON.stringify(state));
+            } catch (error) {
+                console.error('Failed to save sidebar state:', error);
+            }
         },
         
         isHidden() {

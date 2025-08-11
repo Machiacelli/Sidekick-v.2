@@ -218,33 +218,40 @@
                 `;
                 
                 notepadElement.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <input type="text" value="${notepad.title || 'Untitled Notepad'}" data-notepad-id="${notepad.id}" 
-                               style="background: #333; border: 1px solid #555; color: #fff; padding: 6px 8px; border-radius: 4px; font-weight: bold; flex: 1; margin-right: 8px;">
-                        <button class="remove-btn" data-item-id="${notepad.id}" data-item-type="notepad" style="background: none; border: none; color: #f44336; cursor: pointer; font-size: 16px; padding: 4px;">×</button>
-                    </div>
-                    <textarea placeholder="Start typing your notes..." data-notepad-content-id="${notepad.id}"
-                              style="width: 100%; height: 120px; background: #333; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 4px; resize: vertical; font-family: inherit; box-sizing: border-box;">${notepad.content || ''}</textarea>
+                    <textarea placeholder="Write your notes here..." data-notepad-content-id="${notepad.id}"
+                              style="width: 100%; height: 120px; background: #2a2a2a; border: 1px solid #444; color: #fff; padding: 12px; border-radius: 8px; resize: both; font-family: inherit; box-sizing: border-box; outline: none; font-size: 13px; line-height: 1.4;">${notepad.content || ''}</textarea>
                 `;
                 
                 // Add event listeners for proper functionality
                 setTimeout(() => {
-                    const titleInput = notepadElement.querySelector(`input[data-notepad-id="${notepad.id}"]`);
                     const contentTextarea = notepadElement.querySelector(`textarea[data-notepad-content-id="${notepad.id}"]`);
-                    const removeBtn = notepadElement.querySelector('.remove-btn');
-                    
-                    if (titleInput) {
-                        titleInput.addEventListener('input', (e) => {
-                            if (window.updateNotepadTitle) {
-                                window.updateNotepadTitle(notepad.id, e.target.value);
-                            }
-                        });
-                    }
                     
                     if (contentTextarea) {
+                        // Auto-save content on input
                         contentTextarea.addEventListener('input', (e) => {
                             if (window.updateNotepadContent) {
                                 window.updateNotepadContent(notepad.id, e.target.value);
+                            }
+                        });
+                        
+                        // Enhanced focus effects
+                        contentTextarea.addEventListener('focus', () => {
+                            contentTextarea.style.borderColor = '#66BB6A';
+                            contentTextarea.style.boxShadow = '0 0 0 2px rgba(102, 187, 106, 0.2)';
+                        });
+                        
+                        contentTextarea.addEventListener('blur', () => {
+                            contentTextarea.style.borderColor = '#444';
+                            contentTextarea.style.boxShadow = 'none';
+                        });
+                        
+                        // Right-click delete functionality
+                        contentTextarea.addEventListener('contextmenu', (e) => {
+                            e.preventDefault();
+                            if (confirm('Delete this notepad?')) {
+                                if (window.removeContent) {
+                                    window.removeContent(notepad.id, 'notepad');
+                                }
                             }
                         });
                     }

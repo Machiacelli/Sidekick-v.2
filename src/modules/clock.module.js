@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Clock Module
 // @namespace    http://tampermonkey.net/
-// @version                  // Debug logging removed to prevent console spam
+// @version                  // Console spam removed       // Debug logging removed to prevent console spam
 // @description  Clock and points pricing functionality for Sidekick sidebar
 // @author       GitHub Copilot
 // @match        https://www.torn.com/*
