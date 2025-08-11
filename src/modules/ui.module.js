@@ -171,7 +171,7 @@
             .sidekick-topbar {
                 background: linear-gradient(135deg, #333, #2a2a2a) !important;
                 padding: 2px 8px !important;
-                border-bottom: 2px solid #444 !important;
+                border-bottom: none !important;
                 color: #fff !important;
                 min-height: 32px !important;
                 max-height: 32px !important;

@@ -190,6 +190,31 @@
                 hamburger.title = state.hidden ? 'Show Sidebar' : 'Hide Sidebar';
                 console.log('🍔 Hamburger updated - showing:', state.hidden ? 'show button' : 'hide button');
             }
+            
+            // Also update the UI module to make sure it knows about the state change
+            if (window.SidekickModules?.UI?.updateSidebarVisibility) {
+                window.SidekickModules.UI.updateSidebarVisibility(state.hidden);
+            }
+        },
+        
+        // Auto-apply state on page load
+        init() {
+            console.log('🏗️ Initializing sidebar state manager...');
+            
+            // Apply state immediately
+            this.applyState();
+            
+            // Also observe for DOM changes to ensure state persistence
+            const observer = new MutationObserver(() => {
+                setTimeout(() => this.applyState(), 100);
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+            
+            console.log('✅ Sidebar state manager initialized');
         }
     };
 
@@ -208,6 +233,9 @@
         getProfileKey,
         getProfileSpecificKey
     };
+
+    // Initialize the sidebar state manager
+    SidebarStateManager.init();
 
     console.log('✅ Core module loaded');
 
