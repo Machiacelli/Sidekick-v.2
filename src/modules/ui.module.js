@@ -459,6 +459,19 @@
                             }
                         });
                     }
+                    
+                    // Setup clock toggle functionality
+                    const clockElement = document.getElementById('sidekick-clock');
+                    if (clockElement) {
+                        clockElement.addEventListener('click', () => {
+                            if (window.SidekickModules?.Clock?.togglePointsDisplay) {
+                                window.SidekickModules.Clock.togglePointsDisplay();
+                                console.log('🔄 Clock/Points display toggled');
+                            } else {
+                                console.log('Clock module not available');
+                            }
+                        });
+                    }
                 }, 100);
                 
                 // Create content area - scrollable and takes up remaining space
@@ -545,18 +558,16 @@
                 const nav = document.createElement('div');
                 nav.className = 'sidekick-page-dots';
                 
-                // Create a centered container for all navigation elements
-                const centeredContainer = document.createElement('div');
-                centeredContainer.style.cssText = `
+                // Create a single centered container that holds ALL navigation elements in order
+                const allElementsContainer = document.createElement('div');
+                allElementsContainer.style.cssText = `
                     display: flex !important;
                     align-items: center !important;
                     gap: 8px !important;
+                    justify-content: center !important;
                 `;
                 
-                // Create component controls (add button)
-                const componentControls = document.createElement('div');
-                componentControls.className = 'sidekick-component-controls';
-                
+                // 1. Add component button (styled like hamburger)
                 const addComponentBtn = document.createElement('button');
                 addComponentBtn.innerHTML = '+';
                 addComponentBtn.className = 'sidekick-add-component-btn';
@@ -567,11 +578,13 @@
                     }
                 });
                 
-                componentControls.appendChild(addComponentBtn);
-                
-                // Create page navigation container
-                const pageNavigation = document.createElement('div');
-                pageNavigation.className = 'sidekick-page-navigation';
+                // 2. Page dots container
+                const pageDotsContainer = document.createElement('div');
+                pageDotsContainer.style.cssText = `
+                    display: flex !important;
+                    align-items: center !important;
+                    gap: 4px !important;
+                `;
                 
                 const pages = loadState(STORAGE_KEYS.SIDEBAR_PAGES, [{ notepads: [], todoLists: [], attackLists: [] }]);
                 const currentPage = loadState(STORAGE_KEYS.CURRENT_PAGE, 0);
@@ -613,10 +626,10 @@
                         }
                     });
                     
-                    pageNavigation.appendChild(dot);
+                    pageDotsContainer.appendChild(dot);
                 });
                 
-                // Add new page button
+                // 3. Add new page button
                 const addPageBtn = document.createElement('button');
                 addPageBtn.innerHTML = '+';
                 addPageBtn.className = 'sidekick-add-page-btn';
@@ -627,12 +640,12 @@
                     }
                 });
                 
-                pageNavigation.appendChild(addPageBtn);
+                // Add all elements to the main container in order: [Add Component] [Page Dots] [Add Page]
+                allElementsContainer.appendChild(addComponentBtn);
+                allElementsContainer.appendChild(pageDotsContainer);
+                allElementsContainer.appendChild(addPageBtn);
                 
-                // Assemble navigation - put everything in the centered container
-                centeredContainer.appendChild(componentControls);
-                centeredContainer.appendChild(pageNavigation);
-                nav.appendChild(centeredContainer);
+                nav.appendChild(allElementsContainer);
                 
                 return nav;
             },
