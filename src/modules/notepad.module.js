@@ -30,7 +30,7 @@
             currentPage: 0,
 
             init() {
-                console.log('📝 Initializing Notepad Module...');
+                console.log('📝 Initializing Notepad Module v3.6.0...');
                 this.loadNotepads();
             },
 

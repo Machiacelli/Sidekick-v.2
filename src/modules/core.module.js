@@ -237,6 +237,6 @@
     // Initialize the sidebar state manager
     SidebarStateManager.init();
 
-    console.log('✅ Core module loaded');
+    console.log('✅ Core module loaded - v3.6.0 cache refresh');
 
 })();
