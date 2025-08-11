@@ -170,12 +170,13 @@
             /* TOP BAR STYLES */
             .sidekick-topbar {
                 background: linear-gradient(135deg, #333, #2a2a2a) !important;
-                padding: 6px 16px !important;
+                padding: 4px 12px !important;
                 border-bottom: 2px solid #444 !important;
                 color: #fff !important;
-                min-height: 40px !important;
+                min-height: 28px !important;
                 display: flex !important;
                 align-items: center !important;
+                flex-shrink: 0 !important;
             }
 
             /* SCROLLBAR STYLING */
@@ -215,7 +216,7 @@
                 display: flex !important;
                 justify-content: center !important;
                 align-items: center !important;
-                gap: 8px !important;
+                gap: 4px !important;
                 flex: 1 !important;
             }
 
@@ -228,13 +229,13 @@
             }
 
             .sidekick-add-component-btn {
-                width: 28px !important;
-                height: 28px !important;
+                width: 32px !important;
+                height: 32px !important;
                 border-radius: 6px !important;
                 background: linear-gradient(135deg, #4CAF50, #45a049) !important;
                 border: none !important;
                 color: white !important;
-                font-size: 16px !important;
+                font-size: 18px !important;
                 font-weight: bold !important;
                 cursor: pointer !important;
                 transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
@@ -373,66 +374,15 @@
         const UIManager = {
             init() {
                 console.log('🎨 Initializing UI Manager...');
-                this.createTopBar();
+                
+                // Create the complete sidebar structure
+                this.createHamburgerButton();
+                this.createSidebar();
+                this.createAddButton();
+                
+                console.log('✅ UI Manager initialization complete!');
             },
 
-            createTopBar() {
-                const sidebar = document.getElementById('sidekick-sidebar');
-                if (!sidebar || sidebar.querySelector('.sidekick-topbar')) return;
-
-                const topBar = document.createElement('div');
-                topBar.className = 'sidekick-topbar';
-                topBar.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <div style="display: flex; align-items: center; margin-left: 15px;">
-                            <svg width="160" height="35" viewBox="0 0 600 160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sidekick logo">
-                              <defs>
-                                <!-- Gradient for text -->
-                                <linearGradient id="grad" gradientTransform="rotate(135)">
-                                  <stop offset="0%" stop-color="#66BB6A"/>
-                                  <stop offset="100%" stop-color="#ffad5a"/>
-                                </linearGradient>
-
-                                <!-- Text shadow -->
-                                <filter id="textShadow" x="-20%" y="-20%" width="140%" height="140%">
-                                  <feDropShadow dx="2" dy="2" stdDeviation="1.5" flood-color="black" flood-opacity="0.7"/>
-                                </filter>
-                              </defs>
-
-                              <!-- Sidekick text only -->
-                              <text x="20" y="110" font-family="Impact, sans-serif" font-size="64" fill="url(#grad)" filter="url(#textShadow)">
-                                Sidekick
-                              </text>
-                            </svg>
-                        </div>
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <div id="sidekick-clock" style="font-family: monospace; font-size: 13px; text-align: center; line-height: 1.2; cursor: pointer;" title="Click to toggle points pricing">
-                                <div id="clock-time">--:--:--</div>
-                                <div id="clock-date" style="font-size: 10px; color: #aaa;">-- ---</div>
-                            </div>
-                            <button id="settings-button" style="background: none; border: 1px solid #555; color: #ccc; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">⚙️</button>
-                        </div>
-                    </div>
-                `;
-
-                // Insert at the beginning of sidebar
-                sidebar.insertBefore(topBar, sidebar.firstChild);
-                
-                // Setup settings button handler
-                const settingsButton = document.getElementById('settings-button');
-                if (settingsButton) {
-                    settingsButton.addEventListener('click', () => {
-                        if (window.SidekickModules?.Settings) {
-                            window.SidekickModules.Settings.showSettingsDialog();
-                        } else {
-                            console.log('Settings module not available');
-                        }
-                    });
-                }
-                
-                console.log('✅ TopBar created');
-                return topBar;
-            },
             createHamburgerButton() {
                 console.log("🍔 Creating hamburger button...");
                 
@@ -466,33 +416,54 @@
                 const sidebar = document.createElement('div');
                 sidebar.id = 'sidekick-sidebar';
                 
-                // Create top bar with clock and settings
+                // Create compact top bar with SVG logo
                 const topBar = document.createElement('div');
                 topBar.className = 'sidekick-topbar';
                 topBar.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="font-size: 18px; font-weight: bold;">🦸 Sidekick</div>
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <div id="sidekick-clock" style="font-family: monospace; font-size: 14px; text-align: center; line-height: 1.2;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 4px 8px;">
+                        <div style="display: flex; align-items: center; margin-left: 8px;">
+                            <svg width="120" height="24" viewBox="0 0 600 160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sidekick logo">
+                              <defs>
+                                <linearGradient id="grad" gradientTransform="rotate(135)">
+                                  <stop offset="0%" stop-color="#66BB6A"/>
+                                  <stop offset="100%" stop-color="#ffad5a"/>
+                                </linearGradient>
+                                <filter id="textShadow" x="-20%" y="-20%" width="140%" height="140%">
+                                  <feDropShadow dx="1" dy="1" stdDeviation="1" flood-color="black" flood-opacity="0.6"/>
+                                </filter>
+                              </defs>
+                              <text x="20" y="110" font-family="Impact, sans-serif" font-size="64" fill="url(#grad)" filter="url(#textShadow)">
+                                Sidekick
+                              </text>
+                            </svg>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <div id="sidekick-clock" style="font-family: monospace; font-size: 11px; text-align: center; line-height: 1.1; cursor: pointer;" title="Click to toggle points pricing">
                                 <div id="clock-time">--:--:--</div>
-                                <div id="clock-date" style="font-size: 11px; color: #aaa;">-- ---</div>
+                                <div id="clock-date" style="font-size: 9px; color: #aaa;">-- ---</div>
                             </div>
-                            <button id="settings-button" style="background: none; border: 1px solid #555; color: #fff; border-radius: 4px; padding: 4px 8px; cursor: pointer;">⚙️</button>
+                            <button id="settings-button" style="background: none; border: 1px solid #555; color: #ccc; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;">⚙️</button>
                         </div>
                     </div>
                 `;
                 
                 sidebar.appendChild(topBar);
                 
-                // Add event listener to settings button after it's added to DOM
+                // Setup settings button handler
                 setTimeout(() => {
-                    const settingsBtn = document.getElementById('settings-button');
-                    if (settingsBtn && window.showSettingsModal) {
-                        settingsBtn.addEventListener('click', window.showSettingsModal);
+                    const settingsButton = document.getElementById('settings-button');
+                    if (settingsButton) {
+                        settingsButton.addEventListener('click', () => {
+                            if (window.SidekickModules?.Settings) {
+                                window.SidekickModules.Settings.showSettingsDialog();
+                            } else {
+                                console.log('Settings module not available');
+                            }
+                        });
                     }
                 }, 100);
                 
-                // Create content area - now scrollable and takes up remaining space
+                // Create content area - scrollable and takes up remaining space
                 const contentArea = document.createElement('div');
                 contentArea.id = 'sidekick-content';
                 contentArea.style.cssText = `
@@ -512,10 +483,6 @@
                 // Add page navigation at the bottom
                 const pageNav = this.createPageNavigation();
                 sidebar.appendChild(pageNav);
-                
-                // Add stylish panel creation button inside sidebar
-                const panelCreationBtn = this.createPanelButton();
-                sidebar.appendChild(panelCreationBtn);
                 
                 document.body.appendChild(sidebar);
                 
