@@ -170,10 +170,10 @@
             /* TOP BAR STYLES */
             .sidekick-topbar {
                 background: linear-gradient(135deg, #333, #2a2a2a) !important;
-                padding: 6px 16px !important;
+                padding: 4px 16px !important;
                 border-bottom: 2px solid #444 !important;
                 color: #fff !important;
-                min-height: 40px !important;
+                min-height: 28px !important;
                 display: flex !important;
                 align-items: center !important;
             }
@@ -205,7 +205,6 @@
                 display: flex !important;
                 justify-content: center !important;
                 align-items: center !important;
-                gap: 6px !important;
                 padding: 12px 16px !important;
                 background: linear-gradient(180deg, transparent 0%, #1a1a1a 50%) !important;
                 border-top: 1px solid #333 !important;
@@ -215,8 +214,10 @@
                 display: flex !important;
                 justify-content: center !important;
                 align-items: center !important;
-                gap: 8px !important;
-                flex: 1 !important;
+                gap: 4px !important;
+                position: absolute !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
             }
 
             .sidekick-component-controls {
@@ -228,20 +229,20 @@
             }
 
             .sidekick-add-component-btn {
-                width: 28px !important;
-                height: 28px !important;
-                border-radius: 6px !important;
+                width: 32px !important;
+                height: 32px !important;
+                border-radius: 8px !important;
                 background: linear-gradient(135deg, #4CAF50, #45a049) !important;
                 border: none !important;
                 color: white !important;
-                font-size: 16px !important;
+                font-size: 18px !important;
                 font-weight: bold !important;
                 cursor: pointer !important;
                 transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
-                box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3) !important;
+                box-shadow: 0 2px 10px rgba(76, 175, 80, 0.3) !important;
                 user-select: none !important;
                 outline: none !important;
             }
@@ -249,7 +250,7 @@
             .sidekick-add-component-btn:hover {
                 transform: scale(1.1) !important;
                 background: linear-gradient(135deg, #66BB6A, #388E3C) !important;
-                box-shadow: 0 4px 12px rgba(76, 175, 80, 0.5) !important;
+                box-shadow: 0 4px 15px rgba(76, 175, 80, 0.5) !important;
             }
 
             .sidekick-add-component-btn:active {
@@ -384,8 +385,8 @@
                 topBar.className = 'sidekick-topbar';
                 topBar.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <div style="display: flex; align-items: center; margin-left: 15px;">
-                            <svg width="160" height="35" viewBox="0 0 600 160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sidekick logo">
+                        <div style="display: flex; align-items: center; margin-left: 10px;">
+                            <svg width="130" height="28" viewBox="0 0 600 160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sidekick logo">
                               <defs>
                                 <!-- Gradient for text -->
                                 <linearGradient id="grad" gradientTransform="rotate(135)">
@@ -395,22 +396,22 @@
 
                                 <!-- Text shadow -->
                                 <filter id="textShadow" x="-20%" y="-20%" width="140%" height="140%">
-                                  <feDropShadow dx="2" dy="2" stdDeviation="1.5" flood-color="black" flood-opacity="0.7"/>
+                                  <feDropShadow dx="1.5" dy="1.5" stdDeviation="1" flood-color="black" flood-opacity="0.6"/>
                                 </filter>
                               </defs>
 
                               <!-- Sidekick text only -->
-                              <text x="20" y="110" font-family="Impact, sans-serif" font-size="64" fill="url(#grad)" filter="url(#textShadow)">
+                              <text x="20" y="105" font-family="Impact, sans-serif" font-size="58" fill="url(#grad)" filter="url(#textShadow)">
                                 Sidekick
                               </text>
                             </svg>
                         </div>
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <div id="sidekick-clock" style="font-family: monospace; font-size: 13px; text-align: center; line-height: 1.2; cursor: pointer;" title="Click to toggle points pricing">
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <div id="sidekick-clock" style="font-family: monospace; font-size: 12px; text-align: center; line-height: 1.2; cursor: pointer;" title="Click to toggle points pricing">
                                 <div id="clock-time">--:--:--</div>
-                                <div id="clock-date" style="font-size: 10px; color: #aaa;">-- ---</div>
+                                <div id="clock-date" style="font-size: 9px; color: #aaa;">-- ---</div>
                             </div>
-                            <button id="settings-button" style="background: none; border: 1px solid #555; color: #ccc; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">⚙️</button>
+                            <button id="settings-button" style="background: none; border: 1px solid #555; color: #ccc; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;">⚙️</button>
                         </div>
                     </div>
                 `;
