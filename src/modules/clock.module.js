@@ -28,8 +28,9 @@
         const ClockModule = {
             clockInterval: null,
             pointsData: null,
-            showPoints: true,
+            showPoints: false,
             apiKey: null,
+            updateTimeout: null,
 
             init() {
                 console.log('🕐 Initializing Clock Module...');
@@ -137,11 +138,17 @@
                 console.log('🔄 Toggling points display from', this.showPoints, 'to', !this.showPoints);
                 this.showPoints = !this.showPoints;
                 saveState('sidekick_show_points', this.showPoints);
-                // Force immediate update
-                setTimeout(() => {
+                
+                // Clear any pending updates to prevent race conditions
+                if (this.updateTimeout) {
+                    clearTimeout(this.updateTimeout);
+                }
+                
+                // Immediate update with slight delay to ensure state is saved
+                this.updateTimeout = setTimeout(() => {
                     this.updateClock();
-                }, 50);
-                console.log('✅ Toggle complete, showing points:', this.showPoints);
+                    console.log('✅ Toggle complete, showing points:', this.showPoints);
+                }, 10);
             },
 
             promptForManualPrice() {

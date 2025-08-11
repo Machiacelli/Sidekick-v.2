@@ -208,9 +208,11 @@
                 justify-content: center !important;
                 align-items: center !important;
                 gap: 8px !important;
-                padding: 2px 16px !important;
+                padding: 1px 16px !important;
                 background: linear-gradient(180deg, transparent 0%, #1a1a1a 50%) !important;
                 border-top: 1px solid #333 !important;
+                min-height: 36px !important;
+                max-height: 36px !important;
             }
 
             .sidekick-page-navigation {
