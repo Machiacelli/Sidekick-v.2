@@ -208,52 +208,249 @@
                 const notepadElement = document.createElement('div');
                 notepadElement.className = 'sidebar-item';
                 notepadElement.dataset.id = notepad.id;
+                
+                // Load saved position and size from localStorage
+                const savedNotepad = JSON.parse(localStorage.getItem(`notepad_${notepad.id}_layout`) || '{}');
+                const defaultWidth = 280;
+                const defaultHeight = 150;
+                const defaultX = 10;
+                const defaultY = 10;
+                
                 notepadElement.style.cssText = `
+                    position: absolute;
+                    left: ${savedNotepad.x || defaultX}px;
+                    top: ${savedNotepad.y || defaultY}px;
+                    width: ${savedNotepad.width || defaultWidth}px;
+                    height: ${savedNotepad.height || defaultHeight}px;
                     background: #2a2a2a;
                     border: 1px solid #444;
                     border-radius: 8px;
-                    padding: 12px;
-                    margin-bottom: 12px;
-                    transition: all 0.3s ease;
+                    display: flex;
+                    flex-direction: column;
+                    min-width: 200px;
+                    min-height: 100px;
+                    z-index: 1000;
+                    resize: ${savedNotepad.pinned ? 'none' : 'both'};
+                    overflow: hidden;
                 `;
                 
                 notepadElement.innerHTML = `
-                    <textarea placeholder="Write your notes here..." data-notepad-content-id="${notepad.id}"
-                              style="width: 100%; height: 120px; background: #2a2a2a; border: 1px solid #444; color: #fff; padding: 12px; border-radius: 8px; resize: both; font-family: inherit; box-sizing: border-box; outline: none; font-size: 13px; line-height: 1.4;">${notepad.content || ''}</textarea>
+                    <div class="notepad-header" style="
+                        background: #333;
+                        border-bottom: 1px solid #555;
+                        padding: 4px 8px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        cursor: ${savedNotepad.pinned ? 'default' : 'move'};
+                        height: 24px;
+                        flex-shrink: 0;
+                        border-radius: 7px 7px 0 0;
+                    ">
+                        <div style="display: flex; align-items: center; gap: 4px;">
+                            <div class="pin-dropdown" style="position: relative; display: inline-block;">
+                                <button class="dropdown-btn" style="
+                                    background: none;
+                                    border: none;
+                                    color: #bbb;
+                                    cursor: pointer;
+                                    font-size: 12px;
+                                    padding: 2px;
+                                    display: flex;
+                                    align-items: center;
+                                " title="Options">
+                                    ▼
+                                </button>
+                                <div class="dropdown-content" style="
+                                    display: none;
+                                    position: absolute;
+                                    background: #333;
+                                    min-width: 120px;
+                                    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+                                    z-index: 1001;
+                                    border-radius: 4px;
+                                    border: 1px solid #555;
+                                    top: 100%;
+                                    left: 0;
+                                ">
+                                    <button class="pin-btn" style="
+                                        background: none;
+                                        border: none;
+                                        color: #fff;
+                                        padding: 8px 12px;
+                                        width: 100%;
+                                        text-align: left;
+                                        cursor: pointer;
+                                        font-size: 12px;
+                                    ">
+                                        ${savedNotepad.pinned ? '📌 Unpin' : '📌 Pin'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="close-btn" style="
+                            background: none;
+                            border: none;
+                            color: #f44336;
+                            cursor: pointer;
+                            font-size: 14px;
+                            padding: 0;
+                            width: 16px;
+                            height: 16px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            opacity: 0.7;
+                        " title="Delete notepad">×</button>
+                    </div>
+                    <textarea placeholder="Write your notes here..." data-notepad-content-id="${notepad.id}" style="
+                        flex: 1;
+                        background: transparent;
+                        border: none;
+                        color: #fff;
+                        padding: 12px;
+                        font-size: 13px;
+                        font-family: inherit;
+                        resize: none;
+                        outline: none;
+                        line-height: 1.4;
+                        width: 100%;
+                        box-sizing: border-box;
+                    ">${notepad.content || ''}</textarea>
                 `;
                 
                 // Add event listeners for proper functionality
                 setTimeout(() => {
                     const contentTextarea = notepadElement.querySelector(`textarea[data-notepad-content-id="${notepad.id}"]`);
+                    const header = notepadElement.querySelector('.notepad-header');
+                    const closeBtn = notepadElement.querySelector('.close-btn');
+                    const dropdownBtn = notepadElement.querySelector('.dropdown-btn');
+                    const dropdownContent = notepadElement.querySelector('.dropdown-content');
+                    const pinBtn = notepadElement.querySelector('.pin-btn');
                     
+                    let isDrawing = false;
+                    let isPinned = savedNotepad.pinned || false;
+                    
+                    // Save position and size function
+                    function saveLayout() {
+                        const rect = notepadElement.getBoundingClientRect();
+                        const sidebarRect = document.getElementById('sidekick-sidebar').getBoundingClientRect();
+                        const layout = {
+                            x: notepadElement.offsetLeft,
+                            y: notepadElement.offsetTop,
+                            width: notepadElement.offsetWidth,
+                            height: notepadElement.offsetHeight,
+                            pinned: isPinned
+                        };
+                        localStorage.setItem(`notepad_${notepad.id}_layout`, JSON.stringify(layout));
+                    }
+                    
+                    // Auto-save content on input
                     if (contentTextarea) {
-                        // Auto-save content on input
                         contentTextarea.addEventListener('input', (e) => {
                             if (window.updateNotepadContent) {
                                 window.updateNotepadContent(notepad.id, e.target.value);
                             }
                         });
                         
-                        // Enhanced focus effects
+                        // Focus effects on the entire notepad
                         contentTextarea.addEventListener('focus', () => {
-                            contentTextarea.style.borderColor = '#66BB6A';
-                            contentTextarea.style.boxShadow = '0 0 0 2px rgba(102, 187, 106, 0.2)';
+                            notepadElement.style.borderColor = '#66BB6A';
+                            notepadElement.style.boxShadow = '0 0 0 2px rgba(102, 187, 106, 0.2)';
                         });
                         
                         contentTextarea.addEventListener('blur', () => {
-                            contentTextarea.style.borderColor = '#444';
-                            contentTextarea.style.boxShadow = 'none';
+                            notepadElement.style.borderColor = '#444';
+                            notepadElement.style.boxShadow = 'none';
                         });
-                        
-                        // Right-click delete functionality
-                        contentTextarea.addEventListener('contextmenu', (e) => {
-                            e.preventDefault();
+                    }
+                    
+                    // Close button functionality
+                    if (closeBtn) {
+                        closeBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
                             if (confirm('Delete this notepad?')) {
+                                localStorage.removeItem(`notepad_${notepad.id}_layout`);
                                 if (window.removeContent) {
                                     window.removeContent(notepad.id, 'notepad');
                                 }
                             }
                         });
+                    }
+                    
+                    // Dropdown functionality
+                    if (dropdownBtn && dropdownContent) {
+                        dropdownBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
+                        });
+                        
+                        // Close dropdown when clicking outside
+                        document.addEventListener('click', () => {
+                            dropdownContent.style.display = 'none';
+                        });
+                    }
+                    
+                    // Pin functionality
+                    if (pinBtn) {
+                        pinBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            isPinned = !isPinned;
+                            pinBtn.textContent = isPinned ? '📌 Unpin' : '📌 Pin';
+                            notepadElement.style.resize = isPinned ? 'none' : 'both';
+                            header.style.cursor = isPinned ? 'default' : 'move';
+                            saveLayout();
+                            dropdownContent.style.display = 'none';
+                        });
+                    }
+                    
+                    // Dragging functionality (only if not pinned)
+                    if (header) {
+                        let isDragging = false;
+                        let dragOffset = { x: 0, y: 0 };
+                        
+                        header.addEventListener('mousedown', (e) => {
+                            if (isPinned) return;
+                            isDragging = true;
+                            const rect = notepadElement.getBoundingClientRect();
+                            dragOffset.x = e.clientX - rect.left;
+                            dragOffset.y = e.clientY - rect.top;
+                            e.preventDefault();
+                        });
+                        
+                        document.addEventListener('mousemove', (e) => {
+                            if (!isDragging || isPinned) return;
+                            
+                            const sidebar = document.getElementById('sidekick-sidebar');
+                            const sidebarRect = sidebar.getBoundingClientRect();
+                            
+                            let newX = e.clientX - sidebarRect.left - dragOffset.x;
+                            let newY = e.clientY - sidebarRect.top - dragOffset.y;
+                            
+                            // Keep within sidebar bounds
+                            newX = Math.max(0, Math.min(newX, sidebar.offsetWidth - notepadElement.offsetWidth));
+                            newY = Math.max(0, Math.min(newY, sidebar.offsetHeight - notepadElement.offsetHeight));
+                            
+                            notepadElement.style.left = newX + 'px';
+                            notepadElement.style.top = newY + 'px';
+                        });
+                        
+                        document.addEventListener('mouseup', () => {
+                            if (isDragging) {
+                                isDragging = false;
+                                saveLayout();
+                            }
+                        });
+                    }
+                    
+                    // Resize observer to save size changes
+                    if (window.ResizeObserver) {
+                        const resizeObserver = new ResizeObserver(() => {
+                            if (!isPinned) {
+                                saveLayout();
+                            }
+                        });
+                        resizeObserver.observe(notepadElement);
                     }
                     
                     if (removeBtn) {

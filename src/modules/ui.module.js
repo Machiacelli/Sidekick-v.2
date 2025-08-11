@@ -479,6 +479,7 @@
                     overflow-y: auto;
                     overflow-x: hidden;
                     padding-bottom: 60px;
+                    position: relative;
                 `;
                 
                 sidebar.appendChild(contentArea);
