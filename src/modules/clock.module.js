@@ -34,6 +34,13 @@
 
             init() {
                 console.log('🕐 Initializing Clock Module...');
+                
+                // Ensure single instance
+                if (window.SidekickModules?.Clock?.initialized) {
+                    console.log('⚠️ Clock module already initialized, skipping...');
+                    return;
+                }
+                
                 this.loadSettings();
                 this.startClock();
                 
@@ -54,11 +61,16 @@
                 
                 // Set up clock click handler
                 this.setupClockClickHandler();
+                
+                // Mark as initialized
+                this.initialized = true;
             },
 
             loadSettings() {
-                this.showPoints = loadState('sidekick_show_points', false);
+                const savedShowPoints = loadState('sidekick_show_points', false);
+                this.showPoints = savedShowPoints;
                 this.apiKey = loadState('sidekick_api_key', '');
+                console.log('🔧 Clock settings loaded - showPoints:', this.showPoints, 'apiKey:', this.apiKey ? 'SET' : 'NOT SET');
             },
 
             startClock() {
@@ -73,6 +85,19 @@
                 const dateElement = document.getElementById('clock-date');
                 
                 if (!timeElement || !dateElement) return;
+
+                // Reload the current state from storage to ensure consistency
+                const currentShowPoints = loadState('sidekick_show_points', false);
+                if (this.showPoints !== currentShowPoints) {
+                    console.log('🔄 State mismatch detected! Correcting showPoints from', this.showPoints, 'to', currentShowPoints);
+                    this.showPoints = currentShowPoints;
+                }
+
+                // Debug: Log the current state every 10 seconds to avoid spam
+                if (!this.lastDebugTime || Date.now() - this.lastDebugTime > 10000) {
+                    console.log('🕐 Clock update - showPoints:', this.showPoints, 'hasPointsData:', !!this.pointsData);
+                    this.lastDebugTime = Date.now();
+                }
 
                 if (this.showPoints && this.pointsData && this.pointsData.length > 0) {
                     // Show points price - find cheapest offer
@@ -135,7 +160,9 @@
             },
 
             togglePointsDisplay() {
-                console.log('🔄 Toggling points display from', this.showPoints, 'to', !this.showPoints);
+                console.log('🔄 TOGGLE CALLED - Current showPoints:', this.showPoints, 'Will change to:', !this.showPoints);
+                console.trace('Toggle called from:'); // This will show the call stack
+                
                 this.showPoints = !this.showPoints;
                 saveState('sidekick_show_points', this.showPoints);
                 
