@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Modular - Full Featured Sidebar
 // @namespace    http://tampermonkey.net/
-// @version      3.1.1
+// @version      3.1.2
 // @description  Modular version of Sidekick - Enhanced Torn.com sidebar with notepads, todo lists, attack lists, cooldown timers, travel tracker, points monitor, clock, and debugging tools
 // @author       GitHub Copilot
 // @match        https://www.torn.com/*
@@ -9,13 +9,13 @@
 // @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@06a0189cc7cb876e955b1e3b615954aded596b36/src/modules/core.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@06a0189cc7cb876e955b1e3b615954aded596b36/src/modules/ui.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@06a0189cc7cb876e955b1e3b615954aded596b36/src/modules/content.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@06a0189cc7cb876e955b1e3b615954aded596b36/src/modules/settings.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@06a0189cc7cb876e955b1e3b615954aded596b36/src/modules/clock.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@06a0189cc7cb876e955b1e3b615954aded596b36/src/modules/notepad.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@06a0189cc7cb876e955b1e3b615954aded596b36/src/modules/global-functions.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@465c753a9ea11f25854987e3eaa06626a2bbdc25/src/modules/core.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@465c753a9ea11f25854987e3eaa06626a2bbdc25/src/modules/ui.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@465c753a9ea11f25854987e3eaa06626a2bbdc25/src/modules/content.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@465c753a9ea11f25854987e3eaa06626a2bbdc25/src/modules/settings.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@465c753a9ea11f25854987e3eaa06626a2bbdc25/src/modules/clock.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@465c753a9ea11f25854987e3eaa06626a2bbdc25/src/modules/notepad.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@465c753a9ea11f25854987e3eaa06626a2bbdc25/src/modules/global-functions.module.js
 // @run-at       document-end
 // ==/UserScript==
 
