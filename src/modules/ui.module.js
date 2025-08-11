@@ -210,7 +210,6 @@
                 gap: 8px !important;
                 padding: 1px 16px !important;
                 background: linear-gradient(180deg, transparent 0%, #1a1a1a 50%) !important;
-                border-top: 1px solid #333 !important;
                 min-height: 36px !important;
                 max-height: 36px !important;
             }

@@ -88,13 +88,6 @@
                 
                 if (!timeElement || !dateElement) return;
 
-                // Reload the current state from storage to ensure consistency
-                const currentShowPoints = loadState('sidekick_show_points', false);
-                if (this.showPoints !== currentShowPoints) {
-                    console.log('🔄 State mismatch detected! Correcting showPoints from', this.showPoints, 'to', currentShowPoints);
-                    this.showPoints = currentShowPoints;
-                }
-
                 // Debug: Log the current state every 10 seconds to avoid spam
                 if (!this.lastDebugTime || Date.now() - this.lastDebugTime > 10000) {
                     console.log('🕐 Clock update - showPoints:', this.showPoints, 'hasPointsData:', !!this.pointsData);
