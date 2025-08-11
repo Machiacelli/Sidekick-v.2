@@ -56,7 +56,7 @@
             },
 
             loadSettings() {
-                this.showPoints = loadState('sidekick_show_points', true);
+                this.showPoints = loadState('sidekick_show_points', false);
                 this.apiKey = loadState('sidekick_api_key', '');
             },
 
@@ -134,9 +134,14 @@
             },
 
             togglePointsDisplay() {
+                console.log('🔄 Toggling points display from', this.showPoints, 'to', !this.showPoints);
                 this.showPoints = !this.showPoints;
                 saveState('sidekick_show_points', this.showPoints);
-                this.updateClock();
+                // Force immediate update
+                setTimeout(() => {
+                    this.updateClock();
+                }, 50);
+                console.log('✅ Toggle complete, showing points:', this.showPoints);
             },
 
             promptForManualPrice() {

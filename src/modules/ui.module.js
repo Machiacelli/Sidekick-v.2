@@ -69,7 +69,7 @@
                 position: fixed !important;
                 top: 0 !important;
                 left: 0 !important;
-                width: 380px !important;
+                width: 420px !important;
                 height: 100vh !important;
                 background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%) !important;
                 border-right: 2px solid #444 !important;
@@ -170,10 +170,11 @@
             /* TOP BAR STYLES */
             .sidekick-topbar {
                 background: linear-gradient(135deg, #333, #2a2a2a) !important;
-                padding: 4px 12px !important;
+                padding: 2px 8px !important;
                 border-bottom: 2px solid #444 !important;
                 color: #fff !important;
-                min-height: 28px !important;
+                min-height: 32px !important;
+                max-height: 32px !important;
                 display: flex !important;
                 align-items: center !important;
                 flex-shrink: 0 !important;
@@ -207,7 +208,7 @@
                 justify-content: center !important;
                 align-items: center !important;
                 gap: 8px !important;
-                padding: 6px 16px !important;
+                padding: 4px 16px !important;
                 background: linear-gradient(180deg, transparent 0%, #1a1a1a 50%) !important;
                 border-top: 1px solid #333 !important;
             }
@@ -418,9 +419,9 @@
                 const topBar = document.createElement('div');
                 topBar.className = 'sidekick-topbar';
                 topBar.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 4px 8px;">
-                        <div style="display: flex; align-items: center; margin-left: 8px;">
-                            <svg width="240" height="28" viewBox="0 0 600 160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sidekick logo">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0px 4px;">
+                        <div style="display: flex; align-items: center; margin-left: 2px;">
+                            <svg width="280" height="24" viewBox="0 0 600 160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sidekick logo">
                               <defs>
                                 <linearGradient id="grad" gradientTransform="rotate(135)">
                                   <stop offset="0%" stop-color="#66BB6A"/>
@@ -435,12 +436,12 @@
                               </text>
                             </svg>
                         </div>
-                        <div style="display: flex; gap: 8px; align-items: center;">
-                            <div id="sidekick-clock" style="font-family: monospace; font-size: 14px; text-align: center; line-height: 1.1; cursor: pointer; min-width: 80px;" title="Click to toggle points pricing">
+                        <div style="display: flex; gap: 6px; align-items: center; margin-right: 2px;">
+                            <div id="sidekick-clock" style="font-family: monospace; font-size: 12px; text-align: center; line-height: 1.1; cursor: pointer; min-width: 70px;" title="Click to toggle points pricing">
                                 <div id="clock-time">--:--:--</div>
-                                <div id="clock-date" style="font-size: 11px; color: #aaa;">-- ---</div>
+                                <div id="clock-date" style="font-size: 10px; color: #aaa;">-- ---</div>
                             </div>
-                            <button id="settings-button" style="background: none; border: 1px solid #555; color: #ccc; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 16px;">⚙️</button>
+                            <button id="settings-button" style="background: none; border: 1px solid #555; color: #ccc; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 14px;">⚙️</button>
                         </div>
                     </div>
                 `;
