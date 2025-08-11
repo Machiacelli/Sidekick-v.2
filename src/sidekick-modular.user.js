@@ -34,18 +34,36 @@
 
     // Inject critical CSS immediately for maximum visibility
     GM_addStyle(`
-        /* CRITICAL FIXES - HIGH PRIORITY */
-        .sidekick-topbar {
+        /* CRITICAL FIXES - HIGHEST PRIORITY - OVERRIDE EVERYTHING */
+        .sidekick-topbar, #sidekick-sidebar .sidekick-topbar, 
+        .sidekick-page-navigation, .sidekick-bottom-bar,
+        [class*="topbar"], [class*="navigation"], [class*="bottom"] {
             border-bottom: none !important;
+            border-top: none !important;
         }
         
-        .simplified-notepad {
+        /* FORCE REMOVE ALL BORDERS FROM SIDEBAR BOTTOM */
+        #sidekick-sidebar::after, #sidekick-sidebar::before,
+        #sidekick-sidebar > *:last-child, 
+        .sidekick-page-dots, .sidekick-page-navigation {
+            border: none !important;
+            border-bottom: none !important;
+            border-top: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* NOTEPAD COMPLETE OVERRIDE */
+        .simplified-notepad, .sidebar-item.simplified-notepad,
+        [class*="notepad"], .notepad-container, .notepad-element {
             background: transparent !important;
             border: none !important;
             padding: 0px !important;
+            margin-bottom: 12px !important;
         }
         
-        .simplified-notepad textarea {
+        .simplified-notepad textarea, 
+        .sidebar-item.simplified-notepad textarea,
+        [data-notepad-id] {
             width: 100% !important; 
             height: 100% !important; 
             background: #2a2a2a !important; 
@@ -59,11 +77,19 @@
             box-sizing: border-box !important; 
             outline: none !important; 
             margin: 0 !important;
+            min-height: 100px !important;
         }
         
-        .simplified-notepad textarea:focus {
+        .simplified-notepad textarea:focus, 
+        [data-notepad-id]:focus {
             border-color: #66BB6A !important;
             box-shadow: 0 0 0 2px rgba(102, 187, 106, 0.2) !important;
+        }
+        
+        /* HIDE ALL NOTEPAD HEADERS/TITLES */
+        .notepad-header, .notepad-title, .sidebar-item-header,
+        .sidekick-panel-header, [class*="header"], [class*="title"] {
+            display: none !important;
         }
 
         /* COMPACT HAMBURGER BUTTON - SMALLER AND MORE CORNER POSITIONED */

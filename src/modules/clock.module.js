@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Clock Module
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version                  // Debug logging removed to prevent console spam
 // @description  Clock and points pricing functionality for Sidekick sidebar
 // @author       GitHub Copilot
 // @match        https://www.torn.com/*
@@ -123,15 +123,7 @@
                     'currentDateText': dateElement.textContent
                 });
 
-                // DEEP DIVE: Check pointsData structure and condition evaluation
-                console.log('🧪 DETAILED CONDITION TEST:', {
-                    'this.showPoints': this.showPoints,
-                    'this.pointsData exists': !!this.pointsData,
-                    'this.pointsData': this.pointsData,
-                    'this.pointsData.length': this.pointsData ? this.pointsData.length : 'null/undefined',
-                    'this.pointsData.length > 0': this.pointsData && this.pointsData.length > 0,
-                    'FULL CONDITION RESULT': this.showPoints && this.pointsData && this.pointsData.length > 0
-                });
+                // Detailed condition test removed to prevent console spam
 
                 // If state is inconsistent, log a warning but DON'T auto-correct
                 if (!stateConsistent) {
