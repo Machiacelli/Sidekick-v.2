@@ -38,6 +38,15 @@
             init() {
                 console.log('🕐 Initializing Clock Module...');
                 
+                // CHECK FOR EXISTING INSTANCES
+                if (window.clockInstanceCount) {
+                    window.clockInstanceCount++;
+                    console.error('🚨 MULTIPLE CLOCK INSTANCES DETECTED! Count:', window.clockInstanceCount);
+                } else {
+                    window.clockInstanceCount = 1;
+                    console.log('✅ First clock instance');
+                }
+                
                 // Destroy any existing instance first
                 this.destroy();
                 
@@ -100,10 +109,24 @@
                 
                 if (!timeElement || !dateElement) return;
 
-                // Debug: Log the current state every 10 seconds to avoid spam
-                if (!this.lastDebugTime || Date.now() - this.lastDebugTime > 10000) {
-                    console.log('🕐 Clock update - showPoints:', this.showPoints, 'hasPointsData:', !!this.pointsData);
-                    this.lastDebugTime = Date.now();
+                // DETAILED DEBUG: Check state consistency every update
+                const savedState = loadState('sidekick_show_points', false);
+                const stateConsistent = (this.showPoints === savedState);
+                
+                // Log every update for debugging
+                console.log(`� CLOCK UPDATE [${new Date().toLocaleTimeString()}]:`, {
+                    'this.showPoints': this.showPoints,
+                    'savedState': savedState,
+                    'stateConsistent': stateConsistent,
+                    'hasPointsData': !!this.pointsData,
+                    'currentTimeText': timeElement.textContent,
+                    'currentDateText': dateElement.textContent
+                });
+
+                // If state is inconsistent, log a warning but DON'T auto-correct
+                if (!stateConsistent) {
+                    console.warn('⚠️ STATE MISMATCH DETECTED - Internal:', this.showPoints, 'Saved:', savedState);
+                    console.warn('⚠️ NOT auto-correcting to avoid loops - manual investigation needed');
                 }
 
                 if (this.showPoints && this.pointsData && this.pointsData.length > 0) {
@@ -340,16 +363,24 @@
             destroy() {
                 console.log('🧹 Destroying clock module...');
                 
+                // Decrease instance count
+                if (window.clockInstanceCount) {
+                    window.clockInstanceCount--;
+                    console.log('📉 Clock instance count decreased to:', window.clockInstanceCount);
+                }
+                
                 // Clear interval
                 if (this.clockInterval) {
                     clearInterval(this.clockInterval);
                     this.clockInterval = null;
+                    console.log('⏹️ Clock interval cleared');
                 }
                 
                 // Clear timeout
                 if (this.updateTimeout) {
                     clearTimeout(this.updateTimeout);
                     this.updateTimeout = null;
+                    console.log('⏹️ Update timeout cleared');
                 }
                 
                 // Reset flags
