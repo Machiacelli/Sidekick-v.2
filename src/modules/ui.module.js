@@ -468,18 +468,7 @@
                         });
                     }
                     
-                    // Setup clock toggle functionality
-                    const clockElement = document.getElementById('sidekick-clock');
-                    if (clockElement) {
-                        clockElement.addEventListener('click', () => {
-                            if (window.SidekickModules?.Clock?.togglePointsDisplay) {
-                                window.SidekickModules.Clock.togglePointsDisplay();
-                                console.log('🔄 Clock/Points display toggled');
-                            } else {
-                                console.log('Clock module not available');
-                            }
-                        });
-                    }
+                    // Clock toggle is handled by the Clock module - no need for duplicate event listener here
                 }, 100);
                 
                 // Create content area - scrollable and takes up remaining space
