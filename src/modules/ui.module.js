@@ -69,7 +69,7 @@
                 position: fixed !important;
                 top: 0 !important;
                 left: 0 !important;
-                width: 360px !important;
+                width: 500px !important;
                 height: 100vh !important;
                 background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%) !important;
                 border-right: 2px solid #444 !important;
@@ -420,7 +420,7 @@
                 topBar.className = 'sidekick-topbar';
                 topBar.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0px 4px;">
-                        <div style="display: flex; align-items: center; margin-left: 2px;">
+                        <div style="display: flex; align-items: center; margin-left: 50px;">
                             <svg width="120" height="24" viewBox="0 0 120 24" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sidekick logo">
                               <defs>
                                 <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -450,10 +450,19 @@
                     const settingsButton = document.getElementById('settings-button');
                     if (settingsButton) {
                         settingsButton.addEventListener('click', () => {
-                            if (window.SidekickModules?.Settings) {
-                                window.SidekickModules.Settings.showSettingsDialog();
+                            console.log('🔧 Settings button clicked');
+                            if (window.SidekickModules?.Settings?.createModal) {
+                                window.SidekickModules.Settings.createModal();
                             } else {
-                                console.log('Settings module not available');
+                                console.log('Settings module not available - available modules:', Object.keys(window.SidekickModules || {}));
+                                // Fallback simple settings dialog
+                                const apiKey = prompt('Enter your Torn API key:');
+                                if (apiKey && apiKey.trim()) {
+                                    if (window.SidekickModules?.Core?.saveState) {
+                                        window.SidekickModules.Core.saveState('sidekick_api_key', apiKey.trim());
+                                        alert('API key saved!');
+                                    }
+                                }
                             }
                         });
                     }
