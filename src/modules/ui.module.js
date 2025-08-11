@@ -420,7 +420,7 @@
                 topBar.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 4px 8px;">
                         <div style="display: flex; align-items: center; margin-left: 8px;">
-                            <svg width="120" height="24" viewBox="0 0 600 160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sidekick logo">
+                            <svg width="180" height="32" viewBox="0 0 600 160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sidekick logo">
                               <defs>
                                 <linearGradient id="grad" gradientTransform="rotate(135)">
                                   <stop offset="0%" stop-color="#66BB6A"/>
@@ -436,11 +436,11 @@
                             </svg>
                         </div>
                         <div style="display: flex; gap: 8px; align-items: center;">
-                            <div id="sidekick-clock" style="font-family: monospace; font-size: 11px; text-align: center; line-height: 1.1; cursor: pointer;" title="Click to toggle points pricing">
+                            <div id="sidekick-clock" style="font-family: monospace; font-size: 14px; text-align: center; line-height: 1.1; cursor: pointer; min-width: 80px;" title="Click to toggle points pricing">
                                 <div id="clock-time">--:--:--</div>
-                                <div id="clock-date" style="font-size: 9px; color: #aaa;">-- ---</div>
+                                <div id="clock-date" style="font-size: 11px; color: #aaa;">-- ---</div>
                             </div>
-                            <button id="settings-button" style="background: none; border: 1px solid #555; color: #ccc; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;">⚙️</button>
+                            <button id="settings-button" style="background: none; border: 1px solid #555; color: #ccc; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 16px;">⚙️</button>
                         </div>
                     </div>
                 `;
@@ -558,16 +558,19 @@
                 const nav = document.createElement('div');
                 nav.className = 'sidekick-page-dots';
                 
-                // Create a single centered container that holds ALL navigation elements in order
-                const allElementsContainer = document.createElement('div');
-                allElementsContainer.style.cssText = `
+                // Create layout: [Add Button on left] [Centered dots container] [Empty space on right]
+                const layoutContainer = document.createElement('div');
+                layoutContainer.style.cssText = `
                     display: flex !important;
                     align-items: center !important;
-                    gap: 8px !important;
-                    justify-content: center !important;
+                    justify-content: space-between !important;
+                    width: 100% !important;
                 `;
                 
-                // 1. Add component button (styled like hamburger)
+                // 1. Add component button (stays on left)
+                const leftContainer = document.createElement('div');
+                leftContainer.style.cssText = `display: flex; align-items: center;`;
+                
                 const addComponentBtn = document.createElement('button');
                 addComponentBtn.innerHTML = '+';
                 addComponentBtn.className = 'sidekick-add-component-btn';
@@ -577,13 +580,17 @@
                         window.SidekickModules.Content.showAddMenu();
                     }
                 });
+                leftContainer.appendChild(addComponentBtn);
                 
-                // 2. Page dots container
-                const pageDotsContainer = document.createElement('div');
-                pageDotsContainer.style.cssText = `
+                // 2. Centered page dots and add page button
+                const centeredContainer = document.createElement('div');
+                centeredContainer.style.cssText = `
                     display: flex !important;
                     align-items: center !important;
                     gap: 4px !important;
+                    position: absolute !important;
+                    left: 50% !important;
+                    transform: translateX(-50%) !important;
                 `;
                 
                 const pages = loadState(STORAGE_KEYS.SIDEBAR_PAGES, [{ notepads: [], todoLists: [], attackLists: [] }]);
@@ -626,10 +633,10 @@
                         }
                     });
                     
-                    pageDotsContainer.appendChild(dot);
+                    centeredContainer.appendChild(dot);
                 });
                 
-                // 3. Add new page button
+                // Add new page button
                 const addPageBtn = document.createElement('button');
                 addPageBtn.innerHTML = '+';
                 addPageBtn.className = 'sidekick-add-page-btn';
@@ -639,13 +646,17 @@
                         window.SidekickModules.Content.addNewPage();
                     }
                 });
+                centeredContainer.appendChild(addPageBtn);
                 
-                // Add all elements to the main container in order: [Add Component] [Page Dots] [Add Page]
-                allElementsContainer.appendChild(addComponentBtn);
-                allElementsContainer.appendChild(pageDotsContainer);
-                allElementsContainer.appendChild(addPageBtn);
+                // 3. Right container (empty for balance)
+                const rightContainer = document.createElement('div');
+                rightContainer.style.cssText = `width: 32px; height: 32px;`; // Same size as left button for balance
                 
-                nav.appendChild(allElementsContainer);
+                // Assemble layout
+                layoutContainer.appendChild(leftContainer);
+                layoutContainer.appendChild(centeredContainer);
+                layoutContainer.appendChild(rightContainer);
+                nav.appendChild(layoutContainer);
                 
                 return nav;
             },

@@ -116,7 +116,7 @@
                 notepadElement.id = `notepad-${notepad.id}`;
                 notepadElement.className = 'sidebar-item enhanced-notepad';
                 notepadElement.style.cssText = `
-                    background: #2a2a2a !important;
+                    background: transparent !important;
                     border: none !important;
                     border-radius: 8px !important;
                     padding: 0px !important;
@@ -133,23 +133,8 @@
                 `;
 
                 notepadElement.innerHTML = `
-                    <div class="notepad-header" style="position: absolute; top: 0; left: 0; right: 0; height: 20px; background: rgba(42, 42, 42, 0.8); cursor: move; z-index: 10; display: flex; justify-content: flex-end; align-items: center; padding: 2px 4px;">
-                        <div style="display: flex; align-items: center; gap: 4px;">
-                            <div class="notepad-dropdown" style="position: relative;">
-                                <button class="dropdown-toggle" style="background: none; border: none; color: #aaa; cursor: pointer; font-size: 10px; width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; transition: color 0.2s ease;"
-                                        title="Options">▼</button>
-                                <div class="dropdown-menu" style="position: absolute; top: 16px; right: 0; background: #333; border: 1px solid #555; border-radius: 4px; min-width: 80px; display: none; z-index: 20; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
-                                    <button class="pin-notepad-btn" style="width: 100%; background: none; border: none; color: #fff; padding: 6px 8px; text-align: left; cursor: pointer; font-size: 11px; transition: background 0.2s ease;"
-                                            title="Pin window position and size">📌 Pin</button>
-                                </div>
-                            </div>
-                            <button class="delete-notepad-btn" data-notepad-id="${notepad.id}"
-                                    style="background: none; border: none; color: rgba(128, 128, 128, 0.7); cursor: pointer; font-size: 11px; width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; transition: color 0.2s ease; font-weight: bold;"
-                                    title="Delete notepad">×</button>
-                        </div>
-                    </div>
-                    <textarea placeholder="Write your notes here..."
-                              style="width: 100%; height: 100%; background: #2a2a2a; border: 1px solid #444; color: #fff; padding: 20px 8px 8px 8px; border-radius: 8px; font-size: 13px; resize: none; font-family: inherit; box-sizing: border-box; outline: none; margin: 0;">${notepad.content}</textarea>
+                    <textarea placeholder="Write your notes here..." data-notepad-id="${notepad.id}"
+                              style="width: 100%; height: 100%; background: #2a2a2a; border: 1px solid #444; color: #fff; padding: 8px; border-radius: 8px; font-size: 13px; resize: both; font-family: inherit; box-sizing: border-box; outline: none; margin: 0;">${notepad.content}</textarea>
                 `;
 
                 // Add enhanced functionality
@@ -160,131 +145,21 @@
 
             setupNotepadHandlers(notepadElement, notepad) {
                 const contentTextarea = notepadElement.querySelector('textarea');
-                const deleteBtn = notepadElement.querySelector('.delete-notepad-btn');
-                const dropdownToggle = notepadElement.querySelector('.dropdown-toggle');
-                const dropdownMenu = notepadElement.querySelector('.dropdown-menu');
-                const pinBtn = notepadElement.querySelector('.pin-notepad-btn');
-                const notepadHeader = notepadElement.querySelector('.notepad-header');
                 
-                // Dropdown menu functionality
-                dropdownToggle.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    dropdownMenu.style.display = dropdownMenu.style.display === 'none' ? 'block' : 'none';
-                });
-                
-                // Close dropdown when clicking outside
-                document.addEventListener('click', (e) => {
-                    if (!notepadElement.contains(e.target)) {
-                        dropdownMenu.style.display = 'none';
-                    }
-                });
-                
-                // Pin functionality
-                let isPinned = notepad.pinned || false;
-                pinBtn.innerHTML = isPinned ? '📍 Unpin' : '📌 Pin';
-                pinBtn.addEventListener('click', () => {
-                    isPinned = !isPinned;
-                    pinBtn.innerHTML = isPinned ? '📍 Unpin' : '📌 Pin';
-                    pinBtn.title = isPinned ? 'Unpin window' : 'Pin window position and size';
-                    dropdownMenu.style.display = 'none';
+                // Auto-save content on input
+                if (contentTextarea) {
+                    contentTextarea.addEventListener('input', () => {
+                        this.updateNotepad(notepad.id, notepad.title, contentTextarea.value);
+                    });
                     
-                    // Save pinned state
-                    notepad.pinned = isPinned;
-                    notepad.pinnedPosition = isPinned ? {
-                        left: notepadElement.style.left,
-                        top: notepadElement.style.top,
-                        width: notepadElement.style.width,
-                        height: notepadElement.style.height
-                    } : null;
-                    this.saveNotepads();
-                });
-                
-                // Dragging functionality
-                let isDragging = false;
-                let dragOffset = { x: 0, y: 0 };
-                
-                notepadHeader.addEventListener('mousedown', (e) => {
-                    if (isPinned) return;
-                    isDragging = true;
-                    const rect = notepadElement.getBoundingClientRect();
-                    dragOffset.x = e.clientX - rect.left;
-                    dragOffset.y = e.clientY - rect.top;
-                    notepadElement.style.zIndex = '1000';
-                    e.preventDefault();
-                });
-                
-                document.addEventListener('mousemove', (e) => {
-                    if (!isDragging || isPinned) return;
-                    
-                    const sidebar = document.getElementById('sidekick-sidebar');
-                    const sidebarRect = sidebar.getBoundingClientRect();
-                    
-                    let newLeft = e.clientX - sidebarRect.left - dragOffset.x;
-                    let newTop = e.clientY - sidebarRect.top - dragOffset.y;
-                    
-                    // Constrain to sidebar bounds with smaller padding
-                    const padding = 8;
-                    newLeft = Math.max(padding, Math.min(newLeft, sidebarRect.width - notepadElement.offsetWidth - padding));
-                    newTop = Math.max(padding, Math.min(newTop, sidebarRect.height - notepadElement.offsetHeight - padding));
-                    
-                    notepadElement.style.left = `${newLeft}px`;
-                    notepadElement.style.top = `${newTop}px`;
-                    notepadElement.style.position = 'absolute';
-                });
-                
-                document.addEventListener('mouseup', () => {
-                    if (isDragging) {
-                        isDragging = false;
-                        notepadElement.style.zIndex = '';
-                    }
-                });
-
-                // Content change handler
-                contentTextarea.addEventListener('input', () => {
-                    notepad.content = contentTextarea.value;
-                    notepad.modified = new Date().toISOString();
-                    this.saveNotepads();
-                });
-
-                // Delete button functionality
-                deleteBtn.addEventListener('click', () => {
-                    this.deleteNotepad(notepad.id);
-                });
-
-                // Add resize constraints
-                const resizeObserver = new ResizeObserver(entries => {
-                    for (let entry of entries) {
-                        const element = entry.target;
-                        const rect = element.getBoundingClientRect();
-                        const sidebar = document.getElementById('sidekick-sidebar');
-                        const sidebarRect = sidebar ? sidebar.getBoundingClientRect() : null;
-                        
-                        // Constraint: don't exceed sidebar width with smaller padding
-                        if (sidebarRect && rect.width > sidebarRect.width - 8) {
-                            element.style.width = `${sidebarRect.width - 8}px`;
+                    // Add delete functionality with right-click context menu
+                    contentTextarea.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        if (confirm(`Delete this notepad?`)) {
+                            this.deleteNotepad(notepad.id);
                         }
-                        
-                        // Constraint: minimum size based on content
-                        const textLength = contentTextarea.value.length;
-                        const minHeight = Math.max(60, Math.min(180, textLength / 5 + 50));
-                        if (rect.height < minHeight) {
-                            element.style.height = `${minHeight}px`;
-                        }
-                    }
-                });
-                
-                resizeObserver.observe(notepadElement);
-
-                // Add hover effects
-                notepadElement.addEventListener('mouseenter', () => {
-                    notepadElement.style.background = '#333 !important';
-                    notepadElement.style.borderColor = '#555 !important';
-                });
-
-                notepadElement.addEventListener('mouseleave', () => {
-                    notepadElement.style.background = '#2a2a2a !important';
-                    notepadElement.style.borderColor = '#444 !important';
-                });
+                    });
+                }
             },
 
             deleteNotepad(id) {

@@ -80,6 +80,12 @@
                     timeElement.style.color = '#4CAF50';
                     dateElement.textContent = 'Points';
                     dateElement.style.color = '#4CAF50';
+                } else if (this.showPoints && (!this.pointsData || this.pointsData.length === 0)) {
+                    // Show "No Data" when points mode is enabled but no data available
+                    timeElement.textContent = 'No Data';
+                    timeElement.style.color = '#ff9800';
+                    dateElement.textContent = 'Points';
+                    dateElement.style.color = '#ff9800';
                 } else {
                     // Show current UTC time (Torn time)
                     const now = new Date();
@@ -261,6 +267,9 @@
                 this.showPoints = !this.showPoints;
                 saveState('sidekick_show_points', this.showPoints);
                 
+                // Force immediate update of display
+                this.updateClock();
+                
                 if (this.showPoints) {
                     // Enable points display and fetch fresh data
                     if (this.apiKey) {
@@ -268,11 +277,7 @@
                     }
                     NotificationSystem.show('Points Display', 'Points pricing enabled', 'info', 2000);
                 } else {
-                    // Hide points display
-                    const pointsDisplay = document.getElementById('clock-points');
-                    if (pointsDisplay) {
-                        pointsDisplay.remove();
-                    }
+                    // Disable points display - clock will show time instead
                     NotificationSystem.show('Points Display', 'Points pricing disabled', 'info', 2000);
                 }
             },
