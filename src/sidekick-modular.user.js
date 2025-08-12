@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Modular - Full Featured Sidebar
 // @namespace    http://tampermonkey.net/
-// @version      4.2.0
+// @version      4.2.1
 // @description  Modular version of Sidekick - Enhanced Torn.com sidebar with notepads, todo lists, attack lists, cooldown timers, travel tracker, points monitor, clock, and debugging tools
 // @author       GitHub Copilot
 // @match        https://www.torn.com/*
@@ -23,7 +23,8 @@
 (function() {
     'use strict';
 
-    console.log("🚀 SIDEKICK MODULAR STARTING - " + new Date().toLocaleTimeString());
+    console.log("🚀 SIDEKICK MODULAR STARTING v4.2.1 - " + new Date().toLocaleTimeString());
+    console.log("🔧 FIXES APPLIED: Add menu toggle, notepad persistence, color fixes, flight tracker debug");
     
     // FORCE OVERRIDE NOTEPAD SYSTEM - SIMPLIFIED AND FIXED
     window.forceFixNotepads = function() {
@@ -1403,11 +1404,14 @@
             addComponentBtn.className = 'sidekick-add-component-btn';
             addComponentBtn.title = 'Add component (notepad, todo, etc.)';
             addComponentBtn.addEventListener('click', () => {
+                console.log("🔧 ADD BUTTON CLICKED - Toggle behavior active");
                 // Check if menu is already open and toggle it
                 const existingMenu = document.getElementById('sidekick-add-menu');
                 if (existingMenu) {
+                    console.log("🔧 Closing existing menu");
                     existingMenu.remove();
                 } else {
+                    console.log("🔧 Opening new menu");
                     showAddComponentDialog();
                 }
             });
