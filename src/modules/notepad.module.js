@@ -31,15 +31,29 @@
 
             init() {
                 console.log('📝 Initializing Notepad Module v3.6.0...');
+                this.core = window.SidekickModules.Core;
+                if (!this.core) {
+                    console.error('❌ Core module not available for Notepad');
+                    return;
+                }
                 this.loadNotepads();
+                this.refreshDisplay(); // Render any existing notepads
+                console.log('📝 Notepad module initialized, loaded', this.notepads.length, 'notepads');
             },
 
             loadNotepads() {
+                console.log('📝 Loading notepads...');
                 const pages = this.core.loadState(this.core.STORAGE_KEYS.SIDEBAR_PAGES, [{ notepads: [], todoLists: [], attackLists: [] }]);
+                console.log('📝 Loaded pages from storage:', pages);
                 this.currentPage = this.core.loadState(this.core.STORAGE_KEYS.CURRENT_PAGE, 0);
+                console.log('📝 Current page index:', this.currentPage);
 
                 if (pages[this.currentPage]) {
                     this.notepads = pages[this.currentPage].notepads || [];
+                    console.log('📝 Loaded notepads for current page:', this.notepads);
+                } else {
+                    console.log('📝 No data for current page, initializing empty');
+                    this.notepads = [];
                 }
             },
 
@@ -55,6 +69,7 @@
                     this.renderNotepad(notepad);
                 });
             },            saveNotepads() {
+                console.log('📝 Saving notepads...', this.notepads);
                 const pages = this.core.loadState(this.core.STORAGE_KEYS.SIDEBAR_PAGES, [{ notepads: [], todoLists: [], attackLists: [] }]);
                 
                 // Ensure current page exists
@@ -64,6 +79,7 @@
                 
                 pages[this.currentPage].notepads = this.notepads;
                 this.core.saveState(this.core.STORAGE_KEYS.SIDEBAR_PAGES, pages);
+                console.log('📝 Notepads saved to storage, total pages:', pages.length);
             },
 
             addNotepad(title = 'New Note') {

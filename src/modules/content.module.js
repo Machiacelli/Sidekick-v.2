@@ -51,6 +51,13 @@
             },
 
             showAddMenu() {
+                // Check if menu already exists and remove it (toggle behavior)
+                const existingMenu = document.getElementById('sidekick-add-menu');
+                if (existingMenu) {
+                    this.closeAddMenu();
+                    return;
+                }
+
                 const menu = document.createElement('div');
                 menu.id = 'sidekick-add-menu';
                 
@@ -223,9 +230,11 @@
             },
 
             addTravelTracker() {
-                if (window.createTravelTracker) {
-                    window.createTravelTracker();
+                if (window.SidekickModules?.FlightTracker?.addTravelTracker) {
+                    window.SidekickModules.FlightTracker.addTravelTracker();
+                    this.closeAddMenu();
                 } else {
+                    console.error('FlightTracker module not available');
                     NotificationSystem.show('Travel Tracker', 'Travel tracker module not loaded!', 'error');
                 }
             },
@@ -363,6 +372,7 @@
                     const contentTextarea = notepadElement.querySelector(`textarea[data-notepad-content-id="${notepad.id}"]`);
                     const header = notepadElement.querySelector('.notepad-header');
                     const closeBtn = notepadElement.querySelector('.close-btn');
+                    const removeBtn = closeBtn; // Use same variable for consistency
                     const dropdownBtn = notepadElement.querySelector('.dropdown-btn');
                     const dropdownContent = notepadElement.querySelector('.dropdown-content');
                     const pinBtn = notepadElement.querySelector('.pin-btn');
