@@ -113,22 +113,22 @@
                 const savedState = loadState('sidekick_show_points', false);
                 const stateConsistent = (this.showPoints === savedState);
                 
-                // Log every update for debugging
-                console.log(`� CLOCK UPDATE [${new Date().toLocaleTimeString()}]:`, {
-                    'this.showPoints': this.showPoints,
-                    'savedState': savedState,
-                    'stateConsistent': stateConsistent,
-                    'hasPointsData': !!this.pointsData,
-                    'currentTimeText': timeElement.textContent,
-                    'currentDateText': dateElement.textContent
-                });
+                // Log every update for debugging - DISABLED to prevent console spam
+                // console.log(`� CLOCK UPDATE [${new Date().toLocaleTimeString()}]:`, {
+                //     'this.showPoints': this.showPoints,
+                //     'savedState': savedState,
+                //     'stateConsistent': stateConsistent,
+                //     'hasPointsData': !!this.pointsData,
+                //     'currentTimeText': timeElement.textContent,
+                //     'currentDateText': dateElement.textContent
+                // });
 
                 // Detailed condition test removed to prevent console spam
 
                 // If state is inconsistent, log a warning but DON'T auto-correct
                 if (!stateConsistent) {
-                    console.warn('⚠️ STATE MISMATCH DETECTED - Internal:', this.showPoints, 'Saved:', savedState);
-                    console.warn('⚠️ NOT auto-correcting to avoid loops - manual investigation needed');
+                    // console.warn('⚠️ STATE MISMATCH DETECTED - Internal:', this.showPoints, 'Saved:', savedState);
+                    // console.warn('⚠️ NOT auto-correcting to avoid loops - manual investigation needed');
                 }
 
                 if (this.showPoints && this.pointsData && this.pointsData.length > 0) {
