@@ -15,6 +15,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@734e05c/src/modules/settings.module.js
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@734e05c/src/modules/clock.module.js
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@734e05c/src/modules/notepad.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@734e05c/src/modules/flight-tracker.module.js
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@734e05c/src/modules/global-functions.module.js
 // @run-at       document-end
 // ==/UserScript==
@@ -23,6 +24,653 @@
     'use strict';
 
     console.log("🚀 SIDEKICK MODULAR STARTING - " + new Date().toLocaleTimeString());
+    
+    // FORCE OVERRIDE NOTEPAD SYSTEM - SIMPLIFIED AND FIXED
+    window.forceFixNotepads = function() {
+        console.log("🔧 Force fixing notepads...");
+        
+        // Find all notepad elements
+        const notepads = document.querySelectorAll('[id*="notepad"], .sidebar-item, .simplified-notepad, .movable-notepad');
+        
+        notepads.forEach((notepad, index) => {
+            if (notepad.querySelector('textarea')) {
+                console.log("📝 Fixing notepad:", notepad.id);
+                
+                // Get saved layout or use defaults
+                const notepadId = notepad.id.replace('notepad-', '') || index;
+                const savedLayout = JSON.parse(localStorage.getItem(`notepad_${notepadId}_layout`) || '{}');
+                const savedContent = localStorage.getItem(`notepad_${notepadId}_content`) || '';
+                const savedColor = localStorage.getItem(`notepad_${notepadId}_color`) || '#333';
+                
+                // Get existing content if not saved
+                const existingTextarea = notepad.querySelector('textarea');
+                const content = savedContent || (existingTextarea ? existingTextarea.value : '');
+                
+                // COMPLETELY REBUILD with clean structure
+                notepad.innerHTML = '';
+                
+                // Apply clean styles
+                notepad.style.cssText = `
+                    position: absolute !important;
+                    left: ${savedLayout.x || (10 + index * 20)}px !important;
+                    top: ${savedLayout.y || (10 + index * 20)}px !important;
+                    width: ${savedLayout.width || 280}px !important;
+                    height: ${savedLayout.height || 150}px !important;
+                    background: #2a2a2a !important;
+                    border: 1px solid #444 !important;
+                    border-radius: 8px !important;
+                    display: block !important;
+                    min-width: 200px !important;
+                    min-height: 100px !important;
+                    max-width: 350px !important;
+                    max-height: 400px !important;
+                    z-index: ${1000 + index} !important;
+                    resize: both !important;
+                    overflow: hidden !important;
+                    box-sizing: border-box !important;
+                `;
+                
+                // Create header with saved color
+                const header = document.createElement('div');
+                header.className = 'notepad-header';
+                header.style.cssText = `
+                    background: ${savedColor} !important;
+                    border-bottom: 1px solid #555 !important;
+                    padding: 4px 8px !important;
+                    display: flex !important;
+                    justify-content: space-between !important;
+                    align-items: center !important;
+                    cursor: move !important;
+                    height: 20px !important;
+                    user-select: none !important;
+                    border-radius: 7px 7px 0 0 !important;
+                    box-sizing: border-box !important;
+                `;
+                
+                // Create dropdown container
+                const dropdownContainer = document.createElement('div');
+                dropdownContainer.style.cssText = `
+                    position: relative !important;
+                    display: flex !important;
+                    align-items: center !important;
+                `;
+                
+                const dropdownArrow = document.createElement('span');
+                dropdownArrow.innerHTML = '▼';
+                dropdownArrow.style.cssText = `
+                    color: #bbb !important;
+                    font-size: 10px !important;
+                    cursor: pointer !important;
+                    user-select: none !important;
+                `;
+                
+                const dropdownMenu = document.createElement('div');
+                dropdownMenu.style.cssText = `
+                    position: absolute !important;
+                    top: 18px !important;
+                    left: 0 !important;
+                    background: #333 !important;
+                    border: 1px solid #555 !important;
+                    border-radius: 4px !important;
+                    min-width: 120px !important;
+                    display: none !important;
+                    z-index: 9999 !important;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+                `;
+                
+                const pinOption = document.createElement('div');
+                pinOption.innerHTML = '📌 Pin';
+                pinOption.style.cssText = `
+                    padding: 6px 10px !important;
+                    color: #fff !important;
+                    cursor: pointer !important;
+                    font-size: 11px !important;
+                    border-bottom: 1px solid #555 !important;
+                `;
+                
+                const colorOption = document.createElement('div');
+                colorOption.innerHTML = '🎨 Color';
+                colorOption.style.cssText = `
+                    padding: 6px 10px !important;
+                    color: #fff !important;
+                    cursor: pointer !important;
+                    font-size: 11px !important;
+                `;
+                
+                dropdownMenu.appendChild(pinOption);
+                dropdownMenu.appendChild(colorOption);
+                dropdownContainer.appendChild(dropdownArrow);
+                dropdownContainer.appendChild(dropdownMenu);
+                
+                // Create close button
+                const closeBtn = document.createElement('button');
+                closeBtn.innerHTML = '×';
+                closeBtn.style.cssText = `
+                    background: none !important;
+                    border: none !important;
+                    color: #f44336 !important;
+                    cursor: pointer !important;
+                    font-size: 14px !important;
+                    font-weight: bold !important;
+                    padding: 0 !important;
+                    width: 16px !important;
+                    height: 16px !important;
+                `;
+                
+                header.appendChild(dropdownContainer);
+                header.appendChild(closeBtn);
+                
+                // Create textarea
+                const textarea = document.createElement('textarea');
+                textarea.placeholder = 'Write your notes here...';
+                textarea.value = content;
+                textarea.style.cssText = `
+                    width: 100% !important;
+                    height: calc(100% - 28px) !important;
+                    background: transparent !important;
+                    border: none !important;
+                    color: #fff !important;
+                    padding: 8px !important;
+                    font-size: 13px !important;
+                    font-family: inherit !important;
+                    resize: none !important;
+                    outline: none !important;
+                    line-height: 1.4 !important;
+                    box-sizing: border-box !important;
+                    margin: 0 !important;
+                    border-radius: 0 0 7px 7px !important;
+                `;
+                
+                // Assemble notepad
+                notepad.appendChild(header);
+                notepad.appendChild(textarea);
+                
+                // FUNCTIONALITY - Dragging with fixed offset
+                let isDragging = false;
+                let dragOffset = { x: 0, y: 0 };
+                
+                header.addEventListener('mousedown', (e) => {
+                    if (e.target === dropdownArrow || e.target === closeBtn || dropdownMenu.contains(e.target)) {
+                        return;
+                    }
+                    
+                    isDragging = true;
+                    // Fix the drag offset calculation
+                    const headerRect = header.getBoundingClientRect();
+                    dragOffset.x = e.clientX - headerRect.left;
+                    dragOffset.y = e.clientY - headerRect.top;
+                    notepad.style.zIndex = '2000';
+                    e.preventDefault();
+                });
+                
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    
+                    const sidebar = document.getElementById('sidekick-sidebar');
+                    if (!sidebar) return;
+                    
+                    const sidebarRect = sidebar.getBoundingClientRect();
+                    // Use header-relative positioning for smooth dragging
+                    let newX = e.clientX - sidebarRect.left - dragOffset.x;
+                    let newY = e.clientY - sidebarRect.top - dragOffset.y;
+                    
+                    // Keep within bounds
+                    const padding = 5;
+                    const maxX = sidebar.offsetWidth - notepad.offsetWidth - padding;
+                    const maxY = sidebar.offsetHeight - notepad.offsetHeight - padding;
+                    
+                    newX = Math.max(padding, Math.min(newX, maxX));
+                    newY = Math.max(padding, Math.min(newY, maxY));
+                    
+                    notepad.style.left = newX + 'px';
+                    notepad.style.top = newY + 'px';
+                });
+                
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        notepad.style.zIndex = (1000 + index).toString();
+                        
+                        // Save position and size
+                        const layout = {
+                            x: parseInt(notepad.style.left),
+                            y: parseInt(notepad.style.top),
+                            width: notepad.offsetWidth,
+                            height: notepad.offsetHeight
+                        };
+                        localStorage.setItem(`notepad_${notepadId}_layout`, JSON.stringify(layout));
+                    }
+                });
+                
+                // Close button
+                closeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (confirm('Delete this notepad?')) {
+                        notepad.remove();
+                        localStorage.removeItem(`notepad_${notepadId}_layout`);
+                        localStorage.removeItem(`notepad_${notepadId}_content`);
+                        localStorage.removeItem(`notepad_${notepadId}_color`);
+                    }
+                });
+                
+                // Dropdown functionality
+                dropdownArrow.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isVisible = dropdownMenu.style.display === 'block';
+                    dropdownMenu.style.display = isVisible ? 'none' : 'block';
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!notepad.contains(e.target)) {
+                        dropdownMenu.style.display = 'none';
+                    }
+                });
+                
+                // Pin functionality
+                let isPinned = savedLayout.pinned || false;
+                pinOption.innerHTML = isPinned ? '📍 Unpin' : '📌 Pin';
+                if (isPinned) {
+                    notepad.style.resize = 'none';
+                    header.style.cursor = 'default';
+                } else {
+                    notepad.style.resize = 'both';
+                    header.style.cursor = 'move';
+                }
+                
+                pinOption.addEventListener('click', () => {
+                    isPinned = !isPinned;
+                    pinOption.innerHTML = isPinned ? '📍 Unpin' : '📌 Pin';
+                    dropdownMenu.style.display = 'none';
+                    
+                    if (isPinned) {
+                        notepad.style.resize = 'none';
+                        header.style.cursor = 'default';
+                    } else {
+                        notepad.style.resize = 'both';
+                        header.style.cursor = 'move';
+                    }
+                    
+                    // Save pin state
+                    const layout = JSON.parse(localStorage.getItem(`notepad_${notepadId}_layout`) || '{}');
+                    layout.pinned = isPinned;
+                    localStorage.setItem(`notepad_${notepadId}_layout`, JSON.stringify(layout));
+                });
+                
+                // Color functionality
+                colorOption.addEventListener('click', () => {
+                    dropdownMenu.style.display = 'none';
+                    
+                    // Create color picker popup
+                    const colorPicker = document.createElement('div');
+                    colorPicker.style.cssText = `
+                        position: absolute !important;
+                        top: 25px !important;
+                        left: 0 !important;
+                        background: #333 !important;
+                        border: 1px solid #555 !important;
+                        border-radius: 4px !important;
+                        padding: 8px !important;
+                        display: grid !important;
+                        grid-template-columns: repeat(4, 20px) !important;
+                        gap: 4px !important;
+                        z-index: 9999 !important;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+                    `;
+                    
+                    const colors = ['#333', '#4CAF50', '#2196F3', '#FF9800', '#f44336', '#9C27B0', '#607D8B', '#795548'];
+                    
+                    colors.forEach(color => {
+                        const colorBtn = document.createElement('div');
+                        colorBtn.style.cssText = `
+                            width: 20px !important;
+                            height: 20px !important;
+                            background: ${color} !important;
+                            border: 1px solid #666 !important;
+                            border-radius: 3px !important;
+                            cursor: pointer !important;
+                        `;
+                        
+                        if (color === savedColor) {
+                            colorBtn.style.border = '2px solid #fff !important';
+                        }
+                        
+                        colorBtn.addEventListener('click', () => {
+                            header.style.background = color + ' !important';
+                            localStorage.setItem(`notepad_${notepadId}_color`, color);
+                            colorPicker.remove();
+                        });
+                        
+                        colorPicker.appendChild(colorBtn);
+                    });
+                    
+                    dropdownContainer.appendChild(colorPicker);
+                    
+                    // Remove color picker when clicking outside
+                    setTimeout(() => {
+                        document.addEventListener('click', function removeColorPicker(e) {
+                            if (!colorPicker.contains(e.target)) {
+                                colorPicker.remove();
+                                document.removeEventListener('click', removeColorPicker);
+                            }
+                        });
+                    }, 100);
+                });
+                
+                // Hover effects for dropdown items
+                [pinOption, colorOption].forEach(item => {
+                    item.addEventListener('mouseenter', () => item.style.background = '#444');
+                    item.addEventListener('mouseleave', () => item.style.background = 'transparent');
+                });
+                
+                // Save content on changes
+                textarea.addEventListener('input', () => {
+                    localStorage.setItem(`notepad_${notepadId}_content`, textarea.value);
+                });
+                
+                // Save size changes on resize
+                const resizeObserver = new ResizeObserver(() => {
+                    const layout = {
+                        x: parseInt(notepad.style.left),
+                        y: parseInt(notepad.style.top),
+                        width: notepad.offsetWidth,
+                        height: notepad.offsetHeight,
+                        pinned: isPinned
+                    };
+                    localStorage.setItem(`notepad_${notepadId}_layout`, JSON.stringify(layout));
+                });
+                resizeObserver.observe(notepad);
+                
+                console.log("✅ Notepad rebuilt successfully:", notepadId);
+            }
+        });
+    };
+    
+    // Function to create new notepads
+    window.createNewNotepad = function(content = '') {
+        const sidebar = document.getElementById('sidekick-sidebar');
+        const contentArea = document.getElementById('sidekick-content');
+        if (!sidebar || !contentArea) return;
+        
+        const notepadId = Date.now() + Math.random();
+        const notepad = document.createElement('div');
+        notepad.id = `notepad-${notepadId}`;
+        notepad.className = 'sidebar-item movable-notepad';
+        
+        // Add basic textarea
+        notepad.innerHTML = `<textarea>${content}</textarea>`;
+        contentArea.appendChild(notepad);
+        
+        // Force fix this notepad
+        setTimeout(() => {
+            window.forceFixNotepads();
+        }, 100);
+    };
+    
+    // Function to create flight tracker
+    window.createFlightTracker = function() {
+        const sidebar = document.getElementById('sidekick-sidebar');
+        const contentArea = document.getElementById('sidekick-content');
+        if (!sidebar || !contentArea) return;
+        
+        const trackerId = Date.now() + Math.random();
+        const savedLayout = JSON.parse(localStorage.getItem(`flighttracker_${trackerId}_layout`) || '{}');
+        
+        const tracker = document.createElement('div');
+        tracker.id = `flighttracker-${trackerId}`;
+        tracker.className = 'sidebar-item flight-tracker';
+        tracker.style.cssText = `
+            position: absolute !important;
+            left: ${savedLayout.x || 50}px !important;
+            top: ${savedLayout.y || 50}px !important;
+            width: ${savedLayout.width || 300}px !important;
+            height: ${savedLayout.height || 180}px !important;
+            background: #2a2a2a !important;
+            border: 1px solid #444 !important;
+            border-radius: 8px !important;
+            display: block !important;
+            min-width: 250px !important;
+            min-height: 150px !important;
+            max-width: 400px !important;
+            max-height: 300px !important;
+            z-index: 1000 !important;
+            resize: both !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
+        `;
+        
+        // Create header
+        const header = document.createElement('div');
+        header.style.cssText = `
+            background: #1976D2 !important;
+            border-bottom: 1px solid #555 !important;
+            padding: 4px 8px !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            cursor: move !important;
+            height: 20px !important;
+            user-select: none !important;
+            border-radius: 7px 7px 0 0 !important;
+            box-sizing: border-box !important;
+        `;
+        
+        const title = document.createElement('span');
+        title.innerHTML = '✈️ Flight Tracker';
+        title.style.cssText = `
+            color: #fff !important;
+            font-size: 11px !important;
+            font-weight: bold !important;
+        `;
+        
+        const closeBtn = document.createElement('button');
+        closeBtn.innerHTML = '×';
+        closeBtn.style.cssText = `
+            background: none !important;
+            border: none !important;
+            color: #fff !important;
+            cursor: pointer !important;
+            font-size: 14px !important;
+            font-weight: bold !important;
+            padding: 0 !important;
+            width: 16px !important;
+            height: 16px !important;
+        `;
+        
+        header.appendChild(title);
+        header.appendChild(closeBtn);
+        
+        // Create content area
+        const content = document.createElement('div');
+        content.style.cssText = `
+            padding: 12px !important;
+            height: calc(100% - 28px) !important;
+            overflow-y: auto !important;
+            color: #fff !important;
+            font-size: 12px !important;
+        `;
+        
+        content.innerHTML = `
+            <div style="margin-bottom: 8px;">
+                <strong>Flight Status:</strong> <span id="flight-status-${trackerId}" style="color: #4CAF50;">Checking...</span>
+            </div>
+            <div style="margin-bottom: 8px;">
+                <strong>Destination:</strong> <span id="flight-destination-${trackerId}">Unknown</span>
+            </div>
+            <div style="margin-bottom: 8px;">
+                <strong>Time Remaining:</strong> <span id="flight-time-${trackerId}">--:--:--</span>
+            </div>
+            <div style="margin-bottom: 8px;">
+                <strong>Landing:</strong> <span id="flight-landing-${trackerId}">--</span>
+            </div>
+            <div style="text-align: center; margin-top: 12px;">
+                <button id="refresh-flight-${trackerId}" style="background: #4CAF50; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">🔄 Refresh</button>
+            </div>
+        `;
+        
+        tracker.appendChild(header);
+        tracker.appendChild(content);
+        contentArea.appendChild(tracker);
+        
+        // Add drag functionality
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+        
+        header.addEventListener('mousedown', (e) => {
+            if (e.target === closeBtn) return;
+            
+            isDragging = true;
+            const headerRect = header.getBoundingClientRect();
+            dragOffset.x = e.clientX - headerRect.left;
+            dragOffset.y = e.clientY - headerRect.top;
+            tracker.style.zIndex = '2000';
+            e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            
+            const sidebar = document.getElementById('sidekick-sidebar');
+            if (!sidebar) return;
+            
+            const sidebarRect = sidebar.getBoundingClientRect();
+            let newX = e.clientX - sidebarRect.left - dragOffset.x;
+            let newY = e.clientY - sidebarRect.top - dragOffset.y;
+            
+            const padding = 5;
+            const maxX = sidebar.offsetWidth - tracker.offsetWidth - padding;
+            const maxY = sidebar.offsetHeight - tracker.offsetHeight - padding;
+            
+            newX = Math.max(padding, Math.min(newX, maxX));
+            newY = Math.max(padding, Math.min(newY, maxY));
+            
+            tracker.style.left = newX + 'px';
+            tracker.style.top = newY + 'px';
+        });
+        
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                tracker.style.zIndex = '1000';
+                
+                // Save position
+                const layout = {
+                    x: parseInt(tracker.style.left),
+                    y: parseInt(tracker.style.top),
+                    width: tracker.offsetWidth,
+                    height: tracker.offsetHeight
+                };
+                localStorage.setItem(`flighttracker_${trackerId}_layout`, JSON.stringify(layout));
+            }
+        });
+        
+        // Close button functionality
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (confirm('Remove flight tracker?')) {
+                tracker.remove();
+                localStorage.removeItem(`flighttracker_${trackerId}_layout`);
+            }
+        });
+        
+        // Flight tracking functionality
+        async function updateFlightStatus() {
+            const apiKey = localStorage.getItem('sidekick_api_key');
+            if (!apiKey) {
+                document.getElementById(`flight-status-${trackerId}`).innerHTML = '<span style="color: #f44336;">API Key Required</span>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`https://api.torn.com/user/?selections=travel&key=${apiKey}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    document.getElementById(`flight-status-${trackerId}`).innerHTML = '<span style="color: #f44336;">API Error</span>';
+                    return;
+                }
+                
+                const travel = data.travel;
+                const statusEl = document.getElementById(`flight-status-${trackerId}`);
+                const destinationEl = document.getElementById(`flight-destination-${trackerId}`);
+                const timeEl = document.getElementById(`flight-time-${trackerId}`);
+                const landingEl = document.getElementById(`flight-landing-${trackerId}`);
+                
+                if (travel.departed === 0) {
+                    statusEl.innerHTML = '<span style="color: #666;">Not Traveling</span>';
+                    destinationEl.textContent = 'None';
+                    timeEl.textContent = '--:--:--';
+                    landingEl.textContent = '--';
+                } else {
+                    const timeRemaining = travel.time_left;
+                    const destination = travel.destination;
+                    
+                    statusEl.innerHTML = '<span style="color: #4CAF50;">In Flight</span>';
+                    destinationEl.textContent = destination;
+                    
+                    if (timeRemaining > 0) {
+                        const hours = Math.floor(timeRemaining / 3600);
+                        const minutes = Math.floor((timeRemaining % 3600) / 60);
+                        const seconds = timeRemaining % 60;
+                        timeEl.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                        
+                        const landingTime = new Date(Date.now() + timeRemaining * 1000);
+                        landingEl.textContent = landingTime.toLocaleTimeString();
+                    } else {
+                        statusEl.innerHTML = '<span style="color: #FF9800;">Landing...</span>';
+                        timeEl.textContent = '00:00:00';
+                        landingEl.textContent = 'Now';
+                    }
+                }
+                
+            } catch (error) {
+                document.getElementById(`flight-status-${trackerId}`).innerHTML = '<span style="color: #f44336;">Connection Error</span>';
+            }
+        }
+        
+        // Refresh button
+        document.getElementById(`refresh-flight-${trackerId}`).addEventListener('click', updateFlightStatus);
+        
+        // Auto-update every 30 seconds
+        updateFlightStatus();
+        const updateInterval = setInterval(updateFlightStatus, 30000);
+        
+        // Clean up interval when tracker is removed
+        const originalRemove = tracker.remove;
+        tracker.remove = function() {
+            clearInterval(updateInterval);
+            originalRemove.call(this);
+        };
+        
+        console.log("✈️ Flight tracker created:", trackerId);
+    };
+    
+    // Debug function to see what's happening
+    window.debugNotepads = function() {
+        console.log("🔍 DEBUGGING NOTEPADS:");
+        const allElements = document.querySelectorAll('[id*="notepad"], .sidebar-item, .simplified-notepad, .movable-notepad');
+        allElements.forEach((el, i) => {
+            console.log(`Element ${i}:`, {
+                id: el.id,
+                className: el.className,
+                hasTextarea: !!el.querySelector('textarea'),
+                innerHTML: el.innerHTML.substring(0, 100) + '...'
+            });
+        });
+    };
+    
+    // Test function to create a notepad for testing
+    window.testCreateNotepad = function() {
+        console.log("🧪 Creating test notepad...");
+        window.createNewNotepad("This is a test notepad!\n\nYou should be able to:\n✅ Type in this area\n✅ Drag the window by the header\n✅ Resize the window\n✅ Use the dropdown menu\n✅ Close with the × button");
+    };
+    
+    // Auto-fix notepads every 2 seconds
+    setInterval(() => {
+        if (document.getElementById('sidekick-sidebar')) {
+            window.forceFixNotepads();
+        }
+    }, 2000);
     
     // Test basic functionality
     console.log('🧪 Testing modular system...');
@@ -53,48 +701,10 @@
             box-shadow: none !important;
         }
         
-        /* NOTEPAD SINGLE WRITEABLE AREA - SIDEBAR ONLY */
-        #sidekick-sidebar .simplified-notepad, 
-        #sidekick-sidebar .sidebar-item.simplified-notepad {
-            background: transparent !important;
-            border: none !important;
-            padding: 0px !important;
-            margin-bottom: 12px !important;
-            min-height: 120px !important;
+        /* FORCE BOUNDARY CONSTRAINTS */
+        #sidekick-content {
             position: relative !important;
-        }
-        
-        #sidekick-sidebar .simplified-notepad textarea, 
-        #sidekick-sidebar .sidebar-item.simplified-notepad textarea,
-        #sidekick-sidebar [data-notepad-id] {
-            width: 100% !important; 
-            height: 100% !important; 
-            background: #2a2a2a !important; 
-            border: 1px solid #444 !important; 
-            color: #fff !important; 
-            padding: 12px !important; 
-            border-radius: 8px !important; 
-            font-size: 13px !important; 
-            resize: both !important; 
-            font-family: inherit !important; 
-            box-sizing: border-box !important; 
-            outline: none !important; 
-            margin: 0 !important;
-            min-height: 100px !important;
-        }
-        
-        #sidekick-sidebar .simplified-notepad textarea:focus, 
-        #sidekick-sidebar [data-notepad-id]:focus {
-            border-color: #66BB6A !important;
-            box-shadow: 0 0 0 2px rgba(102, 187, 106, 0.2) !important;
-        }
-        
-        /* HIDE NOTEPAD HEADERS ONLY IN SIDEBAR */
-        #sidekick-sidebar .notepad-header, 
-        #sidekick-sidebar .notepad-title, 
-        #sidekick-sidebar .sidebar-item-header,
-        #sidekick-sidebar .sidekick-panel-header {
-            display: none !important;
+            overflow: hidden !important;
         }
 
         /* COMPACT HAMBURGER BUTTON */
@@ -469,7 +1079,7 @@
 
     // Wait for all modules to be loaded
     function waitForModules(callback) {
-        const requiredModules = ['Core', 'UI', 'Content', 'Settings', 'Notepad'];
+        const requiredModules = ['Core', 'UI', 'Content', 'Settings', 'Notepad', 'FlightTracker'];
         const checkModules = () => {
             const loadedModules = requiredModules.filter(module => 
                 window.SidekickModules && window.SidekickModules[module]
@@ -1938,6 +2548,15 @@
                     }
                 },
                 { 
+                    icon: '✈️', 
+                    text: 'Add Flight Tracker', 
+                    color: '#1976D2',
+                    action: () => {
+                        window.createFlightTracker();
+                        menu.remove();
+                    }
+                },
+                { 
                     icon: '✅', 
                     text: 'Add Todo List', 
                     color: '#4CAF50',
@@ -2044,6 +2663,12 @@
                 if (window.SidekickModules.Content.restoreSavedContent) {
                     window.SidekickModules.Content.restoreSavedContent();
                     console.log('📋 Content restored');
+                }
+                
+                // Initialize FlightTracker module
+                if (window.SidekickModules.FlightTracker && window.SidekickModules.FlightTracker.init) {
+                    window.SidekickModules.FlightTracker.init();
+                    console.log('✈️ FlightTracker module initialized');
                 }
                 
                 console.log('✅ Sidekick Modular initialization complete!');
