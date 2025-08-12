@@ -347,6 +347,13 @@
                             header.style.background = color + ' !important';
                             localStorage.setItem(`notepad_${notepadId}_color`, color);
                             colorPicker.remove();
+                            
+                            // Force rebuild this specific notepad to apply the new color properly
+                            setTimeout(() => {
+                                // Temporarily remove the notepad-header class to force rebuild
+                                header.classList.remove('notepad-header');
+                                window.forceFixNotepads();
+                            }, 100);
                         });
                         
                         colorPicker.appendChild(colorBtn);
@@ -435,12 +442,26 @@
         window.createNewNotepad("This is a test notepad!\n\nYou should be able to:\n✅ Type in this area\n✅ Drag the window by the header\n✅ Resize the window\n✅ Use the dropdown menu\n✅ Close with the × button");
     };
     
-    // Auto-fix notepads every 2 seconds
+    // Auto-fix notepads every 1 second for better persistence
     setInterval(() => {
         if (document.getElementById('sidekick-sidebar')) {
             window.forceFixNotepads();
         }
-    }, 2000);
+    }, 1000);
+    
+    // Also run forceFixNotepads on page navigation events
+    let lastUrl = window.location.href;
+    setInterval(() => {
+        if (window.location.href !== lastUrl) {
+            lastUrl = window.location.href;
+            console.log('🔄 Page navigation detected, fixing notepads...');
+            setTimeout(() => {
+                if (window.forceFixNotepads) {
+                    window.forceFixNotepads();
+                }
+            }, 500);
+        }
+    }, 500);
     
     // Test basic functionality
     console.log('🧪 Testing modular system...');
@@ -1382,7 +1403,13 @@
             addComponentBtn.className = 'sidekick-add-component-btn';
             addComponentBtn.title = 'Add component (notepad, todo, etc.)';
             addComponentBtn.addEventListener('click', () => {
-                showAddComponentDialog();
+                // Check if menu is already open and toggle it
+                const existingMenu = document.getElementById('sidekick-add-menu');
+                if (existingMenu) {
+                    existingMenu.remove();
+                } else {
+                    showAddComponentDialog();
+                }
             });
             
             componentControls.appendChild(addComponentBtn);
@@ -2322,7 +2349,18 @@
                     text: 'Add Flight Tracker', 
                     color: '#1976D2',
                     action: () => {
-                        window.createFlightTracker();
+                        console.log('🔍 Flight tracker button clicked');
+                        console.log('🔍 window.createFlightTracker exists:', typeof window.createFlightTracker);
+                        console.log('🔍 FlightTracker module:', window.SidekickModules?.FlightTracker);
+                        
+                        if (window.createFlightTracker) {
+                            window.createFlightTracker();
+                        } else if (window.SidekickModules?.FlightTracker?.createFlightTracker) {
+                            window.SidekickModules.FlightTracker.createFlightTracker();
+                        } else {
+                            console.error('❌ Flight tracker function not available');
+                            window.NotificationSystem?.show('Error', 'Flight tracker module not loaded', 'error');
+                        }
                         menu.remove();
                     }
                 },
@@ -2433,6 +2471,12 @@
                 if (window.SidekickModules.Content.restoreSavedContent) {
                     window.SidekickModules.Content.restoreSavedContent();
                     console.log('📋 Content restored');
+                }
+                
+                // Force fix notepads to ensure proper formatting after content restoration
+                if (window.forceFixNotepads) {
+                    window.forceFixNotepads();
+                    console.log('🔧 Notepads force-fixed after content restoration');
                 }
                 
                 // Initialize FlightTracker module
