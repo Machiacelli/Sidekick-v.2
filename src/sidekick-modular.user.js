@@ -29,23 +29,24 @@
     // FORCE OVERRIDE NOTEPAD SYSTEM - SIMPLIFIED AND FIXED
     window.forceFixNotepads = function() {
         // Only log occasionally to reduce spam
-        const shouldLog = Math.random() < 0.1; // Only log 10% of the time
+        const shouldLog = Math.random() < 0.05; // Only log 5% of the time
         if (shouldLog) console.log("🔧 Force fixing notepads...");
         
-        // Find all notepad elements - be more specific to avoid false positives
-        const notepads = document.querySelectorAll('[id^="notepad-"], .sidebar-item[id*="notepad"]');
+        // Find all notepad elements
+        const notepads = document.querySelectorAll('[id*="notepad"], .sidebar-item, .simplified-notepad, .movable-notepad');
         
-        // Only process notepads that actually exist and have content
-        let processedCount = 0;
         notepads.forEach((notepad, index) => {
-            if (notepad.querySelector('textarea') && notepad.id) {
-                // Check if notepad is already properly formatted (has our header structure)
-                if (notepad.querySelector('.notepad-header') && notepad.style.position === 'absolute') {
-                    // Already fixed, skip rebuilding
+            if (notepad.querySelector('textarea')) {
+                // Skip if already properly formatted AND has our complete structure
+                const hasHeader = notepad.querySelector('.notepad-header');
+                const hasDropdown = notepad.querySelector('.dropdown-menu');
+                const isAbsolute = notepad.style.position === 'absolute';
+                
+                if (hasHeader && hasDropdown && isAbsolute) {
+                    // Already fully fixed, skip rebuilding
                     return;
                 }
                 
-                processedCount++;
                 if (shouldLog) console.log("📝 Fixing notepad:", notepad.id);
                 
                 // Get saved layout or use defaults
@@ -117,10 +118,292 @@
                 `;
                 
                 const dropdownMenu = document.createElement('div');
+                dropdownMenu.className = 'dropdown-menu';
                 dropdownMenu.style.cssText = `
                     position: absolute !important;
                     top: 18px !important;
                     left: 0 !important;
+                    background: #333 !important;
+                    border: 1px solid #555 !important;
+                    border-radius: 4px !important;
+                    padding: 4px 0 !important;
+                    display: none !important;
+                    z-index: 9999 !important;
+                    min-width: 120px !important;
+                `;
+                
+                // Create close button
+                const closeBtn = document.createElement('span');
+                closeBtn.innerHTML = '×';
+                closeBtn.style.cssText = `
+                    color: #bbb !important;
+                    font-size: 14px !important;
+                    cursor: pointer !important;
+                    user-select: none !important;
+                    font-weight: bold !important;
+                `;
+                
+                // Pin option
+                const pinOption = document.createElement('div');
+                pinOption.style.cssText = `
+                    padding: 6px 12px !important;
+                    cursor: pointer !important;
+                    font-size: 11px !important;
+                    color: #fff !important;
+                `;
+                
+                // Color option
+                const colorOption = document.createElement('div');
+                colorOption.innerHTML = '🎨 Change Color';
+                colorOption.style.cssText = `
+                    padding: 6px 12px !important;
+                    cursor: pointer !important;
+                    font-size: 11px !important;
+                    color: #fff !important;
+                `;
+                
+                dropdownMenu.appendChild(pinOption);
+                dropdownMenu.appendChild(colorOption);
+                dropdownContainer.appendChild(dropdownArrow);
+                dropdownContainer.appendChild(dropdownMenu);
+                
+                header.appendChild(dropdownContainer);
+                header.appendChild(closeBtn);
+                
+                // Create textarea
+                const textarea = document.createElement('textarea');
+                textarea.value = content;
+                textarea.style.cssText = `
+                    width: 100% !important;
+                    height: calc(100% - 28px) !important;
+                    background: transparent !important;
+                    border: none !important;
+                    color: #fff !important;
+                    font-family: monospace !important;
+                    font-size: 12px !important;
+                    padding: 8px !important;
+                    resize: none !important;
+                    outline: none !important;
+                    box-sizing: border-box !important;
+                `;
+                
+                notepad.appendChild(header);
+                notepad.appendChild(textarea);
+                
+                // Color option functionality
+                colorOption.addEventListener('click', () => {
+                    // Remove existing color picker
+                    const existingPicker = document.querySelector('.color-picker');
+                    if (existingPicker) existingPicker.remove();
+                    
+                    // Create color picker popup
+                    const colorPicker = document.createElement('div');
+                    colorPicker.className = 'color-picker';
+                    colorPicker.style.cssText = `
+                        position: absolute !important;
+                        top: 25px !important;
+                        left: 0 !important;
+                        background: #333 !important;
+                        border: 1px solid #555 !important;
+                        border-radius: 4px !important;
+                        padding: 8px !important;
+                        display: grid !important;
+                        grid-template-columns: repeat(4, 20px) !important;
+                        gap: 4px !important;
+                        z-index: 9999 !important;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+                    `;
+                    
+                    const colors = ['#333', '#4CAF50', '#2196F3', '#FF9800', '#f44336', '#9C27B0', '#607D8B', '#795548'];
+                    
+                    colors.forEach(color => {
+                        const colorBtn = document.createElement('div');
+                        colorBtn.style.cssText = `
+                            width: 20px !important;
+                            height: 20px !important;
+                            background: ${color} !important;
+                            border: 1px solid #666 !important;
+                            border-radius: 3px !important;
+                            cursor: pointer !important;
+                        `;
+                        
+                        if (color === savedColor) {
+                            colorBtn.style.border = '2px solid #fff !important';
+                        }
+                        
+                        colorBtn.addEventListener('click', () => {
+                            header.style.background = color + ' !important';
+                            localStorage.setItem(`notepad_${notepadId}_color`, color);
+                            colorPicker.remove();
+                            
+                            // Force rebuild this specific notepad to apply the new color properly
+                            setTimeout(() => {
+                                // Temporarily remove the notepad-header class to force rebuild
+                                header.classList.remove('notepad-header');
+                                window.forceFixNotepads();
+                            }, 100);
+                        });
+                        
+                        colorPicker.appendChild(colorBtn);
+                    });
+                    
+                    dropdownContainer.appendChild(colorPicker);
+                    
+                    // Remove color picker when clicking outside
+                    setTimeout(() => {
+                        document.addEventListener('click', function removeColorPicker(e) {
+                            if (!colorPicker.contains(e.target)) {
+                                colorPicker.remove();
+                                document.removeEventListener('click', removeColorPicker);
+                            }
+                        });
+                    }, 100);
+                });
+                
+                // Dropdown functionality
+                dropdownArrow.addEventListener('click', () => {
+                    const isVisible = dropdownMenu.style.display === 'block';
+                    dropdownMenu.style.display = isVisible ? 'none' : 'block';
+                });
+                
+                // Close dropdown when clicking outside (but not on color picker)
+                document.addEventListener('click', (e) => {
+                    if (!notepad.contains(e.target) && !e.target.closest('.color-picker')) {
+                        dropdownMenu.style.display = 'none';
+                    }
+                });
+                
+                // Pin functionality
+                let isPinned = savedLayout.pinned || false;
+                pinOption.innerHTML = isPinned ? '📍 Unpin' : '📌 Pin';
+                if (isPinned) {
+                    notepad.style.resize = 'none';
+                    header.style.cursor = 'default';
+                } else {
+                    notepad.style.resize = 'both';
+                    header.style.cursor = 'move';
+                }
+                
+                pinOption.addEventListener('click', () => {
+                    isPinned = !isPinned;
+                    pinOption.innerHTML = isPinned ? '📍 Unpin' : '📌 Pin';
+                    dropdownMenu.style.display = 'none';
+                    
+                    if (isPinned) {
+                        notepad.style.resize = 'none';
+                        header.style.cursor = 'default';
+                    } else {
+                        notepad.style.resize = 'both';
+                        header.style.cursor = 'move';
+                    }
+                    
+                    // Save pin state
+                    const layout = {
+                        x: parseInt(notepad.style.left),
+                        y: parseInt(notepad.style.top),
+                        width: notepad.offsetWidth,
+                        height: notepad.offsetHeight,
+                        pinned: isPinned
+                    };
+                    localStorage.setItem(`notepad_${notepadId}_layout`, JSON.stringify(layout));
+                });
+                
+                // Close button functionality
+                closeBtn.addEventListener('click', () => {
+                    if (confirm('Remove this notepad?')) {
+                        notepad.remove();
+                        localStorage.removeItem(`notepad_${notepadId}_content`);
+                        localStorage.removeItem(`notepad_${notepadId}_layout`);
+                        localStorage.removeItem(`notepad_${notepadId}_color`);
+                    }
+                });
+                
+                // FUNCTIONALITY - Dragging with fixed offset
+                let isDragging = false;
+                let dragOffset = { x: 0, y: 0 };
+                
+                header.addEventListener('mousedown', (e) => {
+                    if (e.target === dropdownArrow || e.target === closeBtn || dropdownMenu.contains(e.target)) {
+                        return;
+                    }
+                    
+                    isDragging = true;
+                    // Fix the drag offset calculation - use notepad position, not header
+                    const notepadRect = notepad.getBoundingClientRect();
+                    const sidebarRect = document.getElementById('sidekick-sidebar').getBoundingClientRect();
+                    dragOffset.x = e.clientX - notepadRect.left;
+                    dragOffset.y = e.clientY - notepadRect.top;
+                    notepad.style.zIndex = '2000';
+                    e.preventDefault();
+                });
+                
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    
+                    const sidebar = document.getElementById('sidekick-sidebar');
+                    if (!sidebar) return;
+                    
+                    const sidebarRect = sidebar.getBoundingClientRect();
+                    // Use header-relative positioning for smooth dragging
+                    let newX = e.clientX - sidebarRect.left - dragOffset.x;
+                    let newY = e.clientY - sidebarRect.top - dragOffset.y;
+                    
+                    // Keep within bounds
+                    const padding = 5;
+                    const maxX = sidebar.offsetWidth - notepad.offsetWidth - padding;
+                    const maxY = sidebar.offsetHeight - notepad.offsetHeight - padding;
+                    
+                    newX = Math.max(padding, Math.min(newX, maxX));
+                    newY = Math.max(padding, Math.min(newY, maxY));
+                    
+                    notepad.style.left = newX + 'px';
+                    notepad.style.top = newY + 'px';
+                });
+                
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        notepad.style.zIndex = (1000 + index).toString();
+                        
+                        // Save position and size
+                        const layout = {
+                            x: parseInt(notepad.style.left),
+                            y: parseInt(notepad.style.top),
+                            width: notepad.offsetWidth,
+                            height: notepad.offsetHeight,
+                            pinned: isPinned
+                        };
+                        localStorage.setItem(`notepad_${notepadId}_layout`, JSON.stringify(layout));
+                    }
+                });
+                
+                // Hover effects for dropdown items
+                [pinOption, colorOption].forEach(item => {
+                    item.addEventListener('mouseenter', () => item.style.background = '#444');
+                    item.addEventListener('mouseleave', () => item.style.background = 'transparent');
+                });
+                
+                // Save content on changes
+                textarea.addEventListener('input', () => {
+                    localStorage.setItem(`notepad_${notepadId}_content`, textarea.value);
+                });
+                
+                // Save size changes on resize
+                const resizeObserver = new ResizeObserver(() => {
+                    const layout = {
+                        x: parseInt(notepad.style.left),
+                        y: parseInt(notepad.style.top),
+                        width: notepad.offsetWidth,
+                        height: notepad.offsetHeight,
+                        pinned: isPinned
+                    };
+                    localStorage.setItem(`notepad_${notepadId}_layout`, JSON.stringify(layout));
+                });
+                resizeObserver.observe(notepad);
+                
+                if (shouldLog) console.log("✅ Notepad rebuilt successfully:", notepadId);
+            }
+        });
                     background: #333 !important;
                     border: 1px solid #555 !important;
                     border-radius: 4px !important;
@@ -1409,7 +1692,6 @@
             addComponentBtn.className = 'sidekick-add-component-btn';
             addComponentBtn.title = 'Add component (notepad, todo, etc.)';
             addComponentBtn.addEventListener('click', () => {
-                console.log("🔧 ADD BUTTON CLICKED - Toggle behavior active");
                 // Check if menu is already open and toggle it
                 const existingMenu = document.getElementById('sidekick-add-menu');
                 if (existingMenu) {
