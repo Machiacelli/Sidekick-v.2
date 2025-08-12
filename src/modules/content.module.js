@@ -832,12 +832,19 @@
             switchToPage(pageIndex) {
                 saveState(STORAGE_KEYS.CURRENT_PAGE, pageIndex);
                 
+                // Update notepad module's current page and reload notepads
+                if (window.SidekickModules?.Notepad) {
+                    window.SidekickModules.Notepad.currentPage = pageIndex;
+                    window.SidekickModules.Notepad.loadNotepads();
+                    window.SidekickModules.Notepad.refreshDisplay();
+                }
+                
                 // Update dot appearance
                 document.querySelectorAll('.sidekick-page-dot').forEach((dot, index) => {
                     dot.classList.toggle('active', index === pageIndex);
                 });
                 
-                // Refresh content for new page
+                // Refresh content for new page (excluding notepads since we handled them above)
                 this.refreshSidebarContent();
             },
 
@@ -848,17 +855,9 @@
                 pages.push({ notepads: [], todoLists: [], attackLists: [] });
                 saveState(STORAGE_KEYS.SIDEBAR_PAGES, pages);
                 
-                // Update navigation
-                const nav = document.querySelector('.sidekick-page-dots');
-                if (nav) {
-                    const newDot = document.createElement('div');
-                    newDot.className = 'sidekick-page-dot';
-                    newDot.dataset.page = pages.length - 1;
-                    newDot.addEventListener('click', () => this.switchToPage(pages.length - 1));
-                    
-                    // Insert before add button
-                    const addBtn = nav.querySelector('.sidekick-add-page-btn');
-                    nav.insertBefore(newDot, addBtn);
+                // Update page dots using UI module
+                if (window.SidekickModules?.UI?.updatePageDots) {
+                    window.SidekickModules.UI.updatePageDots();
                 }
                 
                 // Switch to new page
@@ -876,14 +875,14 @@
                 
                 const pageData = pages[currentPage];
                 
-                // Restore notepads
-                if (pageData.notepads && pageData.notepads.length > 0) {
-                    pageData.notepads.forEach(notepad => {
-                        const element = this.createNotepadElement(notepad);
-                        const container = document.getElementById('sidekick-notepads');
-                        if (container) container.appendChild(element);
-                    });
-                }
+                // Clear non-notepad containers (notepads are handled by the notepad module)
+                const todoContainer = document.getElementById('sidekick-todos');
+                const attackContainer = document.getElementById('sidekick-attacks');
+                
+                if (todoContainer) todoContainer.innerHTML = '';
+                if (attackContainer) attackContainer.innerHTML = '';
+                
+                // Note: Notepads are handled by the notepad module's refreshDisplay method
                 
                 // Restore todo lists
                 if (pageData.todoLists && pageData.todoLists.length > 0) {
@@ -903,16 +902,14 @@
                     });
                 }
                 
-                console.log(`✅ Restored ${pageData.notepads?.length || 0} notepads, ${pageData.todoLists?.length || 0} todo lists, ${pageData.attackLists?.length || 0} attack lists`);
+                console.log(`✅ Restored ${pageData.notepads?.length || 0} notepads (via notepad module), ${pageData.todoLists?.length || 0} todo lists, ${pageData.attackLists?.length || 0} attack lists`);
             },
 
             refreshSidebarContent() {
-                // Clear current content
-                const notepadContainer = document.getElementById('sidekick-notepads');
+                // Clear current content (excluding notepads which are managed by notepad module)
                 const todoContainer = document.getElementById('sidekick-todos');
                 const attackContainer = document.getElementById('sidekick-attacks');
                 
-                if (notepadContainer) notepadContainer.innerHTML = '';
                 if (todoContainer) todoContainer.innerHTML = '';
                 if (attackContainer) attackContainer.innerHTML = '';
                 

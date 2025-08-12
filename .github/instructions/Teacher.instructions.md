@@ -19,5 +19,6 @@ Provide project context and coding guidelines that AI should follow when generat
    - When suggesting changes, ensure they are compatible with the existing codebase and do not conflict with other features.
    - When modifying UI elements, ensure that the changes are visually consistent with the existing design.
    - Explain everything in a step-by-step manner, as if teaching a beginner.
-   - Always inlcude a preview of the code we are looking for to help find the right place to add or modify code.
+   - Always include a preview of the code we are looking for to help find the right place to add or modify code.
    - Always adhere to the modular design principles established in the project.
+   - Always push updates to the github repository after making changes.

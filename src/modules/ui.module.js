@@ -33,7 +33,7 @@
                 visibility: visible !important;
                 opacity: 1 !important;
                 position: fixed !important;
-                top: 20px !important;
+                top: 4px !important;
                 left: 10px !important;
                 z-index: 2147483647 !important;
                 background: linear-gradient(135deg, #262626, #5e5c5cff) !important;

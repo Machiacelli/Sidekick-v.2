@@ -37,13 +37,24 @@
             loadNotepads() {
                 const pages = loadState('sidekick_sidebar_pages', [{ notepads: [], todoLists: [], attackLists: [] }]);
                 this.currentPage = loadState('sidekick_current_page', 0);
-                
+
                 if (pages[this.currentPage]) {
                     this.notepads = pages[this.currentPage].notepads || [];
                 }
             },
 
-            saveNotepads() {
+            refreshDisplay() {
+                // Clear current notepad display
+                const container = document.getElementById('sidekick-notepads');
+                if (container) {
+                    container.innerHTML = '';
+                }
+
+                // Re-render all notepads for current page
+                this.notepads.forEach(notepad => {
+                    this.renderNotepad(notepad);
+                });
+            },            saveNotepads() {
                 const pages = loadState('sidekick_sidebar_pages', [{ notepads: [], todoLists: [], attackLists: [] }]);
                 
                 // Ensure current page exists
@@ -193,6 +204,18 @@
                                     ">
                                         ${savedNotepad.pinned ? '📌 Unpin' : '📌 Pin'}
                                     </button>
+                                    <button class="color-btn" style="
+                                        background: none;
+                                        border: none;
+                                        color: #fff;
+                                        padding: 8px 12px;
+                                        width: 100%;
+                                        text-align: left;
+                                        cursor: pointer;
+                                        font-size: 12px;
+                                    ">
+                                        🎨 Change Color
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -240,6 +263,7 @@
                 const dropdownBtn = notepadElement.querySelector('.dropdown-btn');
                 const dropdownContent = notepadElement.querySelector('.dropdown-content');
                 const pinBtn = notepadElement.querySelector('.pin-btn');
+                const colorBtn = notepadElement.querySelector('.color-btn');
                 
                 let isPinned = savedNotepad.pinned || false;
                 
@@ -308,6 +332,15 @@
                         header.style.cursor = isPinned ? 'default' : 'move';
                         saveLayout();
                         dropdownContent.style.display = 'none';
+                    });
+                }
+                
+                // Color functionality
+                if (colorBtn) {
+                    colorBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        dropdownContent.style.display = 'none';
+                        this.showColorPicker(notepadElement, notepad);
                     });
                 }
                 
@@ -410,6 +443,82 @@
                         this.renderNotepad(notepad);
                     });
                 }
+            },
+
+            showColorPicker(notepadElement, notepad) {
+                // Remove any existing color picker
+                const existingPicker = document.querySelector('.color-picker');
+                if (existingPicker) existingPicker.remove();
+                
+                // Create color picker overlay
+                const colorPicker = document.createElement('div');
+                colorPicker.className = 'color-picker';
+                colorPicker.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: #333;
+                    border: 1px solid #555;
+                    border-radius: 8px;
+                    padding: 16px;
+                    z-index: 999999;
+                    display: grid;
+                    grid-template-columns: repeat(4, 30px);
+                    gap: 8px;
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+                `;
+                
+                const colors = ['#333', '#4CAF50', '#2196F3', '#FF9800', '#f44336', '#9C27B0', '#607D8B', '#795548'];
+                
+                colors.forEach(color => {
+                    const colorBtn = document.createElement('div');
+                    colorBtn.style.cssText = `
+                        width: 30px;
+                        height: 30px;
+                        background: ${color};
+                        border: 2px solid ${notepad.color === color ? '#fff' : '#666'};
+                        border-radius: 4px;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    `;
+                    
+                    colorBtn.addEventListener('click', () => {
+                        // Update notepad color
+                        notepad.color = color;
+                        notepadElement.querySelector('.notepad-header').style.background = color;
+                        
+                        // Save notepads
+                        this.saveNotepads();
+                        
+                        // Remove color picker
+                        colorPicker.remove();
+                        
+                        console.log(`🎨 Notepad color changed to ${color}`);
+                    });
+                    
+                    colorBtn.addEventListener('mouseenter', () => {
+                        colorBtn.style.transform = 'scale(1.1)';
+                    });
+                    
+                    colorBtn.addEventListener('mouseleave', () => {
+                        colorBtn.style.transform = 'scale(1)';
+                    });
+                    
+                    colorPicker.appendChild(colorBtn);
+                });
+                
+                document.body.appendChild(colorPicker);
+                
+                // Close when clicking outside
+                setTimeout(() => {
+                    document.addEventListener('click', function closeColorPicker(e) {
+                        if (!colorPicker.contains(e.target)) {
+                            colorPicker.remove();
+                            document.removeEventListener('click', closeColorPicker);
+                        }
+                    });
+                }, 100);
             },
 
             switchToPage(pageIndex) {
