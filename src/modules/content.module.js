@@ -27,6 +27,29 @@
 
         // === CONTENT MANAGEMENT ===
         const ContentManager = {
+            init() {
+                console.log('🎯 Initializing Content Module...');
+                // Initialize pages if none exist
+                const pages = loadState(STORAGE_KEYS.SIDEBAR_PAGES, [{ notepads: [], todoLists: [], attackLists: [] }]);
+                if (pages.length === 0) {
+                    pages.push({ notepads: [], todoLists: [], attackLists: [] });
+                    saveState(STORAGE_KEYS.SIDEBAR_PAGES, pages);
+                }
+                
+                // Set initial page if none set
+                const currentPage = loadState(STORAGE_KEYS.CURRENT_PAGE, 0);
+                if (currentPage >= pages.length) {
+                    saveState(STORAGE_KEYS.CURRENT_PAGE, 0);
+                }
+                
+                // Restore saved content after a short delay to ensure UI is ready
+                setTimeout(() => {
+                    this.restoreSavedContent();
+                }, 500);
+                
+                console.log('✅ Content Module initialized');
+            },
+
             showAddMenu() {
                 const menu = document.createElement('div');
                 menu.id = 'sidekick-add-menu';
@@ -200,7 +223,11 @@
             },
 
             addTravelTracker() {
-                NotificationSystem.show('Travel Tracker', 'Travel tracker functionality coming soon!', 'info');
+                if (window.createTravelTracker) {
+                    window.createTravelTracker();
+                } else {
+                    NotificationSystem.show('Travel Tracker', 'Travel tracker module not loaded!', 'error');
+                }
             },
 
             // === ELEMENT CREATION FUNCTIONS ===
