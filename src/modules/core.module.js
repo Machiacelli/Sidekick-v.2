@@ -31,8 +31,15 @@
 
     // Enhanced storage with profile support
     function getProfileKey() {
+        // Only use profile-specific storage when actually viewing a profile page
         const urlMatch = window.location.href.match(/profiles\.php\?XID=(\d+)/);
-        return urlMatch ? urlMatch[1] : 'default';
+        if (urlMatch) {
+            return urlMatch[1];
+        }
+        
+        // For all other pages, use a consistent key based on your own user ID
+        // This ensures storage is consistent across all pages except when viewing other profiles
+        return 'main';
     }
 
     function getProfileSpecificKey(baseKey) {

@@ -508,14 +508,41 @@
                     }
                 }
 
-                // Extract time remaining
-                const timeMatch = text.match(/(\d{1,2}):(\d{2}):(\d{2})/);
+                // Extract time remaining - look for time patterns near travel keywords
+                // or specifically in travel-related context
                 let timeRemaining = null;
-                if (timeMatch) {
-                    const hours = parseInt(timeMatch[1]);
-                    const minutes = parseInt(timeMatch[2]);
-                    const seconds = parseInt(timeMatch[3]);
-                    timeRemaining = hours * 3600 + minutes * 60 + seconds;
+                
+                // Try to find time in specific travel context first
+                const travelTimePatterns = [
+                    /(?:time remaining|arrives? in|landing in|eta)\s*:?\s*(\d{1,2}):(\d{2}):(\d{2})/i,
+                    /(\d{1,2}):(\d{2}):(\d{2})(?:\s*(?:remaining|left|until arrival))/i,
+                    /(?:traveling|flying).*?(\d{1,2}):(\d{2}):(\d{2})/i
+                ];
+                
+                for (const pattern of travelTimePatterns) {
+                    const match = text.match(pattern);
+                    if (match) {
+                        const hours = parseInt(match[1]);
+                        const minutes = parseInt(match[2]);
+                        const seconds = parseInt(match[3]);
+                        timeRemaining = hours * 3600 + minutes * 60 + seconds;
+                        break;
+                    }
+                }
+                
+                // Fallback: if no specific travel time found, look for any time pattern
+                // but only if we're confident we're in a travel context
+                if (!timeRemaining && isTravel) {
+                    const timeMatch = text.match(/(\d{1,2}):(\d{2}):(\d{2})/);
+                    if (timeMatch) {
+                        const hours = parseInt(timeMatch[1]);
+                        const minutes = parseInt(timeMatch[2]);
+                        const seconds = parseInt(timeMatch[3]);
+                        // Only accept if it seems like a reasonable travel time (less than 24 hours)
+                        if (hours < 24) {
+                            timeRemaining = hours * 3600 + minutes * 60 + seconds;
+                        }
+                    }
                 }
 
                 return { status: 'traveling', destination, timeRemaining };

@@ -23,7 +23,7 @@
     }
 
     waitForCore(() => {
-        const { saveState, loadState, NotificationSystem } = window.SidekickModules.Core;
+        const { NotificationSystem } = window.SidekickModules.Core;
 
         const NotepadModule = {
             notepads: [],
@@ -35,8 +35,8 @@
             },
 
             loadNotepads() {
-                const pages = loadState('sidekick_sidebar_pages', [{ notepads: [], todoLists: [], attackLists: [] }]);
-                this.currentPage = loadState('sidekick_current_page', 0);
+                const pages = this.core.loadState(this.core.STORAGE_KEYS.SIDEBAR_PAGES, [{ notepads: [], todoLists: [], attackLists: [] }]);
+                this.currentPage = this.core.loadState(this.core.STORAGE_KEYS.CURRENT_PAGE, 0);
 
                 if (pages[this.currentPage]) {
                     this.notepads = pages[this.currentPage].notepads || [];
@@ -55,7 +55,7 @@
                     this.renderNotepad(notepad);
                 });
             },            saveNotepads() {
-                const pages = loadState('sidekick_sidebar_pages', [{ notepads: [], todoLists: [], attackLists: [] }]);
+                const pages = this.core.loadState(this.core.STORAGE_KEYS.SIDEBAR_PAGES, [{ notepads: [], todoLists: [], attackLists: [] }]);
                 
                 // Ensure current page exists
                 while (pages.length <= this.currentPage) {
@@ -63,7 +63,7 @@
                 }
                 
                 pages[this.currentPage].notepads = this.notepads;
-                saveState('sidekick_sidebar_pages', pages);
+                this.core.saveState(this.core.STORAGE_KEYS.SIDEBAR_PAGES, pages);
             },
 
             addNotepad(title = 'New Note') {
