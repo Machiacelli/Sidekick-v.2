@@ -34,6 +34,12 @@
         
         notepads.forEach((notepad, index) => {
             if (notepad.querySelector('textarea')) {
+                // Check if notepad is already properly formatted (has our header structure)
+                if (notepad.querySelector('.notepad-header') && notepad.style.position === 'absolute') {
+                    // Already fixed, skip rebuilding
+                    return;
+                }
+                
                 console.log("📝 Fixing notepad:", notepad.id);
                 
                 // Get saved layout or use defaults
@@ -195,10 +201,11 @@
                     }
                     
                     isDragging = true;
-                    // Fix the drag offset calculation
-                    const headerRect = header.getBoundingClientRect();
-                    dragOffset.x = e.clientX - headerRect.left;
-                    dragOffset.y = e.clientY - headerRect.top;
+                    // Fix the drag offset calculation - use notepad position, not header
+                    const notepadRect = notepad.getBoundingClientRect();
+                    const sidebarRect = document.getElementById('sidekick-sidebar').getBoundingClientRect();
+                    dragOffset.x = e.clientX - notepadRect.left;
+                    dragOffset.y = e.clientY - notepadRect.top;
                     notepad.style.zIndex = '2000';
                     e.preventDefault();
                 });
@@ -260,9 +267,9 @@
                     dropdownMenu.style.display = isVisible ? 'none' : 'block';
                 });
                 
-                // Close dropdown when clicking outside
+                // Close dropdown when clicking outside (but not on color picker)
                 document.addEventListener('click', (e) => {
-                    if (!notepad.contains(e.target)) {
+                    if (!notepad.contains(e.target) && !e.target.closest('.color-picker')) {
                         dropdownMenu.style.display = 'none';
                     }
                 });
@@ -303,6 +310,7 @@
                     
                     // Create color picker popup
                     const colorPicker = document.createElement('div');
+                    colorPicker.className = 'color-picker';
                     colorPicker.style.cssText = `
                         position: absolute !important;
                         top: 25px !important;
@@ -405,244 +413,6 @@
         setTimeout(() => {
             window.forceFixNotepads();
         }, 100);
-    };
-    
-    // Function to create flight tracker
-    window.createFlightTracker = function() {
-        const sidebar = document.getElementById('sidekick-sidebar');
-        const contentArea = document.getElementById('sidekick-content');
-        if (!sidebar || !contentArea) return;
-        
-        const trackerId = Date.now() + Math.random();
-        const savedLayout = JSON.parse(localStorage.getItem(`flighttracker_${trackerId}_layout`) || '{}');
-        
-        const tracker = document.createElement('div');
-        tracker.id = `flighttracker-${trackerId}`;
-        tracker.className = 'sidebar-item flight-tracker';
-        tracker.style.cssText = `
-            position: absolute !important;
-            left: ${savedLayout.x || 50}px !important;
-            top: ${savedLayout.y || 50}px !important;
-            width: ${savedLayout.width || 300}px !important;
-            height: ${savedLayout.height || 180}px !important;
-            background: #2a2a2a !important;
-            border: 1px solid #444 !important;
-            border-radius: 8px !important;
-            display: block !important;
-            min-width: 250px !important;
-            min-height: 150px !important;
-            max-width: 400px !important;
-            max-height: 300px !important;
-            z-index: 1000 !important;
-            resize: both !important;
-            overflow: hidden !important;
-            box-sizing: border-box !important;
-        `;
-        
-        // Create header
-        const header = document.createElement('div');
-        header.style.cssText = `
-            background: #1976D2 !important;
-            border-bottom: 1px solid #555 !important;
-            padding: 4px 8px !important;
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            cursor: move !important;
-            height: 20px !important;
-            user-select: none !important;
-            border-radius: 7px 7px 0 0 !important;
-            box-sizing: border-box !important;
-        `;
-        
-        const title = document.createElement('span');
-        title.innerHTML = '✈️ Flight Tracker';
-        title.style.cssText = `
-            color: #fff !important;
-            font-size: 11px !important;
-            font-weight: bold !important;
-        `;
-        
-        const closeBtn = document.createElement('button');
-        closeBtn.innerHTML = '×';
-        closeBtn.style.cssText = `
-            background: none !important;
-            border: none !important;
-            color: #fff !important;
-            cursor: pointer !important;
-            font-size: 14px !important;
-            font-weight: bold !important;
-            padding: 0 !important;
-            width: 16px !important;
-            height: 16px !important;
-        `;
-        
-        header.appendChild(title);
-        header.appendChild(closeBtn);
-        
-        // Create content area
-        const content = document.createElement('div');
-        content.style.cssText = `
-            padding: 12px !important;
-            height: calc(100% - 28px) !important;
-            overflow-y: auto !important;
-            color: #fff !important;
-            font-size: 12px !important;
-        `;
-        
-        content.innerHTML = `
-            <div style="margin-bottom: 8px;">
-                <strong>Flight Status:</strong> <span id="flight-status-${trackerId}" style="color: #4CAF50;">Checking...</span>
-            </div>
-            <div style="margin-bottom: 8px;">
-                <strong>Destination:</strong> <span id="flight-destination-${trackerId}">Unknown</span>
-            </div>
-            <div style="margin-bottom: 8px;">
-                <strong>Time Remaining:</strong> <span id="flight-time-${trackerId}">--:--:--</span>
-            </div>
-            <div style="margin-bottom: 8px;">
-                <strong>Landing:</strong> <span id="flight-landing-${trackerId}">--</span>
-            </div>
-            <div style="text-align: center; margin-top: 12px;">
-                <button id="refresh-flight-${trackerId}" style="background: #4CAF50; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">🔄 Refresh</button>
-            </div>
-        `;
-        
-        tracker.appendChild(header);
-        tracker.appendChild(content);
-        contentArea.appendChild(tracker);
-        
-        // Add drag functionality
-        let isDragging = false;
-        let dragOffset = { x: 0, y: 0 };
-        
-        header.addEventListener('mousedown', (e) => {
-            if (e.target === closeBtn) return;
-            
-            isDragging = true;
-            const headerRect = header.getBoundingClientRect();
-            dragOffset.x = e.clientX - headerRect.left;
-            dragOffset.y = e.clientY - headerRect.top;
-            tracker.style.zIndex = '2000';
-            e.preventDefault();
-        });
-        
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            
-            const sidebar = document.getElementById('sidekick-sidebar');
-            if (!sidebar) return;
-            
-            const sidebarRect = sidebar.getBoundingClientRect();
-            let newX = e.clientX - sidebarRect.left - dragOffset.x;
-            let newY = e.clientY - sidebarRect.top - dragOffset.y;
-            
-            const padding = 5;
-            const maxX = sidebar.offsetWidth - tracker.offsetWidth - padding;
-            const maxY = sidebar.offsetHeight - tracker.offsetHeight - padding;
-            
-            newX = Math.max(padding, Math.min(newX, maxX));
-            newY = Math.max(padding, Math.min(newY, maxY));
-            
-            tracker.style.left = newX + 'px';
-            tracker.style.top = newY + 'px';
-        });
-        
-        document.addEventListener('mouseup', () => {
-            if (isDragging) {
-                isDragging = false;
-                tracker.style.zIndex = '1000';
-                
-                // Save position
-                const layout = {
-                    x: parseInt(tracker.style.left),
-                    y: parseInt(tracker.style.top),
-                    width: tracker.offsetWidth,
-                    height: tracker.offsetHeight
-                };
-                localStorage.setItem(`flighttracker_${trackerId}_layout`, JSON.stringify(layout));
-            }
-        });
-        
-        // Close button functionality
-        closeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (confirm('Remove flight tracker?')) {
-                tracker.remove();
-                localStorage.removeItem(`flighttracker_${trackerId}_layout`);
-            }
-        });
-        
-        // Flight tracking functionality
-        async function updateFlightStatus() {
-            const apiKey = localStorage.getItem('sidekick_api_key');
-            if (!apiKey) {
-                document.getElementById(`flight-status-${trackerId}`).innerHTML = '<span style="color: #f44336;">API Key Required</span>';
-                return;
-            }
-            
-            try {
-                const response = await fetch(`https://api.torn.com/user/?selections=travel&key=${apiKey}`);
-                const data = await response.json();
-                
-                if (data.error) {
-                    document.getElementById(`flight-status-${trackerId}`).innerHTML = '<span style="color: #f44336;">API Error</span>';
-                    return;
-                }
-                
-                const travel = data.travel;
-                const statusEl = document.getElementById(`flight-status-${trackerId}`);
-                const destinationEl = document.getElementById(`flight-destination-${trackerId}`);
-                const timeEl = document.getElementById(`flight-time-${trackerId}`);
-                const landingEl = document.getElementById(`flight-landing-${trackerId}`);
-                
-                if (travel.departed === 0) {
-                    statusEl.innerHTML = '<span style="color: #666;">Not Traveling</span>';
-                    destinationEl.textContent = 'None';
-                    timeEl.textContent = '--:--:--';
-                    landingEl.textContent = '--';
-                } else {
-                    const timeRemaining = travel.time_left;
-                    const destination = travel.destination;
-                    
-                    statusEl.innerHTML = '<span style="color: #4CAF50;">In Flight</span>';
-                    destinationEl.textContent = destination;
-                    
-                    if (timeRemaining > 0) {
-                        const hours = Math.floor(timeRemaining / 3600);
-                        const minutes = Math.floor((timeRemaining % 3600) / 60);
-                        const seconds = timeRemaining % 60;
-                        timeEl.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                        
-                        const landingTime = new Date(Date.now() + timeRemaining * 1000);
-                        landingEl.textContent = landingTime.toLocaleTimeString();
-                    } else {
-                        statusEl.innerHTML = '<span style="color: #FF9800;">Landing...</span>';
-                        timeEl.textContent = '00:00:00';
-                        landingEl.textContent = 'Now';
-                    }
-                }
-                
-            } catch (error) {
-                document.getElementById(`flight-status-${trackerId}`).innerHTML = '<span style="color: #f44336;">Connection Error</span>';
-            }
-        }
-        
-        // Refresh button
-        document.getElementById(`refresh-flight-${trackerId}`).addEventListener('click', updateFlightStatus);
-        
-        // Auto-update every 30 seconds
-        updateFlightStatus();
-        const updateInterval = setInterval(updateFlightStatus, 30000);
-        
-        // Clean up interval when tracker is removed
-        const originalRemove = tracker.remove;
-        tracker.remove = function() {
-            clearInterval(updateInterval);
-            originalRemove.call(this);
-        };
-        
-        console.log("✈️ Flight tracker created:", trackerId);
     };
     
     // Debug function to see what's happening
