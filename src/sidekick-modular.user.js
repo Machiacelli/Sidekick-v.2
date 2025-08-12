@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Modular - Full Featured Sidebar
 // @namespace    http://tampermonkey.net/
-// @version      4.2.6
+// @version      4.2.7
 // @description  Modular version of Sidekick - Enhanced Torn.com sidebar with notepads, todo lists, attack lists, cooldown timers, travel tracker, points monitor, clock, and debugging tools
 // @author       GitHub Copilot
 // @match        https://www.torn.com/*
@@ -9,22 +9,24 @@
 // @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@b7756d2/src/modules/core.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@b7756d2/src/modules/ui.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@b7756d2/src/modules/content.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@b7756d2/src/modules/settings.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@b7756d2/src/modules/clock.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@b7756d2/src/modules/notepad.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@b7756d2/src/modules/flight-tracker.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@b7756d2/src/modules/global-functions.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@67cab9c/src/modules/core.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@67cab9c/src/modules/ui.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@67cab9c/src/modules/content.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@67cab9c/src/modules/settings.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@67cab9c/src/modules/clock.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@67cab9c/src/modules/notepad.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@67cab9c/src/modules/flight-tracker.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@67cab9c/src/modules/global-functions.module.js
 // @run-at       document-end
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log("🚀 SIDEKICK MODULAR STARTING v4.2.5 - " + new Date().toLocaleTimeString());
+    console.log("🚀 SIDEKICK MODULAR STARTING v4.2.7 - " + new Date().toLocaleTimeString());
     console.log("🔧 CLEAN VERSION: Proper modular architecture restored");
+    console.log("📦 Checking modules availability...");
+    console.log("📦 window.SidekickModules =", typeof window.SidekickModules);
     
     // Simple wrapper functions for module coordination (NO implementation here)
     window.forceFixNotepads = function() {
@@ -79,5 +81,43 @@
     } else {
         initializeSidekick();
     }
+
+    // Fallback timeout - if no sidebar appears after 10 seconds, show error
+    setTimeout(() => {
+        if (!document.getElementById('sidekick-sidebar')) {
+            console.error("❌ SIDEKICK FAILED TO LOAD - No sidebar found after 10 seconds");
+            console.error("📊 Debug info:", {
+                "SidekickModules exists": typeof window.SidekickModules !== 'undefined',
+                "Available modules": window.SidekickModules ? Object.keys(window.SidekickModules) : 'none',
+                "Document ready": document.readyState,
+                "Current URL": window.location.href
+            });
+            
+            // Create a simple error notification
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #f44336;
+                color: white;
+                padding: 16px;
+                border-radius: 8px;
+                z-index: 999999;
+                font-family: Arial, sans-serif;
+                max-width: 300px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            `;
+            errorDiv.innerHTML = `
+                <strong>🚨 Sidekick Failed to Load</strong><br>
+                Modules: ${window.SidekickModules ? Object.keys(window.SidekickModules).join(', ') : 'None loaded'}<br>
+                <small>Check console for details</small>
+            `;
+            document.body.appendChild(errorDiv);
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => errorDiv.remove(), 10000);
+        }
+    }, 10000);
 
 })();
