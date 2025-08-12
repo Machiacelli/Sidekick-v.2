@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Modular - Full Featured Sidebar
 // @namespace    http://tampermonkey.net/
-// @version      4.2.7
+// @version      4.2.8
 // @description  Modular version of Sidekick - Enhanced Torn.com sidebar with notepads, todo lists, attack lists, cooldown timers, travel tracker, points monitor, clock, and debugging tools
 // @author       GitHub Copilot
 // @match        https://www.torn.com/*
@@ -9,21 +9,21 @@
 // @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@67cab9c/src/modules/core.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@67cab9c/src/modules/ui.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@67cab9c/src/modules/content.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@67cab9c/src/modules/settings.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@67cab9c/src/modules/clock.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@67cab9c/src/modules/notepad.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@67cab9c/src/modules/flight-tracker.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@67cab9c/src/modules/global-functions.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@47ca096/src/modules/core.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@47ca096/src/modules/ui.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@47ca096/src/modules/content.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@47ca096/src/modules/settings.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@47ca096/src/modules/clock.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@47ca096/src/modules/notepad.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@47ca096/src/modules/flight-tracker.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@47ca096/src/modules/global-functions.module.js
 // @run-at       document-end
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log("🚀 SIDEKICK MODULAR STARTING v4.2.7 - " + new Date().toLocaleTimeString());
+    console.log("🚀 SIDEKICK MODULAR STARTING v4.2.8 - " + new Date().toLocaleTimeString());
     console.log("🔧 CLEAN VERSION: Proper modular architecture restored");
     console.log("📦 Checking modules availability...");
     console.log("📦 window.SidekickModules =", typeof window.SidekickModules);
@@ -44,24 +44,48 @@
         }
 
         console.log("📦 Modules loaded:", Object.keys(window.SidekickModules));
+        
+        // Wait a bit more to ensure all modules are fully initialized
+        if (!window.SidekickModules.UI || !window.SidekickModules.Core) {
+            console.log("⏳ Core modules not ready yet, waiting...");
+            setTimeout(initializeSidekick, 200);
+            return;
+        }
+
+        console.log("🎯 Starting module initialization sequence...");
 
         // Initialize Core module first
         if (window.SidekickModules.Core) {
             console.log("🔧 Initializing Core module...");
-            window.SidekickModules.Core.init();
+            try {
+                window.SidekickModules.Core.init();
+                console.log("✅ Core module initialized");
+            } catch (error) {
+                console.error("❌ Core module failed:", error);
+            }
         }
 
         // Initialize UI module
         if (window.SidekickModules.UI) {
             console.log("🎨 Initializing UI module...");
-            window.SidekickModules.UI.init();
+            try {
+                window.SidekickModules.UI.init();
+                console.log("✅ UI module initialized");
+            } catch (error) {
+                console.error("❌ UI module failed:", error);
+            }
         }
 
         // Initialize other modules
         ['Settings', 'Clock', 'Notepad', 'FlightTracker', 'Content'].forEach(moduleName => {
             if (window.SidekickModules[moduleName]) {
                 console.log(`🔌 Initializing ${moduleName} module...`);
-                window.SidekickModules[moduleName].init();
+                try {
+                    window.SidekickModules[moduleName].init();
+                    console.log(`✅ ${moduleName} module initialized`);
+                } catch (error) {
+                    console.error(`❌ ${moduleName} module failed:`, error);
+                }
             }
         });
 
