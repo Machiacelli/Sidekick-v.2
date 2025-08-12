@@ -28,20 +28,25 @@
     
     // FORCE OVERRIDE NOTEPAD SYSTEM - SIMPLIFIED AND FIXED
     window.forceFixNotepads = function() {
-        console.log("🔧 Force fixing notepads...");
+        // Only log occasionally to reduce spam
+        const shouldLog = Math.random() < 0.1; // Only log 10% of the time
+        if (shouldLog) console.log("🔧 Force fixing notepads...");
         
-        // Find all notepad elements
-        const notepads = document.querySelectorAll('[id*="notepad"], .sidebar-item, .simplified-notepad, .movable-notepad');
+        // Find all notepad elements - be more specific to avoid false positives
+        const notepads = document.querySelectorAll('[id^="notepad-"], .sidebar-item[id*="notepad"]');
         
+        // Only process notepads that actually exist and have content
+        let processedCount = 0;
         notepads.forEach((notepad, index) => {
-            if (notepad.querySelector('textarea')) {
+            if (notepad.querySelector('textarea') && notepad.id) {
                 // Check if notepad is already properly formatted (has our header structure)
                 if (notepad.querySelector('.notepad-header') && notepad.style.position === 'absolute') {
                     // Already fixed, skip rebuilding
                     return;
                 }
                 
-                console.log("📝 Fixing notepad:", notepad.id);
+                processedCount++;
+                if (shouldLog) console.log("📝 Fixing notepad:", notepad.id);
                 
                 // Get saved layout or use defaults
                 const notepadId = notepad.id.replace('notepad-', '') || index;
@@ -443,14 +448,14 @@
         window.createNewNotepad("This is a test notepad!\n\nYou should be able to:\n✅ Type in this area\n✅ Drag the window by the header\n✅ Resize the window\n✅ Use the dropdown menu\n✅ Close with the × button");
     };
     
-    // Auto-fix notepads every 1 second for better persistence
+    // Auto-fix notepads every 5 seconds (reduced frequency to prevent spam)
     setInterval(() => {
         if (document.getElementById('sidekick-sidebar')) {
             window.forceFixNotepads();
         }
-    }, 1000);
+    }, 5000);
     
-    // Also run forceFixNotepads on page navigation events
+    // Also run forceFixNotepads on page navigation events (but less frequently)
     let lastUrl = window.location.href;
     setInterval(() => {
         if (window.location.href !== lastUrl) {
@@ -460,9 +465,9 @@
                 if (window.forceFixNotepads) {
                     window.forceFixNotepads();
                 }
-            }, 500);
+            }, 1000); // Increased delay to let page load properly
         }
-    }, 500);
+    }, 2000); // Check for navigation every 2 seconds instead of 500ms
     
     // Test basic functionality
     console.log('🧪 Testing modular system...');
@@ -2477,11 +2482,14 @@
                     console.log('📋 Content restored');
                 }
                 
-                // Force fix notepads to ensure proper formatting after content restoration
-                if (window.forceFixNotepads) {
-                    window.forceFixNotepads();
-                    console.log('🔧 Notepads force-fixed after content restoration');
-                }
+                // Force fix notepads to ensure proper formatting after content restoration (only if notepads exist)
+                setTimeout(() => {
+                    const existingNotepads = document.querySelectorAll('[id^="notepad-"]');
+                    if (window.forceFixNotepads && existingNotepads.length > 0) {
+                        window.forceFixNotepads();
+                        console.log('🔧 Notepads force-fixed after content restoration');
+                    }
+                }, 1000);
                 
                 // Initialize FlightTracker module
                 if (window.SidekickModules.FlightTracker && window.SidekickModules.FlightTracker.init) {
