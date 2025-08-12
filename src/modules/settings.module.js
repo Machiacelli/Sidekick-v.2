@@ -100,10 +100,11 @@
                         
                         <div style="border-top: 1px solid #444; margin: 20px 0; padding-top: 20px;">
                             <h4 style="color: #aaa; margin: 0 0 12px 0; font-size: 14px; font-weight: bold;">Data Management</h4>
-                            <div style="display: flex; gap: 12px;">
+                            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
                                 <button id="export-data-btn" style="flex: 1; padding: 10px; background: #555; border: 1px solid #666; color: white; border-radius: 6px; cursor: pointer; font-size: 13px;">📤 Export Data</button>
                                 <button id="import-data-btn" style="flex: 1; padding: 10px; background: #555; border: 1px solid #666; color: white; border-radius: 6px; cursor: pointer; font-size: 13px;">📥 Import Data</button>
                             </div>
+                            <button id="clear-all-data-btn" style="width: 100%; padding: 10px; background: #d32f2f; border: 1px solid #f44336; color: white; border-radius: 6px; cursor: pointer; font-size: 13px;">🗑️ Clear All Data</button>
                         </div>
                     </div>
                 `, 'settings_modal');
@@ -114,11 +115,13 @@
                     const refreshBtn = document.getElementById('refresh-price-btn');
                     const exportBtn = document.getElementById('export-data-btn');
                     const importBtn = document.getElementById('import-data-btn');
+                    const clearBtn = document.getElementById('clear-all-data-btn');
                     
                     if (testBtn) testBtn.addEventListener('click', () => this.testApiConnection());
                     if (refreshBtn) refreshBtn.addEventListener('click', () => this.refreshPointsPrice());
                     if (exportBtn) exportBtn.addEventListener('click', () => this.exportData());
                     if (importBtn) importBtn.addEventListener('click', () => this.importData());
+                    if (clearBtn) clearBtn.addEventListener('click', () => this.clearAllData());
                 }, 100);
                 
                 console.log('✅ Settings modal created successfully!');
@@ -319,6 +322,25 @@
                     }
                 };
                 input.click();
+            },
+
+            clearAllData() {
+                if (confirm('Are you sure you want to clear all Sidekick data? This cannot be undone!')) {
+                    if (window.SidekickModules?.Core?.clearAllData) {
+                        window.SidekickModules.Core.clearAllData();
+                        
+                        // Close settings modal
+                        const modal = document.querySelector('[id*="settings_modal"]');
+                        if (modal) modal.remove();
+                        
+                        // Suggest page reload
+                        if (confirm('Data cleared! Reload the page to reset completely?')) {
+                            window.location.reload();
+                        }
+                    } else {
+                        NotificationSystem.show('Error', 'Clear data function not available', 'error');
+                    }
+                }
             }
         };
 

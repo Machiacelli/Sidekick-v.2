@@ -312,6 +312,18 @@
                                     ">
                                         ${savedNotepad.pinned ? '📌 Unpin' : '📌 Pin'}
                                     </button>
+                                    <button class="color-btn" style="
+                                        background: none;
+                                        border: none;
+                                        color: #fff;
+                                        padding: 8px 12px;
+                                        width: 100%;
+                                        text-align: left;
+                                        cursor: pointer;
+                                        font-size: 12px;
+                                    ">
+                                        🎨 Change Color
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -431,6 +443,22 @@
                         });
                     }
                     
+                    // Color picker functionality
+                    const colorBtn = notepadElement.querySelector('.color-btn');
+                    if (colorBtn) {
+                        colorBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            dropdownContent.style.display = 'none';
+                            
+                            // Call the color picker function from notepad module
+                            if (window.SidekickModules?.Notepad?.showColorPicker) {
+                                window.SidekickModules.Notepad.showColorPicker(notepadElement, notepad);
+                            } else {
+                                console.warn('Color picker functionality not available');
+                            }
+                        });
+                    }
+                    
                     // Dragging functionality (only if not pinned)
                     if (header) {
                         let isDragging = false;
@@ -482,8 +510,16 @@
                     
                     if (removeBtn) {
                         removeBtn.addEventListener('click', () => {
-                            if (window.removeSidebarItem) {
-                                window.removeSidebarItem(notepad.id, 'notepad');
+                            console.log('🗑️ Delete button clicked for notepad:', notepad.id);
+                            
+                            // Remove from DOM
+                            notepadElement.remove();
+                            
+                            // Remove from notepad module data
+                            if (window.SidekickModules?.Notepad?.deleteNotepad) {
+                                window.SidekickModules.Notepad.deleteNotepad(notepad.id);
+                            } else {
+                                console.warn('Notepad deletion method not available');
                             }
                         });
                     }
