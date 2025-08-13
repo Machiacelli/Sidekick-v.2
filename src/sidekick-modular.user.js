@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Modular - Full Featured Sidebar
 // @namespace    http://tampermonkey.net/
-// @version      5.2.3
+// @version      5.2.4
 // @description  Modular version of Sidekick - Enhanced Torn.com sidebar with global notepads, todo lists, attack lists, cooldown timers, travel tracker, points monitor, clock, and debugging tools
 // @author       GitHub Copilot
 // @match        https://www.torn.com/*
@@ -23,8 +23,8 @@
 (function() {
     'use strict';
 
-    console.log("🚀 SIDEKICK MODULAR STARTING v5.2.3 - " + new Date().toLocaleTimeString());
-    console.log("🎯 NEW: Area-based flight tracker - Click to mark areas for travel monitoring!");
+    console.log("🚀 SIDEKICK MODULAR STARTING v5.2.4 - " + new Date().toLocaleTimeString());
+    console.log("✨ ENHANCED: Stylish flight tracker with subtle scanning borders and dark theme!");
     console.log("📦 Checking modules availability...");
     console.log("📦 window.SidekickModules =", typeof window.SidekickModules);
     

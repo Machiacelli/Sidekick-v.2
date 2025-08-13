@@ -75,6 +75,7 @@
                 existingOverlay.remove();
             }
 
+            // Create subtle dark overlay matching Torn's theme
             const overlay = document.createElement('div');
             overlay.id = 'flight-tracker-overlay';
             overlay.style.cssText = `
@@ -83,35 +84,57 @@
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background: rgba(0, 123, 255, 0.1);
+                background: rgba(26, 26, 26, 0.85);
                 z-index: 999998;
                 pointer-events: none;
-                border: 3px dashed #007bff;
-                box-sizing: border-box;
+                backdrop-filter: blur(2px);
             `;
 
+            // Stylish instructions matching Torn's dark theme
             const instructions = document.createElement('div');
             instructions.style.cssText = `
                 position: fixed;
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
-                background: #007bff;
-                color: white;
-                padding: 20px;
-                border-radius: 10px;
-                font-family: Arial, sans-serif;
-                font-size: 16px;
+                background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+                color: #e0e0e0;
+                padding: 24px 32px;
+                border-radius: 12px;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                font-size: 15px;
                 text-align: center;
                 z-index: 999999;
-                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                box-shadow: 0 8px 32px rgba(0,0,0,0.6), 
+                           inset 0 1px 0 rgba(255,255,255,0.1);
+                border: 1px solid rgba(255,255,255,0.15);
                 pointer-events: none;
+                max-width: 400px;
+                animation: fadeInScale 0.3s ease-out;
             `;
+            
             instructions.innerHTML = `
-                <strong>🎯 Flight Tracker - Area Marking Mode</strong><br>
-                Click anywhere to mark a travel tracking area<br>
-                <small>Press ESC to cancel</small>
+                <div style="margin-bottom: 12px;">
+                    <span style="font-size: 24px; margin-right: 8px;">🎯</span>
+                    <strong style="color: #4CAF50; font-size: 16px;">Flight Tracker</strong>
+                </div>
+                <div style="margin-bottom: 8px; color: #b0b0b0;">
+                    Click anywhere on the page to mark a travel monitoring area
+                </div>
+                <div style="font-size: 13px; color: #888; opacity: 0.8;">
+                    Press <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace;">ESC</kbd> to cancel
+                </div>
             `;
+
+            // Add CSS animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeInScale {
+                    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+                    100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                }
+            `;
+            document.head.appendChild(style);
 
             document.body.appendChild(overlay);
             document.body.appendChild(instructions);
@@ -163,61 +186,110 @@
         createTrackingArea(rect) {
             const areaId = 'flight-area-' + Date.now();
             
-            // Create tracking indicator
+            // Create subtle scanning border around the target element
+            const scanBorder = document.createElement('div');
+            scanBorder.id = areaId + '-border';
+            
+            // Get element dimensions and position
+            const elementRect = rect.element.getBoundingClientRect();
+            const scrollX = window.scrollX;
+            const scrollY = window.scrollY;
+            
+            scanBorder.style.cssText = `
+                position: absolute;
+                left: ${elementRect.left + scrollX - 3}px;
+                top: ${elementRect.top + scrollY - 3}px;
+                width: ${elementRect.width + 6}px;
+                height: ${elementRect.height + 6}px;
+                border: 2px solid rgba(76, 175, 80, 0.6);
+                border-radius: 4px;
+                pointer-events: none;
+                z-index: 999996;
+                animation: scanPulse 3s ease-in-out infinite;
+                box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+            `;
+            
+            // Create stylish tracking indicator
             const indicator = document.createElement('div');
             indicator.id = areaId;
             indicator.style.cssText = `
                 position: absolute;
-                left: ${rect.x - 100}px;
+                left: ${rect.x - 120}px;
                 top: ${rect.y + 20}px;
-                background: linear-gradient(135deg, #007bff, #0056b3);
-                color: white;
-                padding: 8px 12px;
-                border-radius: 20px;
-                font-family: Arial, sans-serif;
-                font-size: 12px;
-                font-weight: bold;
+                background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+                color: #e0e0e0;
+                padding: 12px 16px;
+                border-radius: 8px;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                font-size: 11px;
+                font-weight: 500;
                 z-index: 999997;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-                border: 2px solid #fff;
-                min-width: 200px;
+                box-shadow: 0 4px 16px rgba(0,0,0,0.4), 
+                           inset 0 1px 0 rgba(255,255,255,0.1);
+                border: 1px solid rgba(76, 175, 80, 0.3);
+                min-width: 220px;
                 text-align: center;
-                animation: pulse 2s infinite;
+                backdrop-filter: blur(4px);
             `;
             
-            // Add pulsing animation
+            // Enhanced CSS animations
             const style = document.createElement('style');
             style.textContent = `
-                @keyframes pulse {
-                    0% { transform: scale(1); }
-                    50% { transform: scale(1.05); }
-                    100% { transform: scale(1); }
+                @keyframes scanPulse {
+                    0%, 100% { 
+                        border-color: rgba(76, 175, 80, 0.6);
+                        box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+                    }
+                    50% { 
+                        border-color: rgba(76, 175, 80, 0.9);
+                        box-shadow: 0 0 16px rgba(76, 175, 80, 0.5);
+                    }
+                }
+                @keyframes statusGlow {
+                    0%, 100% { text-shadow: 0 0 4px rgba(76, 175, 80, 0.5); }
+                    50% { text-shadow: 0 0 8px rgba(76, 175, 80, 0.8); }
                 }
             `;
             document.head.appendChild(style);
             
             indicator.innerHTML = `
-                <div>🛩️ Flight Tracker Active</div>
-                <div id="${areaId}-status" style="margin-top: 4px; font-size: 11px;">
+                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+                    <span style="font-size: 14px; margin-right: 6px;">🛩️</span>
+                    <strong style="color: #4CAF50; font-size: 12px;">Flight Tracker</strong>
+                </div>
+                <div id="${areaId}-status" style="margin-bottom: 8px; font-size: 10px; color: #b0b0b0;">
                     🔍 Scanning for travel status...
                 </div>
-                <div style="margin-top: 4px;">
+                <div style="display: flex; justify-content: center;">
                     <button onclick="window.SidekickModules.FlightTracker.removeArea('${areaId}')" 
-                            style="background: rgba(255,255,255,0.2); border: 1px solid white; 
-                                   color: white; padding: 2px 6px; border-radius: 10px; 
-                                   cursor: pointer; font-size: 10px;">✕ Remove</button>
+                            style="background: rgba(244, 67, 54, 0.2); 
+                                   border: 1px solid rgba(244, 67, 54, 0.4); 
+                                   color: #ff6b6b; 
+                                   padding: 4px 8px; 
+                                   border-radius: 4px; 
+                                   cursor: pointer; 
+                                   font-size: 9px;
+                                   transition: all 0.2s ease;
+                                   font-family: inherit;"
+                            onmouseover="this.style.background='rgba(244, 67, 54, 0.3)'"
+                            onmouseout="this.style.background='rgba(244, 67, 54, 0.2)'">
+                        ✕ Remove
+                    </button>
                 </div>
             `;
             
+            // Add both elements to the page
+            document.body.appendChild(scanBorder);
             document.body.appendChild(indicator);
             
-            // Store area data
+            // Store area data including border reference
             const areaData = {
                 id: areaId,
                 x: rect.x,
                 y: rect.y,
                 element: rect.element,
-                created: Date.now()
+                created: Date.now(),
+                borderElement: scanBorder
             };
             
             this.trackedAreas.push(areaData);
@@ -243,17 +315,32 @@
             if (travelStatus.isActive) {
                 if (travelStatus.isWaiting) {
                     statusElement.innerHTML = `⏳ Waiting for departure`;
-                    statusElement.style.color = '#ffc107';
+                    statusElement.style.cssText = `
+                        margin-bottom: 8px; font-size: 10px; 
+                        color: #ffc107; 
+                        animation: statusGlow 2s ease-in-out infinite;
+                    `;
                 } else if (travelStatus.timeRemaining) {
                     statusElement.innerHTML = `✈️ Landing in: ${travelStatus.timeRemaining}`;
-                    statusElement.style.color = '#28a745';
+                    statusElement.style.cssText = `
+                        margin-bottom: 8px; font-size: 10px; 
+                        color: #4CAF50; 
+                        animation: statusGlow 2s ease-in-out infinite;
+                    `;
                 } else if (travelStatus.destination) {
                     statusElement.innerHTML = `🌍 Traveling to: ${travelStatus.destination}`;
-                    statusElement.style.color = '#17a2b8';
+                    statusElement.style.cssText = `
+                        margin-bottom: 8px; font-size: 10px; 
+                        color: #2196F3; 
+                        animation: statusGlow 2s ease-in-out infinite;
+                    `;
                 }
             } else {
                 statusElement.innerHTML = `🏠 Not traveling`;
-                statusElement.style.color = '#6c757d';
+                statusElement.style.cssText = `
+                    margin-bottom: 8px; font-size: 10px; 
+                    color: #757575;
+                `;
             }
         },
 
@@ -323,6 +410,12 @@
                 indicator.remove();
             }
             
+            // Remove scanning border
+            const border = document.getElementById(areaId + '-border');
+            if (border) {
+                border.remove();
+            }
+            
             // Remove from tracked areas
             this.trackedAreas = this.trackedAreas.filter(area => area.id !== areaId);
             this.saveTrackedAreas();
@@ -365,37 +458,81 @@
         },
 
         recreateAreaIndicator(areaData) {
-            // Recreate the visual indicator for a saved area
+            // Try to find the element by selector if we have it stored
+            let targetElement = areaData.element;
+            
+            // Create scanning border (if element still exists)
+            if (targetElement && document.contains(targetElement)) {
+                const scanBorder = document.createElement('div');
+                scanBorder.id = areaData.id + '-border';
+                
+                const elementRect = targetElement.getBoundingClientRect();
+                const scrollX = window.scrollX;
+                const scrollY = window.scrollY;
+                
+                scanBorder.style.cssText = `
+                    position: absolute;
+                    left: ${elementRect.left + scrollX - 3}px;
+                    top: ${elementRect.top + scrollY - 3}px;
+                    width: ${elementRect.width + 6}px;
+                    height: ${elementRect.height + 6}px;
+                    border: 2px solid rgba(76, 175, 80, 0.6);
+                    border-radius: 4px;
+                    pointer-events: none;
+                    z-index: 999996;
+                    animation: scanPulse 3s ease-in-out infinite;
+                    box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+                `;
+                
+                document.body.appendChild(scanBorder);
+            }
+            
+            // Recreate the stylish indicator
             const indicator = document.createElement('div');
             indicator.id = areaData.id;
             indicator.style.cssText = `
                 position: absolute;
-                left: ${areaData.x - 100}px;
+                left: ${areaData.x - 120}px;
                 top: ${areaData.y + 20}px;
-                background: linear-gradient(135deg, #007bff, #0056b3);
-                color: white;
-                padding: 8px 12px;
-                border-radius: 20px;
-                font-family: Arial, sans-serif;
-                font-size: 12px;
-                font-weight: bold;
+                background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+                color: #e0e0e0;
+                padding: 12px 16px;
+                border-radius: 8px;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                font-size: 11px;
+                font-weight: 500;
                 z-index: 999997;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-                border: 2px solid #fff;
-                min-width: 200px;
+                box-shadow: 0 4px 16px rgba(0,0,0,0.4), 
+                           inset 0 1px 0 rgba(255,255,255,0.1);
+                border: 1px solid rgba(76, 175, 80, 0.3);
+                min-width: 220px;
                 text-align: center;
+                backdrop-filter: blur(4px);
             `;
             
             indicator.innerHTML = `
-                <div>🛩️ Flight Tracker Active</div>
-                <div id="${areaData.id}-status" style="margin-top: 4px; font-size: 11px;">
+                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+                    <span style="font-size: 14px; margin-right: 6px;">🛩️</span>
+                    <strong style="color: #4CAF50; font-size: 12px;">Flight Tracker</strong>
+                </div>
+                <div id="${areaData.id}-status" style="margin-bottom: 8px; font-size: 10px; color: #b0b0b0;">
                     🔍 Scanning for travel status...
                 </div>
-                <div style="margin-top: 4px;">
+                <div style="display: flex; justify-content: center;">
                     <button onclick="window.SidekickModules.FlightTracker.removeArea('${areaData.id}')" 
-                            style="background: rgba(255,255,255,0.2); border: 1px solid white; 
-                                   color: white; padding: 2px 6px; border-radius: 10px; 
-                                   cursor: pointer; font-size: 10px;">✕ Remove</button>
+                            style="background: rgba(244, 67, 54, 0.2); 
+                                   border: 1px solid rgba(244, 67, 54, 0.4); 
+                                   color: #ff6b6b; 
+                                   padding: 4px 8px; 
+                                   border-radius: 4px; 
+                                   cursor: pointer; 
+                                   font-size: 9px;
+                                   transition: all 0.2s ease;
+                                   font-family: inherit;"
+                            onmouseover="this.style.background='rgba(244, 67, 54, 0.3)'"
+                            onmouseout="this.style.background='rgba(244, 67, 54, 0.2)'">
+                        ✕ Remove
+                    </button>
                 </div>
             `;
             
