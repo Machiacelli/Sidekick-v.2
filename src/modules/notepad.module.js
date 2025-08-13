@@ -83,6 +83,7 @@
             },
 
             addNotepad(title = 'New Note') {
+                console.log('📝 Adding new notepad:', title);
                 const notepad = {
                     id: Date.now() + Math.random(),
                     title: title,
@@ -93,27 +94,27 @@
 
                 this.notepads.push(notepad);
                 this.saveNotepads();
-                this.renderNotepad(notepad);
+                
+                // Use refreshDisplay instead of renderNotepad to avoid duplicates
+                this.refreshDisplay();
                 
                 NotificationSystem.show('Notepad', 'New notepad created', 'info', 2000);
+                console.log('📝 Notepad added successfully, total notepads:', this.notepads.length);
                 return notepad;
             },
 
             deleteNotepad(id) {
-                const index = this.notepads.findIndex(n => n.id === id);
-                if (index > -1) {
-                    const notepad = this.notepads[index];
-                    if (confirm(`Delete notepad "${notepad.title}"?`)) {
-                        this.notepads.splice(index, 1);
-                        this.saveNotepads();
-                        
-                        // Remove from DOM
-                        const element = document.getElementById(`notepad-${id}`);
-                        if (element) {
-                            element.remove();
-                        }
-                        
+                const notepad = this.notepads.find(n => n.id === id);
+                if (notepad && confirm(`Delete notepad "${notepad.title}"?`)) {
+                    // Use the standard removeSidebarItem function like attack lists do
+                    if (window.removeSidebarItem) {
+                        window.removeSidebarItem(id, 'notepad');
+                        // Reload notepads to sync with updated storage
+                        this.loadNotepads();
+                        this.refreshDisplay();
                         NotificationSystem.show('Notepad', 'Notepad deleted', 'info', 2000);
+                    } else {
+                        console.error('removeSidebarItem function not available');
                     }
                 }
             },

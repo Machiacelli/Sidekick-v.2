@@ -135,15 +135,23 @@
                 // Close menu when clicking outside
                 setTimeout(() => {
                     const closeHandler = (e) => {
-                        if (!menu.contains(e.target) && 
-                            e.target.id !== 'sidekick-add-btn' && 
-                            e.target.id !== 'sidekick-panel-btn') {
-                            this.closeAddMenu();
-                            document.removeEventListener('click', closeHandler);
+                        // Don't close if clicking on the add button itself
+                        if (e.target.id === 'sidekick-add-btn' || 
+                            e.target.closest('#sidekick-add-btn')) {
+                            return;
                         }
+                        
+                        // Don't close if clicking inside the menu
+                        if (menu.contains(e.target)) {
+                            return;
+                        }
+                        
+                        // Close the menu for any other click
+                        this.closeAddMenu();
+                        document.removeEventListener('click', closeHandler);
                     };
-                    document.addEventListener('click', closeHandler);
-                }, 100);
+                    document.addEventListener('click', closeHandler, { capture: true });
+                }, 50); // Reduced delay for better responsiveness
             },
 
             closeAddMenu() {
@@ -153,28 +161,32 @@
                 }
             },
 
+            refreshAllPanels() {
+                console.log('🔄 Refreshing all panels...');
+                try {
+                    // Refresh notepads
+                    if (window.SidekickModules?.Notepad) {
+                        window.SidekickModules.Notepad.loadNotepads();
+                        window.SidekickModules.Notepad.refreshDisplay();
+                    }
+                    
+                    // Refresh other panel types as needed
+                    console.log('✅ All panels refreshed');
+                } catch (error) {
+                    console.error('❌ Error refreshing panels:', error);
+                }
+            },
+
             // === ADD FUNCTIONS ===
             addNotepad() {
-                const notepad = DataTemplates.createNotepad();
-                
-                // Create notepad element to add inside sidebar
-                const notepadElement = this.createNotepadElement(notepad);
-                
-                // Add to sidebar content
-                const notepadContainer = document.getElementById('sidekick-notepads');
-                if (notepadContainer) {
-                    notepadContainer.appendChild(notepadElement);
+                console.log('📝 Content module: delegating notepad creation to Notepad module...');
+                // Delegate to the Notepad module instead of doing it ourselves
+                if (window.SidekickModules?.Notepad?.addNotepad) {
+                    window.SidekickModules.Notepad.addNotepad('New Note');
+                } else {
+                    console.error('Notepad module not available');
+                    NotificationSystem.show('Error', 'Notepad module not available', 'error');
                 }
-                
-                // Save to current page
-                const pages = loadState(STORAGE_KEYS.SIDEBAR_PAGES, [{ notepads: [], todoLists: [], attackLists: [] }]);
-                const currentPage = loadState(STORAGE_KEYS.CURRENT_PAGE, 0);
-                
-                if (!pages[currentPage].notepads) pages[currentPage].notepads = [];
-                pages[currentPage].notepads.push(notepad);
-                
-                saveState(STORAGE_KEYS.SIDEBAR_PAGES, pages);
-                NotificationSystem.show('Success', 'Notepad created!', 'info');
             },
 
             addTodoList() {
@@ -922,21 +934,27 @@
             },
 
             addNewPage() {
+                console.log('📄 Adding new page...');
                 const pages = loadState(STORAGE_KEYS.SIDEBAR_PAGES, [{ notepads: [], todoLists: [], attackLists: [] }]);
                 
                 // Add new empty page
                 pages.push({ notepads: [], todoLists: [], attackLists: [] });
                 saveState(STORAGE_KEYS.SIDEBAR_PAGES, pages);
+                console.log('📄 New page added, total pages:', pages.length);
                 
-                // Update page dots using UI module
-                if (window.SidekickModules?.UI?.updatePageDots) {
-                    window.SidekickModules.UI.updatePageDots();
-                }
+                // Switch to new page immediately
+                const newPageIndex = pages.length - 1;
+                this.switchToPage(newPageIndex);
                 
-                // Switch to new page
-                this.switchToPage(pages.length - 1);
+                // Force immediate UI update
+                setTimeout(() => {
+                    if (window.SidekickModules?.UI?.updatePageDots) {
+                        window.SidekickModules.UI.updatePageDots();
+                    }
+                }, 50);
                 
-                NotificationSystem.show('Success', 'New page created!', 'info');
+                NotificationSystem.show('Success', `New page ${newPageIndex + 1} created!`, 'success', 2000);
+                console.log('📄 Page creation complete, switched to page:', newPageIndex);
             },
 
             // === CONTENT RESTORATION ===

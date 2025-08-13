@@ -226,6 +226,82 @@
         }
     };
 
+    // Navigation detection for better persistence
+    const NavigationManager = {
+        currentUrl: window.location.href,
+        
+        init() {
+            this.setupNavigationDetection();
+        },
+        
+        setupNavigationDetection() {
+            // Monitor for URL changes (both popstate and pushstate)
+            window.addEventListener('popstate', () => this.handleNavigation());
+            
+            // Override pushState and replaceState to catch programmatic navigation
+            const originalPushState = history.pushState;
+            const originalReplaceState = history.replaceState;
+            
+            history.pushState = function(...args) {
+                originalPushState.apply(history, args);
+                NavigationManager.handleNavigation();
+            };
+            
+            history.replaceState = function(...args) {
+                originalReplaceState.apply(history, args);
+                NavigationManager.handleNavigation();
+            };
+            
+            // Also monitor for DOM changes that might indicate navigation
+            const observer = new MutationObserver(() => {
+                if (window.location.href !== this.currentUrl) {
+                    this.handleNavigation();
+                }
+            });
+            
+            observer.observe(document.body, { 
+                childList: true, 
+                subtree: true,
+                attributes: false
+            });
+            
+            console.log('🧭 Navigation detection system initialized');
+        },
+        
+        handleNavigation() {
+            const newUrl = window.location.href;
+            if (newUrl !== this.currentUrl) {
+                console.log('🧭 Page navigation detected:', this.currentUrl, '→', newUrl);
+                this.currentUrl = newUrl;
+                
+                // Delay to allow page to load
+                setTimeout(() => {
+                    this.restorePanels();
+                }, 1000);
+            }
+        },
+        
+        restorePanels() {
+            try {
+                console.log('🔄 Restoring panels after navigation...');
+                
+                // Refresh all modules to reload their content
+                if (window.SidekickModules?.Notepad?.loadNotepads) {
+                    window.SidekickModules.Notepad.loadNotepads();
+                    window.SidekickModules.Notepad.refreshDisplay();
+                }
+                
+                if (window.SidekickModules?.Content?.refreshAllPanels) {
+                    window.SidekickModules.Content.refreshAllPanels();
+                }
+                
+                console.log('✅ Panel restoration complete');
+            } catch (error) {
+                console.error('❌ Error restoring panels:', error);
+            }
+        }
+    };
+
     // Export to global scope for other modules to use
     if (typeof window.SidekickModules === 'undefined') {
         window.SidekickModules = {};
@@ -238,12 +314,14 @@
         NotificationSystem,
         DataTemplates,
         SidebarStateManager,
+        NavigationManager,
         getProfileKey,
         getProfileSpecificKey
     };
 
-    // Initialize the sidebar state manager
+    // Initialize the sidebar state manager and navigation detection
     SidebarStateManager.init();
+    NavigationManager.init();
 
     console.log('✅ Core module loaded - v3.6.0 cache refresh');
 

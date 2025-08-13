@@ -513,7 +513,10 @@
                 addBtn.innerHTML = '+';
                 addBtn.title = 'Add new item';
                 
-                addBtn.addEventListener('click', () => {
+                addBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
                     if (window.SidekickModules?.Content?.showAddMenu) {
                         window.SidekickModules.Content.showAddMenu();
                     } else {
