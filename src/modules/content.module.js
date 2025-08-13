@@ -242,8 +242,8 @@
             },
 
             addTravelTracker() {
-                if (window.SidekickModules?.FlightTracker?.addTravelTracker) {
-                    window.SidekickModules.FlightTracker.addTravelTracker();
+                if (window.SidekickModules?.FlightTracker?.activate) {
+                    window.SidekickModules.FlightTracker.activate();
                     this.closeAddMenu();
                 } else {
                     console.error('FlightTracker module not available');
