@@ -1,30 +1,30 @@
 // ==UserScript==
 // @name         Sidekick Modular - Full Featured Sidebar
 // @namespace    http://tampermonkey.net/
-// @version      5.0.0
-// @description  Modular version of Sidekick - Enhanced Torn.com sidebar with notepads, todo lists, attack lists, cooldown timers, travel tracker, points monitor, clock, and debugging tools
+// @version      5.1.0
+// @description  Modular version of Sidekick - Enhanced Torn.com sidebar with page-specific layouts, notepads, todo lists, attack lists, cooldown timers, travel tracker, points monitor, clock, and debugging tools
 // @author       GitHub Copilot
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
 // @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3833f8b/src/modules/core.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3833f8b/src/modules/ui.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3833f8b/src/modules/content.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3833f8b/src/modules/settings.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3833f8b/src/modules/clock.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3833f8b/src/modules/notepad.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3833f8b/src/modules/flight-tracker.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3833f8b/src/modules/global-functions.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5b7b71/src/modules/core.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5b7b71/src/modules/ui.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5b7b71/src/modules/content.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5b7b71/src/modules/settings.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5b7b71/src/modules/clock.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5b7b71/src/modules/notepad.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5b7b71/src/modules/flight-tracker.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5b7b71/src/modules/global-functions.module.js
 // @run-at       document-end
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log("🚀 SIDEKICK MODULAR STARTING v5.0.0 - " + new Date().toLocaleTimeString());
-    console.log("🔥 NUCLEAR FIXES: Global content, color persistence, layout fixes");
+    console.log("🚀 SIDEKICK MODULAR STARTING v5.1.0 - " + new Date().toLocaleTimeString());
+    console.log("🎯 PAGE-SPECIFIC LAYOUTS: New pages start clean, positions per page, content global");
     console.log("📦 Checking modules availability...");
     console.log("📦 window.SidekickModules =", typeof window.SidekickModules);
     
