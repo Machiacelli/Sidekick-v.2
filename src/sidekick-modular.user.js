@@ -23,8 +23,8 @@
 (function() {
     'use strict';
 
-    console.log("🚀 SIDEKICK MODULAR STARTING v4.5.0 - " + new Date().toLocaleTimeString());
-    console.log("� EMERGENCY FIXES: Individual deletion, no duplicates, immediate UI");
+    console.log("🚀 SIDEKICK MODULAR STARTING v5.0.0 - " + new Date().toLocaleTimeString());
+    console.log("🔥 NUCLEAR FIXES: Global content, color persistence, layout fixes");
     console.log("📦 Checking modules availability...");
     console.log("📦 window.SidekickModules =", typeof window.SidekickModules);
     

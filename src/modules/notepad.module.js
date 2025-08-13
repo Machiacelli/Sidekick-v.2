@@ -85,6 +85,12 @@
                     id: Date.now() + Math.random(),
                     title: title,
                     content: '',
+                    color: '#4CAF50', // Default color
+                    x: 10 + (this.notepads.length * 20), // Offset new notepads so they don't overlap
+                    y: 10 + (this.notepads.length * 20),
+                    width: 280,
+                    height: 150,
+                    pinned: false,
                     created: new Date().toISOString(),
                     modified: new Date().toISOString()
                 };
@@ -137,6 +143,23 @@
                     notepad.content = content;
                     notepad.modified = new Date().toISOString();
                     this.saveNotepads();
+                    console.log('📝 Updated notepad content:', id, content.substring(0, 50));
+                }
+            },
+
+            // Update position, size, color, and pinned state
+            updateNotepadLayout(id, layout) {
+                const notepad = this.notepads.find(n => n.id === id);
+                if (notepad) {
+                    if (layout.x !== undefined) notepad.x = layout.x;
+                    if (layout.y !== undefined) notepad.y = layout.y;
+                    if (layout.width !== undefined) notepad.width = layout.width;
+                    if (layout.height !== undefined) notepad.height = layout.height;
+                    if (layout.pinned !== undefined) notepad.pinned = layout.pinned;
+                    if (layout.color !== undefined) notepad.color = layout.color;
+                    notepad.modified = new Date().toISOString();
+                    this.saveNotepads();
+                    console.log('📝 Updated notepad layout:', id, layout);
                 }
             },
 
@@ -156,8 +179,7 @@
                 notepadElement.className = 'sidebar-item movable-notepad';
                 notepadElement.dataset.id = notepad.id;
                 
-                // Load saved position and size from localStorage
-                const savedNotepad = JSON.parse(localStorage.getItem(`notepad_${notepad.id}_layout`) || '{}');
+                // Load saved position and size from notepad data (not localStorage)
                 const defaultWidth = 280;
                 const defaultHeight = 150;
                 const defaultX = 10;
@@ -165,10 +187,10 @@
                 
                 notepadElement.style.cssText = `
                     position: absolute;
-                    left: ${savedNotepad.x || defaultX}px;
-                    top: ${savedNotepad.y || defaultY}px;
-                    width: ${savedNotepad.width || defaultWidth}px;
-                    height: ${savedNotepad.height || defaultHeight}px;
+                    left: ${notepad.x || defaultX}px;
+                    top: ${notepad.y || defaultY}px;
+                    width: ${notepad.width || defaultWidth}px;
+                    height: ${notepad.height || defaultHeight}px;
                     background: #2a2a2a;
                     border: 1px solid #444;
                     border-radius: 8px;
@@ -177,19 +199,19 @@
                     min-width: 200px;
                     min-height: 100px;
                     z-index: 1000;
-                    resize: ${savedNotepad.pinned ? 'none' : 'both'};
+                    resize: ${notepad.pinned ? 'none' : 'both'};
                     overflow: hidden;
                 `;
                 
                 notepadElement.innerHTML = `
                     <div class="notepad-header" style="
-                        background: #333;
+                        background: ${notepad.color || '#4CAF50'};
                         border-bottom: 1px solid #555;
                         padding: 4px 8px;
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
-                        cursor: ${savedNotepad.pinned ? 'default' : 'move'};
+                        cursor: ${notepad.pinned ? 'default' : 'move'};
                         height: 24px;
                         flex-shrink: 0;
                         border-radius: 7px 7px 0 0;
@@ -230,7 +252,7 @@
                                         cursor: pointer;
                                         font-size: 12px;
                                     ">
-                                        ${savedNotepad.pinned ? '📌 Unpin' : '📌 Pin'}
+                                        ${notepad.pinned ? '📌 Unpin' : '📌 Pin'}
                                     </button>
                                     <button class="color-btn" style="
                                         background: none;
@@ -279,12 +301,12 @@
                 `;
 
                 // Add enhanced functionality with movable controls
-                this.setupNotepadHandlers(notepadElement, notepad, savedNotepad);
+                this.setupNotepadHandlers(notepadElement, notepad);
 
                 contentArea.appendChild(notepadElement);
             },
 
-            setupNotepadHandlers(notepadElement, notepad, savedNotepad = {}) {
+            setupNotepadHandlers(notepadElement, notepad) {
                 const contentTextarea = notepadElement.querySelector('textarea');
                 const header = notepadElement.querySelector('.notepad-header');
                 const closeBtn = notepadElement.querySelector('.close-btn');
@@ -293,9 +315,9 @@
                 const pinBtn = notepadElement.querySelector('.pin-btn');
                 const colorBtn = notepadElement.querySelector('.color-btn');
                 
-                let isPinned = savedNotepad.pinned || false;
+                let isPinned = notepad.pinned || false;
                 
-                // Save position and size function
+                // Save position and size function - now saves to global notepad data
                 function saveLayout() {
                     const layout = {
                         x: notepadElement.offsetLeft,
@@ -304,7 +326,7 @@
                         height: notepadElement.offsetHeight,
                         pinned: isPinned
                     };
-                    localStorage.setItem(`notepad_${notepad.id}_layout`, JSON.stringify(layout));
+                    this.updateNotepadLayout(notepad.id, layout);
                 }
                 
                 // Add enhanced styling and functionality
@@ -331,7 +353,6 @@
                     closeBtn.addEventListener('click', (e) => {
                         e.stopPropagation();
                         if (confirm('Delete this notepad?')) {
-                            localStorage.removeItem(`notepad_${notepad.id}_layout`);
                             this.deleteNotepad(notepad.id);
                         }
                     });
@@ -358,7 +379,7 @@
                         pinBtn.textContent = isPinned ? '📌 Unpin' : '📌 Pin';
                         notepadElement.style.resize = isPinned ? 'none' : 'both';
                         header.style.cursor = isPinned ? 'default' : 'move';
-                        saveLayout();
+                        saveLayout.call(this);
                         dropdownContent.style.display = 'none';
                     });
                 }
@@ -406,7 +427,7 @@
                     document.addEventListener('mouseup', () => {
                         if (isDragging) {
                             isDragging = false;
-                            saveLayout();
+                            saveLayout.call(this);
                         }
                     });
                 }
@@ -415,7 +436,7 @@
                 if (window.ResizeObserver) {
                     const resizeObserver = new ResizeObserver(() => {
                         if (!isPinned) {
-                            saveLayout();
+                            saveLayout.call(this);
                         }
                     });
                     resizeObserver.observe(notepadElement);
