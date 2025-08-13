@@ -212,99 +212,102 @@
             
             scanBorder.style.cssText = `
                 position: absolute;
-                left: ${elementRect.left + scrollX - 3}px;
-                top: ${elementRect.top + scrollY - 3}px;
-                width: ${elementRect.width + 6}px;
-                height: ${elementRect.height + 6}px;
-                border: 2px solid rgba(76, 175, 80, 0.6);
-                border-radius: 4px;
+                left: ${elementRect.left + scrollX - 2}px;
+                top: ${elementRect.top + scrollY - 2}px;
+                width: ${elementRect.width + 4}px;
+                height: ${elementRect.height + 4}px;
+                border: 1px solid rgba(76, 175, 80, 0.4);
+                border-radius: 3px;
                 pointer-events: none;
                 z-index: 999996;
-                animation: scanPulse 3s ease-in-out infinite;
-                box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+                animation: subtlePulse 4s ease-in-out infinite;
             `;
             
-            // Create stylish tracking indicator
+            // Create sleek bottom-left corner tracker
             const indicator = document.createElement('div');
             indicator.id = areaId;
             indicator.style.cssText = `
-                position: absolute;
-                left: ${rect.x - 120}px;
-                top: ${rect.y + 20}px;
-                background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+                position: fixed;
+                bottom: 20px;
+                left: 20px;
+                background: rgba(26, 26, 26, 0.95);
                 color: #e0e0e0;
-                padding: 12px 16px;
-                border-radius: 8px;
+                padding: 8px 12px;
+                border-radius: 6px;
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                font-size: 11px;
-                font-weight: 500;
+                font-size: 12px;
+                font-weight: 400;
                 z-index: 999997;
-                box-shadow: 0 4px 16px rgba(0,0,0,0.4), 
-                           inset 0 1px 0 rgba(255,255,255,0.1);
                 border: 1px solid rgba(76, 175, 80, 0.3);
-                min-width: 220px;
-                text-align: center;
-                backdrop-filter: blur(4px);
+                backdrop-filter: blur(8px);
+                box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                max-width: 400px;
+                transition: all 0.2s ease;
             `;
             
-            // Enhanced CSS animations
+            // Add subtle animations
             const style = document.createElement('style');
             style.textContent = `
-                @keyframes scanPulse {
+                @keyframes subtlePulse {
                     0%, 100% { 
-                        border-color: rgba(76, 175, 80, 0.6);
-                        box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+                        border-color: rgba(76, 175, 80, 0.3);
+                        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.2);
                     }
                     50% { 
-                        border-color: rgba(76, 175, 80, 0.9);
-                        box-shadow: 0 0 16px rgba(76, 175, 80, 0.5);
+                        border-color: rgba(76, 175, 80, 0.6);
+                        box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
                     }
                 }
-                @keyframes statusGlow {
-                    0%, 100% { text-shadow: 0 0 4px rgba(76, 175, 80, 0.5); }
-                    50% { text-shadow: 0 0 8px rgba(76, 175, 80, 0.8); }
+                .flight-remove-btn:hover {
+                    background: rgba(244, 67, 54, 0.3) !important;
+                    transform: scale(1.05);
                 }
             `;
             document.head.appendChild(style);
             
             indicator.innerHTML = `
-                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
-                    <span style="font-size: 14px; margin-right: 6px;">🛩️</span>
-                    <strong style="color: #4CAF50; font-size: 12px;">Flight Tracker</strong>
-                </div>
-                <div id="${areaId}-status" style="margin-bottom: 8px; font-size: 10px; color: #b0b0b0;">
-                    🔍 Scanning for travel status...
-                </div>
-                <div style="display: flex; justify-content: center;">
-                    <button onclick="window.SidekickModules.FlightTracker.removeArea('${areaId}')" 
-                            style="background: rgba(244, 67, 54, 0.2); 
-                                   border: 1px solid rgba(244, 67, 54, 0.4); 
-                                   color: #ff6b6b; 
-                                   padding: 4px 8px; 
-                                   border-radius: 4px; 
-                                   cursor: pointer; 
-                                   font-size: 9px;
-                                   transition: all 0.2s ease;
-                                   font-family: inherit;"
-                            onmouseover="this.style.background='rgba(244, 67, 54, 0.3)'"
-                            onmouseout="this.style.background='rgba(244, 67, 54, 0.2)'">
-                        ✕ Remove
-                    </button>
-                </div>
+                <span id="${areaId}-status" style="flex: 1; color: #b0b0b0;">
+                    🔍 Scanning...
+                </span>
+                <button class="flight-remove-btn" data-area-id="${areaId}"
+                        style="background: rgba(244, 67, 54, 0.2); 
+                               border: 1px solid rgba(244, 67, 54, 0.4); 
+                               color: #ff6b6b; 
+                               padding: 3px 6px; 
+                               border-radius: 3px; 
+                               cursor: pointer; 
+                               font-size: 10px;
+                               transition: all 0.2s ease;
+                               font-family: inherit;">
+                    ✕
+                </button>
             `;
+            
+            // Add click handler for remove button (better than onclick)
+            const removeBtn = indicator.querySelector('.flight-remove-btn');
+            removeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.removeArea(areaId);
+            });
             
             // Add both elements to the page
             document.body.appendChild(scanBorder);
             document.body.appendChild(indicator);
             
-            // Store area data including border reference
+            // Store area data with element selector for persistence
+            const elementSelector = this.generateElementSelector(rect.element);
             const areaData = {
                 id: areaId,
                 x: rect.x,
                 y: rect.y,
+                elementSelector: elementSelector,
                 element: rect.element,
                 created: Date.now(),
-                borderElement: scanBorder
+                url: window.location.href // Store URL for cross-page persistence
             };
             
             this.trackedAreas.push(areaData);
@@ -314,10 +317,67 @@
             this.monitorArea(areaData);
             
             this.core.NotificationSystem.show(
-                "✅ Travel tracking area created! Monitoring for travel status...",
+                "✅ Flight tracker created! Monitoring travel status...",
                 "success",
-                4000
+                3000
             );
+        },
+
+        // Generate a unique selector for an element to find it after page refresh
+        generateElementSelector(element) {
+            if (!element) return null;
+            
+            const selectors = [];
+            
+            // Try ID first
+            if (element.id) {
+                return `#${element.id}`;
+            }
+            
+            // Try classes
+            if (element.className && typeof element.className === 'string') {
+                const classes = element.className.split(' ').filter(c => c.trim()).slice(0, 3);
+                if (classes.length > 0) {
+                    selectors.push(element.tagName.toLowerCase() + '.' + classes.join('.'));
+                }
+            }
+            
+            // Try data attributes
+            for (const attr of element.attributes) {
+                if (attr.name.startsWith('data-')) {
+                    selectors.push(`${element.tagName.toLowerCase()}[${attr.name}="${attr.value}"]`);
+                    break;
+                }
+            }
+            
+            // Fallback: try to create a path
+            let path = [];
+            let current = element;
+            while (current && current !== document.body && path.length < 5) {
+                let selector = current.tagName.toLowerCase();
+                if (current.id) {
+                    path.unshift(`#${current.id}`);
+                    break;
+                } else if (current.className && typeof current.className === 'string') {
+                    const classes = current.className.split(' ').filter(c => c.trim()).slice(0, 2);
+                    if (classes.length > 0) {
+                        selector += '.' + classes.join('.');
+                    }
+                }
+                
+                // Add position if needed
+                const siblings = Array.from(current.parentElement?.children || [])
+                    .filter(sibling => sibling.tagName === current.tagName);
+                if (siblings.length > 1) {
+                    const index = siblings.indexOf(current) + 1;
+                    selector += `:nth-of-type(${index})`;
+                }
+                
+                path.unshift(selector);
+                current = current.parentElement;
+            }
+            
+            return selectors[0] || path.join(' > ');
         },
 
         monitorArea(areaData) {
@@ -329,46 +389,29 @@
             
             if (travelStatus.isActive) {
                 if (travelStatus.isWaiting) {
-                    const planeTypeText = travelStatus.planeType ? ` (${travelStatus.planeType})` : '';
-                    const destinationText = travelStatus.destination ? ` to ${travelStatus.destination.charAt(0).toUpperCase() + travelStatus.destination.slice(1)}` : '';
+                    const destinationText = travelStatus.destination ? 
+                        ` to ${travelStatus.destination.charAt(0).toUpperCase() + travelStatus.destination.slice(1)}` : '';
                     
-                    statusElement.innerHTML = `⏳ Waiting for departure${destinationText}${planeTypeText}`;
-                    statusElement.style.cssText = `
-                        margin-bottom: 8px; font-size: 10px; 
-                        color: #ffc107; 
-                        animation: statusGlow 2s ease-in-out infinite;
-                    `;
+                    statusElement.innerHTML = `⏳ Waiting for departure${destinationText}`;
+                    statusElement.style.color = '#ffc107';
+                    
                 } else if (travelStatus.destination) {
-                    const planeIcon = travelStatus.planeType === 'private' ? '🛩️' : '✈️';
-                    const planeTypeText = travelStatus.planeType === 'private' ? 'Private' : 'Commercial';
+                    const planeType = travelStatus.planeType === 'private' ? 'Private' : 'Commercial';
                     const destinationName = travelStatus.destination.charAt(0).toUpperCase() + travelStatus.destination.slice(1);
                     
-                    let statusText = `${planeIcon} ${planeTypeText} to ${destinationName}`;
+                    let statusText = `✈️ ${planeType} to ${destinationName}`;
                     
-                    // Show calculated landing time if available
+                    // Show estimated landing time if available
                     if (travelStatus.estimatedLanding) {
-                        statusText += `<br><small style="color: #90caf9;">Est. Landing: ${travelStatus.estimatedLanding}</small>`;
-                    }
-                    
-                    // Show actual remaining time if detected from page
-                    if (travelStatus.timeRemaining) {
-                        statusText += `<br><small style="color: #81c784;">Remaining: ${travelStatus.timeRemaining}</small>`;
+                        statusText = `🕒 Est. ${planeType.toLowerCase()} arrival ${travelStatus.estimatedLanding}`;
                     }
                     
                     statusElement.innerHTML = statusText;
-                    statusElement.style.cssText = `
-                        margin-bottom: 8px; font-size: 10px; 
-                        color: #4CAF50; 
-                        animation: statusGlow 2s ease-in-out infinite;
-                        line-height: 1.3;
-                    `;
+                    statusElement.style.color = '#4CAF50';
                 }
             } else {
-                statusElement.innerHTML = `🏠 Not traveling`;
-                statusElement.style.cssText = `
-                    margin-bottom: 8px; font-size: 10px; 
-                    color: #757575;
-                `;
+                statusElement.innerHTML = `🏠 No travel detected`;
+                statusElement.style.color = '#757575';
             }
         },
 
@@ -558,14 +601,20 @@
         loadTrackedAreas() {
             try {
                 const saved = this.core.getStorage('flight_tracked_areas', '[]');
-                this.trackedAreas = JSON.parse(saved);
+                const savedAreas = JSON.parse(saved);
+                
+                // Filter areas for current page and recreate them
+                this.trackedAreas = savedAreas.filter(area => {
+                    // Only keep areas for the current page or general areas
+                    return !area.url || area.url === window.location.href;
+                });
                 
                 // Recreate visual indicators for saved areas
                 this.trackedAreas.forEach(area => {
                     this.recreateAreaIndicator(area);
                 });
                 
-                console.log(`🛩️ FlightTracker: Loaded ${this.trackedAreas.length} tracked areas`);
+                console.log(`🛩️ FlightTracker: Loaded ${this.trackedAreas.length} tracked areas for current page`);
             } catch (error) {
                 console.error("❌ FlightTracker: Error loading tracked areas:", error);
                 this.trackedAreas = [];
@@ -581,11 +630,19 @@
         },
 
         recreateAreaIndicator(areaData) {
-            // Try to find the element by selector if we have it stored
-            let targetElement = areaData.element;
+            // Try to find the element using the saved selector
+            let targetElement = null;
             
-            // Create scanning border (if element still exists)
-            if (targetElement && document.contains(targetElement)) {
+            if (areaData.elementSelector) {
+                try {
+                    targetElement = document.querySelector(areaData.elementSelector);
+                } catch (e) {
+                    console.warn("❌ FlightTracker: Could not find element with selector:", areaData.elementSelector);
+                }
+            }
+            
+            // If we found the element, create the scanning border
+            if (targetElement) {
                 const scanBorder = document.createElement('div');
                 scanBorder.id = areaData.id + '-border';
                 
@@ -595,69 +652,71 @@
                 
                 scanBorder.style.cssText = `
                     position: absolute;
-                    left: ${elementRect.left + scrollX - 3}px;
-                    top: ${elementRect.top + scrollY - 3}px;
-                    width: ${elementRect.width + 6}px;
-                    height: ${elementRect.height + 6}px;
-                    border: 2px solid rgba(76, 175, 80, 0.6);
-                    border-radius: 4px;
+                    left: ${elementRect.left + scrollX - 2}px;
+                    top: ${elementRect.top + scrollY - 2}px;
+                    width: ${elementRect.width + 4}px;
+                    height: ${elementRect.height + 4}px;
+                    border: 1px solid rgba(76, 175, 80, 0.4);
+                    border-radius: 3px;
                     pointer-events: none;
                     z-index: 999996;
-                    animation: scanPulse 3s ease-in-out infinite;
-                    box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+                    animation: subtlePulse 4s ease-in-out infinite;
                 `;
                 
                 document.body.appendChild(scanBorder);
+                areaData.element = targetElement; // Update the element reference
             }
             
-            // Recreate the stylish indicator
+            // Create the sleek bottom-left tracker
             const indicator = document.createElement('div');
             indicator.id = areaData.id;
             indicator.style.cssText = `
-                position: absolute;
-                left: ${areaData.x - 120}px;
-                top: ${areaData.y + 20}px;
-                background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+                position: fixed;
+                bottom: 20px;
+                left: 20px;
+                background: rgba(26, 26, 26, 0.95);
                 color: #e0e0e0;
-                padding: 12px 16px;
-                border-radius: 8px;
+                padding: 8px 12px;
+                border-radius: 6px;
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                font-size: 11px;
-                font-weight: 500;
+                font-size: 12px;
+                font-weight: 400;
                 z-index: 999997;
-                box-shadow: 0 4px 16px rgba(0,0,0,0.4), 
-                           inset 0 1px 0 rgba(255,255,255,0.1);
                 border: 1px solid rgba(76, 175, 80, 0.3);
-                min-width: 220px;
-                text-align: center;
-                backdrop-filter: blur(4px);
+                backdrop-filter: blur(8px);
+                box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                max-width: 400px;
+                transition: all 0.2s ease;
             `;
             
             indicator.innerHTML = `
-                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
-                    <span style="font-size: 14px; margin-right: 6px;">🛩️</span>
-                    <strong style="color: #4CAF50; font-size: 12px;">Flight Tracker</strong>
-                </div>
-                <div id="${areaData.id}-status" style="margin-bottom: 8px; font-size: 10px; color: #b0b0b0;">
-                    🔍 Scanning for travel status...
-                </div>
-                <div style="display: flex; justify-content: center;">
-                    <button onclick="window.SidekickModules.FlightTracker.removeArea('${areaData.id}')" 
-                            style="background: rgba(244, 67, 54, 0.2); 
-                                   border: 1px solid rgba(244, 67, 54, 0.4); 
-                                   color: #ff6b6b; 
-                                   padding: 4px 8px; 
-                                   border-radius: 4px; 
-                                   cursor: pointer; 
-                                   font-size: 9px;
-                                   transition: all 0.2s ease;
-                                   font-family: inherit;"
-                            onmouseover="this.style.background='rgba(244, 67, 54, 0.3)'"
-                            onmouseout="this.style.background='rgba(244, 67, 54, 0.2)'">
-                        ✕ Remove
-                    </button>
-                </div>
+                <span id="${areaData.id}-status" style="flex: 1; color: #b0b0b0;">
+                    🔍 Scanning...
+                </span>
+                <button class="flight-remove-btn" data-area-id="${areaData.id}"
+                        style="background: rgba(244, 67, 54, 0.2); 
+                               border: 1px solid rgba(244, 67, 54, 0.4); 
+                               color: #ff6b6b; 
+                               padding: 3px 6px; 
+                               border-radius: 3px; 
+                               cursor: pointer; 
+                               font-size: 10px;
+                               transition: all 0.2s ease;
+                               font-family: inherit;">
+                    ✕
+                </button>
             `;
+            
+            // Add click handler for remove button
+            const removeBtn = indicator.querySelector('.flight-remove-btn');
+            removeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.removeArea(areaData.id);
+            });
             
             document.body.appendChild(indicator);
         }
