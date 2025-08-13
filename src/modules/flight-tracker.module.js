@@ -531,9 +531,6 @@
                 ...Array.from(element.parentElement?.children || [])
             ];
             
-            // Also search for images to detect plane type
-            const allImages = Array.from(document.querySelectorAll('img'));
-            
             for (const el of searchElements) {
                 if (!el || !el.textContent) continue;
                 
@@ -558,7 +555,7 @@
                     
                     // Detect plane type by looking for airplane images near the travel text
                     if (result.destination) {
-                        result.planeType = this.detectPlaneType(el, allImages);
+                        result.planeType = this.detectPlaneType(el);
                         
                         // Calculate flight time and estimated landing
                         if (this.flightDurations[result.destination] && result.planeType) {
@@ -590,7 +587,7 @@
                     for (const dest of destinations) {
                         if (text.includes(dest)) {
                             result.destination = dest.toLowerCase();
-                            result.planeType = this.detectPlaneType(el, allImages);
+                            result.planeType = this.detectPlaneType(el);
                             break;
                         }
                     }
@@ -602,7 +599,7 @@
             return result;
         },
 
-        detectPlaneType(travelElement, allImages) {
+        detectPlaneType(travelElement) {
             // Look for airplane images near the travel text to determine plane type
             const searchArea = travelElement.closest('div') || travelElement.parentElement;
             if (!searchArea) return 'commercial'; // Default fallback
@@ -610,47 +607,64 @@
             // Search for images within the same container or nearby
             const nearbyImages = Array.from(searchArea.querySelectorAll('img'));
             
-            // Also check images that might be in adjacent elements
-            const siblingElements = Array.from(searchArea.parentElement?.children || []);
-            siblingElements.forEach(sibling => {
-                nearbyImages.push(...Array.from(sibling.querySelectorAll('img')));
-            });
+            // Also check images that might be in adjacent elements and parent elements
+            const parentElement = searchArea.parentElement;
+            if (parentElement) {
+                const siblingElements = Array.from(parentElement.children);
+                siblingElements.forEach(sibling => {
+                    nearbyImages.push(...Array.from(sibling.querySelectorAll('img')));
+                });
+                // Also check parent level images
+                nearbyImages.push(...Array.from(parentElement.querySelectorAll('img')));
+            }
             
-            for (const img of nearbyImages) {
-                const src = img.src?.toLowerCase() || '';
-                const alt = img.alt?.toLowerCase() || '';
-                const title = img.title?.toLowerCase() || '';
+            // Remove duplicates
+            const uniqueImages = [...new Set(nearbyImages)];
+            
+            console.log('🛩️ Checking images for plane type detection:', uniqueImages.map(img => img.src));
+            
+            for (const img of uniqueImages) {
+                const src = img.src || '';
                 
-                // Private plane indicators (small single-engine propeller plane)
-                if (src.includes('private') || src.includes('airstrip') || 
-                    src.includes('small') || src.includes('propeller') ||
-                    alt.includes('private') || alt.includes('airstrip') ||
-                    title.includes('private') || title.includes('airstrip')) {
+                // SPECIFIC CHECK: Private jet image (single engine propeller plane)
+                // Looking for the specific private jet image pattern you mentioned
+                if (src.includes('private_jet') || 
+                    src.includes('386/travelling') ||
+                    (src.includes('profile/user_status') && src.includes('private')) ||
+                    src.includes('private_jet_to.jpg')) {
+                    
+                    console.log('✈️ Detected PRIVATE plane from image:', src);
                     return 'private';
                 }
                 
-                // Commercial plane indicators (large planes with airline text/livery)
-                if (src.includes('commercial') || src.includes('airline') || 
-                    src.includes('boeing') || src.includes('airbus') ||
-                    alt.includes('commercial') || alt.includes('airline') ||
-                    title.includes('commercial') || title.includes('airline')) {
+                // If it's any other travel-related image, it's commercial
+                if (src.includes('travelling') || 
+                    src.includes('user_status') || 
+                    src.includes('airplane') ||
+                    src.includes('plane') ||
+                    src.includes('flight')) {
+                    
+                    console.log('🛫 Detected COMMERCIAL plane from image:', src);
                     return 'commercial';
-                }
-                
-                // Check for specific airline liveries mentioned in the requirements
-                const airlineIndicators = [
-                    'hawaii', 'dimsum', 'buenos', 'springbrook', 'arabic'
-                ];
-                
-                for (const indicator of airlineIndicators) {
-                    if (src.includes(indicator) || alt.includes(indicator) || title.includes(indicator)) {
-                        return 'commercial';
-                    }
                 }
             }
             
-            // If we can't determine from images, try to detect from file names or context
-            // Most travel images without specific private plane indicators are commercial
+            // Also check alt text and title attributes as fallback
+            for (const img of uniqueImages) {
+                const alt = img.alt?.toLowerCase() || '';
+                const title = img.title?.toLowerCase() || '';
+                
+                if (alt.includes('private') || title.includes('private') ||
+                    alt.includes('single engine') || title.includes('single engine') ||
+                    alt.includes('propeller') || title.includes('propeller')) {
+                    
+                    console.log('✈️ Detected PRIVATE plane from alt/title:', alt, title);
+                    return 'private';
+                }
+            }
+            
+            // Default to commercial if we can't determine
+            console.log('🛫 Defaulting to COMMERCIAL plane');
             return 'commercial';
         },
 
