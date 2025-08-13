@@ -915,6 +915,7 @@
 
             // === PAGE MANAGEMENT ===
             switchToPage(pageIndex) {
+                console.log('📄 Switching to page:', pageIndex);
                 saveState(STORAGE_KEYS.CURRENT_PAGE, pageIndex);
                 
                 // Update notepad module's current page and reload notepads
@@ -924,13 +925,19 @@
                     window.SidekickModules.Notepad.refreshDisplay();
                 }
                 
-                // Update dot appearance
+                // Update dot appearance immediately
                 document.querySelectorAll('.sidekick-page-dot').forEach((dot, index) => {
                     dot.classList.toggle('active', index === pageIndex);
                 });
                 
+                // Force page dots update for any new dots
+                if (window.SidekickModules?.UI?.updatePageDots) {
+                    window.SidekickModules.UI.updatePageDots();
+                }
+                
                 // Refresh content for new page (excluding notepads since we handled them above)
                 this.refreshSidebarContent();
+                console.log('📄 Page switch complete');
             },
 
             addNewPage() {
@@ -946,12 +953,11 @@
                 const newPageIndex = pages.length - 1;
                 this.switchToPage(newPageIndex);
                 
-                // Force immediate UI update
-                setTimeout(() => {
-                    if (window.SidekickModules?.UI?.updatePageDots) {
-                        window.SidekickModules.UI.updatePageDots();
-                    }
-                }, 50);
+                // Force immediate UI update - no timeout
+                if (window.SidekickModules?.UI?.updatePageDots) {
+                    window.SidekickModules.UI.updatePageDots();
+                    console.log('📄 Page dots updated immediately');
+                }
                 
                 NotificationSystem.show('Success', `New page ${newPageIndex + 1} created!`, 'success', 2000);
                 console.log('📄 Page creation complete, switched to page:', newPageIndex);

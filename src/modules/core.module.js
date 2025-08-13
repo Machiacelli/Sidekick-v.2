@@ -285,17 +285,14 @@
             try {
                 console.log('🔄 Restoring panels after navigation...');
                 
-                // Refresh all modules to reload their content
-                if (window.SidekickModules?.Notepad?.loadNotepads) {
-                    window.SidekickModules.Notepad.loadNotepads();
-                    window.SidekickModules.Notepad.refreshDisplay();
+                // Only refresh if we actually have modules loaded
+                if (window.SidekickModules?.Notepad && window.SidekickModules?.Content) {
+                    // Don't automatically reload - let the modules handle their own state
+                    console.log('✅ Modules available, but skipping auto-restore to prevent duplicates');
+                } else {
+                    console.log('⚠️ Modules not ready for panel restoration');
                 }
                 
-                if (window.SidekickModules?.Content?.refreshAllPanels) {
-                    window.SidekickModules.Content.refreshAllPanels();
-                }
-                
-                console.log('✅ Panel restoration complete');
             } catch (error) {
                 console.error('❌ Error restoring panels:', error);
             }

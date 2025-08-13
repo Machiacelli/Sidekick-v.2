@@ -58,16 +58,24 @@
             },
 
             refreshDisplay() {
-                // Clear current notepad display
+                console.log('📝 Refreshing notepad display...');
+                // Clear current notepad display completely
                 const container = document.getElementById('sidekick-notepads');
                 if (container) {
                     container.innerHTML = '';
+                    console.log('📝 Cleared notepad container');
                 }
 
                 // Re-render all notepads for current page
-                this.notepads.forEach(notepad => {
-                    this.renderNotepad(notepad);
-                });
+                if (this.notepads && this.notepads.length > 0) {
+                    console.log(`📝 Rendering ${this.notepads.length} notepads...`);
+                    this.notepads.forEach((notepad, index) => {
+                        console.log(`📝 Rendering notepad ${index + 1}:`, notepad.title, notepad.id);
+                        this.renderNotepad(notepad);
+                    });
+                } else {
+                    console.log('📝 No notepads to render');
+                }
             },            saveNotepads() {
                 console.log('📝 Saving notepads...', this.notepads);
                 const pages = this.core.loadState(this.core.STORAGE_KEYS.SIDEBAR_PAGES, [{ notepads: [], todoLists: [], attackLists: [] }]);
@@ -106,16 +114,23 @@
             deleteNotepad(id) {
                 const notepad = this.notepads.find(n => n.id === id);
                 if (notepad && confirm(`Delete notepad "${notepad.title}"?`)) {
-                    // Use the standard removeSidebarItem function like attack lists do
-                    if (window.removeSidebarItem) {
-                        window.removeSidebarItem(id, 'notepad');
-                        // Reload notepads to sync with updated storage
-                        this.loadNotepads();
-                        this.refreshDisplay();
-                        NotificationSystem.show('Notepad', 'Notepad deleted', 'info', 2000);
-                    } else {
-                        console.error('removeSidebarItem function not available');
+                    console.log('📝 Deleting notepad:', id, notepad.title);
+                    
+                    // Remove from local array first
+                    this.notepads = this.notepads.filter(n => n.id !== id);
+                    
+                    // Remove from DOM
+                    const element = document.querySelector(`[data-id="${id}"]`);
+                    if (element) {
+                        element.remove();
+                        console.log('📝 Removed notepad element from DOM');
                     }
+                    
+                    // Save updated array to storage
+                    this.saveNotepads();
+                    
+                    NotificationSystem.show('Notepad', 'Notepad deleted', 'success', 2000);
+                    console.log('📝 Notepad deleted successfully, remaining notepads:', this.notepads.length);
                 }
             },
 
