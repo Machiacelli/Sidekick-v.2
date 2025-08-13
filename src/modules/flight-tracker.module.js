@@ -45,7 +45,12 @@
                     const flightInfo = this.extractFlightInfo();
                     
                     if (!flightInfo) {
-                        NotificationSystem.show('Flight Tracker', 'Please navigate to a flight page to track your flight', 'warning', 3000);
+                        // Use proper notification system reference
+                        if (this.core && this.core.NotificationSystem) {
+                            this.core.NotificationSystem.show('Flight Tracker', 'Please navigate to a flight page to track your flight', 'warning', 3000);
+                        } else {
+                            console.warn('✈️ Flight Tracker: Please navigate to a flight page to track your flight');
+                        }
                         return;
                     }
                     
@@ -58,15 +63,21 @@
                         };
                         
                         window.SidekickModules.Clock.createTimer(timerData);
-                        NotificationSystem.show('Flight Tracker', `Flight timer created: ${timerData.name}`, 'success', 3000);
+                        if (this.core && this.core.NotificationSystem) {
+                            this.core.NotificationSystem.show('Flight Tracker', `Flight timer created: ${timerData.name}`, 'success', 3000);
+                        }
                     } else {
                         console.error('Clock module not available for timer creation');
-                        NotificationSystem.show('Flight Tracker', 'Clock module not available', 'error', 3000);
+                        if (this.core && this.core.NotificationSystem) {
+                            this.core.NotificationSystem.show('Flight Tracker', 'Clock module not available', 'error', 3000);
+                        }
                     }
                     
                 } catch (error) {
                     console.error('✈️ Error creating flight tracker timer:', error);
-                    NotificationSystem.show('Flight Tracker', 'Error creating flight timer', 'error', 3000);
+                    if (this.core && this.core.NotificationSystem) {
+                        this.core.NotificationSystem.show('Flight Tracker', 'Error creating flight timer', 'error', 3000);
+                    }
                 }
             },
             

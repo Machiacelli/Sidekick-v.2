@@ -285,12 +285,12 @@
             try {
                 console.log('🔄 Restoring panels after navigation...');
                 
-                // Only refresh if we actually have modules loaded
-                if (window.SidekickModules?.Notepad && window.SidekickModules?.Content) {
-                    // Don't automatically reload - let the modules handle their own state
-                    console.log('✅ Modules available, but skipping auto-restore to prevent duplicates');
+                // Refresh notepads with page-specific layouts but global content
+                if (window.SidekickModules?.Notepad) {
+                    console.log('📝 Refreshing notepads for new page...');
+                    window.SidekickModules.Notepad.refreshDisplay();
                 } else {
-                    console.log('⚠️ Modules not ready for panel restoration');
+                    console.log('⚠️ Notepad module not ready for panel restoration');
                 }
                 
             } catch (error) {
