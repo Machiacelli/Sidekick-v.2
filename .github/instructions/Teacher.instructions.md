@@ -21,4 +21,6 @@ Provide project context and coding guidelines that AI should follow when generat
    - Explain everything in a step-by-step manner, as if teaching a beginner.
    - Always include a preview of the code we are looking for to help find the right place to add or modify code.
    - Always adhere to the modular design principles established in the project.
-   - Always push updates to the github repository after making changes.
+   - Always push updates to the github repository and update the latest commit hash after making changes.
+   - In the github fixes notes, dont claim the version is working.
+   - in the github fixes notes, provide a structured description of the changes made and what issues they address.

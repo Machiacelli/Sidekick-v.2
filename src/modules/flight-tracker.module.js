@@ -223,19 +223,23 @@
                 animation: subtlePulse 4s ease-in-out infinite;
             `;
             
-            // Create sleek bottom-left corner tracker
+            // Position tracker below the marked area (not bottom-left corner)
+            const trackerX = elementRect.left + scrollX;
+            const trackerY = elementRect.bottom + scrollY + 8; // 8px below the element
+            
+            // Create sleek tracker positioned below the marked area
             const indicator = document.createElement('div');
             indicator.id = areaId;
             indicator.style.cssText = `
-                position: fixed;
-                bottom: 20px;
-                left: 20px;
+                position: absolute;
+                left: ${trackerX}px;
+                top: ${trackerY}px;
                 background: rgba(26, 26, 26, 0.95);
                 color: #e0e0e0;
-                padding: 8px 12px;
-                border-radius: 6px;
+                padding: 6px 10px;
+                border-radius: 5px;
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                font-size: 12px;
+                font-size: 11px;
                 font-weight: 400;
                 z-index: 999997;
                 border: 1px solid rgba(76, 175, 80, 0.3);
@@ -243,9 +247,10 @@
                 box-shadow: 0 2px 12px rgba(0,0,0,0.3);
                 display: flex;
                 align-items: center;
-                gap: 8px;
-                max-width: 400px;
+                gap: 6px;
+                max-width: 300px;
                 transition: all 0.2s ease;
+                white-space: nowrap;
             `;
             
             // Add subtle animations
@@ -269,17 +274,17 @@
             document.head.appendChild(style);
             
             indicator.innerHTML = `
-                <span id="${areaId}-status" style="flex: 1; color: #b0b0b0;">
+                <span id="${areaId}-status" style="flex: 1; color: #b0b0b0; font-size: 11px;">
                     🔍 Scanning...
                 </span>
                 <button class="flight-remove-btn" data-area-id="${areaId}"
                         style="background: rgba(244, 67, 54, 0.2); 
                                border: 1px solid rgba(244, 67, 54, 0.4); 
                                color: #ff6b6b; 
-                               padding: 3px 6px; 
+                               padding: 2px 5px; 
                                border-radius: 3px; 
                                cursor: pointer; 
-                               font-size: 10px;
+                               font-size: 9px;
                                transition: all 0.2s ease;
                                font-family: inherit;">
                     ✕
@@ -302,12 +307,13 @@
             const elementSelector = this.generateElementSelector(rect.element);
             const areaData = {
                 id: areaId,
-                x: rect.x,
-                y: rect.y,
+                x: trackerX,
+                y: trackerY,
                 elementSelector: elementSelector,
                 element: rect.element,
                 created: Date.now(),
-                url: window.location.href // Store URL for cross-page persistence
+                url: window.location.href,
+                departureTime: null // Will store when flight departs FROM Torn
             };
             
             this.trackedAreas.push(areaData);
@@ -395,23 +401,67 @@
                     statusElement.innerHTML = `⏳ Waiting for departure${destinationText}`;
                     statusElement.style.color = '#ffc107';
                     
+                    // If waiting to depart FROM Torn, prepare to start live timer
+                    if (travelStatus.destination && travelStatus.destination !== 'torn') {
+                        areaData.departureTime = null; // Reset, will be set when flight starts
+                    }
+                    
                 } else if (travelStatus.destination) {
                     const planeType = travelStatus.planeType === 'private' ? 'Private' : 'Commercial';
                     const destinationName = travelStatus.destination.charAt(0).toUpperCase() + travelStatus.destination.slice(1);
                     
-                    let statusText = `✈️ ${planeType} to ${destinationName}`;
-                    
-                    // Show estimated landing time if available
-                    if (travelStatus.estimatedLanding) {
-                        statusText = `🕒 Est. ${planeType.toLowerCase()} arrival ${travelStatus.estimatedLanding}`;
+                    // Smart timer logic based on flight direction
+                    if (travelStatus.destination === 'torn' || destinationName.toLowerCase() === 'torn') {
+                        // Flight TO Torn - show estimated arrival time (we don't know when they departed)
+                        if (travelStatus.estimatedLanding) {
+                            statusElement.innerHTML = `🏠 Est. arrival ${travelStatus.estimatedLanding}`;
+                            statusElement.style.color = '#4CAF50';
+                        } else {
+                            statusElement.innerHTML = `🏠 ${planeType} to Torn`;
+                            statusElement.style.color = '#4CAF50';
+                        }
+                    } else {
+                        // Flight FROM Torn - use live countdown timer
+                        if (!areaData.departureTime) {
+                            // First time detecting departure, record the time
+                            areaData.departureTime = Date.now();
+                            this.saveTrackedAreas();
+                        }
+                        
+                        // Calculate live countdown
+                        const elapsedMinutes = Math.floor((Date.now() - areaData.departureTime) / (1000 * 60));
+                        const flightDuration = this.flightDurations[travelStatus.destination.toLowerCase()];
+                        
+                        if (flightDuration && flightDuration[travelStatus.planeType]) {
+                            const totalMinutes = parseInt(flightDuration[travelStatus.planeType].replace('m', ''));
+                            const remainingMinutes = totalMinutes - elapsedMinutes;
+                            
+                            if (remainingMinutes > 0) {
+                                const hours = Math.floor(remainingMinutes / 60);
+                                const mins = remainingMinutes % 60;
+                                const timeString = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+                                
+                                statusElement.innerHTML = `✈️ Landing in ${timeString}`;
+                                statusElement.style.color = '#4CAF50';
+                            } else {
+                                statusElement.innerHTML = `🛬 Should have landed`;
+                                statusElement.style.color = '#ff9800';
+                            }
+                        } else {
+                            statusElement.innerHTML = `✈️ ${planeType} to ${destinationName}`;
+                            statusElement.style.color = '#4CAF50';
+                        }
                     }
-                    
-                    statusElement.innerHTML = statusText;
-                    statusElement.style.color = '#4CAF50';
                 }
             } else {
                 statusElement.innerHTML = `🏠 No travel detected`;
                 statusElement.style.color = '#757575';
+                
+                // Reset departure time when not traveling
+                if (areaData.departureTime) {
+                    areaData.departureTime = null;
+                    this.saveTrackedAreas();
+                }
             }
         },
 
@@ -449,7 +499,7 @@
                     // Extract destination
                     const destinations = [
                         'argentina', 'canada', 'cayman islands', 'china', 'hawaii', 
-                        'japan', 'mexico', 'south africa', 'switzerland', 'uae', 'united kingdom'
+                        'japan', 'mexico', 'south africa', 'switzerland', 'uae', 'united kingdom', 'torn'
                     ];
                     
                     for (const dest of destinations) {
@@ -487,7 +537,7 @@
                     // Still try to detect destination and plane type for waiting flights
                     const destinations = [
                         'argentina', 'canada', 'cayman islands', 'china', 'hawaii', 
-                        'japan', 'mexico', 'south africa', 'switzerland', 'uae', 'united kingdom'
+                        'japan', 'mexico', 'south africa', 'switzerland', 'uae', 'united kingdom', 'torn'
                     ];
                     
                     for (const dest of destinations) {
