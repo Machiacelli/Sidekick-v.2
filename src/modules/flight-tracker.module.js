@@ -602,7 +602,7 @@
         detectPlaneType(travelElement) {
             // Look for airplane images near the travel text to determine plane type
             const searchArea = travelElement.closest('div') || travelElement.parentElement;
-            if (!searchArea) return 'commercial'; // Default fallback
+            if (!searchArea) return 'Commercial'; // Default fallback
             
             // Search for images within the same container or nearby
             const nearbyImages = Array.from(searchArea.querySelectorAll('img'));
@@ -621,51 +621,82 @@
             // Remove duplicates
             const uniqueImages = [...new Set(nearbyImages)];
             
-            console.log('🛩️ Checking images for plane type detection:', uniqueImages.map(img => img.src));
+            console.log('🛩️ ADVANCED PLANE DETECTION - Analyzing images:');
             
             for (const img of uniqueImages) {
                 const src = img.src || '';
+                console.log('  📸 Checking:', src);
+                console.log('  📐 Dimensions:', img.naturalWidth + 'x' + img.naturalHeight, '(displayed:', img.width + 'x' + img.height + ')');
                 
-                // SPECIFIC CHECK: Private jet image (single engine propeller plane)
-                // Looking for the specific private jet image pattern you mentioned
-                if (src.includes('private_jet') || 
-                    src.includes('386/travelling') ||
-                    (src.includes('profile/user_status') && src.includes('private')) ||
-                    src.includes('private_jet_to.jpg')) {
-                    
-                    console.log('✈️ Detected PRIVATE plane from image:', src);
-                    return 'private';
+                // Method 1: URL Analysis - Look for any private-related patterns
+                if (src.includes('private') || 
+                    src.includes('single') || 
+                    src.includes('prop') ||
+                    src.includes('jet') ||
+                    src.match(/\/\d+\/travelling/) && src.includes('386')) {
+                    console.log('✈️ PRIVATE detected via URL pattern');
+                    return 'Private';
                 }
                 
-                // If it's any other travel-related image, it's commercial
-                if (src.includes('travelling') || 
-                    src.includes('user_status') || 
-                    src.includes('airplane') ||
-                    src.includes('plane') ||
-                    src.includes('flight')) {
+                // Method 2: Dimension Analysis - Private planes often have different image sizes
+                if (img.naturalWidth && img.naturalHeight) {
+                    const aspectRatio = img.naturalWidth / img.naturalHeight;
                     
-                    console.log('🛫 Detected COMMERCIAL plane from image:', src);
-                    return 'commercial';
+                    // Check for small images (often private planes have smaller icons)
+                    if (img.naturalWidth <= 40 && img.naturalHeight <= 40) {
+                        console.log('✈️ PRIVATE suspected - Small image size (likely private jet icon)');
+                        return 'Private';
+                    }
+                    
+                    // Check for square-ish aspect ratios (private planes often more square)
+                    if (aspectRatio >= 0.9 && aspectRatio <= 1.1) {
+                        console.log('✈️ PRIVATE suspected - Square aspect ratio:', aspectRatio.toFixed(2));
+                        return 'Private';
+                    }
                 }
-            }
-            
-            // Also check alt text and title attributes as fallback
-            for (const img of uniqueImages) {
+                
+                // Method 3: Image Name/URL Pattern Analysis
+                const urlParts = src.split('/');
+                const filename = urlParts[urlParts.length - 1];
+                
+                // Check for specific image numbers that might indicate private planes
+                if (filename.match(/^\d+\.png$/) || filename.match(/^\d+\.jpg$/)) {
+                    const imageNumber = parseInt(filename.match(/^\d+/)[0]);
+                    console.log('  🔢 Image number:', imageNumber);
+                    
+                    // Based on observation, lower numbers might be private planes
+                    // This is experimental and may need adjustment
+                    if (imageNumber < 100 || imageNumber === 386) {
+                        console.log('✈️ PRIVATE suspected - Low image number pattern');
+                        return 'Private';
+                    }
+                }
+                
+                // Method 4: Context Analysis - Check surrounding text
+                const travelText = travelElement.textContent?.toLowerCase() || '';
+                const parentText = searchArea.textContent?.toLowerCase() || '';
+                
+                if ((travelText.includes('switzerland') || travelText.includes('swiss')) && 
+                    img.naturalWidth && img.naturalWidth < 50) {
+                    console.log('🇨🇭 PRIVATE - Switzerland flight with small icon (common private jet pattern)');
+                    return 'Private';
+                }
+                
+                // Method 5: Alt text analysis
                 const alt = img.alt?.toLowerCase() || '';
                 const title = img.title?.toLowerCase() || '';
                 
                 if (alt.includes('private') || title.includes('private') ||
-                    alt.includes('single engine') || title.includes('single engine') ||
-                    alt.includes('propeller') || title.includes('propeller')) {
-                    
-                    console.log('✈️ Detected PRIVATE plane from alt/title:', alt, title);
-                    return 'private';
+                    alt.includes('jet') || title.includes('jet') ||
+                    alt.includes('single') || title.includes('single')) {
+                    console.log('✈️ PRIVATE detected from alt/title attributes');
+                    return 'Private';
                 }
             }
             
-            // Default to commercial if we can't determine
-            console.log('🛫 Defaulting to COMMERCIAL plane');
-            return 'commercial';
+            // Default to commercial
+            console.log('🛫 No private indicators found - defaulting to COMMERCIAL');
+            return 'Commercial';
         },
 
         calculateLandingTime(durationString) {
