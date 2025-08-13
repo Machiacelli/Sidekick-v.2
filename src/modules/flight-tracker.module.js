@@ -224,8 +224,17 @@
             `;
             
             // Position tracker below the marked area (not bottom-left corner)
-            const trackerX = elementRect.left + scrollX;
-            const trackerY = elementRect.bottom + scrollY + 8; // 8px below the element
+            let trackerX, trackerY;
+            
+            if (rect.element) {
+                // Position relative to the marked element
+                trackerX = elementRect.left + scrollX;
+                trackerY = elementRect.bottom + scrollY + 8; // 8px below the element
+            } else {
+                // Fallback to click position if no element
+                trackerX = rect.x || elementRect.left + scrollX;
+                trackerY = rect.y || elementRect.bottom + scrollY + 8;
+            }
             
             // Create sleek tracker positioned below the marked area
             const indicator = document.createElement('div');
@@ -401,18 +410,13 @@
                     statusElement.innerHTML = `⏳ Waiting for departure${destinationText}`;
                     statusElement.style.color = '#ffc107';
                     
-                    // If waiting to depart FROM Torn, prepare to start live timer
-                    if (travelStatus.destination && travelStatus.destination !== 'torn') {
-                        areaData.departureTime = null; // Reset, will be set when flight starts
-                    }
-                    
                 } else if (travelStatus.destination) {
                     const planeType = travelStatus.planeType === 'private' ? 'Private' : 'Commercial';
                     const destinationName = travelStatus.destination.charAt(0).toUpperCase() + travelStatus.destination.slice(1);
                     
-                    // Smart timer logic based on flight direction
+                    // CORRECTED LOGIC: We can only track flights we see departing
                     if (travelStatus.destination === 'torn' || destinationName.toLowerCase() === 'torn') {
-                        // Flight TO Torn - show estimated arrival time (we don't know when they departed)
+                        // Flight TO Torn - we DON'T know when they started, so just show estimated arrival
                         if (travelStatus.estimatedLanding) {
                             statusElement.innerHTML = `🏠 Est. arrival ${travelStatus.estimatedLanding}`;
                             statusElement.style.color = '#4CAF50';
@@ -420,15 +424,21 @@
                             statusElement.innerHTML = `🏠 ${planeType} to Torn`;
                             statusElement.style.color = '#4CAF50';
                         }
+                        
+                        // Reset departure time since we can't track flights TO Torn
+                        if (areaData.departureTime) {
+                            areaData.departureTime = null;
+                            this.saveTrackedAreas();
+                        }
                     } else {
-                        // Flight FROM Torn - use live countdown timer
+                        // Flight FROM Torn TO another country - we CAN track this with live timer
                         if (!areaData.departureTime) {
-                            // First time detecting departure, record the time
+                            // First time detecting departure FROM Torn, record the time
                             areaData.departureTime = Date.now();
                             this.saveTrackedAreas();
                         }
                         
-                        // Calculate live countdown
+                        // Calculate live countdown for flight FROM Torn
                         const elapsedMinutes = Math.floor((Date.now() - areaData.departureTime) / (1000 * 60));
                         const flightDuration = this.flightDurations[travelStatus.destination.toLowerCase()];
                         
@@ -717,13 +727,29 @@
                 areaData.element = targetElement; // Update the element reference
             }
             
-            // Create the sleek bottom-left tracker
+            // Create the tracker positioned below the marked element (not bottom-left corner)
             const indicator = document.createElement('div');
             indicator.id = areaData.id;
+            
+            // Calculate position below the marked element
+            let trackerX = 20, trackerY = 20; // Default fallback position
+            
+            if (targetElement) {
+                const elementRect = targetElement.getBoundingClientRect();
+                const scrollX = window.scrollX;
+                const scrollY = window.scrollY;
+                trackerX = elementRect.left + scrollX;
+                trackerY = elementRect.bottom + scrollY + 8; // 8px below element
+            } else if (areaData.x && areaData.y) {
+                // Use saved position if available
+                trackerX = areaData.x;
+                trackerY = areaData.y;
+            }
+            
             indicator.style.cssText = `
-                position: fixed;
-                bottom: 20px;
-                left: 20px;
+                position: absolute;
+                left: ${trackerX}px;
+                top: ${trackerY}px;
                 background: rgba(26, 26, 26, 0.95);
                 color: #e0e0e0;
                 padding: 8px 12px;
