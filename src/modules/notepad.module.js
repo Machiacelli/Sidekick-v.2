@@ -147,34 +147,6 @@
                 }
             },
 
-            // === PAGE-SPECIFIC LAYOUT SYSTEM ===
-            getCurrentPage() {
-                return this.core.loadState(this.core.STORAGE_KEYS.CURRENT_PAGE, 0);
-            },
-
-            getPageLayoutKey(notepadId) {
-                const currentPage = this.getCurrentPage();
-                return `notepad_${notepadId}_page_${currentPage}_layout`;
-            },
-
-            getPageLayout(notepadId) {
-                const pageLayoutKey = this.getPageLayoutKey(notepadId);
-                const pageLayoutStr = localStorage.getItem(pageLayoutKey);
-                
-                if (pageLayoutStr) {
-                    return JSON.parse(pageLayoutStr);
-                }
-                
-                // Return sensible defaults if no layout exists
-                return {
-                    x: 10,
-                    y: 10,
-                    width: 280,
-                    height: 150,
-                    pinned: false
-                };
-            },
-
             // Update position, size, color, and pinned state
             updateNotepadLayout(id, layout) {
                 const notepad = this.notepads.find(n => n.id === id);
@@ -207,15 +179,13 @@
                 notepadElement.className = 'sidebar-item movable-notepad';
                 notepadElement.dataset.id = notepad.id;
                 
-                // Get page-specific layout for position/size, global data for content/color
-                const pageLayout = this.getPageLayout(notepad.id);
-                
+                // Use global notepad properties for position/size (not page-specific)
                 notepadElement.style.cssText = `
                     position: absolute;
-                    left: ${pageLayout.x}px;
-                    top: ${pageLayout.y}px;
-                    width: ${pageLayout.width}px;
-                    height: ${pageLayout.height}px;
+                    left: ${notepad.x || 10}px;
+                    top: ${notepad.y || 10}px;
+                    width: ${notepad.width || 280}px;
+                    height: ${notepad.height || 150}px;
                     background: #2a2a2a;
                     border: 1px solid #444;
                     border-radius: 8px;
@@ -224,7 +194,7 @@
                     min-width: 200px;
                     min-height: 100px;
                     z-index: 1000;
-                    resize: ${pageLayout.pinned ? 'none' : 'both'};
+                    resize: ${notepad.pinned ? 'none' : 'both'};
                     overflow: hidden;
                 `;
                 
@@ -340,22 +310,23 @@
                 const pinBtn = notepadElement.querySelector('.pin-btn');
                 const colorBtn = notepadElement.querySelector('.color-btn');
                 
-                // Get page-specific layout for pinned state
-                const pageLayout = this.getPageLayout(notepad.id);
-                let isPinned = pageLayout.pinned || false;
+                // Use global notepad pinned state
+                let isPinned = notepad.pinned || false;
                 
-                // Save position and size function - now saves to page-specific storage
+                // Save position and size function - saves to global notepad object
                 const saveLayout = () => {
-                    const pageLayoutKey = this.getPageLayoutKey(notepad.id);
-                    const layout = {
-                        x: notepadElement.offsetLeft,
-                        y: notepadElement.offsetTop,
-                        width: notepadElement.offsetWidth,
-                        height: notepadElement.offsetHeight,
-                        pinned: isPinned
-                    };
-                    localStorage.setItem(pageLayoutKey, JSON.stringify(layout));
-                    console.log(`📝 Saved page layout for notepad ${notepad.id}:`, layout);
+                    // Update the global notepad object
+                    notepad.x = notepadElement.offsetLeft;
+                    notepad.y = notepadElement.offsetTop;
+                    notepad.width = notepadElement.offsetWidth;
+                    notepad.height = notepadElement.offsetHeight;
+                    notepad.pinned = isPinned;
+                    
+                    // Save all notepads globally
+                    this.saveNotepads();
+                    console.log(`📝 Saved global layout for notepad ${notepad.id}:`, {
+                        x: notepad.x, y: notepad.y, width: notepad.width, height: notepad.height, pinned: notepad.pinned
+                    });
                 };
                 
                 // Add enhanced styling and functionality
