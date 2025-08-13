@@ -9,6 +9,21 @@
         isMarkingMode: false,
         trackedAreas: [],
         
+        // Flight duration database from Torn Wiki (Commercial/Standard and Airstrip/Private)
+        flightDurations: {
+            'argentina': { commercial: '167m', private: '134m' },
+            'canada': { commercial: '41m', private: '33m' },
+            'cayman islands': { commercial: '35m', private: '28m' },
+            'china': { commercial: '242m', private: '194m' },
+            'hawaii': { commercial: '103m', private: '82m' },
+            'japan': { commercial: '220m', private: '176m' },
+            'mexico': { commercial: '26m', private: '21m' },
+            'south africa': { commercial: '297m', private: '238m' },
+            'switzerland': { commercial: '158m', private: '126m' },
+            'uae': { commercial: '273m', private: '218m' },
+            'united kingdom': { commercial: '127m', private: '102m' }
+        },
+        
         init() {
             console.log("🛩️ FlightTracker: Initializing area marking system...");
             this.core = window.SidekickModules?.Core;
@@ -314,25 +329,38 @@
             
             if (travelStatus.isActive) {
                 if (travelStatus.isWaiting) {
-                    statusElement.innerHTML = `⏳ Waiting for departure`;
+                    const planeTypeText = travelStatus.planeType ? ` (${travelStatus.planeType})` : '';
+                    const destinationText = travelStatus.destination ? ` to ${travelStatus.destination.charAt(0).toUpperCase() + travelStatus.destination.slice(1)}` : '';
+                    
+                    statusElement.innerHTML = `⏳ Waiting for departure${destinationText}${planeTypeText}`;
                     statusElement.style.cssText = `
                         margin-bottom: 8px; font-size: 10px; 
                         color: #ffc107; 
                         animation: statusGlow 2s ease-in-out infinite;
                     `;
-                } else if (travelStatus.timeRemaining) {
-                    statusElement.innerHTML = `✈️ Landing in: ${travelStatus.timeRemaining}`;
+                } else if (travelStatus.destination) {
+                    const planeIcon = travelStatus.planeType === 'private' ? '🛩️' : '✈️';
+                    const planeTypeText = travelStatus.planeType === 'private' ? 'Private' : 'Commercial';
+                    const destinationName = travelStatus.destination.charAt(0).toUpperCase() + travelStatus.destination.slice(1);
+                    
+                    let statusText = `${planeIcon} ${planeTypeText} to ${destinationName}`;
+                    
+                    // Show calculated landing time if available
+                    if (travelStatus.estimatedLanding) {
+                        statusText += `<br><small style="color: #90caf9;">Est. Landing: ${travelStatus.estimatedLanding}</small>`;
+                    }
+                    
+                    // Show actual remaining time if detected from page
+                    if (travelStatus.timeRemaining) {
+                        statusText += `<br><small style="color: #81c784;">Remaining: ${travelStatus.timeRemaining}</small>`;
+                    }
+                    
+                    statusElement.innerHTML = statusText;
                     statusElement.style.cssText = `
                         margin-bottom: 8px; font-size: 10px; 
                         color: #4CAF50; 
                         animation: statusGlow 2s ease-in-out infinite;
-                    `;
-                } else if (travelStatus.destination) {
-                    statusElement.innerHTML = `🌍 Traveling to: ${travelStatus.destination}`;
-                    statusElement.style.cssText = `
-                        margin-bottom: 8px; font-size: 10px; 
-                        color: #2196F3; 
-                        animation: statusGlow 2s ease-in-out infinite;
+                        line-height: 1.3;
                     `;
                 }
             } else {
@@ -350,7 +378,9 @@
                 isActive: false,
                 isWaiting: false,
                 destination: null,
-                timeRemaining: null
+                timeRemaining: null,
+                planeType: null, // 'commercial' or 'private'
+                estimatedLanding: null
             };
             
             // Search in the element and its parents/siblings for travel text
@@ -360,6 +390,9 @@
                 element.parentElement?.parentElement,
                 ...Array.from(element.parentElement?.children || [])
             ];
+            
+            // Also search for images to detect plane type
+            const allImages = Array.from(document.querySelectorAll('img'));
             
             for (const el of searchElements) {
                 if (!el || !el.textContent) continue;
@@ -378,12 +411,23 @@
                     
                     for (const dest of destinations) {
                         if (text.includes(dest)) {
-                            result.destination = dest.charAt(0).toUpperCase() + dest.slice(1);
+                            result.destination = dest.toLowerCase();
                             break;
                         }
                     }
                     
-                    // Look for time remaining
+                    // Detect plane type by looking for airplane images near the travel text
+                    if (result.destination) {
+                        result.planeType = this.detectPlaneType(el, allImages);
+                        
+                        // Calculate flight time and estimated landing
+                        if (this.flightDurations[result.destination] && result.planeType) {
+                            const flightDuration = this.flightDurations[result.destination][result.planeType];
+                            result.estimatedLanding = this.calculateLandingTime(flightDuration);
+                        }
+                    }
+                    
+                    // Look for existing time remaining in the text
                     const timeMatch = text.match(/(\d+)\s*(min|hour|hr|minute)/i);
                     if (timeMatch) {
                         result.timeRemaining = timeMatch[0];
@@ -396,11 +440,90 @@
                 if (text.includes('waiting') || text.includes('boarding') || text.includes('departing')) {
                     result.isActive = true;
                     result.isWaiting = true;
+                    
+                    // Still try to detect destination and plane type for waiting flights
+                    const destinations = [
+                        'argentina', 'canada', 'cayman islands', 'china', 'hawaii', 
+                        'japan', 'mexico', 'south africa', 'switzerland', 'uae', 'united kingdom'
+                    ];
+                    
+                    for (const dest of destinations) {
+                        if (text.includes(dest)) {
+                            result.destination = dest.toLowerCase();
+                            result.planeType = this.detectPlaneType(el, allImages);
+                            break;
+                        }
+                    }
+                    
                     break;
                 }
             }
             
             return result;
+        },
+
+        detectPlaneType(travelElement, allImages) {
+            // Look for airplane images near the travel text to determine plane type
+            const searchArea = travelElement.closest('div') || travelElement.parentElement;
+            if (!searchArea) return 'commercial'; // Default fallback
+            
+            // Search for images within the same container or nearby
+            const nearbyImages = Array.from(searchArea.querySelectorAll('img'));
+            
+            // Also check images that might be in adjacent elements
+            const siblingElements = Array.from(searchArea.parentElement?.children || []);
+            siblingElements.forEach(sibling => {
+                nearbyImages.push(...Array.from(sibling.querySelectorAll('img')));
+            });
+            
+            for (const img of nearbyImages) {
+                const src = img.src?.toLowerCase() || '';
+                const alt = img.alt?.toLowerCase() || '';
+                const title = img.title?.toLowerCase() || '';
+                
+                // Private plane indicators (small single-engine propeller plane)
+                if (src.includes('private') || src.includes('airstrip') || 
+                    src.includes('small') || src.includes('propeller') ||
+                    alt.includes('private') || alt.includes('airstrip') ||
+                    title.includes('private') || title.includes('airstrip')) {
+                    return 'private';
+                }
+                
+                // Commercial plane indicators (large planes with airline text/livery)
+                if (src.includes('commercial') || src.includes('airline') || 
+                    src.includes('boeing') || src.includes('airbus') ||
+                    alt.includes('commercial') || alt.includes('airline') ||
+                    title.includes('commercial') || title.includes('airline')) {
+                    return 'commercial';
+                }
+                
+                // Check for specific airline liveries mentioned in the requirements
+                const airlineIndicators = [
+                    'hawaii', 'dimsum', 'buenos', 'springbrook', 'arabic'
+                ];
+                
+                for (const indicator of airlineIndicators) {
+                    if (src.includes(indicator) || alt.includes(indicator) || title.includes(indicator)) {
+                        return 'commercial';
+                    }
+                }
+            }
+            
+            // If we can't determine from images, try to detect from file names or context
+            // Most travel images without specific private plane indicators are commercial
+            return 'commercial';
+        },
+
+        calculateLandingTime(durationString) {
+            // Parse duration string like "167m" and calculate landing time
+            const minutes = parseInt(durationString.replace('m', ''));
+            if (isNaN(minutes)) return null;
+            
+            const now = new Date();
+            const landingTime = new Date(now.getTime() + (minutes * 60 * 1000));
+            
+            // Format as HH:MM
+            return landingTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         },
 
         removeArea(areaId) {
