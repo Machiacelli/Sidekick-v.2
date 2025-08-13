@@ -204,7 +204,7 @@
         },
 
         createVisualIndicator(areaData) {
-            // Create border around target element
+            // Create border around target element with color coding
             const border = document.createElement('div');
             border.id = areaData.id + '-border';
             border.style.cssText = `
@@ -214,6 +214,7 @@
                 pointer-events: none;
                 z-index: 999995;
                 animation: pulse-border 3s ease-in-out infinite;
+                transition: border-color 0.3s ease;
             `;
             
             // Create compact status indicator
@@ -241,7 +242,10 @@
                 <div id="${areaData.id}-status" style="margin-bottom: 2px; font-weight: 500;">
                     🔍 Scanning...
                 </div>
-                <div id="${areaData.id}-close" onclick="window.SidekickModules.FlightTracker.removeTracker('${areaData.id}')" 
+                <div id="${areaData.id}-plane-type" style="font-size: 9px; color: #999; margin-bottom: 2px;">
+                    Detecting plane type...
+                </div>
+                <div id="${areaData.id}-close" 
                      style="position: absolute; top: 2px; right: 2px; background: rgba(244, 67, 54, 0.3); 
                             border: none; color: #ff6b6b; width: 14px; height: 14px; border-radius: 50%; 
                             cursor: pointer; font-size: 9px; display: flex; align-items: center; 
@@ -251,8 +255,15 @@
                 </div>
             `;
             
-            // Add hover effect for close button
+            // FIXED: Proper event binding for remove button
             const closeBtn = indicator.querySelector('#' + areaData.id + '-close');
+            closeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.removeTracker(areaData.id);
+            });
+            
+            // Add hover effects
             closeBtn.addEventListener('mouseenter', function() {
                 this.style.background = 'rgba(244, 67, 54, 0.6)';
                 this.style.transform = 'scale(1.1)';
@@ -335,6 +346,9 @@
 
         monitorArea(areaData) {
             const statusElement = document.getElementById(areaData.id + '-status');
+            const planeTypeElement = document.getElementById(areaData.id + '-plane-type');
+            const borderElement = document.getElementById(areaData.id + '-border');
+            
             if (!statusElement) return;
             
             console.log("🔍 Monitoring area:", areaData.id);
@@ -346,11 +360,22 @@
                 if (travelInfo.found) {
                     const status = travelInfo.status.toLowerCase();
                     
+                    // Detect plane type and display it
+                    const planeType = this.detectPlaneTypeFromStatus(travelInfo.rawText);
+                    const planeIcon = planeType === 'private' ? '🛩️' : '✈️';
+                    const planeLabel = planeType === 'private' ? 'Private Jet' : 'Commercial';
+                    
+                    if (planeTypeElement) {
+                        planeTypeElement.innerHTML = `${planeIcon} ${planeLabel}`;
+                        planeTypeElement.style.color = planeType === 'private' ? '#FFD700' : '#87CEEB';
+                    }
+                    
                     // Check if person is currently IN another country (landed abroad)
                     const inCountryMatch = this.detectInCountry(status);
                     if (inCountryMatch) {
                         statusElement.innerHTML = `🌍 In ${inCountryMatch.country}<br><span style="color: #FFC107; font-size: 10px;">⏳ Waiting for departure</span>`;
                         statusElement.style.color = '#4CAF50';
+                        this.updateBorderColor(borderElement, 'waiting');
                         console.log("🌍 Person is in:", inCountryMatch.country);
                         return;
                     }
@@ -373,38 +398,47 @@
                                 console.log("⏰ Started countdown for return flight from", sourceCountry);
                             }
                             
-                            // Detect plane type
-                            const planeType = this.detectPlaneTypeFromStatus(travelInfo.rawText);
-                            const planeIcon = planeType === 'private' ? '🛩️' : '✈️';
-                            
-                            // Calculate countdown
+                            // Calculate countdown with plane type
                             const countdown = this.calculateCountdown(areaData.departureTime, sourceCountry, planeType);
                             
                             if (countdown.isActive) {
                                 const countryFormatted = this.formatCountryName(sourceCountry);
                                 statusElement.innerHTML = `${planeIcon} Returning from ${countryFormatted}<br><span style="color: #4CAF50; font-weight: bold;">${countdown.timeString}</span>`;
                                 statusElement.style.color = '#e8e8e8';
+                                
+                                // COLOR CODING: Change border color based on remaining time
+                                this.updateBorderColorByTime(borderElement, countdown.remainingMinutes);
                             } else {
                                 statusElement.innerHTML = `🛬 Should have landed!`;
                                 statusElement.style.color = '#ff9800';
+                                this.updateBorderColor(borderElement, 'landed');
                             }
                         } else {
                             // Unknown country or no duration data
                             const formattedStatus = this.formatTravelStatus(travelInfo.status);
                             statusElement.innerHTML = formattedStatus;
                             statusElement.style.color = '#4CAF50';
+                            this.updateBorderColor(borderElement, 'active');
                         }
                     } else {
                         // Other travel status (outbound flights, etc.)
                         const formattedStatus = this.formatTravelStatus(travelInfo.status);
                         statusElement.innerHTML = formattedStatus;
                         statusElement.style.color = travelInfo.color;
+                        this.updateBorderColor(borderElement, 'active');
                     }
                     
                     console.log("✅ Travel found:", travelInfo.status);
                 } else {
                     statusElement.innerHTML = `🏠 No travel detected`;
                     statusElement.style.color = '#888';
+                    
+                    if (planeTypeElement) {
+                        planeTypeElement.innerHTML = `No travel detected`;
+                        planeTypeElement.style.color = '#666';
+                    }
+                    
+                    this.updateBorderColor(borderElement, 'idle');
                     
                     // Reset departure time when not traveling
                     if (areaData.departureTime) {
@@ -416,6 +450,52 @@
                 console.error("Error monitoring area:", e);
                 statusElement.innerHTML = `❌ Error`;
                 statusElement.style.color = '#f44336';
+                this.updateBorderColor(borderElement, 'error');
+            }
+        },
+
+        updateBorderColor(borderElement, status) {
+            if (!borderElement) return;
+            
+            switch (status) {
+                case 'urgent': // Less than 30 minutes
+                    borderElement.style.borderColor = 'rgba(244, 67, 54, 0.8)'; // Red
+                    borderElement.style.boxShadow = '0 0 10px rgba(244, 67, 54, 0.4)';
+                    break;
+                case 'warning': // Less than 60 minutes
+                    borderElement.style.borderColor = 'rgba(255, 193, 7, 0.8)'; // Yellow
+                    borderElement.style.boxShadow = '0 0 8px rgba(255, 193, 7, 0.3)';
+                    break;
+                case 'active': // Normal travel
+                    borderElement.style.borderColor = 'rgba(76, 175, 80, 0.6)'; // Green
+                    borderElement.style.boxShadow = '0 0 6px rgba(76, 175, 80, 0.2)';
+                    break;
+                case 'waiting': // In another country
+                    borderElement.style.borderColor = 'rgba(33, 150, 243, 0.6)'; // Blue
+                    borderElement.style.boxShadow = '0 0 6px rgba(33, 150, 243, 0.2)';
+                    break;
+                case 'landed': // Should have landed
+                    borderElement.style.borderColor = 'rgba(156, 39, 176, 0.6)'; // Purple
+                    borderElement.style.boxShadow = '0 0 8px rgba(156, 39, 176, 0.3)';
+                    break;
+                case 'idle': // No travel
+                    borderElement.style.borderColor = 'rgba(158, 158, 158, 0.4)'; // Gray
+                    borderElement.style.boxShadow = 'none';
+                    break;
+                case 'error': // Error state
+                    borderElement.style.borderColor = 'rgba(244, 67, 54, 0.6)'; // Red
+                    borderElement.style.boxShadow = '0 0 8px rgba(244, 67, 54, 0.3)';
+                    break;
+            }
+        },
+
+        updateBorderColorByTime(borderElement, remainingMinutes) {
+            if (remainingMinutes <= 30) {
+                this.updateBorderColor(borderElement, 'urgent');
+            } else if (remainingMinutes <= 60) {
+                this.updateBorderColor(borderElement, 'warning');
+            } else {
+                this.updateBorderColor(borderElement, 'active');
             }
         },
 
@@ -711,18 +791,19 @@
 
         saveTrackedAreas() {
             try {
-                // Save minimal data (remove DOM references)
+                // Save complete data including departure time for persistence
                 const saveData = this.trackedAreas.map(area => ({
                     id: area.id,
                     selector: area.selector,
                     textContent: area.textContent,
                     clickX: area.clickX,
                     clickY: area.clickY,
-                    createdAt: area.createdAt
+                    createdAt: area.createdAt,
+                    departureTime: area.departureTime // IMPORTANT: Save departure time for countdown persistence
                 }));
                 
                 this.core.setSetting('flight-tracked-areas', JSON.stringify(saveData));
-                console.log("💾 Saved", saveData.length, "tracked areas");
+                console.log("💾 Saved", saveData.length, "tracked areas with departure times");
             } catch (e) {
                 console.error("Error saving tracked areas:", e);
             }
@@ -734,10 +815,24 @@
                 const element = document.querySelector(areaData.selector);
                 if (element) {
                     areaData.element = element;
+                } else {
+                    // If selector fails, try to find by text content
+                    const allElements = document.querySelectorAll('*');
+                    for (const el of allElements) {
+                        if (el.textContent && el.textContent.includes(areaData.textContent.substring(0, 20))) {
+                            areaData.element = el;
+                            break;
+                        }
+                    }
+                }
+                
+                // Ensure departureTime is preserved
+                if (!areaData.departureTime) {
+                    areaData.departureTime = null;
                 }
                 
                 this.createVisualIndicator(areaData);
-                console.log("🔄 Recreated tracker:", areaData.id);
+                console.log("🔄 Recreated tracker:", areaData.id, "with departure time:", areaData.departureTime);
             } catch (e) {
                 console.error("Error recreating tracker:", e);
             }
