@@ -209,46 +209,58 @@
             border.id = areaData.id + '-border';
             border.style.cssText = `
                 position: absolute;
-                border: 2px solid rgba(76, 175, 80, 0.6);
-                border-radius: 4px;
+                border: 1px solid rgba(76, 175, 80, 0.5);
+                border-radius: 3px;
                 pointer-events: none;
                 z-index: 999995;
-                animation: pulse-border 2s ease-in-out infinite;
+                animation: pulse-border 3s ease-in-out infinite;
             `;
             
-            // Create status indicator positioned relative to element
+            // Create compact status indicator
             const indicator = document.createElement('div');
             indicator.id = areaData.id;
             indicator.style.cssText = `
                 position: fixed;
-                background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(20, 20, 20, 0.95));
-                color: #e0e0e0;
-                padding: 12px 14px;
-                border-radius: 8px;
-                font-family: 'Segoe UI', 'Arial', sans-serif;
-                font-size: 13px;
+                background: rgba(26, 26, 26, 0.92);
+                color: #e8e8e8;
+                padding: 6px 8px;
+                border-radius: 4px;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 11px;
                 z-index: 999996;
-                backdrop-filter: blur(15px);
-                border: 1px solid rgba(76, 175, 80, 0.4);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-                max-width: 220px;
-                min-width: 180px;
+                backdrop-filter: blur(8px);
+                border: 1px solid rgba(76, 175, 80, 0.3);
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+                min-width: 160px;
+                max-width: 280px;
                 word-wrap: break-word;
+                line-height: 1.3;
             `;
             
             indicator.innerHTML = `
-                <div id="${areaData.id}-status" style="margin-bottom: 8px; line-height: 1.4; font-weight: 500;">
-                    🔍 <span style="font-size: 14px;">S</span>canning for travel...
+                <div id="${areaData.id}-status" style="margin-bottom: 2px; font-weight: 500;">
+                    🔍 Scanning...
                 </div>
-                <button onclick="window.SidekickModules.FlightTracker.removeTracker('${areaData.id}')" 
-                        style="position: absolute; top: 4px; right: 4px; background: rgba(244, 67, 54, 0.2); 
-                               border: 1px solid rgba(244, 67, 54, 0.4); color: #ff6b6b; 
-                               width: 18px; height: 18px; border-radius: 50%; cursor: pointer; 
-                               font-size: 11px; display: flex; align-items: center; justify-content: center;
-                               font-weight: bold; transition: all 0.2s ease;">
+                <div id="${areaData.id}-close" onclick="window.SidekickModules.FlightTracker.removeTracker('${areaData.id}')" 
+                     style="position: absolute; top: 2px; right: 2px; background: rgba(244, 67, 54, 0.3); 
+                            border: none; color: #ff6b6b; width: 14px; height: 14px; border-radius: 50%; 
+                            cursor: pointer; font-size: 9px; display: flex; align-items: center; 
+                            justify-content: center; font-weight: bold; transition: all 0.15s ease;
+                            line-height: 1;">
                     ×
-                </button>
+                </div>
             `;
+            
+            // Add hover effect for close button
+            const closeBtn = indicator.querySelector('#' + areaData.id + '-close');
+            closeBtn.addEventListener('mouseenter', function() {
+                this.style.background = 'rgba(244, 67, 54, 0.6)';
+                this.style.transform = 'scale(1.1)';
+            });
+            closeBtn.addEventListener('mouseleave', function() {
+                this.style.background = 'rgba(244, 67, 54, 0.3)';
+                this.style.transform = 'scale(1)';
+            });
             
             // Position indicators
             this.updateIndicatorPosition(areaData, border, indicator);
@@ -332,14 +344,25 @@
                 const travelInfo = this.findTravelStatus(areaData);
                 
                 if (travelInfo.found) {
+                    const status = travelInfo.status.toLowerCase();
+                    
+                    // Check if person is currently IN another country (landed abroad)
+                    const inCountryMatch = this.detectInCountry(status);
+                    if (inCountryMatch) {
+                        statusElement.innerHTML = `🌍 In ${inCountryMatch.country}<br><span style="color: #FFC107; font-size: 10px;">⏳ Waiting for departure</span>`;
+                        statusElement.style.color = '#4CAF50';
+                        console.log("🌍 Person is in:", inCountryMatch.country);
+                        return;
+                    }
+                    
                     // Check if this is a "Returning to Torn" flight for countdown
-                    const isReturningToTorn = travelInfo.status.toLowerCase().includes('returning to torn') || 
-                                            travelInfo.status.toLowerCase().includes('returning to') ||
-                                            travelInfo.status.toLowerCase().includes('traveling to torn');
+                    const isReturningToTorn = status.includes('returning to torn') || 
+                                            status.includes('returning to') ||
+                                            status.includes('traveling to torn');
                     
                     if (isReturningToTorn) {
                         // Extract source country from status
-                        const sourceCountry = this.extractSourceCountry(travelInfo.status);
+                        const sourceCountry = this.extractSourceCountry(status);
                         console.log("🏠 Detected return flight from:", sourceCountry);
                         
                         if (sourceCountry && this.flightDurations[sourceCountry]) {
@@ -350,35 +373,38 @@
                                 console.log("⏰ Started countdown for return flight from", sourceCountry);
                             }
                             
+                            // Detect plane type
+                            const planeType = this.detectPlaneTypeFromStatus(travelInfo.rawText);
+                            const planeIcon = planeType === 'private' ? '🛩️' : '✈️';
+                            
                             // Calculate countdown
-                            const countdown = this.calculateCountdown(areaData.departureTime, sourceCountry);
+                            const countdown = this.calculateCountdown(areaData.departureTime, sourceCountry, planeType);
                             
                             if (countdown.isActive) {
-                                const countryCapitalized = sourceCountry.charAt(0).toUpperCase() + sourceCountry.slice(1);
-                                statusElement.innerHTML = `🏠 <span style="font-size: 14px;">R</span>eturning from ${countryCapitalized}<br>
-                                    <span style="color: #4CAF50; font-weight: bold; font-size: 14px;">${countdown.timeString}</span> remaining`;
-                                statusElement.style.color = '#e0e0e0';
+                                const countryFormatted = this.formatCountryName(sourceCountry);
+                                statusElement.innerHTML = `${planeIcon} Returning from ${countryFormatted}<br><span style="color: #4CAF50; font-weight: bold;">${countdown.timeString}</span>`;
+                                statusElement.style.color = '#e8e8e8';
                             } else {
-                                statusElement.innerHTML = `🛬 <span style="font-size: 14px;">S</span>hould have landed!`;
+                                statusElement.innerHTML = `🛬 Should have landed!`;
                                 statusElement.style.color = '#ff9800';
                             }
                         } else {
                             // Unknown country or no duration data
-                            const formattedStatus = this.formatStatusText(travelInfo.status);
+                            const formattedStatus = this.formatTravelStatus(travelInfo.status);
                             statusElement.innerHTML = formattedStatus;
                             statusElement.style.color = '#4CAF50';
                         }
                     } else {
-                        // Other travel status (not returning to Torn)
-                        const formattedStatus = this.formatStatusText(travelInfo.status);
+                        // Other travel status (outbound flights, etc.)
+                        const formattedStatus = this.formatTravelStatus(travelInfo.status);
                         statusElement.innerHTML = formattedStatus;
                         statusElement.style.color = travelInfo.color;
                     }
                     
                     console.log("✅ Travel found:", travelInfo.status);
                 } else {
-                    statusElement.innerHTML = `🏠 <span style="font-size: 14px;">N</span>o travel detected`;
-                    statusElement.style.color = '#757575';
+                    statusElement.innerHTML = `🏠 No travel detected`;
+                    statusElement.style.color = '#888';
                     
                     // Reset departure time when not traveling
                     if (areaData.departureTime) {
@@ -388,9 +414,99 @@
                 }
             } catch (e) {
                 console.error("Error monitoring area:", e);
-                statusElement.innerHTML = `❌ <span style="font-size: 14px;">M</span>onitoring error`;
+                statusElement.innerHTML = `❌ Error`;
                 statusElement.style.color = '#f44336';
             }
+        },
+
+        detectInCountry(statusText) {
+            // Detect if someone is currently IN a country (has landed abroad)
+            const countryNames = {
+                'argentina': 'Argentina',
+                'canada': 'Canada', 
+                'cayman islands': 'Cayman Islands',
+                'china': 'China',
+                'hawaii': 'Hawaii',
+                'japan': 'Japan',
+                'mexico': 'Mexico',
+                'south africa': 'South Africa',
+                'switzerland': 'Switzerland',
+                'uae': 'UAE',
+                'united kingdom': 'United Kingdom'
+            };
+            
+            // Look for "In [Country]" or "Currently in [Country]" patterns
+            for (const [key, displayName] of Object.entries(countryNames)) {
+                if (statusText.includes(`in ${key}`) || 
+                    statusText.includes(`currently in ${key}`) ||
+                    statusText.includes(`located in ${key}`) ||
+                    statusText.includes(`staying in ${key}`)) {
+                    return { country: displayName, key: key };
+                }
+            }
+            
+            return null;
+        },
+
+        detectPlaneTypeFromStatus(fullText) {
+            // Look for airplane images or indicators in the full text/elements
+            if (fullText.toLowerCase().includes('private') || 
+                fullText.toLowerCase().includes('jet')) {
+                return 'private';
+            }
+            return 'commercial'; // Default
+        },
+
+        formatCountryName(countryKey) {
+            const countryNames = {
+                'argentina': 'Argentina',
+                'canada': 'Canada', 
+                'cayman islands': 'Cayman Islands',
+                'china': 'China',
+                'hawaii': 'Hawaii',
+                'japan': 'Japan',
+                'mexico': 'Mexico',
+                'south africa': 'South Africa',
+                'switzerland': 'Switzerland',
+                'uae': 'UAE',
+                'united kingdom': 'United Kingdom'
+            };
+            
+            return countryNames[countryKey] || countryKey.charAt(0).toUpperCase() + countryKey.slice(1);
+        },
+
+        formatTravelStatus(statusText) {
+            // Format travel status with proper country names and emojis
+            let formatted = statusText;
+            
+            // Replace country names with properly capitalized versions
+            const countryNames = {
+                'argentina': 'Argentina',
+                'canada': 'Canada', 
+                'cayman islands': 'Cayman Islands',
+                'china': 'China',
+                'hawaii': 'Hawaii',
+                'japan': 'Japan',
+                'mexico': 'Mexico',
+                'south africa': 'South Africa',
+                'switzerland': 'Switzerland',
+                'uae': 'UAE',
+                'united kingdom': 'United Kingdom'
+            };
+            
+            for (const [key, displayName] of Object.entries(countryNames)) {
+                const regex = new RegExp(`\\b${key}\\b`, 'gi');
+                formatted = formatted.replace(regex, displayName);
+            }
+            
+            // Add appropriate emoji
+            if (formatted.toLowerCase().includes('traveling') || formatted.toLowerCase().includes('flying')) {
+                formatted = '✈️ ' + formatted;
+            } else if (formatted.toLowerCase().includes('returning')) {
+                formatted = '🏠 ' + formatted;
+            }
+            
+            return formatted;
         },
 
         extractSourceCountry(statusText) {
@@ -417,12 +533,13 @@
             return null;
         },
 
-        calculateCountdown(departureTime, sourceCountry) {
+        calculateCountdown(departureTime, sourceCountry, planeType = 'commercial') {
             const flightData = this.flightDurations[sourceCountry];
             if (!flightData) return { isActive: false };
             
-            // Use commercial flight time as default, could be enhanced to detect plane type
-            const durationMinutes = parseInt(flightData.commercial.replace('m', ''));
+            // Use the appropriate flight time based on plane type
+            const flightTypeKey = planeType === 'private' ? 'private' : 'commercial';
+            const durationMinutes = parseInt(flightData[flightTypeKey].replace('m', ''));
             const elapsedMs = Date.now() - departureTime;
             const elapsedMinutes = Math.floor(elapsedMs / (1000 * 60));
             const remainingMinutes = durationMinutes - elapsedMinutes;
@@ -503,7 +620,7 @@
                 const text = element.textContent.toLowerCase();
                 console.log("🔍 Checking text:", text.substring(0, 100));
                 
-                // EXPANDED: Look for more travel patterns
+                // EXPANDED: Look for more travel patterns including "In Country"
                 if (text.includes('traveling') || 
                     text.includes('flying') || 
                     text.includes('in flight') ||
@@ -512,11 +629,13 @@
                     text.includes('departing') ||
                     text.includes('boarding') ||
                     text.includes('landed') ||
+                    text.match(/\bin (argentina|canada|cayman|china|hawaii|japan|mexico|south africa|switzerland|uae|united kingdom)\b/i) ||
                     text.match(/to (argentina|canada|cayman|china|hawaii|japan|mexico|south africa|switzerland|uae|united kingdom|torn)/i)) {
                     
                     return {
                         found: true,
                         status: this.parseStatusText(text),
+                        rawText: element.textContent, // Full text for plane detection
                         color: '#4CAF50'
                     };
                 }
