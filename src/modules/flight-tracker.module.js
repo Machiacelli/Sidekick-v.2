@@ -163,7 +163,8 @@
                 textContent: targetElement.textContent,
                 clickX: clickX,
                 clickY: clickY,
-                createdAt: Date.now()
+                createdAt: Date.now(),
+                departureTime: null // Will be set when return flight detected
             };
             
             // Create visual indicator
@@ -220,28 +221,32 @@
             indicator.id = areaData.id;
             indicator.style.cssText = `
                 position: fixed;
-                background: rgba(0, 0, 0, 0.9);
+                background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(20, 20, 20, 0.95));
                 color: #e0e0e0;
-                padding: 8px 12px;
-                border-radius: 6px;
-                font-family: 'Segoe UI', Arial, sans-serif;
-                font-size: 12px;
+                padding: 12px 14px;
+                border-radius: 8px;
+                font-family: 'Segoe UI', 'Arial', sans-serif;
+                font-size: 13px;
                 z-index: 999996;
-                backdrop-filter: blur(10px);
-                border: 1px solid rgba(76, 175, 80, 0.3);
-                max-width: 200px;
+                backdrop-filter: blur(15px);
+                border: 1px solid rgba(76, 175, 80, 0.4);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                max-width: 220px;
+                min-width: 180px;
                 word-wrap: break-word;
             `;
             
             indicator.innerHTML = `
-                <div id="${areaData.id}-status" style="margin-bottom: 4px;">
-                    🔍 Scanning for travel...
+                <div id="${areaData.id}-status" style="margin-bottom: 8px; line-height: 1.4; font-weight: 500;">
+                    🔍 <span style="font-size: 14px;">S</span>canning for travel...
                 </div>
                 <button onclick="window.SidekickModules.FlightTracker.removeTracker('${areaData.id}')" 
-                        style="background: rgba(244, 67, 54, 0.2); border: 1px solid rgba(244, 67, 54, 0.4); 
-                               color: #ff6b6b; padding: 2px 6px; border-radius: 3px; cursor: pointer; 
-                               font-size: 10px;">
-                    Remove
+                        style="position: absolute; top: 4px; right: 4px; background: rgba(244, 67, 54, 0.2); 
+                               border: 1px solid rgba(244, 67, 54, 0.4); color: #ff6b6b; 
+                               width: 18px; height: 18px; border-radius: 50%; cursor: pointer; 
+                               font-size: 11px; display: flex; align-items: center; justify-content: center;
+                               font-weight: bold; transition: all 0.2s ease;">
+                    ×
                 </button>
             `;
             
@@ -327,18 +332,148 @@
                 const travelInfo = this.findTravelStatus(areaData);
                 
                 if (travelInfo.found) {
-                    statusElement.innerHTML = `✈️ ${travelInfo.status}`;
-                    statusElement.style.color = travelInfo.color;
+                    // Check if this is a "Returning to Torn" flight for countdown
+                    const isReturningToTorn = travelInfo.status.toLowerCase().includes('returning to torn') || 
+                                            travelInfo.status.toLowerCase().includes('returning to') ||
+                                            travelInfo.status.toLowerCase().includes('traveling to torn');
+                    
+                    if (isReturningToTorn) {
+                        // Extract source country from status
+                        const sourceCountry = this.extractSourceCountry(travelInfo.status);
+                        console.log("🏠 Detected return flight from:", sourceCountry);
+                        
+                        if (sourceCountry && this.flightDurations[sourceCountry]) {
+                            // Initialize departure time if not set
+                            if (!areaData.departureTime) {
+                                areaData.departureTime = Date.now();
+                                this.saveTrackedAreas();
+                                console.log("⏰ Started countdown for return flight from", sourceCountry);
+                            }
+                            
+                            // Calculate countdown
+                            const countdown = this.calculateCountdown(areaData.departureTime, sourceCountry);
+                            
+                            if (countdown.isActive) {
+                                const countryCapitalized = sourceCountry.charAt(0).toUpperCase() + sourceCountry.slice(1);
+                                statusElement.innerHTML = `🏠 <span style="font-size: 14px;">R</span>eturning from ${countryCapitalized}<br>
+                                    <span style="color: #4CAF50; font-weight: bold; font-size: 14px;">${countdown.timeString}</span> remaining`;
+                                statusElement.style.color = '#e0e0e0';
+                            } else {
+                                statusElement.innerHTML = `🛬 <span style="font-size: 14px;">S</span>hould have landed!`;
+                                statusElement.style.color = '#ff9800';
+                            }
+                        } else {
+                            // Unknown country or no duration data
+                            const formattedStatus = this.formatStatusText(travelInfo.status);
+                            statusElement.innerHTML = formattedStatus;
+                            statusElement.style.color = '#4CAF50';
+                        }
+                    } else {
+                        // Other travel status (not returning to Torn)
+                        const formattedStatus = this.formatStatusText(travelInfo.status);
+                        statusElement.innerHTML = formattedStatus;
+                        statusElement.style.color = travelInfo.color;
+                    }
+                    
                     console.log("✅ Travel found:", travelInfo.status);
                 } else {
-                    statusElement.innerHTML = `🏠 No travel detected`;
+                    statusElement.innerHTML = `🏠 <span style="font-size: 14px;">N</span>o travel detected`;
                     statusElement.style.color = '#757575';
+                    
+                    // Reset departure time when not traveling
+                    if (areaData.departureTime) {
+                        areaData.departureTime = null;
+                        this.saveTrackedAreas();
+                    }
                 }
             } catch (e) {
                 console.error("Error monitoring area:", e);
-                statusElement.innerHTML = `❌ Monitoring error`;
+                statusElement.innerHTML = `❌ <span style="font-size: 14px;">M</span>onitoring error`;
                 statusElement.style.color = '#f44336';
             }
+        },
+
+        extractSourceCountry(statusText) {
+            // Extract country name from "Returning to Torn from [Country]" text
+            const text = statusText.toLowerCase();
+            
+            // Check for "from [country]" pattern
+            const fromMatch = text.match(/from\s+([a-zA-Z\s]+)/);
+            if (fromMatch) {
+                const country = fromMatch[1].trim();
+                // Check if it's a known country
+                if (this.flightDurations[country]) {
+                    return country;
+                }
+            }
+            
+            // Check for direct country mentions in known destinations
+            for (const country of Object.keys(this.flightDurations)) {
+                if (text.includes(country)) {
+                    return country;
+                }
+            }
+            
+            return null;
+        },
+
+        calculateCountdown(departureTime, sourceCountry) {
+            const flightData = this.flightDurations[sourceCountry];
+            if (!flightData) return { isActive: false };
+            
+            // Use commercial flight time as default, could be enhanced to detect plane type
+            const durationMinutes = parseInt(flightData.commercial.replace('m', ''));
+            const elapsedMs = Date.now() - departureTime;
+            const elapsedMinutes = Math.floor(elapsedMs / (1000 * 60));
+            const remainingMinutes = durationMinutes - elapsedMinutes;
+            
+            if (remainingMinutes > 0) {
+                const hours = Math.floor(remainingMinutes / 60);
+                const mins = remainingMinutes % 60;
+                
+                let timeString;
+                if (hours > 0) {
+                    timeString = `${hours}h ${mins}m`;
+                } else if (mins > 0) {
+                    timeString = `${mins}m`;
+                } else {
+                    timeString = "Landing soon";
+                }
+                
+                return {
+                    isActive: true,
+                    timeString: timeString,
+                    remainingMinutes: remainingMinutes
+                };
+            } else {
+                return { isActive: false };
+            }
+        },
+
+        formatStatusText(statusText) {
+            // Format status text with proper capitalization and styling
+            const lines = statusText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            
+            for (const line of lines) {
+                const lower = line.toLowerCase();
+                if (lower.includes('traveling') || 
+                    lower.includes('flying') || 
+                    lower.includes('returning') ||
+                    lower.includes('abroad')) {
+                    
+                    // Capitalize first letter and add emoji
+                    const firstLetter = line.charAt(0).toUpperCase();
+                    const rest = line.slice(1);
+                    const formatted = `✈️ <span style="font-size: 14px;">${firstLetter}</span>${rest}`;
+                    
+                    return formatted.length > 60 ? formatted.substring(0, 57) + '...' : formatted;
+                }
+            }
+            
+            // Fallback formatting
+            const firstLetter = statusText.charAt(0).toUpperCase();
+            const rest = statusText.slice(1);
+            return `✈️ <span style="font-size: 14px;">${firstLetter}</span>${rest}`;
         },
 
         findTravelStatus(areaData) {
@@ -391,7 +526,7 @@
         },
 
         parseStatusText(text) {
-            // Extract meaningful status from text
+            // Extract meaningful status from text - now handled by formatStatusText
             const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
             
             for (const line of lines) {
