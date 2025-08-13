@@ -29,17 +29,11 @@
         TRAVEL_TRACKERS: 'sidekick_travel_trackers'
     };
 
-    // Enhanced storage with profile support
+    // Enhanced storage with consistent global keys
     function getProfileKey() {
-        // Only use profile-specific storage when actually viewing a profile page
-        const urlMatch = window.location.href.match(/profiles\.php\?XID=(\d+)/);
-        if (urlMatch) {
-            return urlMatch[1];
-        }
-        
-        // For all other pages, use a consistent key based on your own user ID
-        // This ensures storage is consistent across all pages except when viewing other profiles
-        return 'main';
+        // Use consistent storage across ALL pages for true global persistence
+        // This ensures notepads appear on all pages regardless of which profile you're viewing
+        return 'global';
     }
 
     function getProfileSpecificKey(baseKey) {

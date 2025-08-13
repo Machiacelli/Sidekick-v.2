@@ -23,8 +23,6 @@
     }
 
     waitForCore(() => {
-        const { NotificationSystem } = window.SidekickModules.Core;
-
         const NotepadModule = {
             notepads: [],
             currentPage: 0,
@@ -101,7 +99,9 @@
                 // Use refreshDisplay instead of renderNotepad to avoid duplicates
                 this.refreshDisplay();
                 
-                NotificationSystem.show('Notepad', 'New notepad created', 'info', 2000);
+                if (this.core && this.core.NotificationSystem) {
+                    this.core.NotificationSystem.show('Notepad', 'New notepad created', 'info', 2000);
+                }
                 console.log('📝 Notepad added successfully, total notepads:', this.notepads.length);
                 return notepad;
             },
@@ -131,7 +131,9 @@
                     // Check if we need to show placeholder
                     this.checkAndShowPlaceholder();
                     
-                    NotificationSystem.show('Notepad', 'Notepad deleted', 'success', 2000);
+                    if (this.core && this.core.NotificationSystem) {
+                        this.core.NotificationSystem.show('Notepad', 'Notepad deleted', 'success', 2000);
+                    }
                     console.log('📝 Notepad deleted successfully, remaining notepads:', this.notepads.length);
                 }
             },

@@ -29,8 +29,8 @@
             name: 'FlightTracker',
             core: null,
             
-            init(coreModule) {
-                this.core = coreModule;
+            init() {
+                this.core = window.SidekickModules.Core;
                 console.log('✈️ Flight Tracker module initialized');
                 
                 // Register as flight tracker button handler
