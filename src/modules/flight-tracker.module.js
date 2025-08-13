@@ -319,10 +319,12 @@
                 x: trackerX,
                 y: trackerY,
                 elementSelector: elementSelector,
+                elementText: rect.element.textContent.substring(0, 200), // Store more text for better matching
                 element: rect.element,
                 created: Date.now(),
                 url: window.location.href,
-                departureTime: null // Will store when flight departs FROM Torn
+                pageTitle: document.title, // Store page title for better identification
+                departureTime: null // Will store when flight departs TO Torn
             };
             
             this.trackedAreas.push(areaData);
@@ -414,33 +416,22 @@
                     const planeType = travelStatus.planeType === 'private' ? 'Private' : 'Commercial';
                     const destinationName = travelStatus.destination.charAt(0).toUpperCase() + travelStatus.destination.slice(1);
                     
-                    // CORRECTED LOGIC: We can only track flights we see departing
+                    // CORRECT LOGIC: Check flight direction
                     if (travelStatus.destination === 'torn' || destinationName.toLowerCase() === 'torn') {
-                        // Flight TO Torn - we DON'T know when they started, so just show estimated arrival
-                        if (travelStatus.estimatedLanding) {
-                            statusElement.innerHTML = `🏠 Est. arrival ${travelStatus.estimatedLanding}`;
-                            statusElement.style.color = '#4CAF50';
-                        } else {
-                            statusElement.innerHTML = `🏠 ${planeType} to Torn`;
-                            statusElement.style.color = '#4CAF50';
-                        }
-                        
-                        // Reset departure time since we can't track flights TO Torn
-                        if (areaData.departureTime) {
-                            areaData.departureTime = null;
-                            this.saveTrackedAreas();
-                        }
-                    } else {
-                        // Flight FROM Torn TO another country - we CAN track this with live timer
+                        // Flight TO Torn - WE CAN TRACK THIS! Start timer when "Returning to Torn" detected
                         if (!areaData.departureTime) {
-                            // First time detecting departure FROM Torn, record the time
+                            // First time detecting "Returning to Torn", start the timer
                             areaData.departureTime = Date.now();
                             this.saveTrackedAreas();
+                            console.log('🕒 Started tracking flight TO Torn from', destinationName);
                         }
                         
-                        // Calculate live countdown for flight FROM Torn
+                        // Calculate live countdown for flight TO Torn
                         const elapsedMinutes = Math.floor((Date.now() - areaData.departureTime) / (1000 * 60));
-                        const flightDuration = this.flightDurations[travelStatus.destination.toLowerCase()];
+                        
+                        // Try to find return flight duration (use the same country data)
+                        const sourceCountry = this.detectSourceCountry(travelStatus);
+                        const flightDuration = sourceCountry ? this.flightDurations[sourceCountry.toLowerCase()] : null;
                         
                         if (flightDuration && flightDuration[travelStatus.planeType]) {
                             const totalMinutes = parseInt(flightDuration[travelStatus.planeType].replace('m', ''));
@@ -451,15 +442,25 @@
                                 const mins = remainingMinutes % 60;
                                 const timeString = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
                                 
-                                statusElement.innerHTML = `✈️ Landing in ${timeString}`;
+                                statusElement.innerHTML = `🏠 Landing in ${timeString}`;
                                 statusElement.style.color = '#4CAF50';
                             } else {
                                 statusElement.innerHTML = `🛬 Should have landed`;
                                 statusElement.style.color = '#ff9800';
                             }
                         } else {
-                            statusElement.innerHTML = `✈️ ${planeType} to ${destinationName}`;
+                            statusElement.innerHTML = `🏠 ${planeType} returning to Torn`;
                             statusElement.style.color = '#4CAF50';
+                        }
+                    } else {
+                        // Flight FROM Torn TO another country - we DON'T know arrival time
+                        statusElement.innerHTML = `✈️ ${planeType} to ${destinationName}`;
+                        statusElement.style.color = '#2196F3';
+                        
+                        // Reset departure time for outbound flights (we can't track arrival)
+                        if (areaData.departureTime) {
+                            areaData.departureTime = null;
+                            this.saveTrackedAreas();
                         }
                     }
                 }
@@ -473,6 +474,42 @@
                     this.saveTrackedAreas();
                 }
             }
+        },
+
+        detectSourceCountry(travelStatus) {
+            // When someone is "Returning to Torn", try to detect which country they're coming from
+            if (!travelStatus.element || !travelStatus.element.textContent) return null;
+            
+            const text = travelStatus.element.textContent.toLowerCase();
+            
+            // Look for "returning to torn from XXX" or "from XXX to torn" patterns
+            const returnPatterns = [
+                /returning to torn from ([a-z\s]+)/i,
+                /from ([a-z\s]+) to torn/i,
+                /([a-z\s]+) to torn/i
+            ];
+            
+            for (const pattern of returnPatterns) {
+                const match = text.match(pattern);
+                if (match) {
+                    const country = match[1].trim();
+                    // Map to our flight duration keys
+                    if (country.includes('argentina')) return 'argentina';
+                    if (country.includes('canada')) return 'canada';
+                    if (country.includes('cayman')) return 'cayman islands';
+                    if (country.includes('china')) return 'china';
+                    if (country.includes('hawaii')) return 'hawaii';
+                    if (country.includes('japan')) return 'japan';
+                    if (country.includes('mexico')) return 'mexico';
+                    if (country.includes('south africa')) return 'south africa';
+                    if (country.includes('switzerland')) return 'switzerland';
+                    if (country.includes('uae') || country.includes('emirates')) return 'uae';
+                    if (country.includes('uk') || country.includes('kingdom')) return 'uk';
+                    return country;
+                }
+            }
+            
+            return null;
         },
 
         detectTravelStatus(element) {
@@ -663,18 +700,25 @@
                 const saved = this.core.getStorage('flight_tracked_areas', '[]');
                 const savedAreas = JSON.parse(saved);
                 
-                // Filter areas for current page and recreate them
+                // Filter areas for current page and within last 6 hours (more reasonable timeframe)
+                const sixHoursAgo = Date.now() - (6 * 60 * 60 * 1000);
+                const currentUrl = window.location.href;
+                
                 this.trackedAreas = savedAreas.filter(area => {
-                    // Only keep areas for the current page or general areas
-                    return !area.url || area.url === window.location.href;
+                    return area.url === currentUrl && area.created > sixHoursAgo;
                 });
                 
-                // Recreate visual indicators for saved areas
-                this.trackedAreas.forEach(area => {
-                    this.recreateAreaIndicator(area);
-                });
+                console.log(`🛩️ FlightTracker: Found ${this.trackedAreas.length} areas to restore`);
                 
-                console.log(`🛩️ FlightTracker: Loaded ${this.trackedAreas.length} tracked areas for current page`);
+                // Recreate visual indicators for saved areas with a delay to ensure DOM is ready
+                setTimeout(() => {
+                    this.trackedAreas.forEach((area, index) => {
+                        setTimeout(() => {
+                            this.recreateAreaIndicator(area);
+                        }, index * 100); // Stagger recreation to avoid conflicts
+                    });
+                }, 500);
+                
             } catch (error) {
                 console.error("❌ FlightTracker: Error loading tracked areas:", error);
                 this.trackedAreas = [];
@@ -701,7 +745,23 @@
                 }
             }
             
-            // If we found the element, create the scanning border
+            // If selector failed, try to find by text content
+            if (!targetElement && areaData.elementText) {
+                const searchText = areaData.elementText.substring(0, 100);
+                const allElements = Array.from(document.querySelectorAll('*'));
+                
+                targetElement = allElements.find(el => 
+                    el.textContent && 
+                    el.textContent.includes(searchText.substring(0, 50)) &&
+                    el.offsetWidth > 0 && el.offsetHeight > 0 // Element must be visible
+                );
+                
+                if (targetElement) {
+                    console.log('🔍 Found element by text content match');
+                }
+            }
+            
+            // Create the scanning border if we found the element
             if (targetElement) {
                 const scanBorder = document.createElement('div');
                 scanBorder.id = areaData.id + '-border';
@@ -727,12 +787,12 @@
                 areaData.element = targetElement; // Update the element reference
             }
             
-            // Create the tracker positioned below the marked element (not bottom-left corner)
+            // Create the tracker positioned below the marked element
             const indicator = document.createElement('div');
             indicator.id = areaData.id;
             
-            // Calculate position below the marked element
-            let trackerX = 20, trackerY = 20; // Default fallback position
+            // Calculate position below the marked element (with fallback to saved position)
+            let trackerX, trackerY;
             
             if (targetElement) {
                 const elementRect = targetElement.getBoundingClientRect();
@@ -740,10 +800,16 @@
                 const scrollY = window.scrollY;
                 trackerX = elementRect.left + scrollX;
                 trackerY = elementRect.bottom + scrollY + 8; // 8px below element
-            } else if (areaData.x && areaData.y) {
-                // Use saved position if available
-                trackerX = areaData.x;
-                trackerY = areaData.y;
+                
+                // Update stored position
+                areaData.x = trackerX;
+                areaData.y = trackerY;
+                this.saveTrackedAreas();
+            } else {
+                // Fallback to saved position if element not found
+                trackerX = areaData.x || 20;
+                trackerY = areaData.y || 20;
+                console.warn('⚠️ Using fallback position for tracker');
             }
             
             indicator.style.cssText = `
