@@ -43,27 +43,23 @@
 
             loadNotepads() {
                 console.log('📝 Loading notepads...');
-                const pages = this.core.loadState(this.core.STORAGE_KEYS.SIDEBAR_PAGES, [{ notepads: [], todoLists: [], attackLists: [] }]);
-                console.log('📝 Loaded pages from storage:', pages);
-                this.currentPage = this.core.loadState(this.core.STORAGE_KEYS.CURRENT_PAGE, 0);
-                console.log('📝 Current page index:', this.currentPage);
-
-                if (pages[this.currentPage]) {
-                    this.notepads = pages[this.currentPage].notepads || [];
-                    console.log('📝 Loaded notepads for current page:', this.notepads);
-                } else {
-                    console.log('📝 No data for current page, initializing empty');
-                    this.notepads = [];
-                }
+                // Load notepads globally, not page-specific
+                const allNotepads = this.core.loadState(this.core.STORAGE_KEYS.NOTEPADS, []);
+                console.log('📝 Loaded global notepads from storage:', allNotepads);
+                
+                this.notepads = allNotepads;
+                console.log('📝 Set notepads globally:', this.notepads);
             },
 
             refreshDisplay() {
                 console.log('📝 Refreshing notepad display...');
-                // Clear current notepad display completely
-                const container = document.getElementById('sidekick-notepads');
+                // Clear current notepad display completely - use content area consistently
+                const container = document.getElementById('sidekick-content');
                 if (container) {
-                    container.innerHTML = '';
-                    console.log('📝 Cleared notepad container');
+                    // Only clear notepad elements, not all content
+                    const notepads = container.querySelectorAll('.movable-notepad');
+                    notepads.forEach(notepad => notepad.remove());
+                    console.log('📝 Cleared existing notepad elements');
                 }
 
                 // Re-render all notepads for current page
@@ -77,17 +73,10 @@
                     console.log('📝 No notepads to render');
                 }
             },            saveNotepads() {
-                console.log('📝 Saving notepads...', this.notepads);
-                const pages = this.core.loadState(this.core.STORAGE_KEYS.SIDEBAR_PAGES, [{ notepads: [], todoLists: [], attackLists: [] }]);
-                
-                // Ensure current page exists
-                while (pages.length <= this.currentPage) {
-                    pages.push({ notepads: [], todoLists: [], attackLists: [] });
-                }
-                
-                pages[this.currentPage].notepads = this.notepads;
-                this.core.saveState(this.core.STORAGE_KEYS.SIDEBAR_PAGES, pages);
-                console.log('📝 Notepads saved to storage, total pages:', pages.length);
+                console.log('📝 Saving notepads globally...', this.notepads);
+                // Save notepads globally, not page-specific
+                this.core.saveState(this.core.STORAGE_KEYS.NOTEPADS, this.notepads);
+                console.log('📝 Notepads saved to global storage');
             },
 
             addNotepad(title = 'New Note') {
@@ -126,8 +115,15 @@
                         console.log('📝 Removed notepad element from DOM');
                     }
                     
+                    // Clear layout storage
+                    localStorage.removeItem(`notepad_${id}_layout`);
+                    console.log('📝 Cleared notepad layout storage');
+                    
                     // Save updated array to storage
                     this.saveNotepads();
+                    
+                    // Check if we need to show placeholder
+                    this.checkAndShowPlaceholder();
                     
                     NotificationSystem.show('Notepad', 'Notepad deleted', 'success', 2000);
                     console.log('📝 Notepad deleted successfully, remaining notepads:', this.notepads.length);
@@ -426,27 +422,6 @@
                 }
             },
 
-            deleteNotepad(id) {
-                const index = this.notepads.findIndex(n => n.id === id);
-                if (index > -1) {
-                    if (confirm('Delete this notepad?')) {
-                        this.notepads.splice(index, 1);
-                        this.saveNotepads();
-                        
-                        // Remove from DOM
-                        const element = document.getElementById(`notepad-${id}`);
-                        if (element) {
-                            element.remove();
-                        }
-                        
-                        // Show placeholder if no notepads left
-                        this.checkAndShowPlaceholder();
-                        
-                        NotificationSystem.show('Notepad', 'Notepad deleted!', 'info', 1500);
-                    }
-                }
-            },
-
             checkAndShowPlaceholder() {
                 const contentArea = document.getElementById('sidekick-content');
                 if (contentArea && !contentArea.querySelector('.enhanced-notepad')) {
@@ -553,11 +528,6 @@
                 }, 100);
             },
 
-            switchToPage(pageIndex) {
-                this.currentPage = pageIndex;
-                this.loadNotepads();
-                this.renderAllNotepads();
-            }
         };
 
         // Export to global scope

@@ -918,10 +918,9 @@
                 console.log('📄 Switching to page:', pageIndex);
                 saveState(STORAGE_KEYS.CURRENT_PAGE, pageIndex);
                 
-                // Update notepad module's current page and reload notepads
+                // Notepads are now global, no need to reload on page switch
+                // Just ensure they're displayed if switching pages
                 if (window.SidekickModules?.Notepad) {
-                    window.SidekickModules.Notepad.currentPage = pageIndex;
-                    window.SidekickModules.Notepad.loadNotepads();
                     window.SidekickModules.Notepad.refreshDisplay();
                 }
                 

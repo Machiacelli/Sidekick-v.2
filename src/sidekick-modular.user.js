@@ -81,7 +81,12 @@
             if (window.SidekickModules[moduleName]) {
                 console.log(`🔌 Initializing ${moduleName} module...`);
                 try {
-                    window.SidekickModules[moduleName].init();
+                    // Pass core module to modules that need it
+                    if (moduleName === 'FlightTracker' || moduleName === 'Notepad') {
+                        window.SidekickModules[moduleName].init(window.SidekickModules.Core);
+                    } else {
+                        window.SidekickModules[moduleName].init();
+                    }
                     console.log(`✅ ${moduleName} module initialized`);
                 } catch (error) {
                     console.error(`❌ ${moduleName} module failed:`, error);
