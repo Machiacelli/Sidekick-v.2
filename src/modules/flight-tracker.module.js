@@ -381,9 +381,9 @@
                     }
                     
                     // Check if this is a "Returning to Torn" flight for countdown
-                    const isReturningToTorn = status.includes('returning to torn') || 
-                                            status.includes('returning to') ||
-                                            status.includes('traveling to torn');
+                    const isReturningToTorn = status.includes('Returning to torn') || 
+                                            status.includes('Returning to') ||
+                                            status.includes('Traveling to torn');
                     
                     if (isReturningToTorn) {
                         // Extract source country from status
@@ -502,17 +502,17 @@
         detectInCountry(statusText) {
             // Detect if someone is currently IN a country (has landed abroad)
             const countryNames = {
-                'argentina': 'Argentina',
-                'canada': 'Canada', 
-                'cayman islands': 'Cayman Islands',
-                'china': 'China',
-                'hawaii': 'Hawaii',
-                'japan': 'Japan',
-                'mexico': 'Mexico',
-                'south africa': 'South Africa',
-                'switzerland': 'Switzerland',
-                'uae': 'UAE',
-                'united kingdom': 'United Kingdom'
+                'Argentina': 'Argentina',
+                'Canada': 'Canada', 
+                'Cayman Islands': 'Cayman Islands',
+                'China': 'China',
+                'Hawaii': 'Hawaii',
+                'Japan': 'Japan',
+                'Mexico': 'Mexico',
+                'South Africa': 'South Africa',
+                'Switzerland': 'Switzerland',
+                'UAE': 'UAE',
+                'United Kingdom': 'United Kingdom'
             };
             
             // Look for "In [Country]" or "Currently in [Country]" patterns
@@ -577,13 +577,6 @@
             for (const [key, displayName] of Object.entries(countryNames)) {
                 const regex = new RegExp(`\\b${key}\\b`, 'gi');
                 formatted = formatted.replace(regex, displayName);
-            }
-            
-            // Add appropriate emoji
-            if (formatted.toLowerCase().includes('traveling') || formatted.toLowerCase().includes('flying')) {
-                formatted = '✈️ ' + formatted;
-            } else if (formatted.toLowerCase().includes('returning')) {
-                formatted = '🏠 ' + formatted;
             }
             
             return formatted;
