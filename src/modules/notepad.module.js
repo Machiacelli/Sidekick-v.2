@@ -147,6 +147,34 @@
                 }
             },
 
+            // === PAGE-SPECIFIC LAYOUT SYSTEM ===
+            getCurrentPage() {
+                return this.core.loadState(this.core.STORAGE_KEYS.CURRENT_PAGE, 0);
+            },
+
+            getPageLayoutKey(notepadId) {
+                const currentPage = this.getCurrentPage();
+                return `notepad_${notepadId}_page_${currentPage}_layout`;
+            },
+
+            getPageLayout(notepadId) {
+                const pageLayoutKey = this.getPageLayoutKey(notepadId);
+                const pageLayoutStr = localStorage.getItem(pageLayoutKey);
+                
+                if (pageLayoutStr) {
+                    return JSON.parse(pageLayoutStr);
+                }
+                
+                // Return sensible defaults if no layout exists
+                return {
+                    x: 10,
+                    y: 10,
+                    width: 280,
+                    height: 150,
+                    pinned: false
+                };
+            },
+
             // Update position, size, color, and pinned state
             updateNotepadLayout(id, layout) {
                 const notepad = this.notepads.find(n => n.id === id);
