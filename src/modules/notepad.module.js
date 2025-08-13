@@ -354,9 +354,7 @@
                 if (closeBtn) {
                     closeBtn.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        if (confirm('Delete this notepad?')) {
-                            this.deleteNotepad(notepad.id);
-                        }
+                        this.deleteNotepad(notepad.id);
                     });
                 }
                 
