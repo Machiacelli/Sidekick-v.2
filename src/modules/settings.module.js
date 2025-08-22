@@ -122,6 +122,22 @@
                     if (exportBtn) exportBtn.addEventListener('click', () => this.exportData());
                     if (importBtn) importBtn.addEventListener('click', () => this.importData());
                     if (clearBtn) clearBtn.addEventListener('click', () => this.clearAllData());
+
+                // Add Block Training button
+                const modal = document.querySelector('[id*="settings_modal"]');
+                if (modal) {
+                    const blockBtn = document.createElement('button');
+                    blockBtn.textContent = 'Block Training';
+                    blockBtn.className = 'sidekick-btn';
+                    blockBtn.style.margin = '8px 0';
+                    blockBtn.onclick = function() {
+                        if (window.SidekickModules?.BlockTraining?.blockTraining) {
+                            window.SidekickModules.BlockTraining.blockTraining();
+                        }
+                    };
+                    modal.appendChild(blockBtn);
+                }
+
                 }, 100);
                 
                 console.log('✅ Settings modal created successfully!');
