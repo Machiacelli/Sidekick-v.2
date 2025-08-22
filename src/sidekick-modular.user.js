@@ -9,14 +9,14 @@
 // @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@c234318/src/modules/core.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@c234318/src/modules/ui.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@c234318/src/modules/content.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@c234318/src/modules/settings.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@c234318/src/modules/clock.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@c234318/src/modules/notepad.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@c234318/src/modules/flight-tracker.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@c234318/src/modules/global-functions.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f9b0e73/src/modules/core.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f9b0e73/src/modules/ui.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f9b0e73/src/modules/content.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f9b0e73/src/modules/settings.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f9b0e73/src/modules/clock.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f9b0e73/src/modules/notepad.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f9b0e73/src/modules/flight-tracker.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f9b0e73/src/modules/global-functions.module.js
 // @run-at       document-end
 // ==/UserScript==
 
@@ -28,7 +28,7 @@
     console.log("🎨 NEW: Color-coded borders (Red=urgent, Yellow=warning, Green=active), proper event binding, departure time preservation");
     console.log("📦 Checking modules availability...");
     console.log("📦 window.SidekickModules =", typeof window.SidekickModules);
-    
+
     // Simple wrapper functions for module coordination (NO implementation here)
     window.forceFixNotepads = function() {
         if (window.SidekickModules?.Notepad?.forceFixNotepads) {
@@ -45,7 +45,7 @@
         }
 
         console.log("📦 Modules loaded:", Object.keys(window.SidekickModules));
-        
+
         // Wait a bit more to ensure all modules are fully initialized
         if (!window.SidekickModules.UI || !window.SidekickModules.Core) {
             console.log("⏳ Core modules not ready yet, waiting...");
@@ -91,7 +91,7 @@
         });
 
         console.log("✅ Sidekick Modular initialization complete!");
-        
+
         // Set up periodic fixes (reduced frequency to minimize console spam)
         setInterval(() => {
             if (window.forceFixNotepads) {
@@ -117,7 +117,7 @@
                 "Document ready": document.readyState,
                 "Current URL": window.location.href
             });
-            
+
             // Create a simple error notification
             const errorDiv = document.createElement('div');
             errorDiv.style.cssText = `
@@ -139,7 +139,7 @@
                 <small>Check console for details</small>
             `;
             document.body.appendChild(errorDiv);
-            
+
             // Auto-remove after 10 seconds
             setTimeout(() => errorDiv.remove(), 10000);
         }
