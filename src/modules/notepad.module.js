@@ -45,7 +45,28 @@
                 const allNotepads = this.core.loadState(this.core.STORAGE_KEYS.NOTEPADS, []);
                 console.log('📝 Loaded global notepads from storage:', allNotepads);
                 
-                this.notepads = allNotepads;
+                // Clamp any loaded layouts to sidebar bounds to avoid broken positions/sizes
+                const sidebar = document.getElementById('sidekick-sidebar');
+                const sidebarWidth = sidebar ? Math.max(200, sidebar.clientWidth) : 500;
+                const sidebarHeight = sidebar ? Math.max(200, sidebar.clientHeight) : 600;
+
+                this.notepads = (allNotepads || []).map(n => {
+                    const desiredWidth = n.width || 280;
+                    const desiredHeight = n.height || 150;
+                    const maxWidth = Math.max(150, sidebarWidth - 16);
+                    const maxHeight = Math.max(100, sidebarHeight - 80);
+                    const width = Math.min(desiredWidth, maxWidth);
+                    const height = Math.min(desiredHeight, maxHeight);
+
+                    const desiredX = (n.x !== undefined) ? n.x : 10;
+                    const desiredY = (n.y !== undefined) ? n.y : 10;
+                    const maxX = Math.max(0, sidebarWidth - width - 8);
+                    const maxY = Math.max(0, sidebarHeight - height - 8);
+                    const x = Math.min(Math.max(0, desiredX), maxX);
+                    const y = Math.min(Math.max(0, desiredY), maxY);
+
+                    return Object.assign({}, n, { x, y, width, height });
+                });
                 console.log('📝 Set notepads globally:', this.notepads);
             },
 
@@ -181,13 +202,40 @@
                 notepadElement.className = 'sidebar-item movable-notepad';
                 notepadElement.dataset.id = notepad.id;
                 
-                // Use global notepad properties for position/size (not page-specific)
+                // Clamp stored values against the current sidebar size to avoid huge/offset notes
+                const sidebar = document.getElementById('sidekick-sidebar');
+                const sidebarWidth = sidebar ? Math.max(200, sidebar.clientWidth) : 500;
+                const sidebarHeight = sidebar ? Math.max(200, sidebar.clientHeight) : 600;
+
+                const desiredWidth = notepad.width || 280;
+                const desiredHeight = notepad.height || 150;
+                const maxWidth = Math.max(150, sidebarWidth - 16); // leave some padding
+                const maxHeight = Math.max(100, sidebarHeight - 80);
+
+                // Ensure width/height are within min/max bounds
+                const finalWidth = Math.min(desiredWidth, maxWidth);
+                const finalHeight = Math.min(desiredHeight, maxHeight);
+
+                const desiredX = (notepad.x !== undefined) ? notepad.x : 10;
+                const desiredY = (notepad.y !== undefined) ? notepad.y : 10;
+                const maxX = Math.max(0, sidebarWidth - finalWidth - 8);
+                const maxY = Math.max(0, sidebarHeight - finalHeight - 8);
+
+                const finalX = Math.min(Math.max(0, desiredX), maxX);
+                const finalY = Math.min(Math.max(0, desiredY), maxY);
+
+                // Update the notepad object with clamped values so persistence won't reapply bad sizes
+                notepad.x = finalX;
+                notepad.y = finalY;
+                notepad.width = finalWidth;
+                notepad.height = finalHeight;
+
                 notepadElement.style.cssText = `
                     position: absolute;
-                    left: ${notepad.x || 10}px;
-                    top: ${notepad.y || 10}px;
-                    width: ${notepad.width || 280}px;
-                    height: ${notepad.height || 150}px;
+                    left: ${finalX}px;
+                    top: ${finalY}px;
+                    width: ${finalWidth}px;
+                    height: ${finalHeight}px;
                     background: #2a2a2a;
                     border: 1px solid #444;
                     border-radius: 8px;
@@ -199,6 +247,10 @@
                     resize: ${notepad.pinned ? 'none' : 'both'};
                     overflow: hidden;
                 `;
+
+                // Also set explicit max sizes on the element to prevent dragging-resize beyond sidebar
+                notepadElement.style.maxWidth = maxWidth + 'px';
+                notepadElement.style.maxHeight = maxHeight + 'px';
                 
                 notepadElement.innerHTML = `
                     <div class="notepad-header" style="
@@ -315,18 +367,46 @@
                 // Use global notepad pinned state
                 let isPinned = notepad.pinned || false;
                 
-                // Save position and size function - saves to global notepad object
+                // Save position and size function - clamp and save to global notepad object
                 const saveLayout = () => {
-                    // Update the global notepad object
-                    notepad.x = notepadElement.offsetLeft;
-                    notepad.y = notepadElement.offsetTop;
-                    notepad.width = notepadElement.offsetWidth;
-                    notepad.height = notepadElement.offsetHeight;
+                    // Clamp layout before saving to ensure no values exceed the sidebar bounds
+                    const sidebar = document.getElementById('sidekick-sidebar');
+                    const sidebarWidth = sidebar ? Math.max(200, sidebar.clientWidth) : 500;
+                    const sidebarHeight = sidebar ? Math.max(200, sidebar.clientHeight) : 600;
+
+                    const rawX = notepadElement.offsetLeft;
+                    const rawY = notepadElement.offsetTop;
+                    const rawWidth = notepadElement.offsetWidth;
+                    const rawHeight = notepadElement.offsetHeight;
+
+                    const maxWidth = Math.max(150, sidebarWidth - 16);
+                    const maxHeight = Math.max(100, sidebarHeight - 80);
+
+                    const width = Math.min(rawWidth, maxWidth);
+                    const height = Math.min(rawHeight, maxHeight);
+
+                    const maxX = Math.max(0, sidebarWidth - width - 8);
+                    const maxY = Math.max(0, sidebarHeight - height - 8);
+
+                    const x = Math.min(Math.max(0, rawX), maxX);
+                    const y = Math.min(Math.max(0, rawY), maxY);
+
+                    // Update the global notepad object with clamped values
+                    notepad.x = x;
+                    notepad.y = y;
+                    notepad.width = width;
+                    notepad.height = height;
                     notepad.pinned = isPinned;
-                    
+
+                    // Apply clamped styles to the element as well (visual correction)
+                    notepadElement.style.left = x + 'px';
+                    notepadElement.style.top = y + 'px';
+                    notepadElement.style.width = width + 'px';
+                    notepadElement.style.height = height + 'px';
+
                     // Save all notepads globally
                     this.saveNotepads();
-                    console.log(`📝 Saved global layout for notepad ${notepad.id}:`, {
+                    console.log('📝 Saved global layout for notepad ' + notepad.id + ':', {
                         x: notepad.x, y: notepad.y, width: notepad.width, height: notepad.height, pinned: notepad.pinned
                     });
                 };
