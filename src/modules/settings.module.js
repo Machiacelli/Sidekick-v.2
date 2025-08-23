@@ -242,23 +242,18 @@
 
             async testApiConnection() {
                 console.log('🧪 testApiConnection called!');
-                
                 const input = document.getElementById('api-key-input');
                 if (!input || !input.value.trim()) {
                     NotificationSystem.show('Error', 'Please enter an API key first', 'error');
                     return;
                 }
-                
                 const apiKey = input.value.trim();
-                
                 // Save the API key first
                 saveState(STORAGE_KEYS.API_KEY, apiKey);
-                
                 try {
                     NotificationSystem.show('Testing', 'Testing API connection...', 'info');
-                    
-                    const response = await ApiSystem.makeRequest('user?selections=basic');
-                    
+                    // FIX: Use correct endpoint format for Torn API
+                    const response = await ApiSystem.makeRequest('user/me?selections=basic');
                     if (response && response.name) {
                         NotificationSystem.show('Success', `Connected as ${response.name} [${response.player_id}]`, 'info');
                         console.log('✅ API test successful:', response);
