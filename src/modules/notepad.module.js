@@ -131,27 +131,23 @@
                 const notepad = this.notepads.find(n => n.id === id);
                 if (notepad && confirm(`Delete notepad "${notepad.title}"?`)) {
                     console.log('📝 Deleting notepad:', id, notepad.title);
-                    
                     // Remove from local array first
                     this.notepads = this.notepads.filter(n => n.id !== id);
-                    
-                    // Remove from DOM
+                    // Remove only the deleted notepad from DOM
                     const element = document.querySelector(`[data-id="${id}"]`);
                     if (element) {
                         element.remove();
                         console.log('📝 Removed notepad element from DOM');
                     }
-                    
                     // Clear layout storage
                     localStorage.removeItem(`notepad_${id}_layout`);
                     console.log('📝 Cleared notepad layout storage');
-                    
                     // Save updated array to storage
                     this.saveNotepads();
-                    
-                    // Check if we need to show placeholder
-                    this.checkAndShowPlaceholder();
-                    
+                    // If no notepads left, show placeholder
+                    if (this.notepads.length === 0) {
+                        this.checkAndShowPlaceholder();
+                    }
                     if (this.core && this.core.NotificationSystem) {
                         this.core.NotificationSystem.show('Notepad', 'Notepad deleted', 'success', 2000);
                     }
