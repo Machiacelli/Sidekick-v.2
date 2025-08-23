@@ -28,37 +28,32 @@
         // === API SYSTEM ===
         const ApiSystem = {
             lastRequest: 0,
-            
-            async makeRequest(endpoint, retries = 3) {
+            async makeRequest(endpoint, selections = '', retries = 3) {
                 const apiKey = loadState(STORAGE_KEYS.API_KEY, '');
                 if (!apiKey) {
                     throw new Error('API key not configured');
                 }
-                
                 // Rate limiting - wait at least 1 second between requests
                 const now = Date.now();
                 const timeSinceLastRequest = now - this.lastRequest;
                 if (timeSinceLastRequest < 1000) {
                     await new Promise(resolve => setTimeout(resolve, 1000 - timeSinceLastRequest));
                 }
-                
                 this.lastRequest = Date.now();
-                
-                const url = `https://api.torn.com/${endpoint}?selections=&key=${apiKey}`;
-                
+                let url = `https://api.torn.com/${endpoint}?key=${apiKey}`;
+                if (selections) {
+                    url += `&selections=${selections}`;
+                }
                 for (let attempt = 1; attempt <= retries; attempt++) {
                     try {
                         const response = await fetch(url);
                         if (!response.ok) {
                             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                         }
-                        
                         const data = await response.json();
-                        
                         if (data.error) {
                             throw new Error(data.error.error || 'API error');
                         }
-                        
                         return data;
                     } catch (error) {
                         console.warn(`API request attempt ${attempt} failed:`, error);
@@ -253,7 +248,7 @@
                 try {
                     NotificationSystem.show('Testing', 'Testing API connection...', 'info');
                     // FIX: Use correct endpoint format for Torn API
-                    const response = await ApiSystem.makeRequest('user/me?selections=basic');
+                    const response = await ApiSystem.makeRequest('user/me', 'basic');
                     if (response && response.name) {
                         NotificationSystem.show('Success', `Connected as ${response.name} [${response.player_id}]`, 'info');
                         console.log('✅ API test successful:', response);
