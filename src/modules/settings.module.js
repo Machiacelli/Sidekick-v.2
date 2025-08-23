@@ -88,7 +88,6 @@
                                 Get your API key from: <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" style="color: #4CAF50; text-decoration: none;">Torn Preferences</a>
                             </div>
                         </div>
-                        
                         <div style="display: flex; gap: 12px; margin-bottom: 20px;">
                             <button id="test-api-btn" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #2196F3, #1976D2); border: none; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">
                                 🧪 Test API Connection
@@ -97,7 +96,7 @@
                                 🔄 Refresh Points Price
                             </button>
                         </div>
-                        
+                        <button id="block-training-btn" style="width: 100%; margin: 12px 0; padding: 12px; background: linear-gradient(135deg, #FF9800, #F44336); color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer;">Block Training</button>
                         <div style="border-top: 1px solid #444; margin: 20px 0; padding-top: 20px;">
                             <h4 style="color: #aaa; margin: 0 0 12px 0; font-size: 14px; font-weight: bold;">Data Management</h4>
                             <div style="display: flex; gap: 12px; margin-bottom: 12px;">
@@ -116,12 +115,18 @@
                     const exportBtn = document.getElementById('export-data-btn');
                     const importBtn = document.getElementById('import-data-btn');
                     const clearBtn = document.getElementById('clear-all-data-btn');
+                    const blockBtn = document.getElementById('block-training-btn');
                     
                     if (testBtn) testBtn.addEventListener('click', () => this.testApiConnection());
                     if (refreshBtn) refreshBtn.addEventListener('click', () => this.refreshPointsPrice());
                     if (exportBtn) exportBtn.addEventListener('click', () => this.exportData());
                     if (importBtn) importBtn.addEventListener('click', () => this.importData());
                     if (clearBtn) clearBtn.addEventListener('click', () => this.clearAllData());
+                    if (blockBtn) blockBtn.addEventListener('click', () => {
+                        if (window.SidekickModules?.BlockTraining?.blockTraining) {
+                            window.SidekickModules.BlockTraining.blockTraining();
+                        }
+                    });
 
                     // Add Block Training button after other buttons
                     const modal = document.querySelector('[id*="settings_modal"]');

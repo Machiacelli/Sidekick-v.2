@@ -174,15 +174,21 @@
             updateNotepadLayout(id, layout) {
                 const notepad = this.notepads.find(n => n.id === id);
                 if (notepad) {
-                    if (layout.x !== undefined) notepad.x = layout.x;
-                    if (layout.y !== undefined) notepad.y = layout.y;
-                    if (layout.width !== undefined) notepad.width = layout.width;
-                    if (layout.height !== undefined) notepad.height = layout.height;
-                    if (layout.pinned !== undefined) notepad.pinned = layout.pinned;
-                    if (layout.color !== undefined) notepad.color = layout.color;
-                    notepad.modified = new Date().toISOString();
-                    this.saveNotepads();
-                    console.log('📝 Updated notepad layout:', id, layout);
+                        const sidebar = document.getElementById('sidekick-sidebar');
+                        const sidebarWidth = sidebar ? Math.max(200, sidebar.clientWidth) : 500;
+                        const sidebarHeight = sidebar ? Math.max(200, sidebar.clientHeight) : 600;
+                        const minWidth = 150, minHeight = 100;
+                        const maxWidth = Math.max(minWidth, sidebarWidth - 16);
+                        const maxHeight = Math.max(minHeight, sidebarHeight - 80);
+                        if (layout.x !== undefined) notepad.x = Math.min(Math.max(0, layout.x), Math.max(0, sidebarWidth - (notepad.width || minWidth) - 8));
+                        if (layout.y !== undefined) notepad.y = Math.min(Math.max(0, layout.y), Math.max(0, sidebarHeight - (notepad.height || minHeight) - 8));
+                        if (layout.width !== undefined) notepad.width = Math.min(Math.max(minWidth, layout.width), maxWidth);
+                        if (layout.height !== undefined) notepad.height = Math.min(Math.max(minHeight, layout.height), maxHeight);
+                        if (layout.pinned !== undefined) notepad.pinned = layout.pinned;
+                        if (layout.color !== undefined) notepad.color = layout.color;
+                        notepad.modified = new Date().toISOString();
+                        this.saveNotepads();
+                        console.log('📝 Updated notepad layout:', id, layout);
                 }
             },
 
@@ -207,14 +213,15 @@
                 const sidebarWidth = sidebar ? Math.max(200, sidebar.clientWidth) : 500;
                 const sidebarHeight = sidebar ? Math.max(200, sidebar.clientHeight) : 600;
 
+                const minWidth = 150, minHeight = 100;
                 const desiredWidth = notepad.width || 280;
                 const desiredHeight = notepad.height || 150;
-                const maxWidth = Math.max(150, sidebarWidth - 16); // leave some padding
-                const maxHeight = Math.max(100, sidebarHeight - 80);
+                const maxWidth = Math.max(minWidth, sidebarWidth - 16); // leave some padding
+                const maxHeight = Math.max(minHeight, sidebarHeight - 80);
 
                 // Ensure width/height are within min/max bounds
-                const finalWidth = Math.min(desiredWidth, maxWidth);
-                const finalHeight = Math.min(desiredHeight, maxHeight);
+                const finalWidth = Math.min(Math.max(minWidth, desiredWidth), maxWidth);
+                const finalHeight = Math.min(Math.max(minHeight, desiredHeight), maxHeight);
 
                 const desiredX = (notepad.x !== undefined) ? notepad.x : 10;
                 const desiredY = (notepad.y !== undefined) ? notepad.y : 10;
