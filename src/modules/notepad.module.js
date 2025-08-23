@@ -182,8 +182,8 @@
                         const maxHeight = Math.max(minHeight, sidebarHeight - 80);
                         if (layout.x !== undefined) notepad.x = Math.min(Math.max(0, layout.x), Math.max(0, sidebarWidth - (notepad.width || minWidth) - 8));
                         if (layout.y !== undefined) notepad.y = Math.min(Math.max(0, layout.y), Math.max(0, sidebarHeight - (notepad.height || minHeight) - 8));
-                        if (layout.width !== undefined) notepad.width = Math.min(Math.max(minWidth, layout.width), maxWidth);
-                        if (layout.height !== undefined) notepad.height = Math.min(Math.max(minHeight, layout.height), maxHeight);
+                        if (layout.width !== undefined) notepad.width = Math.max(minWidth, Math.min(layout.width, maxWidth));
+                        if (layout.height !== undefined) notepad.height = Math.max(minHeight, Math.min(layout.height, maxHeight));
                         if (layout.pinned !== undefined) notepad.pinned = layout.pinned;
                         if (layout.color !== undefined) notepad.color = layout.color;
                         notepad.modified = new Date().toISOString();
@@ -214,19 +214,17 @@
                 const sidebarHeight = sidebar ? Math.max(200, sidebar.clientHeight) : 600;
 
                 const minWidth = 150, minHeight = 100;
-                const desiredWidth = notepad.width || 280;
-                const desiredHeight = notepad.height || 150;
                 const maxWidth = Math.max(minWidth, sidebarWidth - 16); // leave some padding
                 const maxHeight = Math.max(minHeight, sidebarHeight - 80);
 
-                // Ensure width/height are within min/max bounds
-                const finalWidth = Math.min(Math.max(minWidth, desiredWidth), maxWidth);
-                const finalHeight = Math.min(Math.max(minHeight, desiredHeight), maxHeight);
+                // Clamp width/height strictly
+                const desiredWidth = Math.max(minWidth, Math.min(notepad.width || 280, maxWidth));
+                const desiredHeight = Math.max(minHeight, Math.min(notepad.height || 150, maxHeight));
 
                 const desiredX = (notepad.x !== undefined) ? notepad.x : 10;
                 const desiredY = (notepad.y !== undefined) ? notepad.y : 10;
-                const maxX = Math.max(0, sidebarWidth - finalWidth - 8);
-                const maxY = Math.max(0, sidebarHeight - finalHeight - 8);
+                const maxX = Math.max(0, sidebarWidth - desiredWidth - 8);
+                const maxY = Math.max(0, sidebarHeight - desiredHeight - 8);
 
                 const finalX = Math.min(Math.max(0, desiredX), maxX);
                 const finalY = Math.min(Math.max(0, desiredY), maxY);
@@ -234,30 +232,28 @@
                 // Update the notepad object with clamped values so persistence won't reapply bad sizes
                 notepad.x = finalX;
                 notepad.y = finalY;
-                notepad.width = finalWidth;
-                notepad.height = finalHeight;
+                notepad.width = desiredWidth;
+                notepad.height = desiredHeight;
 
                 notepadElement.style.cssText = `
                     position: absolute;
                     left: ${finalX}px;
                     top: ${finalY}px;
-                    width: ${finalWidth}px;
-                    height: ${finalHeight}px;
+                    width: ${desiredWidth}px;
+                    height: ${desiredHeight}px;
                     background: #2a2a2a;
                     border: 1px solid #444;
                     border-radius: 8px;
                     display: flex;
                     flex-direction: column;
-                    min-width: 200px;
-                    min-height: 100px;
+                    min-width: ${minWidth}px;
+                    min-height: ${minHeight}px;
+                    max-width: ${maxWidth}px;
+                    max-height: ${maxHeight}px;
                     z-index: 1000;
                     resize: ${notepad.pinned ? 'none' : 'both'};
                     overflow: hidden;
                 `;
-
-                // Also set explicit max sizes on the element to prevent dragging-resize beyond sidebar
-                notepadElement.style.maxWidth = maxWidth + 'px';
-                notepadElement.style.maxHeight = maxHeight + 'px';
                 
                 notepadElement.innerHTML = `
                     <div class="notepad-header" style="
@@ -523,6 +519,15 @@
                 if (window.ResizeObserver) {
                     const resizeObserver = new ResizeObserver(() => {
                         if (!isPinned) {
+                            // Clamp size before saving
+                            const sidebar = document.getElementById('sidekick-sidebar');
+                            const sidebarWidth = sidebar ? Math.max(200, sidebar.clientWidth) : 500;
+                            const sidebarHeight = sidebar ? Math.max(200, sidebar.clientHeight) : 600;
+                            const minWidth = 150, minHeight = 100;
+                            const maxWidth = Math.max(minWidth, sidebarWidth - 16);
+                            const maxHeight = Math.max(minHeight, sidebarHeight - 80);
+                            notepadElement.style.width = Math.max(minWidth, Math.min(notepadElement.offsetWidth, maxWidth)) + 'px';
+                            notepadElement.style.height = Math.max(minHeight, Math.min(notepadElement.offsetHeight, maxHeight)) + 'px';
                             saveLayout.call(this);
                         }
                     });
