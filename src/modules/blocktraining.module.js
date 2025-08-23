@@ -92,8 +92,12 @@
 
     // On gym page load, restore block if active (modular persistence)
     if (window.location.pathname === '/gym.php') {
-        // Wait for Core to be ready for modular persistence
+        // Wait for DOM and Core to be ready, then check persistent state
         function restoreBlockTraining() {
+            if (document.readyState !== 'complete') {
+                setTimeout(restoreBlockTraining, 50);
+                return;
+            }
             if (window.SidekickModules?.Core?.loadState) {
                 if (isBlocked()) {
                     showBlock();
