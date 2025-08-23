@@ -123,20 +123,30 @@
                     if (importBtn) importBtn.addEventListener('click', () => this.importData());
                     if (clearBtn) clearBtn.addEventListener('click', () => this.clearAllData());
 
-                // Add Block Training button
-                const modal = document.querySelector('[id*="settings_modal"]');
-                if (modal) {
-                    const blockBtn = document.createElement('button');
-                    blockBtn.textContent = 'Block Training';
-                    blockBtn.className = 'sidekick-btn';
-                    blockBtn.style.margin = '8px 0';
-                    blockBtn.onclick = function() {
-                        if (window.SidekickModules?.BlockTraining?.blockTraining) {
-                            window.SidekickModules.BlockTraining.blockTraining();
-                        }
-                    };
-                    modal.appendChild(blockBtn);
-                }
+                    // Add Block Training button after other buttons
+                    const modal = document.querySelector('[id*="settings_modal"]');
+                    if (modal) {
+                        const blockBtn = document.createElement('button');
+                        blockBtn.textContent = 'Block Training';
+                        blockBtn.className = 'sidekick-btn';
+                        blockBtn.style.display = 'block';
+                        blockBtn.style.width = '100%';
+                        blockBtn.style.margin = '12px 0';
+                        blockBtn.style.padding = '12px';
+                        blockBtn.style.background = 'linear-gradient(135deg, #FF9800, #F44336)';
+                        blockBtn.style.color = 'white';
+                        blockBtn.style.border = 'none';
+                        blockBtn.style.borderRadius = '6px';
+                        blockBtn.style.fontWeight = 'bold';
+                        blockBtn.style.fontSize = '14px';
+                        blockBtn.style.cursor = 'pointer';
+                        blockBtn.onclick = function() {
+                            if (window.SidekickModules?.BlockTraining?.blockTraining) {
+                                window.SidekickModules.BlockTraining.blockTraining();
+                            }
+                        };
+                        modal.appendChild(blockBtn);
+                    }
 
                 }, 100);
                 
