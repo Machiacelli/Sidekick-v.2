@@ -11,14 +11,20 @@
 (function() {
     'use strict';
 
-    // Persistent state key
+    // Modular persistent state key
     const STORAGE_KEY = 'blockTrainingActive';
-
+    // Use Sidekick Core for persistence
     function isBlocked() {
+        if (window.SidekickModules?.Core?.loadState) {
+            return window.SidekickModules.Core.loadState(STORAGE_KEY, false) === true;
+        }
         return localStorage.getItem(STORAGE_KEY) === 'true';
     }
 
     function setBlocked(active) {
+        if (window.SidekickModules?.Core?.saveState) {
+            window.SidekickModules.Core.saveState(STORAGE_KEY, !!active);
+        }
         localStorage.setItem(STORAGE_KEY, active ? 'true' : 'false');
     }
 
@@ -63,8 +69,15 @@
     }
 
     function notify(msg, type) {
+        // Use consistent color and style for Sidekick notifications
         if (window.SidekickModules?.Core?.NotificationSystem) {
-            window.SidekickModules.Core.NotificationSystem.show('Block Training', msg, type || 'info', 2000);
+            // Use 'info' for enabled, 'success' for disabled, matching other modules
+            window.SidekickModules.Core.NotificationSystem.show(
+                'Block Training',
+                msg,
+                type === 'warning' ? 'info' : (type || 'info'),
+                3000
+            );
         } else {
             alert(msg);
         }
@@ -77,11 +90,19 @@
         }
     }
 
-    // On gym page load, restore block if active
+    // On gym page load, restore block if active (modular persistence)
     if (window.location.pathname === '/gym.php') {
-        if (isBlocked()) {
-            showBlock();
+        // Wait for Core to be ready for modular persistence
+        function restoreBlockTraining() {
+            if (window.SidekickModules?.Core?.loadState) {
+                if (isBlocked()) {
+                    showBlock();
+                }
+            } else {
+                setTimeout(restoreBlockTraining, 100);
+            }
         }
+        restoreBlockTraining();
     }
 
     // Export for Sidekick integration
