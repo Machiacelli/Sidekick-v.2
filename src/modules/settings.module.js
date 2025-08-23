@@ -122,11 +122,17 @@
                     if (exportBtn) exportBtn.addEventListener('click', () => this.exportData());
                     if (importBtn) importBtn.addEventListener('click', () => this.importData());
                     if (clearBtn) clearBtn.addEventListener('click', () => this.clearAllData());
-                    if (blockBtn) blockBtn.addEventListener('click', () => {
-                        if (window.SidekickModules?.BlockTraining?.blockTraining) {
-                            window.SidekickModules.BlockTraining.blockTraining();
+                    if (blockBtn) {
+                        // Set initial label
+                        if (window.SidekickModules?.BlockTraining?.updateButtonLabel) {
+                            window.SidekickModules.BlockTraining.updateButtonLabel();
                         }
-                    });
+                        blockBtn.addEventListener('click', () => {
+                            if (window.SidekickModules?.BlockTraining?.toggleBlockTraining) {
+                                window.SidekickModules.BlockTraining.toggleBlockTraining();
+                            }
+                        });
+                    }
 
                     // Add Block Training button after other buttons
                     const modal = document.querySelector('[id*="settings_modal"]');
