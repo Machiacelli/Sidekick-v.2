@@ -196,21 +196,28 @@
         
         // Simple initialization without mutation observer
         clearAllData() {
-            // Clear all Sidekick-related localStorage data
-            const keysToRemove = [];
-            for (let i = 0; i < localStorage.length; i++) {
+            // Remove all Sidekick-related localStorage keys
+            const knownKeys = [
+                'SIDEBAR_PAGES',
+                'CURRENT_PAGE',
+                // Add any other keys your modules use here
+            ];
+            // Remove all keys starting with 'sidekick_'
+            for (let i = localStorage.length - 1; i >= 0; i--) {
                 const key = localStorage.key(i);
                 if (key && key.startsWith('sidekick_')) {
-                    keysToRemove.push(key);
+                    localStorage.removeItem(key);
                 }
             }
-            
-            keysToRemove.forEach(key => {
-                localStorage.removeItem(key);
-            });
-            
+            // Remove known keys
+            knownKeys.forEach(key => localStorage.removeItem(key));
+
             console.log('🗑️ Cleared all Sidekick data from localStorage');
-            NotificationSystem.show('Data Cleared', 'All Sidekick data has been cleared', 'info', 3000);
+            if (window.NotificationSystem && typeof window.NotificationSystem.show === 'function') {
+                NotificationSystem.show('Data Cleared', 'All Sidekick data has been cleared', 'info', 3000);
+            }
+            // Optionally reload the page to reset UI
+            setTimeout(() => window.location.reload(), 500);
         },
 
         init() {
