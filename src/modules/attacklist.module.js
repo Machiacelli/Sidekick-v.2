@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      1.0
 // @description  Attack List functionality for Sidewinder
-// @author       You
+// @author       Machiacelli
 // @match        https://www.torn.com/*
 // @grant        none
 // ==/UserScript==
@@ -419,16 +419,9 @@
         }
     };
     
-        // Register module when DOM is ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                setTimeout(() => { AttackListModule.init(); AttackListModule.startAutoRefresh(); }, 100);
-            });
-        } else {
-            setTimeout(() => { AttackListModule.init(); AttackListModule.startAutoRefresh(); }, 100);
-        }
-    
-    // Expose module globally
-    window.AttackListModule = AttackListModule;
-    
+
+    // Modular registration: attach to SidekickModules for loader-based initialization
+    if (!window.SidekickModules) window.SidekickModules = {};
+    window.SidekickModules.AttackList = AttackListModule;
+
 })();
