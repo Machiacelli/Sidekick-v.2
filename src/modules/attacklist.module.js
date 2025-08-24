@@ -21,6 +21,7 @@
             console.log(`⚔️ Loading ${this.name} Module v${this.version}...`);
             this.registerMenuItems();
             this.registerFunctions();
+            this.startAutoRefresh();
         },
         
         // Register menu items for this module
