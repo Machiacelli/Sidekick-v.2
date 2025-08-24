@@ -49,36 +49,28 @@
                 targets: [],
                 type: 'attacklist'
             };
-            
-            // Create attack list element to add inside sidebar
+            // Create attack list panel using Sidekick theme
             const attackElement = document.createElement('div');
-            attackElement.className = 'sidebar-item';
+            attackElement.className = 'sidekick-panel';
             attackElement.dataset.id = attackList.id;
-            attackElement.style.cssText = `
-                background: #2a2a2a;
-                border: 1px solid #444;
-                border-radius: 8px;
-                padding: 12px;
-                margin-bottom: 12px;
-                transition: all 0.3s ease;
-            `;
-            
+            attackElement.style.cssText = `margin-bottom: 18px;`;
             attackElement.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <input type="text" value="${attackList.title}" data-attack-id="${attackList.id}"
-                           style="background: #333; border: 1px solid #555; color: #fff; padding: 6px 8px; border-radius: 4px; font-weight: bold; flex: 1; margin-right: 8px;">
-                    <button class="remove-btn" data-item-id="${attackList.id}" data-item-type="attacklist" style="background: none; border: none; color: #f44336; cursor: pointer; font-size: 16px; padding: 4px;">×</button>
+                <div class="sidekick-panel-header">
+                    <span style="display: flex; align-items: center; gap: 8px; font-size: 16px;">
+                        <span>⚔️</span>
+                        <input type="text" value="${attackList.title}" data-attack-id="${attackList.id}"
+                            style="background: #222; border: 1px solid #555; color: #fff; padding: 6px 10px; border-radius: 6px; font-weight: bold; font-size: 15px; width: 180px;">
+                    </span>
+                    <button class="remove-btn" data-item-id="${attackList.id}" data-item-type="attacklist" style="background: none; border: none; color: #f44336; cursor: pointer; font-size: 20px; padding: 2px 8px; font-weight: bold;">×</button>
                 </div>
-                <div id="attack-targets-${attackList.id}" style="margin-bottom: 8px;"></div>
-                <button class="add-attack-target" data-list-id="${attackList.id}" style="width: 100%; background: #f44336; border: none; color: white; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 14px;">+ Add Target</button>
+                <div class="sidekick-panel-content" id="attack-targets-${attackList.id}"></div>
+                <button class="add-attack-target" data-list-id="${attackList.id}" style="width: 100%; margin-top: 10px; padding: 12px; background: linear-gradient(135deg, #f44336, #ff9800); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer;">+ Add Target</button>
             `;
-            
             // Add event listeners
             setTimeout(() => {
                 const titleInput = attackElement.querySelector(`input[data-attack-id="${attackList.id}"]`);
                 const addTargetBtn = attackElement.querySelector('.add-attack-target');
                 const removeBtn = attackElement.querySelector('.remove-btn');
-                
                 if (titleInput) {
                     titleInput.addEventListener('change', (e) => this.updateTitle(attackList.id, e.target.value));
                     titleInput.addEventListener('input', (e) => this.updateTitle(attackList.id, e.target.value));
@@ -88,26 +80,19 @@
                 }
                 if (removeBtn) {
                     removeBtn.addEventListener('click', () => {
-                        console.log(`🗑️ Removing attack list: ${attackList.id}`);
                         if (window.removeSidebarItem) {
                             window.removeSidebarItem(attackList.id, 'attacklist');
                         }
                     });
                 }
             }, 50);
-            
-            // Add hover effects
-            this.addHoverEffects(attackElement);
-            
             // Add to sidebar content
             const attackContainer = document.getElementById('sidekick-attacks');
             if (attackContainer) {
                 attackContainer.appendChild(attackElement);
             }
-            
             // Save to current page
             this.saveToStorage(attackList);
-            
             if (window.NotificationSystem) {
                 window.NotificationSystem.show('Success', 'Attack list created!', 'info');
             }
@@ -116,33 +101,25 @@
         // Create attack list element during restoration
         createElement(attackList) {
             const attackElement = document.createElement('div');
-            attackElement.className = 'sidebar-item';
+            attackElement.className = 'sidekick-panel';
             attackElement.dataset.id = attackList.id;
-            attackElement.style.cssText = `
-                background: #2a2a2a;
-                border: 1px solid #444;
-                border-radius: 8px;
-                padding: 12px;
-                margin-bottom: 12px;
-                transition: all 0.3s ease;
-            `;
-            
+            attackElement.style.cssText = `margin-bottom: 18px;`;
             attackElement.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <input type="text" value="${attackList.title || 'Untitled Attack List'}" data-attack-id="${attackList.id}"
-                           style="background: #333; border: 1px solid #555; color: #fff; padding: 6px 8px; border-radius: 4px; font-weight: bold; flex: 1; margin-right: 8px;">
-                    <button class="remove-btn" data-item-id="${attackList.id}" data-item-type="attacklist" style="background: none; border: none; color: #f44336; cursor: pointer; font-size: 16px; padding: 4px;">×</button>
+                <div class="sidekick-panel-header">
+                    <span style="display: flex; align-items: center; gap: 8px; font-size: 16px;">
+                        <span>⚔️</span>
+                        <input type="text" value="${attackList.title || 'Untitled Attack List'}" data-attack-id="${attackList.id}"
+                            style="background: #222; border: 1px solid #555; color: #fff; padding: 6px 10px; border-radius: 6px; font-weight: bold; font-size: 15px; width: 180px;">
+                    </span>
+                    <button class="remove-btn" data-item-id="${attackList.id}" data-item-type="attacklist" style="background: none; border: none; color: #f44336; cursor: pointer; font-size: 20px; padding: 2px 8px; font-weight: bold;">×</button>
                 </div>
-                <div id="attack-targets-${attackList.id}" style="margin-bottom: 8px;"></div>
-                <button class="add-attack-target" data-list-id="${attackList.id}" style="width: 100%; background: #f44336; border: none; color: white; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 14px;">+ Add Target</button>
+                <div class="sidekick-panel-content" id="attack-targets-${attackList.id}"></div>
+                <button class="add-attack-target" data-list-id="${attackList.id}" style="width: 100%; margin-top: 10px; padding: 12px; background: linear-gradient(135deg, #f44336, #ff9800); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer;">+ Add Target</button>
             `;
-            
-            // Add event listeners
             setTimeout(() => {
                 const titleInput = attackElement.querySelector(`input[data-attack-id="${attackList.id}"]`);
                 const addTargetBtn = attackElement.querySelector('.add-attack-target');
                 const removeBtn = attackElement.querySelector('.remove-btn');
-                
                 if (titleInput) {
                     titleInput.addEventListener('change', (e) => this.updateTitle(attackList.id, e.target.value));
                     titleInput.addEventListener('input', (e) => this.updateTitle(attackList.id, e.target.value));
@@ -158,16 +135,10 @@
                     });
                 }
             }, 50);
-            
-            // Add hover effects
-            this.addHoverEffects(attackElement);
-            
             const attackContainer = document.getElementById('sidekick-attacks');
             if (attackContainer) {
                 attackContainer.appendChild(attackElement);
             }
-            
-            // Restore attack targets if they exist
             if (attackList.targets && attackList.targets.length > 0) {
                 setTimeout(() => {
                     attackList.targets.forEach(target => {
