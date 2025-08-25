@@ -100,64 +100,61 @@
                     <div class="timer-header" style="
                         background: #333;
                         border-bottom: 1px solid #555;
-                        padding: 8px 12px;
+                        padding: 4px 8px;
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
                         cursor: move;
-                        height: 32px;
+                        height: 24px;
                         flex-shrink: 0;
                         border-radius: 7px 7px 0 0;
                     ">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <span style="font-size: 16px;">⏰</span>
-                            <span style="font-weight: bold; color: #4CAF50;">Timer Panel</span>
+                        <div style="display: flex; align-items: center; gap: 4px;">
+                            <span style="font-size: 14px;">⏰</span>
+                            <span style="font-weight: bold; color: #4CAF50; font-size: 12px;">Timer Panel</span>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <button id="refresh-cooldowns" style="
-                                background: #FF9800;
-                                border: none;
-                                color: white;
-                                padding: 4px 8px;
-                                border-radius: 4px;
-                                cursor: pointer;
-                                font-size: 11px;
-                                display: flex;
-                                align-items: center;
-                                gap: 4px;
-                            " title="Refresh Cooldowns">
-                                🔄 Refresh
-                            </button>
+                        <div style="display: flex; align-items: center; gap: 4px;">
                             <div class="timer-dropdown" style="position: relative; display: inline-block;">
                                 <button class="dropdown-btn" style="
-                                    background: #2196F3;
+                                    background: none;
                                     border: none;
-                                    color: white;
-                                    padding: 4px 8px;
-                                    border-radius: 4px;
+                                    color: #bbb;
                                     cursor: pointer;
-                                    font-size: 11px;
+                                    font-size: 12px;
+                                    padding: 2px;
                                     display: flex;
                                     align-items: center;
-                                    gap: 4px;
-                                " title="Add Timer">
-                                    + Add Timer
-                                    <span style="font-size: 10px;">▼</span>
+                                " title="Options">
+                                    ▼
                                 </button>
                                 <div class="dropdown-content" style="
                                     display: none;
                                     position: absolute;
-                                    background: #1a1a1a;
+                                    background: #333;
                                     min-width: 160px;
-                                    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.8);
+                                    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
                                     z-index: 1001;
-                                    border-radius: 6px;
-                                    border: 1px solid #444;
+                                    border-radius: 4px;
+                                    border: 1px solid #555;
                                     top: 100%;
                                     right: 0;
                                     margin-top: 4px;
                                     padding: 4px 0;
                                 ">
+                                    <button id="refresh-cooldowns" style="
+                                        background: none;
+                                        border: none;
+                                        color: #fff;
+                                        padding: 8px 12px;
+                                        width: 100%;
+                                        text-align: left;
+                                        cursor: pointer;
+                                        font-size: 12px;
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 8px;
+                                        transition: background 0.2s ease;
+                                    " title="Refresh Cooldowns">🔄 Refresh Cooldowns</button>
                                     <button class="timer-add-btn" data-type="medical" style="
                                         background: none;
                                         border: none;
@@ -221,10 +218,10 @@
                                 border: none;
                                 color: #f44336;
                                 cursor: pointer;
-                                font-size: 18px;
+                                font-size: 14px;
                                 padding: 0;
-                                width: 20px;
-                                height: 20px;
+                                width: 16px;
+                                height: 16px;
                                 display: flex;
                                 align-items: center;
                                 justify-content: center;
@@ -235,9 +232,6 @@
                     
                     <div style="padding: 12px; flex: 1; overflow-y: auto;">
                         <div id="timers-container">
-                            <div style="text-align: center; color: #888; padding: 20px; font-size: 12px;">
-                                No timers added yet. Click "Add Timer" to add one.
-                            </div>
                         </div>
                     </div>
                 `;
@@ -339,7 +333,7 @@
                     this.hideTimerPanel();
                 });
 
-                // Refresh cooldowns button
+                // Refresh cooldowns button (now inside dropdown)
                 panel.querySelector('#refresh-cooldowns').addEventListener('click', () => {
                     this.fetchCooldownData();
                     this.core.NotificationSystem.show(
@@ -347,6 +341,9 @@
                         'Refreshing cooldown data...',
                         'info'
                     );
+                    // Close dropdown after action
+                    const dropdownContent = panel.querySelector('.dropdown-content');
+                    if (dropdownContent) dropdownContent.style.display = 'none';
                 });
 
                 // Add timer buttons
@@ -361,7 +358,7 @@
                     
                     // Hover effects
                     btn.addEventListener('mouseenter', () => {
-                        btn.style.background = '#333';
+                        btn.style.background = '#444';
                     });
                     btn.addEventListener('mouseleave', () => {
                         btn.style.background = 'none';
@@ -383,6 +380,17 @@
                         dropdownContent.style.display = 'none';
                     }
                 });
+
+                // Add hover effect for refresh button
+                const refreshBtn = panel.querySelector('#refresh-cooldowns');
+                if (refreshBtn) {
+                    refreshBtn.addEventListener('mouseenter', () => {
+                        refreshBtn.style.background = '#444';
+                    });
+                    refreshBtn.addEventListener('mouseleave', () => {
+                        refreshBtn.style.background = 'none';
+                    });
+                }
             },
 
             addTimer(type) {
@@ -564,11 +572,7 @@
                 if (!container) return;
 
                 if (this.timers.length === 0) {
-                    container.innerHTML = `
-                        <div style="text-align: center; color: #888; padding: 20px; font-size: 12px;">
-                            No timers added yet. Click "Add Timer" to add one.
-                        </div>
-                    `;
+                    container.innerHTML = '';
                     return;
                 }
 

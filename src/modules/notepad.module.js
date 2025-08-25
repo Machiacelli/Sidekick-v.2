@@ -546,8 +546,6 @@
                     contentArea.innerHTML = `
                         <div class="sidekick-placeholder" style="text-align: center; padding: 40px 20px; color: #aaa;">
                             <div style="font-size: 48px; margin-bottom: 16px;">📝</div>
-                            <h3 style="margin: 0 0 8px 0; color: #fff; text-align: center;">No Notes Yet</h3>
-                            <p style="margin: 0; font-size: 14px; text-align: center;">Click the + button to add your first notepad</p>
                         </div>
                     `;
                 }
