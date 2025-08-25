@@ -75,60 +75,122 @@
                 
                 this.isActive = true;
                 
-                // Create main timer panel
+                // Create timer panel in sidebar style
                 const panel = document.createElement('div');
                 panel.id = 'timer-panel';
+                panel.className = 'sidebar-item';
                 panel.style.cssText = `
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
-                    color: white;
-                    padding: 20px;
-                    border-radius: 12px;
-                    font-family: 'Segoe UI', sans-serif;
-                    font-size: 14px;
-                    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+                    position: absolute;
+                    left: 10px;
+                    top: 10px;
+                    width: 280px;
+                    background: #2a2a2a;
                     border: 1px solid #444;
-                    z-index: 999999;
-                    min-width: 400px;
-                    max-height: 80vh;
-                    overflow-y: auto;
+                    border-radius: 8px;
+                    display: flex;
+                    flex-direction: column;
+                    min-width: 200px;
+                    min-height: 100px;
+                    z-index: 1000;
+                    resize: both;
+                    overflow: hidden;
                 `;
 
                 panel.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3 style="margin: 0; color: #4CAF50;">⏰ Timer Panel</h3>
-                        <button id="timer-close-btn" style="background: none; border: none; color: #ccc; font-size: 20px; cursor: pointer;">×</button>
-                    </div>
-                    
-                    <div style="margin-bottom: 20px;">
-                        <h4 style="margin: 0 0 10px 0; color: #2196F3;">Add Timers</h4>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                            <button id="add-medical-timer" class="timer-add-btn" data-type="medical">
-                                🏥 Medical Cooldown
-                            </button>
-                            <button id="add-drug-timer" class="timer-add-btn" data-type="drug">
-                                💊 Drug Cooldown
-                            </button>
-                            <button id="add-booster-timer" class="timer-add-btn" data-type="booster">
-                                💉 Booster Cooldown
-                            </button>
-                            <button id="add-custom-timer" class="timer-add-btn" data-type="custom">
-                                ⏱️ Custom Timer
-                            </button>
+                    <div class="timer-header" style="
+                        background: #333;
+                        border-bottom: 1px solid #555;
+                        padding: 8px 12px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        cursor: move;
+                        height: 32px;
+                        flex-shrink: 0;
+                        border-radius: 7px 7px 0 0;
+                    ">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 16px;">⏰</span>
+                            <span style="font-weight: bold; color: #4CAF50;">Timer Panel</span>
                         </div>
+                        <button id="timer-close-btn" style="
+                            background: none;
+                            border: none;
+                            color: #f44336;
+                            cursor: pointer;
+                            font-size: 18px;
+                            padding: 0;
+                            width: 20px;
+                            height: 20px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            opacity: 0.7;
+                        " title="Close timer panel">×</button>
                     </div>
                     
-                    <div id="timers-container">
-                        <div style="text-align: center; color: #888; padding: 20px;">
-                            No timers added yet. Click a button above to add one.
+                    <div style="padding: 12px; flex: 1; overflow-y: auto;">
+                        <div style="margin-bottom: 15px;">
+                            <h4 style="margin: 0 0 10px 0; color: #2196F3; font-size: 14px;">Add Timers</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                <button id="add-medical-timer" class="timer-add-btn" data-type="medical" style="
+                                    background: #4CAF50;
+                                    border: none;
+                                    color: white;
+                                    padding: 8px;
+                                    border-radius: 4px;
+                                    cursor: pointer;
+                                    font-size: 12px;
+                                    transition: background 0.3s ease;
+                                ">🏥 Medical</button>
+                                <button id="add-drug-timer" class="timer-add-btn" data-type="drug" style="
+                                    background: #FF9800;
+                                    border: none;
+                                    color: white;
+                                    padding: 8px;
+                                    border-radius: 4px;
+                                    cursor: pointer;
+                                    font-size: 12px;
+                                    transition: background 0.3s ease;
+                                ">💊 Drug</button>
+                                <button id="add-booster-timer" class="timer-add-btn" data-type="booster" style="
+                                    background: #9C27B0;
+                                    border: none;
+                                    color: white;
+                                    padding: 8px;
+                                    border-radius: 4px;
+                                    cursor: pointer;
+                                    font-size: 12px;
+                                    transition: background 0.3s ease;
+                                ">💉 Booster</button>
+                                <button id="add-custom-timer" class="timer-add-btn" data-type="custom" style="
+                                    background: #607D8B;
+                                    border: none;
+                                    color: white;
+                                    padding: 8px;
+                                    border-radius: 4px;
+                                    cursor: pointer;
+                                    font-size: 12px;
+                                    transition: background 0.3s ease;
+                                ">⏱️ Custom</button>
+                            </div>
+                        </div>
+                        
+                        <div id="timers-container">
+                            <div style="text-align: center; color: #888; padding: 20px; font-size: 12px;">
+                                No timers added yet. Click a button above to add one.
+                            </div>
                         </div>
                     </div>
                 `;
 
-                document.body.appendChild(panel);
+                // Add to sidebar content area
+                const sidebar = document.getElementById('sidekick-sidebar');
+                if (sidebar) {
+                    sidebar.appendChild(panel);
+                } else {
+                    document.body.appendChild(panel);
+                }
                 
                 // Add event listeners
                 this.addPanelEventListeners();
@@ -138,6 +200,9 @@
                 
                 // Fetch current cooldown data
                 this.fetchCooldownData();
+                
+                // Add dragging functionality
+                this.addDragging(panel);
             },
 
             hideTimerPanel() {
@@ -146,6 +211,65 @@
                     panel.remove();
                 }
                 this.isActive = false;
+            },
+
+            addDragging(panel) {
+                const header = panel.querySelector('.timer-header');
+                let isDragging = false;
+                let dragOffset = { x: 0, y: 0 };
+                
+                header.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    const rect = panel.getBoundingClientRect();
+                    dragOffset.x = e.clientX - rect.left;
+                    dragOffset.y = e.clientY - rect.top;
+                    e.preventDefault();
+                });
+                
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    
+                    const sidebar = document.getElementById('sidekick-sidebar');
+                    const sidebarRect = sidebar ? sidebar.getBoundingClientRect() : { left: 0, top: 0 };
+                    
+                    let newX = e.clientX - sidebarRect.left - dragOffset.x;
+                    let newY = e.clientY - sidebarRect.top - dragOffset.y;
+                    
+                    // Keep within sidebar bounds
+                    if (sidebar) {
+                        newX = Math.max(0, Math.min(newX, sidebar.offsetWidth - panel.offsetWidth));
+                        newY = Math.max(0, Math.min(newY, sidebar.offsetHeight - panel.offsetHeight));
+                    }
+                    
+                    panel.style.left = newX + 'px';
+                    panel.style.top = newY + 'px';
+                });
+                
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        this.savePanelPosition(panel);
+                    }
+                });
+            },
+
+            savePanelPosition(panel) {
+                const position = {
+                    x: parseInt(panel.style.left) || 10,
+                    y: parseInt(panel.style.top) || 10,
+                    width: panel.offsetWidth,
+                    height: panel.offsetHeight
+                };
+                this.core.saveState('timer_panel_position', position);
+            },
+
+            loadPanelPosition() {
+                try {
+                    const position = this.core.loadState('timer_panel_position', { x: 10, y: 10, width: 280, height: 200 });
+                    return position;
+                } catch (error) {
+                    return { x: 10, y: 10, width: 280, height: 200 };
+                }
             },
 
             addPanelEventListeners() {
@@ -163,13 +287,14 @@
                         const type = e.target.dataset.type;
                         this.addTimer(type);
                     });
-                });
-
-                // Close on outside click
-                panel.addEventListener('click', (e) => {
-                    if (e.target === panel) {
-                        this.hideTimerPanel();
-                    }
+                    
+                    // Hover effects
+                    btn.addEventListener('mouseenter', () => {
+                        btn.style.opacity = '0.8';
+                    });
+                    btn.addEventListener('mouseleave', () => {
+                        btn.style.opacity = '1';
+                    });
                 });
             },
 
@@ -329,7 +454,7 @@
 
                 if (this.timers.length === 0) {
                     container.innerHTML = `
-                        <div style="text-align: center; color: #888; padding: 20px;">
+                        <div style="text-align: center; color: #888; padding: 20px; font-size: 12px;">
                             No timers added yet. Click a button above to add one.
                         </div>
                     `;
@@ -352,15 +477,15 @@
                         background: linear-gradient(135deg, #2d2d2d, #3d3d3d);
                         border: 1px solid #555;
                         border-radius: 8px;
-                        padding: 15px;
+                        padding: 12px;
                         margin-bottom: 10px;
                         position: relative;
                         overflow: hidden;
                     ">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <div>
-                                <strong style="color: #4CAF50;">${timer.name}</strong>
-                                <div style="font-size: 12px; color: #888; margin-top: 2px;">
+                                <strong style="color: #4CAF50; font-size: 13px;">${timer.name}</strong>
+                                <div style="font-size: 11px; color: #888; margin-top: 2px;">
                                     ${timer.isCooldown ? 'Cooldown Timer' : 'Custom Timer'}
                                 </div>
                             </div>
@@ -369,22 +494,22 @@
                                 border: none;
                                 border-radius: 4px;
                                 color: white;
-                                padding: 4px 8px;
-                                font-size: 12px;
+                                padding: 3px 6px;
+                                font-size: 11px;
                                 cursor: pointer;
                             ">Remove</button>
                         </div>
                         
-                        <div style="margin-bottom: 10px;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                <span style="font-size: 12px; color: #888;">Progress</span>
-                                <span style="font-size: 12px; color: #888;">${Math.round(progress * 100)}%</span>
+                        <div style="margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                                <span style="font-size: 11px; color: #888;">Progress</span>
+                                <span style="font-size: 11px; color: #888;">${Math.round(progress * 100)}%</span>
                             </div>
                             <div style="
                                 width: 100%;
-                                height: 6px;
+                                height: 4px;
                                 background: #555;
-                                border-radius: 3px;
+                                border-radius: 2px;
                                 overflow: hidden;
                             ">
                                 <div style="
@@ -398,12 +523,12 @@
                         
                         <div style="text-align: center;">
                             <div style="
-                                font-size: 18px;
+                                font-size: 16px;
                                 font-weight: bold;
                                 color: ${isExpired ? '#4CAF50' : '#FF9800'};
                                 font-family: 'Courier New', monospace;
                             ">${this.formatTime(timeLeft)}</div>
-                            <div style="font-size: 11px; color: #888; margin-top: 2px;">
+                            <div style="font-size: 10px; color: #888; margin-top: 2px;">
                                 ${isExpired ? 'Ready!' : 'Time remaining'}
                             </div>
                         </div>
