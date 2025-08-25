@@ -518,12 +518,34 @@
                     this.makeTitleEditable(titleSpan, attackList);
                 });
 
-                // Resize observer to save dimensions
+                // Resize observer to save dimensions with bounds checking
                 const resizeObserver = new ResizeObserver((entries) => {
                     for (const entry of entries) {
                         const rect = entry.contentRect;
-                        attackList.width = rect.width;
-                        attackList.height = rect.height;
+                        const sidebar = document.getElementById('sidekick-sidebar');
+                        
+                        if (sidebar) {
+                            const sidebarRect = sidebar.getBoundingClientRect();
+                            const maxWidth = sidebarRect.width - element.offsetLeft;
+                            const maxHeight = sidebarRect.height - element.offsetTop;
+                            
+                            // Constrain to sidebar bounds
+                            const constrainedWidth = Math.min(rect.width, maxWidth);
+                            const constrainedHeight = Math.min(rect.height, maxHeight);
+                            
+                            // Only apply constraints if we're exceeding bounds
+                            if (rect.width > maxWidth || rect.height > maxHeight) {
+                                element.style.width = constrainedWidth + 'px';
+                                element.style.height = constrainedHeight + 'px';
+                            }
+                            
+                            attackList.width = constrainedWidth;
+                            attackList.height = constrainedHeight;
+                        } else {
+                            attackList.width = rect.width;
+                            attackList.height = rect.height;
+                        }
+                        
                         this.saveAttackLists();
                     }
                 });
@@ -719,9 +741,11 @@
                 this.saveAttackLists();
                 this.renderTargets(attackList);
                 
-                // Fetch player data
+                // Fetch player data immediately
+                this.core.NotificationSystem.show('Loading', 'Fetching player data...', 'info');
                 await this.updateTargetStatus(newTarget);
                 this.renderTargets(attackList);
+                this.saveAttackLists();
                 
                 this.core.NotificationSystem.show('Added', 'Target added successfully!', 'success');
             },
@@ -738,14 +762,20 @@
 
             async updateTargetStatus(target) {
                 try {
-                    const data = await this.core.Api.makeRequest(`user/${target.id}?selections=basic,profile`);
-                    if (data && data.name) {
-                        target.name = data.name;
+                    console.log(`🎯 Fetching data for player ${target.id}...`);
+                    const data = await this.core.Api.makeRequest(`user/${target.id}?selections=basic,profile,status`);
+                    if (data) {
+                        target.name = data.name || `Player ${target.id}`;
                         target.data = data;
                         target.lastUpdated = Date.now();
+                        console.log(`✅ Updated data for ${target.name} (${target.id})`);
+                    } else {
+                        console.warn(`⚠️ No data returned for player ${target.id}`);
+                        target.name = `Player ${target.id}`;
+                        target.data = null;
                     }
                 } catch (error) {
-                    console.error('❌ Error fetching target data:', error);
+                    console.error(`❌ Error fetching target data for ${target.id}:`, error);
                     target.name = `Player ${target.id}`;
                     target.data = null;
                 }
