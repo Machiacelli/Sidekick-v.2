@@ -147,15 +147,16 @@
                                 <div class="dropdown-content" style="
                                     display: none;
                                     position: absolute;
-                                    background: #333;
-                                    min-width: 140px;
-                                    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+                                    background: #1a1a1a;
+                                    min-width: 160px;
+                                    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.8);
                                     z-index: 1001;
-                                    border-radius: 4px;
-                                    border: 1px solid #555;
+                                    border-radius: 6px;
+                                    border: 1px solid #444;
                                     top: 100%;
                                     right: 0;
                                     margin-top: 4px;
+                                    padding: 4px 0;
                                 ">
                                     <button class="timer-add-btn" data-type="medical" style="
                                         background: none;
@@ -169,6 +170,7 @@
                                         display: flex;
                                         align-items: center;
                                         gap: 8px;
+                                        transition: background 0.2s ease;
                                     ">🏥 Medical Cooldown</button>
                                     <button class="timer-add-btn" data-type="drug" style="
                                         background: none;
@@ -182,6 +184,7 @@
                                         display: flex;
                                         align-items: center;
                                         gap: 8px;
+                                        transition: background 0.2s ease;
                                     ">💊 Drug Cooldown</button>
                                     <button class="timer-add-btn" data-type="booster" style="
                                         background: none;
@@ -195,6 +198,7 @@
                                         display: flex;
                                         align-items: center;
                                         gap: 8px;
+                                        transition: background 0.2s ease;
                                     ">💉 Booster Cooldown</button>
                                     <button class="timer-add-btn" data-type="custom" style="
                                         background: none;
@@ -208,6 +212,7 @@
                                         display: flex;
                                         align-items: center;
                                         gap: 8px;
+                                        transition: background 0.2s ease;
                                     ">⏱️ Custom Timer</button>
                                 </div>
                             </div>
@@ -251,7 +256,7 @@
                 // Load existing timers
                 this.renderTimers();
                 
-                // Fetch current cooldown data
+                // Fetch current cooldown data immediately
                 this.fetchCooldownData();
                 
                 // Add dragging functionality
@@ -356,7 +361,7 @@
                     
                     // Hover effects
                     btn.addEventListener('mouseenter', () => {
-                        btn.style.background = '#555';
+                        btn.style.background = '#333';
                     });
                     btn.addEventListener('mouseleave', () => {
                         btn.style.background = 'none';
@@ -477,11 +482,25 @@
             createCooldownTimer(type) {
                 // Check if we have cooldown data for this type
                 if (!this.cooldownData || !this.cooldownData[type]) {
+                    // Try to fetch fresh data first
                     this.core.NotificationSystem.show(
                         'Timer',
-                        `No cooldown data available for ${type}. Please refresh cooldowns first.`,
-                        'warning'
+                        `No cooldown data for ${type}. Fetching fresh data...`,
+                        'info'
                     );
+                    
+                    // Fetch fresh data and then try again
+                    this.fetchCooldownData().then(() => {
+                        if (this.cooldownData && this.cooldownData[type]) {
+                            this.createCooldownTimer(type);
+                        } else {
+                            this.core.NotificationSystem.show(
+                                'Timer',
+                                `No active ${type} cooldown found. You can only add timers for active cooldowns.`,
+                                'warning'
+                            );
+                        }
+                    });
                     return;
                 }
 
@@ -768,27 +787,65 @@
                     const apiKey = this.core.getApiKey();
                     if (!apiKey) {
                         console.warn('No API key available for cooldown data');
+                        this.core.NotificationSystem.show(
+                            'Timer',
+                            'No API key found. Please set your API key in settings first.',
+                            'warning'
+                        );
                         return;
                     }
 
+                    console.log('🔄 Fetching cooldown data from Torn API...');
+                    
                     const response = await fetch(`https://api.torn.com/user/?selections=cooldowns&key=${apiKey}`);
                     const data = await response.json();
                     
                     if (data.error) {
                         console.warn('Failed to fetch cooldown data:', data.error);
+                        this.core.NotificationSystem.show(
+                            'Timer',
+                            `API Error: ${data.error}`,
+                            'error'
+                        );
                         return;
                     }
                     
                     console.log('📊 Raw cooldown data:', data.cooldowns);
                     
-                    // Convert cooldown seconds to end timestamps
-                    this.cooldownData = {
-                        [this.timerTypes.MEDICAL]: data.cooldowns?.medical ? Date.now() + (data.cooldowns.medical * 1000) : null,
-                        [this.timerTypes.DRUG]: data.cooldowns?.drug ? Date.now() + (data.cooldowns.drug * 1000) : null,
-                        [this.timerTypes.BOOSTER]: data.cooldowns?.booster ? Date.now() + (data.cooldowns.booster * 1000) : null
-                    };
+                    // Check if we have any cooldown data
+                    if (!data.cooldowns || Object.keys(data.cooldowns).length === 0) {
+                        console.log('📊 No active cooldowns found');
+                        this.cooldownData = {
+                            [this.timerTypes.MEDICAL]: null,
+                            [this.timerTypes.DRUG]: null,
+                            [this.timerTypes.BOOSTER]: null
+                        };
+                    } else {
+                        // Convert cooldown seconds to end timestamps
+                        this.cooldownData = {
+                            [this.timerTypes.MEDICAL]: data.cooldowns.medical ? Date.now() + (data.cooldowns.medical * 1000) : null,
+                            [this.timerTypes.DRUG]: data.cooldowns.drug ? Date.now() + (data.cooldowns.drug * 1000) : null,
+                            [this.timerTypes.BOOSTER]: data.cooldowns.booster ? Date.now() + (data.cooldowns.booster * 1000) : null
+                        };
+                    }
                     
                     console.log('📊 Processed cooldown data:', this.cooldownData);
+                    
+                    // Show success notification
+                    const activeCooldowns = Object.values(this.cooldownData).filter(time => time !== null).length;
+                    if (activeCooldowns > 0) {
+                        this.core.NotificationSystem.show(
+                            'Timer',
+                            `Found ${activeCooldowns} active cooldown(s)!`,
+                            'success'
+                        );
+                    } else {
+                        this.core.NotificationSystem.show(
+                            'Timer',
+                            'No active cooldowns found.',
+                            'info'
+                        );
+                    }
                     
                     // Update timers display
                     if (this.isActive) {
@@ -796,6 +853,11 @@
                     }
                 } catch (error) {
                     console.error('❌ Error fetching cooldown data:', error);
+                    this.core.NotificationSystem.show(
+                        'Timer',
+                        `Failed to fetch cooldown data: ${error.message}`,
+                        'error'
+                    );
                 }
             },
 
