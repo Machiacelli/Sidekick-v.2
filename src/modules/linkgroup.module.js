@@ -52,6 +52,8 @@
             `;
 
             document.body.appendChild(panel);
+            panel.style.display = 'block'; // Ensure visible
+            panel.style.background = '#ff0'; // Debug: bright background
             this.panel = panel;
             this.renderLinks();
 
