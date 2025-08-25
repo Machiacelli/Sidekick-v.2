@@ -82,7 +82,7 @@
                 // Create target button
                 this.targetButton = document.createElement('button');
                 this.targetButton.id = 'random-target-button';
-                this.targetButton.innerHTML = 'Chain';
+                this.targetButton.innerHTML = '🎯';
                 this.targetButton.style.cssText = `
                     position: fixed;
                     left: ${savedPosition.x}px;
@@ -90,27 +90,31 @@
                     background: linear-gradient(135deg, #4CAF50, #45a049);
                     color: white;
                     border: none;
-                    padding: 8px 16px;
-                    border-radius: 8px;
-                    cursor: pointer;
+                    padding: 6px;
+                    border-radius: 50%;
+                    cursor: move;
                     font-weight: bold;
-                    font-size: 14px;
-                    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+                    font-size: 16px;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.3), 0 0 15px rgba(76, 175, 80, 0.4);
                     z-index: 9999;
                     user-select: none;
                     transition: all 0.2s ease;
-                    min-width: 80px;
+                    width: 40px;
+                    height: 40px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                 `;
 
                 // Add hover effects
                 this.targetButton.addEventListener('mouseenter', () => {
                     this.targetButton.style.transform = 'scale(1.05)';
-                    this.targetButton.style.boxShadow = '0 6px 12px rgba(0,0,0,0.4)';
+                    this.targetButton.style.boxShadow = '0 6px 12px rgba(0,0,0,0.4), 0 0 20px rgba(76, 175, 80, 0.6)';
                 });
 
                 this.targetButton.addEventListener('mouseleave', () => {
                     this.targetButton.style.transform = 'scale(1)';
-                    this.targetButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+                    this.targetButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3), 0 0 15px rgba(76, 175, 80, 0.4)';
                 });
 
                 // Add click event
@@ -150,6 +154,7 @@
                         dragOffset.x = e.clientX - rect.left;
                         dragOffset.y = e.clientY - rect.top;
                         e.preventDefault();
+                        e.stopPropagation();
                         
                         // Change cursor during drag
                         button.style.cursor = 'grabbing';
@@ -158,6 +163,9 @@
                 
                 document.addEventListener('mousemove', (e) => {
                     if (!isDragging) return;
+                    
+                    e.preventDefault();
+                    e.stopPropagation();
                     
                     const newX = e.clientX - dragOffset.x;
                     const newY = e.clientY - dragOffset.y;
@@ -170,11 +178,15 @@
                     button.style.top = Math.max(0, Math.min(newY, maxY)) + 'px';
                 });
                 
-                document.addEventListener('mouseup', () => {
+                document.addEventListener('mouseup', (e) => {
                     if (isDragging) {
                         isDragging = false;
-                        button.style.cursor = 'pointer';
+                        button.style.cursor = 'move';
                         this.saveButtonPosition(button);
+                        
+                        // Prevent click event from firing after drag
+                        e.preventDefault();
+                        e.stopPropagation();
                     }
                 });
             },
