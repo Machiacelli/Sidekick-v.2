@@ -9,18 +9,18 @@
 // @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@35b4bbe/src/modules/core.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@35b4bbe/src/modules/ui.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@35b4bbe/src/modules/content.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@35b4bbe/src/modules/settings.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@35b4bbe/src/modules/clock.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@35b4bbe/src/modules/notepad.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@35b4bbe/src/modules/blocktraining.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@35b4bbe/src/modules/global-functions.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@35b4bbe/src/modules/attacklist.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@35b4bbe/src/modules/linkgroup.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@35b4bbe/src/modules/travel-blocker.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@35b4bbe/src/modules/traveltracker.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@db66271/src/modules/core.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@db66271/src/modules/ui.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@db66271/src/modules/content.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@db66271/src/modules/settings.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@db66271/src/modules/clock.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@db66271/src/modules/notepad.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@db66271/src/modules/blocktraining.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@db66271/src/modules/global-functions.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@db66271/src/modules/attacklist.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@db66271/src/modules/linkgroup.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@db66271/src/modules/travel-blocker.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@db66271/src/modules/traveltracker.module.js
 
 // @run-at       document-end
 // ==/UserScript==
