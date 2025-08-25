@@ -538,5 +538,20 @@
         window.SidekickModules.TravelTracker = TravelTrackerModule;
 
         console.log('✈️ Travel Tracker module registered globally');
+        console.log('🔍 TravelTracker module check:', {
+            'SidekickModules exists': !!window.SidekickModules,
+            'TravelTracker exists': !!window.SidekickModules.TravelTracker,
+            'TravelTracker.activate exists': !!window.SidekickModules.TravelTracker?.activate,
+            'Available modules': Object.keys(window.SidekickModules)
+        });
+
+        // Fallback registration - ensure module is available
+        setTimeout(() => {
+            if (!window.SidekickModules.TravelTracker) {
+                console.warn('⚠️ TravelTracker not found, re-registering...');
+                window.SidekickModules.TravelTracker = TravelTrackerModule;
+                console.log('✅ TravelTracker re-registered');
+            }
+        }, 1000);
     });
 })();
