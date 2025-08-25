@@ -9,19 +9,20 @@
 // @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9b4db9/src/modules/core.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9b4db9/src/modules/ui.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9b4db9/src/modules/content.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9b4db9/src/modules/settings.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9b4db9/src/modules/clock.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9b4db9/src/modules/notepad.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9b4db9/src/modules/blocktraining.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9b4db9/src/modules/global-functions.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9b4db9/src/modules/attacklist.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9b4db9/src/modules/linkgroup.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9b4db9/src/modules/travel-blocker.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9b4db9/src/modules/traveltracker.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9b4db9/src/modules/timer.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@6798a05/src/modules/core.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@6798a05/src/modules/ui.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@6798a05/src/modules/content.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@6798a05/src/modules/settings.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@6798a05/src/modules/clock.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@6798a05/src/modules/notepad.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@6798a05/src/modules/blocktraining.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@6798a05/src/modules/global-functions.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@6798a05/src/modules/attacklist.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@6798a05/src/modules/linkgroup.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@6798a05/src/modules/travel-blocker.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@6798a05/src/modules/traveltracker.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@6798a05/src/modules/timer.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@6798a05/src/modules/randomtarget.module.js
 
 // @run-at       document-end
 // ==/UserScript==
@@ -84,7 +85,7 @@
         }
 
         // Initialize other modules (modular approach: each module self-registers and is initialized here)
-        ['Settings', 'Clock', 'Notepad', 'TravelTracker', 'Timer', 'Content', 'AttackList', 'LinkGroup', 'TravelBlocker'].forEach(moduleName => {
+        ['Settings', 'Clock', 'Notepad', 'TravelTracker', 'Timer', 'Content', 'AttackList', 'LinkGroup', 'TravelBlocker', 'RandomTarget'].forEach(moduleName => {
             if (window.SidekickModules[moduleName]) {
                 console.log(`🔌 Initializing ${moduleName} module...`);
                 try {

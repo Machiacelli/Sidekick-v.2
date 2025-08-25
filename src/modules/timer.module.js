@@ -134,17 +134,21 @@
                                 " title="Options">
                                     ▼
                                 </button>
-                                <div class="dropdown-content" style="
-                                    display: none;
-                                    position: fixed;
-                                    background: #333;
-                                    min-width: 160px;
-                                    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-                                    z-index: 100000;
-                                    border-radius: 4px;
-                                    border: 1px solid #555;
-                                    padding: 4px 0;
-                                ">
+                                                                 <div class="dropdown-content" style="
+                                     display: none;
+                                     position: fixed;
+                                     background: #333;
+                                     min-width: 160px;
+                                     max-height: 200px;
+                                     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+                                     z-index: 100000;
+                                     border-radius: 4px;
+                                     border: 1px solid #555;
+                                     padding: 4px 0;
+                                     overflow-y: auto;
+                                     scrollbar-width: thin;
+                                     scrollbar-color: #555 #333;
+                                 ">
                                     <button id="refresh-cooldowns" style="
                                         background: none;
                                         border: none;
@@ -248,8 +252,11 @@
                     document.body.appendChild(panel);
                 }
                 
-                // Add event listeners
-                this.addPanelEventListeners();
+                                 // Add event listeners
+                 this.addPanelEventListeners();
+                 
+                 // Add custom scrollbar styling
+                 this.addCustomScrollbarStyles();
                 
                 // Load existing timers
                 this.renderTimers();
@@ -1170,9 +1177,31 @@
                         'error'
                     );
                 }
-            },
+                         },
 
-            updateExistingTimers() {
+             addCustomScrollbarStyles() {
+                 // Add custom scrollbar styles for webkit browsers
+                 const style = document.createElement('style');
+                 style.textContent = `
+                     .dropdown-content::-webkit-scrollbar {
+                         width: 6px;
+                     }
+                     .dropdown-content::-webkit-scrollbar-track {
+                         background: #333;
+                         border-radius: 3px;
+                     }
+                     .dropdown-content::-webkit-scrollbar-thumb {
+                         background: #555;
+                         border-radius: 3px;
+                     }
+                     .dropdown-content::-webkit-scrollbar-thumb:hover {
+                         background: #777;
+                     }
+                 `;
+                 document.head.appendChild(style);
+             },
+
+             updateExistingTimers() {
                 console.log('🔄 Updating existing timers with new cooldown data...');
                 
                 if (!this.cooldownData || this.timers.length === 0) {
