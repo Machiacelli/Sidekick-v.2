@@ -484,7 +484,29 @@
                     overflow-x: hidden;
                     padding-bottom: 60px;
                     position: relative;
+                    scrollbar-width: thin;
+                    scrollbar-color: #555 #333;
                 `;
+                
+                // Add custom scrollbar styles for webkit browsers
+                const scrollbarStyle = document.createElement('style');
+                scrollbarStyle.textContent = `
+                    #sidekick-content::-webkit-scrollbar {
+                        width: 8px;
+                    }
+                    #sidekick-content::-webkit-scrollbar-track {
+                        background: #333;
+                        border-radius: 4px;
+                    }
+                    #sidekick-content::-webkit-scrollbar-thumb {
+                        background: #555;
+                        border-radius: 4px;
+                    }
+                    #sidekick-content::-webkit-scrollbar-thumb:hover {
+                        background: #777;
+                    }
+                `;
+                document.head.appendChild(scrollbarStyle);
                 
                 sidebar.appendChild(contentArea);
                 

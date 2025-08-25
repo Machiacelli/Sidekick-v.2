@@ -191,18 +191,30 @@
 
                     // Random Target toggle
                     const randomTargetToggle = document.getElementById('random-target-toggle');
+                    console.log('🔍 Looking for Random Target toggle:', randomTargetToggle);
+                    console.log('🔍 RandomTarget module available:', !!window.SidekickModules?.RandomTarget);
+                    console.log('🔍 Available modules:', Object.keys(window.SidekickModules || {}));
+                    
                     if (randomTargetToggle) {
                         // Set initial state
                         if (window.SidekickModules?.RandomTarget) {
                             randomTargetToggle.checked = window.SidekickModules.RandomTarget.isActive || false;
+                            console.log('✅ Random Target toggle initialized with state:', randomTargetToggle.checked);
+                        } else {
+                            console.warn('⚠️ RandomTarget module not available for toggle initialization');
                         }
                         
                         randomTargetToggle.addEventListener('change', () => {
+                            console.log('🎛️ Random Target toggle changed to:', randomTargetToggle.checked);
                             if (window.SidekickModules?.RandomTarget) {
                                 window.SidekickModules.RandomTarget.activate();
                                 console.log('🎛️ Random Target toggled:', randomTargetToggle.checked);
+                            } else {
+                                console.error('❌ RandomTarget module not available for activation');
                             }
                         });
+                    } else {
+                        console.error('❌ Random Target toggle element not found in DOM');
                     }
 
                     // Add Block Training button after other buttons

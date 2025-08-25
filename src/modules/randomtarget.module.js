@@ -315,6 +315,11 @@
             'RandomTarget.activate exists': !!window.SidekickModules.RandomTarget?.activate,
             'Available modules': Object.keys(window.SidekickModules)
         });
+        
+        // Additional debugging
+        console.log('🎯 RandomTarget module object:', RandomTargetModule);
+        console.log('🎯 RandomTarget module name:', RandomTargetModule.name);
+        console.log('🎯 RandomTarget module activate method:', typeof RandomTargetModule.activate);
 
         // Fallback registration - ensure module is available
         setTimeout(() => {
