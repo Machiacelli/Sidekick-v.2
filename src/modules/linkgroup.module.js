@@ -53,7 +53,7 @@
 
             document.body.appendChild(panel);
             panel.style.display = 'block'; // Ensure visible
-            panel.style.background = '#ff0'; // Debug: bright background
+            // Use default .sidekick-panel styling for clean look
             this.panel = panel;
             this.renderLinks();
 
