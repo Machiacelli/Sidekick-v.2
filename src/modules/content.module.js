@@ -98,7 +98,31 @@
                     gap: 8px !important;
                     box-shadow: 0 8px 32px rgba(0,0,0,0.3) !important;
                     min-width: 200px !important;
+                    max-height: 200px !important;
+                    overflow-y: auto !important;
+                    scrollbar-width: thin !important;
+                    scrollbar-color: #555 #333 !important;
                 `;
+                
+                // Add custom scrollbar styles for webkit browsers
+                const scrollbarStyle = document.createElement('style');
+                scrollbarStyle.textContent = `
+                    #sidekick-add-menu::-webkit-scrollbar {
+                        width: 6px;
+                    }
+                    #sidekick-add-menu::-webkit-scrollbar-track {
+                        background: #333;
+                        border-radius: 3px;
+                    }
+                    #sidekick-add-menu::-webkit-scrollbar-thumb {
+                        background: #555;
+                        border-radius: 3px;
+                    }
+                    #sidekick-add-menu::-webkit-scrollbar-thumb:hover {
+                        background: #777;
+                    }
+                `;
+                document.head.appendChild(scrollbarStyle);
                 
                 const menuItems = [
                     { icon: '📝', text: 'Add Notepad', color: '#4CAF50', action: () => this.addNotepad() },

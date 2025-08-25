@@ -196,10 +196,11 @@
                     console.log('🔍 Available modules:', Object.keys(window.SidekickModules || {}));
                     
                     if (randomTargetToggle) {
-                        // Set initial state
+                        // Set initial state - check both isActive and the saved state
                         if (window.SidekickModules?.RandomTarget) {
-                            randomTargetToggle.checked = window.SidekickModules.RandomTarget.isActive || false;
-                            console.log('✅ Random Target toggle initialized with state:', randomTargetToggle.checked);
+                            const savedState = window.SidekickModules.Core.loadState('random_target_active', false);
+                            randomTargetToggle.checked = savedState;
+                            console.log('✅ Random Target toggle initialized with saved state:', savedState);
                         } else {
                             console.warn('⚠️ RandomTarget module not available for toggle initialization');
                         }
@@ -214,13 +215,16 @@
                             }
                         });
 
-                        // Also update the toggle state when the module state changes
-                        // This ensures the toggle reflects the actual module state
-                        if (window.SidekickModules?.RandomTarget) {
-                            // Update toggle to match current module state
-                            randomTargetToggle.checked = window.SidekickModules.RandomTarget.isActive || false;
-                            console.log('🔄 Random Target toggle synced with module state:', randomTargetToggle.checked);
-                        }
+                        // Set up a periodic check to keep toggle in sync with module state
+                        setInterval(() => {
+                            if (window.SidekickModules?.RandomTarget && randomTargetToggle) {
+                                const currentState = window.SidekickModules.Core.loadState('random_target_active', false);
+                                if (randomTargetToggle.checked !== currentState) {
+                                    randomTargetToggle.checked = currentState;
+                                    console.log('🔄 Random Target toggle synced to:', currentState);
+                                }
+                            }
+                        }, 1000); // Check every second
                     } else {
                         console.error('❌ Random Target toggle element not found in DOM');
                     }
