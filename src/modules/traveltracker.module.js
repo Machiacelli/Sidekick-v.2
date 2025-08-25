@@ -318,17 +318,15 @@
             },
 
             addStopTrackingListener() {
-                // Remove any existing listeners first
-                const stopBtn = document.getElementById('travel-tracker-stop-btn');
-                if (stopBtn) {
-                    // Clone the button to remove old event listeners
-                    const newStopBtn = stopBtn.cloneNode(true);
-                    stopBtn.parentNode.replaceChild(newStopBtn, stopBtn);
-                    
-                    // Add new event listener
-                    newStopBtn.addEventListener('click', () => {
-                        console.log('🛑 Stop tracking button clicked');
-                        this.removeCurrentTracker();
+                // Use event delegation instead of direct event listeners
+                if (this.statusDisplay) {
+                    this.statusDisplay.addEventListener('click', (e) => {
+                        if (e.target.id === 'travel-tracker-stop-btn') {
+                            console.log('🛑 Stop tracking button clicked');
+                            e.preventDefault();
+                            e.stopPropagation();
+                            this.removeCurrentTracker();
+                        }
                     });
                 }
             },
@@ -447,14 +445,14 @@
             removeCurrentTracker() {
                 console.log('🗑️ Removing current tracker');
                 
-                // Stop monitoring
+                // Stop monitoring immediately
                 if (this.monitoringInterval) {
                     clearInterval(this.monitoringInterval);
                     this.monitoringInterval = null;
                     console.log('🔄 Monitoring stopped');
                 }
                 
-                // Remove status display
+                // Remove status display immediately
                 if (this.statusDisplay) {
                     this.statusDisplay.remove();
                     this.statusDisplay = null;
@@ -464,7 +462,7 @@
                 // Clear current tracker
                 this.currentTracker = null;
                 
-                // Save state
+                // Save state immediately
                 this.saveState();
                 
                 // Show success message
@@ -475,7 +473,23 @@
                 );
                 
                 console.log('✅ Tracker completely removed');
+                
+                // Force a visual update to ensure everything is cleared
+                this.forceUpdate();
             },
+
+            forceUpdate() {
+                // Force browser to re-render and clear any remaining elements
+                if (document.getElementById('travel-tracker-status-display')) {
+                    document.getElementById('travel-tracker-status-display').remove();
+                }
+                
+                // Clear any remaining highlights
+                const highlighted = document.querySelectorAll('.travel-tracker-highlight');
+                highlighted.forEach(el => el.classList.remove('travel-tracker-highlight'));
+                
+                console.log('🔄 Forced visual update completed');
+            }
 
             showInstructions() {
                 if (document.getElementById('travel-tracker-instructions')) return;
@@ -551,12 +565,28 @@
                     
                     if (state.currentTracker) {
                         this.currentTracker = state.currentTracker;
-                        // Note: DOM element reference will be restored during monitoring
-                        console.log('📂 Restored travel tracker state');
+                        console.log('📂 Restored travel tracker state:', state.currentTracker);
+                        
+                        // Restore the status display and monitoring
+                        this.restoreTracker();
                     }
                 } catch (error) {
                     console.error('❌ Failed to load travel tracker state:', error);
                 }
+            },
+
+            restoreTracker() {
+                if (!this.currentTracker) return;
+                
+                console.log('🔄 Restoring tracker display and monitoring...');
+                
+                // Create status display
+                this.createStatusDisplay();
+                
+                // Start monitoring
+                this.startMonitoring();
+                
+                console.log('✅ Tracker restored successfully');
             }
         };
 
