@@ -113,72 +113,125 @@
                             <span style="font-size: 16px;">⏰</span>
                             <span style="font-weight: bold; color: #4CAF50;">Timer Panel</span>
                         </div>
-                        <button id="timer-close-btn" style="
-                            background: none;
-                            border: none;
-                            color: #f44336;
-                            cursor: pointer;
-                            font-size: 18px;
-                            padding: 0;
-                            width: 20px;
-                            height: 20px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            opacity: 0.7;
-                        " title="Close timer panel">×</button>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button id="refresh-cooldowns" style="
+                                background: #FF9800;
+                                border: none;
+                                color: white;
+                                padding: 4px 8px;
+                                border-radius: 4px;
+                                cursor: pointer;
+                                font-size: 11px;
+                                display: flex;
+                                align-items: center;
+                                gap: 4px;
+                            " title="Refresh Cooldowns">
+                                🔄 Refresh
+                            </button>
+                            <div class="timer-dropdown" style="position: relative; display: inline-block;">
+                                <button class="dropdown-btn" style="
+                                    background: #2196F3;
+                                    border: none;
+                                    color: white;
+                                    padding: 4px 8px;
+                                    border-radius: 4px;
+                                    cursor: pointer;
+                                    font-size: 11px;
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 4px;
+                                " title="Add Timer">
+                                    + Add Timer
+                                    <span style="font-size: 10px;">▼</span>
+                                </button>
+                                <div class="dropdown-content" style="
+                                    display: none;
+                                    position: absolute;
+                                    background: #333;
+                                    min-width: 140px;
+                                    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+                                    z-index: 1001;
+                                    border-radius: 4px;
+                                    border: 1px solid #555;
+                                    top: 100%;
+                                    right: 0;
+                                    margin-top: 4px;
+                                ">
+                                    <button class="timer-add-btn" data-type="medical" style="
+                                        background: none;
+                                        border: none;
+                                        color: #fff;
+                                        padding: 8px 12px;
+                                        width: 100%;
+                                        text-align: left;
+                                        cursor: pointer;
+                                        font-size: 12px;
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 8px;
+                                    ">🏥 Medical Cooldown</button>
+                                    <button class="timer-add-btn" data-type="drug" style="
+                                        background: none;
+                                        border: none;
+                                        color: #fff;
+                                        padding: 8px 12px;
+                                        width: 100%;
+                                        text-align: left;
+                                        cursor: pointer;
+                                        font-size: 12px;
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 8px;
+                                    ">💊 Drug Cooldown</button>
+                                    <button class="timer-add-btn" data-type="booster" style="
+                                        background: none;
+                                        border: none;
+                                        color: #fff;
+                                        padding: 8px 12px;
+                                        width: 100%;
+                                        text-align: left;
+                                        cursor: pointer;
+                                        font-size: 12px;
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 8px;
+                                    ">💉 Booster Cooldown</button>
+                                    <button class="timer-add-btn" data-type="custom" style="
+                                        background: none;
+                                        border: none;
+                                        color: #fff;
+                                        padding: 8px 12px;
+                                        width: 100%;
+                                        text-align: left;
+                                        cursor: pointer;
+                                        font-size: 12px;
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 8px;
+                                    ">⏱️ Custom Timer</button>
+                                </div>
+                            </div>
+                            <button id="timer-close-btn" style="
+                                background: none;
+                                border: none;
+                                color: #f44336;
+                                cursor: pointer;
+                                font-size: 18px;
+                                padding: 0;
+                                width: 20px;
+                                height: 20px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                opacity: 0.7;
+                            " title="Close timer panel">×</button>
+                        </div>
                     </div>
                     
                     <div style="padding: 12px; flex: 1; overflow-y: auto;">
-                        <div style="margin-bottom: 15px;">
-                            <h4 style="margin: 0 0 10px 0; color: #2196F3; font-size: 14px;">Add Timers</h4>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                                <button id="add-medical-timer" class="timer-add-btn" data-type="medical" style="
-                                    background: #4CAF50;
-                                    border: none;
-                                    color: white;
-                                    padding: 8px;
-                                    border-radius: 4px;
-                                    cursor: pointer;
-                                    font-size: 12px;
-                                    transition: background 0.3s ease;
-                                ">🏥 Medical</button>
-                                <button id="add-drug-timer" class="timer-add-btn" data-type="drug" style="
-                                    background: #FF9800;
-                                    border: none;
-                                    color: white;
-                                    padding: 8px;
-                                    border-radius: 4px;
-                                    cursor: pointer;
-                                    font-size: 12px;
-                                    transition: background 0.3s ease;
-                                ">💊 Drug</button>
-                                <button id="add-booster-timer" class="timer-add-btn" data-type="booster" style="
-                                    background: #9C27B0;
-                                    border: none;
-                                    color: white;
-                                    padding: 8px;
-                                    border-radius: 4px;
-                                    cursor: pointer;
-                                    font-size: 12px;
-                                    transition: background 0.3s ease;
-                                ">💉 Booster</button>
-                                <button id="add-custom-timer" class="timer-add-btn" data-type="custom" style="
-                                    background: #607D8B;
-                                    border: none;
-                                    color: white;
-                                    padding: 8px;
-                                    border-radius: 4px;
-                                    cursor: pointer;
-                                    font-size: 12px;
-                                    transition: background 0.3s ease;
-                                ">⏱️ Custom</button>
-                            </div>
-                        </div>
-                        
                         <div id="timers-container">
                             <div style="text-align: center; color: #888; padding: 20px; font-size: 12px;">
-                                No timers added yet. Click a button above to add one.
+                                No timers added yet. Click "Add Timer" to add one.
                             </div>
                         </div>
                     </div>
@@ -281,20 +334,49 @@
                     this.hideTimerPanel();
                 });
 
+                // Refresh cooldowns button
+                panel.querySelector('#refresh-cooldowns').addEventListener('click', () => {
+                    this.fetchCooldownData();
+                    this.core.NotificationSystem.show(
+                        'Timer',
+                        'Refreshing cooldown data...',
+                        'info'
+                    );
+                });
+
                 // Add timer buttons
                 panel.querySelectorAll('.timer-add-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const type = e.target.dataset.type;
                         this.addTimer(type);
+                        // Close dropdown after selection
+                        const dropdownContent = panel.querySelector('.dropdown-content');
+                        if (dropdownContent) dropdownContent.style.display = 'none';
                     });
                     
                     // Hover effects
                     btn.addEventListener('mouseenter', () => {
-                        btn.style.opacity = '0.8';
+                        btn.style.background = '#555';
                     });
                     btn.addEventListener('mouseleave', () => {
-                        btn.style.opacity = '1';
+                        btn.style.background = 'none';
                     });
+                });
+
+                // Dropdown button
+                const dropdownBtn = panel.querySelector('.dropdown-btn');
+                const dropdownContent = panel.querySelector('.dropdown-content');
+
+                dropdownBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!dropdownBtn.contains(e.target) && !dropdownContent.contains(e.target)) {
+                        dropdownContent.style.display = 'none';
+                    }
                 });
             },
 
@@ -393,13 +475,23 @@
             },
 
             createCooldownTimer(type) {
+                // Check if we have cooldown data for this type
+                if (!this.cooldownData || !this.cooldownData[type]) {
+                    this.core.NotificationSystem.show(
+                        'Timer',
+                        `No cooldown data available for ${type}. Please refresh cooldowns first.`,
+                        'warning'
+                    );
+                    return;
+                }
+
                 const timer = {
                     id: 'timer-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
                     type: type,
                     name: this.getTimerDisplayName(type),
                     startTime: Date.now(),
-                    endTime: null,
-                    duration: 0,
+                    endTime: this.cooldownData[type],
+                    duration: this.getCooldownDuration(type),
                     isActive: true,
                     isCooldown: true
                 };
@@ -410,7 +502,7 @@
                 
                 this.core.NotificationSystem.show(
                     'Timer',
-                    `${timer.name} timer added!`,
+                    `${timer.name} timer added! Cooldown ends in ${this.formatTime(this.cooldownData[type] - Date.now())}`,
                     'success'
                 );
             },
@@ -455,7 +547,7 @@
                 if (this.timers.length === 0) {
                     container.innerHTML = `
                         <div style="text-align: center; color: #888; padding: 20px; font-size: 12px;">
-                            No timers added yet. Click a button above to add one.
+                            No timers added yet. Click "Add Timer" to add one.
                         </div>
                     `;
                     return;
@@ -472,41 +564,94 @@
                 const progress = this.getProgress(timer);
                 const isExpired = timeLeft <= 0;
                 
-                return `
-                    <div class="timer-item" data-timer-id="${timer.id}" style="
-                        background: linear-gradient(135deg, #2d2d2d, #3d3d3d);
-                        border: 1px solid #555;
-                        border-radius: 8px;
-                        padding: 12px;
-                        margin-bottom: 10px;
-                        position: relative;
-                        overflow: hidden;
-                    ">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <div>
-                                <strong style="color: #4CAF50; font-size: 13px;">${timer.name}</strong>
-                                <div style="font-size: 11px; color: #888; margin-top: 2px;">
-                                    ${timer.isCooldown ? 'Cooldown Timer' : 'Custom Timer'}
+                // If only one timer, show full detailed view
+                if (this.timers.length === 1) {
+                    return `
+                        <div class="timer-item" data-timer-id="${timer.id}" style="
+                            background: linear-gradient(135deg, #2d2d2d, #3d3d3d);
+                            border: 1px solid #555;
+                            border-radius: 8px;
+                            padding: 12px;
+                            margin-bottom: 10px;
+                            position: relative;
+                            overflow: hidden;
+                        ">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div>
+                                    <strong style="color: #4CAF50; font-size: 13px;">${timer.name}</strong>
+                                    <div style="font-size: 11px; color: #888; margin-top: 2px;">
+                                        ${timer.isCooldown ? 'Cooldown Timer' : 'Custom Timer'}
+                                    </div>
+                                </div>
+                                <button class="remove-timer-btn" data-timer-id="${timer.id}" style="
+                                    background: #f44336;
+                                    border: none;
+                                    border-radius: 4px;
+                                    color: white;
+                                    padding: 3px 6px;
+                                    font-size: 11px;
+                                    cursor: pointer;
+                                ">Remove</button>
+                            </div>
+                            
+                            <div style="margin-bottom: 8px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                                    <span style="font-size: 11px; color: #888;">Progress</span>
+                                    <span style="font-size: 11px; color: #888;">${Math.round(progress * 100)}%</span>
+                                </div>
+                                <div style="
+                                    width: 100%;
+                                    height: 4px;
+                                    background: #555;
+                                    border-radius: 2px;
+                                    overflow: hidden;
+                                ">
+                                    <div style="
+                                        width: ${progress * 100}%;
+                                        height: 100%;
+                                        background: ${isExpired ? '#4CAF50' : '#2196F3'};
+                                        transition: width 0.3s ease;
+                                    "></div>
                                 </div>
                             </div>
-                            <button class="remove-timer-btn" data-timer-id="${timer.id}" style="
-                                background: #f44336;
-                                border: none;
-                                border-radius: 4px;
-                                color: white;
-                                padding: 3px 6px;
-                                font-size: 11px;
-                                cursor: pointer;
-                            ">Remove</button>
-                        </div>
-                        
-                        <div style="margin-bottom: 8px;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-                                <span style="font-size: 11px; color: #888;">Progress</span>
-                                <span style="font-size: 11px; color: #888;">${Math.round(progress * 100)}%</span>
+                            
+                            <div style="text-align: center;">
+                                <div style="
+                                    font-size: 16px;
+                                    font-weight: bold;
+                                    color: ${isExpired ? '#4CAF50' : '#FF9800'};
+                                    font-family: 'Courier New', monospace;
+                                ">${this.formatTime(timeLeft)}</div>
+                                <div style="font-size: 10px; color: #888; margin-top: 2px;">
+                                    ${isExpired ? 'Ready!' : 'Time remaining'}
+                                </div>
                             </div>
+                        </div>
+                    `;
+                }
+                
+                // If multiple timers, show compact view
+                return `
+                    <div class="timer-item" data-timer-id="${timer.id}" style="
+                        background: #333;
+                        border: 1px solid #555;
+                        border-radius: 6px;
+                        padding: 8px;
+                        margin-bottom: 6px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                    ">
+                        <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                            <span style="font-size: 14px;">${this.getTimerIcon(timer.type)}</span>
+                            <div>
+                                <div style="font-size: 12px; color: #fff; font-weight: bold;">${timer.name}</div>
+                                <div style="font-size: 10px; color: #888;">${this.formatTime(timeLeft)}</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px;">
                             <div style="
-                                width: 100%;
+                                width: 40px;
                                 height: 4px;
                                 background: #555;
                                 border-radius: 2px;
@@ -519,21 +664,29 @@
                                     transition: width 0.3s ease;
                                 "></div>
                             </div>
-                        </div>
-                        
-                        <div style="text-align: center;">
-                            <div style="
-                                font-size: 16px;
-                                font-weight: bold;
-                                color: ${isExpired ? '#4CAF50' : '#FF9800'};
-                                font-family: 'Courier New', monospace;
-                            ">${this.formatTime(timeLeft)}</div>
-                            <div style="font-size: 10px; color: #888; margin-top: 2px;">
-                                ${isExpired ? 'Ready!' : 'Time remaining'}
-                            </div>
+                            <button class="remove-timer-btn" data-timer-id="${timer.id}" style="
+                                background: #f44336;
+                                border: none;
+                                border-radius: 3px;
+                                color: white;
+                                padding: 2px 4px;
+                                font-size: 10px;
+                                cursor: pointer;
+                                min-width: 20px;
+                            ">×</button>
                         </div>
                     </div>
                 `;
+            },
+
+            getTimerIcon(type) {
+                const icons = {
+                    [this.timerTypes.MEDICAL]: '🏥',
+                    [this.timerTypes.DRUG]: '💊',
+                    [this.timerTypes.BOOSTER]: '💉',
+                    [this.timerTypes.CUSTOM]: '⏱️'
+                };
+                return icons[type] || '⏰';
             },
 
             addTimerEventListeners() {
@@ -612,7 +765,13 @@
             async fetchCooldownData() {
                 try {
                     // Fetch cooldown data from Torn API
-                    const response = await fetch(`https://api.torn.com/user/?selections=cooldowns&key=${this.core.getApiKey()}`);
+                    const apiKey = this.core.getApiKey();
+                    if (!apiKey) {
+                        console.warn('No API key available for cooldown data');
+                        return;
+                    }
+
+                    const response = await fetch(`https://api.torn.com/user/?selections=cooldowns&key=${apiKey}`);
                     const data = await response.json();
                     
                     if (data.error) {
@@ -620,13 +779,16 @@
                         return;
                     }
                     
+                    console.log('📊 Raw cooldown data:', data.cooldowns);
+                    
+                    // Convert cooldown seconds to end timestamps
                     this.cooldownData = {
                         [this.timerTypes.MEDICAL]: data.cooldowns?.medical ? Date.now() + (data.cooldowns.medical * 1000) : null,
                         [this.timerTypes.DRUG]: data.cooldowns?.drug ? Date.now() + (data.cooldowns.drug * 1000) : null,
                         [this.timerTypes.BOOSTER]: data.cooldowns?.booster ? Date.now() + (data.cooldowns.booster * 1000) : null
                     };
                     
-                    console.log('📊 Cooldown data updated:', this.cooldownData);
+                    console.log('📊 Processed cooldown data:', this.cooldownData);
                     
                     // Update timers display
                     if (this.isActive) {
