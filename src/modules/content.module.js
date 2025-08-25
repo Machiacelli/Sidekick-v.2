@@ -256,9 +256,35 @@
             },
 
             addTimer() {
-                // Use existing timer functionality - just show notification
-                NotificationSystem.show('Timer', 'Use the existing timer functionality in the sidebar', 'info');
-                console.log('ℹ️ Timer functionality already available in sidebar');
+                console.log('⏰ Timer button clicked - checking module availability...');
+                console.log('⏰ Available modules:', window.SidekickModules ? Object.keys(window.SidekickModules) : 'No modules found');
+                
+                // Check if Timer module is available
+                if (window.SidekickModules?.Timer?.activate) {
+                    console.log('✅ Timer module found - activating...');
+                    try {
+                        window.SidekickModules.Timer.activate();
+                        this.closeAddMenu();
+                        console.log('✅ Timer activated successfully');
+                    } catch (error) {
+                        console.error('❌ Error activating Timer:', error);
+                        NotificationSystem.show('Timer', 'Error activating timer: ' + error.message, 'error');
+                    }
+                } else {
+                    console.error('❌ Timer module not available');
+                    console.log('🔍 Checking what we have:', {
+                        'SidekickModules exists': !!window.SidekickModules,
+                        'Timer exists': !!window.SidekickModules?.Timer,
+                        'Timer.activate exists': !!window.SidekickModules?.Timer?.activate,
+                        'Available modules': window.SidekickModules ? Object.keys(window.SidekickModules) : 'none'
+                    });
+                    
+                    NotificationSystem.show(
+                        'Timer', 
+                        `Module not loaded. Check console for details. Available: ${window.SidekickModules ? Object.keys(window.SidekickModules).join(', ') : 'None'}`, 
+                        'error'
+                    );
+                }
             },
 
             addTravelTracker() {
