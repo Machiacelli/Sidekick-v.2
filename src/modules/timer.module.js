@@ -260,6 +260,9 @@
                 // Add dragging functionality
                 this.addDragging(panel);
                 
+                // Add resize constraints to prevent going outside sidebar
+                this.addResizeConstraints(panel);
+                
                 // Save panel open state
                 window.SidekickModules.Core.saveState('timer_panel_open', true);
             },
@@ -267,6 +270,11 @@
             hideTimerPanel() {
                 const panel = document.getElementById('timer-panel');
                 if (panel) {
+                    // Clean up resize observer
+                    if (panel.resizeObserver) {
+                        panel.resizeObserver.disconnect();
+                        panel.resizeObserver = null;
+                    }
                     panel.remove();
                 }
                 this.isActive = false;
@@ -323,6 +331,49 @@
                     height: panel.offsetHeight
                 };
                 window.SidekickModules.Core.saveState('timer_panel_position', position);
+            },
+
+            addResizeConstraints(panel) {
+                // Create a ResizeObserver to monitor size changes
+                const resizeObserver = new ResizeObserver((entries) => {
+                    for (const entry of entries) {
+                        const sidebar = document.getElementById('sidekick-sidebar');
+                        if (!sidebar) continue;
+                        
+                        const sidebarRect = sidebar.getBoundingClientRect();
+                        const panelRect = panel.getBoundingClientRect();
+                        
+                        // Check if panel is going outside sidebar bounds
+                        let needsAdjustment = false;
+                        let newWidth = panel.offsetWidth;
+                        let newHeight = panel.offsetHeight;
+                        
+                        // Constrain width
+                        if (panelRect.left + newWidth > sidebarRect.right) {
+                            newWidth = sidebarRect.right - panelRect.left - 10;
+                            needsAdjustment = true;
+                        }
+                        
+                        // Constrain height
+                        if (panelRect.top + newHeight > sidebarRect.bottom) {
+                            newHeight = sidebarRect.bottom - panelRect.top - 10;
+                            needsAdjustment = true;
+                        }
+                        
+                        // Apply constraints if needed
+                        if (needsAdjustment) {
+                            panel.style.width = Math.max(200, newWidth) + 'px';
+                            panel.style.height = Math.max(100, newHeight) + 'px';
+                            this.savePanelPosition(panel);
+                        }
+                    }
+                });
+                
+                // Start observing the panel
+                resizeObserver.observe(panel);
+                
+                // Store observer reference for cleanup
+                panel.resizeObserver = resizeObserver;
             },
 
             loadPanelPosition() {
@@ -725,10 +776,9 @@
                         align-items: center;
                     ">
                         <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
-                            <span style="font-size: 14px;">${this.getTimerIcon(timer.type)}</span>
                             <div>
                                 <div style="font-size: 12px; color: #fff; font-weight: bold;">${timer.name}</div>
-                                <div style="font-size: 10px; color: #888;">${this.formatTime(timeLeft)}</div>
+                                <div style="font-size: 14px; color: #FF9800; font-weight: bold; font-family: 'Courier New', monospace;">${this.formatTime(timeLeft)}</div>
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 6px;">
