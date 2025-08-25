@@ -100,26 +100,24 @@
                     min-width: 200px !important;
                     max-height: 200px !important;
                     overflow-y: auto !important;
-                    scrollbar-width: thin !important;
-                    scrollbar-color: #555 #333 !important;
+                    scrollbar-width: none !important;
+                    scrollbar-color: transparent transparent !important;
                 `;
                 
-                // Add custom scrollbar styles for webkit browsers
+                // Add custom scrollbar styles for webkit browsers - hidden but functional
                 const scrollbarStyle = document.createElement('style');
                 scrollbarStyle.textContent = `
                     #sidekick-add-menu::-webkit-scrollbar {
-                        width: 6px;
+                        width: 0px;
                     }
                     #sidekick-add-menu::-webkit-scrollbar-track {
-                        background: #333;
-                        border-radius: 3px;
+                        background: transparent;
                     }
                     #sidekick-add-menu::-webkit-scrollbar-thumb {
-                        background: #555;
-                        border-radius: 3px;
+                        background: transparent;
                     }
                     #sidekick-add-menu::-webkit-scrollbar-thumb:hover {
-                        background: #777;
+                        background: transparent;
                     }
                 `;
                 document.head.appendChild(scrollbarStyle);

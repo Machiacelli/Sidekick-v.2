@@ -201,6 +201,12 @@
                             const savedState = window.SidekickModules.Core.loadState('random_target_active', false);
                             randomTargetToggle.checked = savedState;
                             console.log('✅ Random Target toggle initialized with saved state:', savedState);
+                            
+                            // Also check if the module is actually active
+                            if (savedState && window.SidekickModules.RandomTarget.isActive) {
+                                console.log('🔄 Random Target module is active, ensuring toggle reflects this');
+                                randomTargetToggle.checked = true;
+                            }
                         } else {
                             console.warn('⚠️ RandomTarget module not available for toggle initialization');
                         }
@@ -219,12 +225,17 @@
                         setInterval(() => {
                             if (window.SidekickModules?.RandomTarget && randomTargetToggle) {
                                 const currentState = window.SidekickModules.Core.loadState('random_target_active', false);
-                                if (randomTargetToggle.checked !== currentState) {
-                                    randomTargetToggle.checked = currentState;
-                                    console.log('🔄 Random Target toggle synced to:', currentState);
+                                const moduleState = window.SidekickModules.RandomTarget.isActive;
+                                
+                                // Use the actual module state if available, otherwise fall back to saved state
+                                const shouldBeChecked = moduleState !== undefined ? moduleState : currentState;
+                                
+                                if (randomTargetToggle.checked !== shouldBeChecked) {
+                                    randomTargetToggle.checked = shouldBeChecked;
+                                    console.log('🔄 Random Target toggle synced to:', shouldBeChecked, '(module state:', moduleState, ', saved state:', currentState, ')');
                                 }
                             }
-                        }, 1000); // Check every second
+                        }, 500); // Check every 500ms for better responsiveness
                     } else {
                         console.error('❌ Random Target toggle element not found in DOM');
                     }

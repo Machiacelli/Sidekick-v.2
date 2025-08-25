@@ -261,26 +261,26 @@
                 width: 8px !important;
                 height: 8px !important;
                 border-radius: 50% !important;
-                background: rgba(255, 255, 255, 0.3) !important;
+                background: rgba(255, 255, 255, 0.1) !important;
                 cursor: pointer !important;
                 transition: all 0.3s ease !important;
-                opacity: 0.4 !important;
+                opacity: 0.2 !important;
                 position: relative !important;
-                border: 1px solid rgba(255, 255, 255, 0.2) !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
             }
 
             .sidekick-page-dot.active {
-                background: rgba(255, 255, 255, 0.8) !important;
+                background: rgba(255, 255, 255, 0.6) !important;
                 transform: scale(1.3) !important;
-                opacity: 1 !important;
-                border: 1px solid rgba(255, 255, 255, 0.6) !important;
+                opacity: 0.8 !important;
+                border: 1px solid rgba(255, 255, 255, 0.4) !important;
             }
 
             .sidekick-page-dot:hover {
-                background: rgba(255, 255, 255, 0.5) !important;
-                opacity: 0.7 !important;
+                background: rgba(255, 255, 255, 0.4) !important;
+                opacity: 0.9 !important;
                 transform: scale(1.1) !important;
-                border: 1px solid rgba(255, 255, 255, 0.4) !important;
+                border: 1px solid rgba(255, 255, 255, 0.3) !important;
             }
 
             .sidekick-page-dot.removing {
