@@ -92,6 +92,16 @@
                             </button>
                         </div>
                         <button id="block-training-btn" style="width: 100%; margin: 12px 0; padding: 12px; background: linear-gradient(135deg, #FF9800, #F44336); color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer;">Block Training</button>
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin: 12px 0;">
+                            <div style="display: flex; flex-direction: column;">
+                                <span style="color: #fff; font-weight: bold; font-size: 14px;">✈️ Travel Blocker</span>
+                                <span style="color: #aaa; font-size: 12px;">Prevents travel that conflicts with OC timing</span>
+                            </div>
+                            <label class="travel-blocker-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
+                                <input type="checkbox" id="travel-blocker-toggle" style="opacity: 0; width: 0; height: 0;">
+                                <span class="travel-blocker-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
+                            </label>
+                        </div>
                         <div style="border-top: 1px solid #444; margin: 20px 0; padding-top: 20px;">
                             <h4 style="color: #aaa; margin: 0 0 12px 0; font-size: 14px; font-weight: bold;">Data Management</h4>
                             <div style="display: flex; gap: 12px; margin-bottom: 12px;">
@@ -102,6 +112,9 @@
                         </div>
                     </div>
                 `, 'settings_modal');
+                
+                // Inject CSS for travel blocker toggle
+                this.injectTravelBlockerCSS();
                 
                 // Add event listeners to buttons after modal is created
                 setTimeout(() => {
@@ -125,6 +138,23 @@
                         blockBtn.addEventListener('click', () => {
                             if (window.SidekickModules?.BlockTraining?.toggleBlockTraining) {
                                 window.SidekickModules.BlockTraining.toggleBlockTraining();
+                            }
+                        });
+                    }
+
+                    // Travel Blocker toggle
+                    const travelBlockerToggle = document.getElementById('travel-blocker-toggle');
+                    if (travelBlockerToggle) {
+                        // Set initial state
+                        if (window.SidekickModules?.TravelBlocker) {
+                            const status = window.SidekickModules.TravelBlocker.getStatus();
+                            travelBlockerToggle.checked = status.enabled;
+                        }
+                        
+                        travelBlockerToggle.addEventListener('change', () => {
+                            if (window.SidekickModules?.TravelBlocker) {
+                                const newState = window.SidekickModules.TravelBlocker.toggle();
+                                console.log('🎛️ Travel Blocker toggled:', newState);
                             }
                         });
                     }
@@ -349,6 +379,39 @@
                     }
                 };
                 input.click();
+            },
+
+            injectTravelBlockerCSS() {
+                if (document.getElementById('travel-blocker-toggle-css')) return;
+                
+                const style = document.createElement('style');
+                style.id = 'travel-blocker-toggle-css';
+                style.textContent = `
+                    .travel-blocker-slider:before {
+                        position: absolute;
+                        content: "";
+                        height: 18px;
+                        width: 18px;
+                        left: 3px;
+                        bottom: 3px;
+                        background-color: white;
+                        transition: 0.3s;
+                        border-radius: 50%;
+                    }
+
+                    #travel-blocker-toggle:checked + .travel-blocker-slider {
+                        background-color: #4CAF50;
+                    }
+
+                    #travel-blocker-toggle:checked + .travel-blocker-slider:before {
+                        transform: translateX(26px);
+                    }
+
+                    .travel-blocker-slider:hover {
+                        box-shadow: 0 0 1px rgba(255,255,255,0.5);
+                    }
+                `;
+                document.head.appendChild(style);
             },
 
             clearAllData() {
