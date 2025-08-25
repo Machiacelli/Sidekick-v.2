@@ -54,6 +54,9 @@
                 // Start update loop
                 this.startUpdateLoop();
                 
+                // Check if panel was previously open and restore it
+                this.restorePanelState();
+                
                 console.log('✅ Timer module initialized successfully');
                 return true;
             },
@@ -75,15 +78,19 @@
                 
                 this.isActive = true;
                 
+                // Load saved panel position
+                const savedPosition = this.loadPanelPosition();
+                
                 // Create timer panel in sidebar style
                 const panel = document.createElement('div');
                 panel.id = 'timer-panel';
                 panel.className = 'sidebar-item';
                 panel.style.cssText = `
                     position: absolute;
-                    left: 10px;
-                    top: 10px;
-                    width: 280px;
+                    left: ${savedPosition.x}px;
+                    top: ${savedPosition.y}px;
+                    width: ${savedPosition.width}px;
+                    height: ${savedPosition.height}px;
                     background: #2a2a2a;
                     border: 1px solid #444;
                     border-radius: 8px;
@@ -252,6 +259,9 @@
                 
                 // Add dragging functionality
                 this.addDragging(panel);
+                
+                // Save panel open state
+                window.SidekickModules.Core.saveState('timer_panel_open', true);
             },
 
             hideTimerPanel() {
@@ -260,6 +270,9 @@
                     panel.remove();
                 }
                 this.isActive = false;
+                
+                // Save panel closed state
+                window.SidekickModules.Core.saveState('timer_panel_open', false);
             },
 
             addDragging(panel) {
@@ -426,6 +439,9 @@
             },
 
             addTimer(type) {
+                console.log(`➕ Adding timer for type: ${type}`);
+                console.log(`➕ Current timers before adding:`, this.timers.length);
+                
                 if (type === this.timerTypes.CUSTOM) {
                     this.showCustomTimerDialog();
                     return;
@@ -435,8 +451,8 @@
                 if (this.timers.some(t => t.type === type)) {
                     window.SidekickModules.Core.NotificationSystem.show(
                         'Timer',
-                        `Only one ${type} timer allowed per page`,
-                        'warning'
+                        `Timer for ${type} already exists`,
+                        'info'
                     );
                     return;
                 }
@@ -522,6 +538,7 @@
             createCooldownTimer(type) {
                 console.log(`🔍 Creating cooldown timer for type: ${type}`);
                 console.log(`🔍 Current cooldown data:`, this.cooldownData);
+                console.log(`🔍 Current timers before creating:`, this.timers.length);
                 
                 // Check if we have cooldown data for this type
                 if (!this.cooldownData || !this.cooldownData[type]) {
@@ -542,7 +559,7 @@
                             window.SidekickModules.Core.NotificationSystem.show(
                                 'Timer',
                                 `No active ${type} cooldown found. You can only add timers for active cooldowns.`,
-                                'warning'
+                                'error'
                             );
                         }
                     });
@@ -559,6 +576,9 @@
                     isActive: true,
                     isCooldown: true
                 };
+
+                console.log(`⏰ Created timer:`, timer);
+                console.log(`⏰ Timers array after push:`, this.timers.length);
 
                 this.timers.push(timer);
                 this.saveState();
@@ -607,6 +627,8 @@
             renderTimers() {
                 const container = document.getElementById('timers-container');
                 if (!container) return;
+
+                console.log('🔄 Rendering timers:', this.timers.length, 'timers');
 
                 if (this.timers.length === 0) {
                     container.innerHTML = '';
@@ -964,8 +986,9 @@
                         }))
                     };
                     
+                    console.log('💾 Saving timer state:', state);
                     window.SidekickModules.Core.saveState('timer_state', state);
-                    console.log('💾 Timer state saved');
+                    console.log('💾 Timer state saved successfully');
                 } catch (error) {
                     console.error('❌ Failed to save timer state:', error);
                 }
@@ -974,10 +997,26 @@
             loadState() {
                 try {
                     const state = window.SidekickModules.Core.loadState('timer_state', { timers: [] });
+                    console.log('📂 Loaded timer state from storage:', state);
                     this.timers = state.timers || [];
                     console.log('📂 Restored timer state:', this.timers.length, 'timers');
                 } catch (error) {
                     console.error('❌ Failed to load timer state:', error);
+                }
+            },
+
+            restorePanelState() {
+                try {
+                    const wasOpen = window.SidekickModules.Core.loadState('timer_panel_open', false);
+                    if (wasOpen) {
+                        console.log('🔄 Restoring timer panel state...');
+                        // Small delay to ensure DOM is ready
+                        setTimeout(() => {
+                            this.showTimerPanel();
+                        }, 500);
+                    }
+                } catch (error) {
+                    console.error('❌ Failed to restore panel state:', error);
                 }
             }
         };
