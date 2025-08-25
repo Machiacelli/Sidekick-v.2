@@ -94,7 +94,7 @@
                         <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin: 12px 0;">
                             <div style="display: flex; flex-direction: column;">
                                 <span style="color: #fff; font-weight: bold; font-size: 14px;">🚫 Block Training</span>
-                                <span style="color: #aaa; font-size: 12px;">Blocks training while stacking stats</span>
+                                <span style="color: #aaa; font-size: 12px;">Blocks training while stacking energy</span>
                             </div>
                             <label class="block-training-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
                                 <input type="checkbox" id="block-training-toggle" style="opacity: 0; width: 0; height: 0;">
@@ -548,10 +548,7 @@
             }
         };
 
-        // === GLOBAL WINDOW FUNCTIONS ===
-        window.showSettingsModal = function() {
-            SettingsManager.createModal();
-        };
+
 
         window.saveApiKey = function() {
             console.log('💾 saveApiKey called!');
