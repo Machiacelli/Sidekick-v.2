@@ -53,7 +53,8 @@
 
             document.body.appendChild(panel);
             panel.style.display = 'block'; // Ensure visible
-            // Use default .sidekick-panel styling for clean look
+            // Debug: Add visible content to confirm rendering
+            panel.innerHTML += '<div style="color:#fff;background:#333;padding:10px;">Debug: Panel Content</div>';
             this.panel = panel;
             this.renderLinks();
 
@@ -130,6 +131,6 @@
     };
 
     // Register to global modules
-    window.SidekickModules = window.SidekickModules || {};
-    window.SidekickModules.LinkGroup = LinkGroup;
+    window.top.SidekickModules = window.top.SidekickModules || {};
+    window.top.SidekickModules.LinkGroup = LinkGroup;
 })();
