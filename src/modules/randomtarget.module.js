@@ -65,10 +65,12 @@
                 
                 if (this.isActive) {
                     this.hideTargetButton();
+                    this.updateSettingsToggle(false);
                     return;
                 }
 
                 this.showTargetButton();
+                this.updateSettingsToggle(true);
             },
 
             showTargetButton() {
@@ -216,6 +218,7 @@
                         // Small delay to ensure DOM is ready
                         setTimeout(() => {
                             this.showTargetButton();
+                            this.updateSettingsToggle(true);
                         }, 500);
                     }
                 } catch (error) {
@@ -311,6 +314,19 @@
                 this.config = { ...this.config, ...newConfig };
                 this.saveConfig();
                 console.log('⚙️ Random target config updated:', this.config);
+            },
+
+            // Method to update the settings toggle to reflect current state
+            updateSettingsToggle(isActive) {
+                try {
+                    const toggle = document.getElementById('random-target-toggle');
+                    if (toggle) {
+                        toggle.checked = isActive;
+                        console.log('🔄 Updated Random Target toggle to:', isActive);
+                    }
+                } catch (error) {
+                    console.error('❌ Failed to update settings toggle:', error);
+                }
             }
         };
 

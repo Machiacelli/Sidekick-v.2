@@ -213,6 +213,14 @@
                                 console.error('❌ RandomTarget module not available for activation');
                             }
                         });
+
+                        // Also update the toggle state when the module state changes
+                        // This ensures the toggle reflects the actual module state
+                        if (window.SidekickModules?.RandomTarget) {
+                            // Update toggle to match current module state
+                            randomTargetToggle.checked = window.SidekickModules.RandomTarget.isActive || false;
+                            console.log('🔄 Random Target toggle synced with module state:', randomTargetToggle.checked);
+                        }
                     } else {
                         console.error('❌ Random Target toggle element not found in DOM');
                     }
