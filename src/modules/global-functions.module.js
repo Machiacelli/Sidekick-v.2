@@ -145,13 +145,13 @@
         window.testApiKeyAndFetchPrice = async function(apiKey) {
             try {
                 if (window.SidekickModules?.Api?.makeRequest) {
-                    const userResponse = await window.SidekickModules.Api.makeRequest('user?selections=basic');
+                    const userResponse = await window.SidekickModules.Api.makeRequest('user', 'basic');
                     if (userResponse && userResponse.name) {
                         NotificationSystem.show('API Test', `Connected as ${userResponse.name}`, 'info');
                         
                         // Try to get points price
                         try {
-                            const marketResponse = await window.SidekickModules.Api.makeRequest('market?selections=pointsmarket');
+                            const marketResponse = await window.SidekickModules.Api.makeRequest('market', 'pointsmarket');
                             if (marketResponse && marketResponse.pointsmarket && marketResponse.pointsmarket.length > 0) {
                                 const price = marketResponse.pointsmarket[0].cost;
                                 saveState('points_price', price);

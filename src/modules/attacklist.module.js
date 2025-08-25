@@ -785,9 +785,14 @@
                 try {
                     console.log(`🎯 Fetching data for player ${target.id}...`);
                     
+                    // Check if API is available
+                    if (!window.SidekickModules?.Api?.makeRequest) {
+                        throw new Error('API system not available. Please check settings.');
+                    }
+                    
                     // According to Torn API docs, we need basic,profile for name and status for current state
                     // API format: https://api.torn.com/user/:ID?selections=basic,profile&key=:KEY
-                    const data = await this.core.Api.makeRequest(`user/${target.id}?selections=basic,profile`);
+                    const data = await window.SidekickModules.Api.makeRequest(`user/${target.id}`, 'basic,profile');
                     
                     if (data && !data.error) {
                         target.name = data.name || `Player ${target.id}`;
@@ -819,8 +824,16 @@
                 } catch (error) {
                     console.error(`❌ Error fetching target data for ${target.id}:`, error);
                     target.name = `Player ${target.id}`;
-                    target.data = null;
-                    this.core.NotificationSystem.show('Error', `Failed to fetch data for player ${target.id}`, 'error');
+                    target.data = { error: error.message };
+                    
+                    // Show specific error messages
+                    if (error.message.includes('API key not configured')) {
+                        this.core.NotificationSystem.show('API Error', 'Please configure your API key in settings', 'error');
+                    } else if (error.message.includes('API system not available')) {
+                        this.core.NotificationSystem.show('API Error', 'API system not loaded. Please refresh the page.', 'error');
+                    } else {
+                        this.core.NotificationSystem.show('Error', `Failed to fetch data for player ${target.id}: ${error.message}`, 'error');
+                    }
                 }
             },
 
