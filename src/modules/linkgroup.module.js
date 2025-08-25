@@ -5,6 +5,16 @@
         panel: null,
 
         init() {
+            console.log('🔗 LinkGroup.init called');
+            // Hide other panels for clean UX
+            document.querySelectorAll('.sidekick-panel').forEach(p => {
+                if (p.id !== 'sidekick-linkgroup-panel') p.style.display = 'none';
+            });
+            const panel = document.getElementById('sidekick-linkgroup-panel');
+            if (panel) {
+                panel.style.display = (panel.style.display === 'none' ? 'block' : 'none');
+                return;
+            }
             this.loadLinks();
             this.createPanel();
         },
@@ -19,6 +29,7 @@
         },
 
         createPanel() {
+            console.log('🔗 LinkGroup.createPanel called');
             // Remove old panel if exists
             const old = document.getElementById('sidekick-linkgroup-panel');
             if (old) old.remove();
