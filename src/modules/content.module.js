@@ -243,11 +243,11 @@
             },
 
             addTravelTracker() {
-                if (window.SidekickModules?.FlightTracker?.activate) {
-                    window.SidekickModules.FlightTracker.activate();
+                if (window.SidekickModules?.TravelTracker?.activate) {
+                    window.SidekickModules.TravelTracker.activate();
                     this.closeAddMenu();
                 } else {
-                    console.error('FlightTracker module not available');
+                    console.error('TravelTracker module not available');
                     NotificationSystem.show('Travel Tracker', 'Travel tracker module not loaded!', 'error');
                 }
             },
