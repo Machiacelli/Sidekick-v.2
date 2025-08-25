@@ -489,7 +489,7 @@
                 highlighted.forEach(el => el.classList.remove('travel-tracker-highlight'));
                 
                 console.log('🔄 Forced visual update completed');
-            }
+            },
 
             showInstructions() {
                 if (document.getElementById('travel-tracker-instructions')) return;
