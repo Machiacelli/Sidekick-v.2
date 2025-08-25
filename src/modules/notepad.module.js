@@ -594,7 +594,17 @@
                     box-shadow: 0 8px 32px rgba(0,0,0,0.5);
                 `;
                 
-                const colors = ['#333', '#4CAF50', '#2196F3', '#FF9800', '#f44336', '#9C27B0', '#607D8B', '#795548'];
+                                const colors = [
+                                    '#333', '#4CAF50', '#2196F3', '#FF9800', '#f44336', '#9C27B0', '#607D8B', '#795548',
+                                    '#E91E63', // Pink
+                                    '#00BCD4', // Cyan
+                                    '#8BC34A', // Light Green
+                                    '#FFC107', // Amber
+                                    '#FFEB3B', // Yellow
+                                    '#BDBDBD', // Grey
+                                    '#FFFFFF', // White
+                                    '#000000'  // Black
+                                ];
                 
                 colors.forEach(color => {
                     const colorBtn = document.createElement('div');
