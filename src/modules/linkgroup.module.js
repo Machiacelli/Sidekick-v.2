@@ -99,13 +99,59 @@
                 linkGroupElement.className = 'sidekick-linkgroup';
                 linkGroupElement.dataset.linkgroupId = linkGroup.id;
                 
+                // Calculate default position and size
+                const defaultWidth = 300;
+                const defaultHeight = 200;
+                const minWidth = 250;
+                const minHeight = 150;
+                const maxWidth = 500;
+                const maxHeight = 600;
+
+                // Position new link groups with slight offset to avoid overlapping
+                const existingGroups = document.querySelectorAll('.sidekick-linkgroup');
+                const offset = existingGroups.length * 20;
+                const defaultX = 20 + offset;
+                const defaultY = 20 + offset;
+
+                // Use saved position or defaults
+                const desiredX = linkGroup.x !== undefined ? linkGroup.x : defaultX;
+                const desiredY = linkGroup.y !== undefined ? linkGroup.y : defaultY;
+                const desiredWidth = linkGroup.width || defaultWidth;
+                const desiredHeight = linkGroup.height || defaultHeight;
+
+                // Get sidebar bounds for constraining position
+                const sidebar = document.getElementById('sidekick-sidebar');
+                const sidebarRect = sidebar ? sidebar.getBoundingClientRect() : { width: 400, height: 600 };
+                const maxX = Math.max(0, sidebarRect.width - desiredWidth);
+                const maxY = Math.max(0, sidebarRect.height - desiredHeight);
+
+                // Clamp position to sidebar bounds
+                const finalX = Math.min(Math.max(0, desiredX), maxX);
+                const finalY = Math.min(Math.max(0, desiredY), maxY);
+
+                // Update the linkGroup object with clamped values
+                linkGroup.x = finalX;
+                linkGroup.y = finalY;
+                linkGroup.width = desiredWidth;
+                linkGroup.height = desiredHeight;
+
                 linkGroupElement.style.cssText = `
+                    position: absolute;
+                    left: ${finalX}px;
+                    top: ${finalY}px;
+                    width: ${desiredWidth}px;
+                    height: ${desiredHeight}px;
                     background: #222;
                     border: 1px solid #444;
                     border-radius: 8px;
-                    margin-bottom: 12px;
                     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                    position: relative;
+                    display: flex;
+                    flex-direction: column;
+                    min-width: ${minWidth}px;
+                    min-height: ${minHeight}px;
+                    max-width: ${maxWidth}px;
+                    max-height: ${maxHeight}px;
+                    z-index: ${1000 + existingGroups.length};
                     resize: ${linkGroup.pinned ? 'none' : 'both'};
                     overflow: hidden;
                 `;
@@ -187,7 +233,7 @@
                                     </button>
                                 </div>
                             </div>
-                            <span style="color: #fff; font-size: 12px; font-weight: bold;">🔗 ${linkGroup.name}</span>
+                            <span class="linkgroup-title" style="color: #fff; font-size: 12px; font-weight: bold; cursor: text;" title="Click to edit title">🔗 ${linkGroup.name}</span>
                         </div>
                         <button class="close-btn" style="
                             background: none;
@@ -309,10 +355,82 @@
             },
 
             setupLinkGroupEventListeners(element, linkGroup) {
-                // Dropdown toggle
+                const header = element.querySelector('.linkgroup-header');
                 const dropdownBtn = element.querySelector('.dropdown-btn');
                 const dropdownContent = element.querySelector('.dropdown-content');
+                const titleSpan = element.querySelector('.linkgroup-title');
 
+                // Dragging functionality (only if not pinned)
+                let isDragging = false;
+                let dragOffset = { x: 0, y: 0 };
+
+                header.addEventListener('mousedown', (e) => {
+                    // Don't drag if clicking on dropdown, title, or close button
+                    if (e.target.closest('.dropdown-btn') || 
+                        e.target.closest('.linkgroup-title') || 
+                        e.target.closest('.close-btn') ||
+                        linkGroup.pinned) {
+                        return;
+                    }
+
+                    isDragging = true;
+                    const rect = element.getBoundingClientRect();
+                    const sidebar = document.getElementById('sidekick-sidebar');
+                    const sidebarRect = sidebar.getBoundingClientRect();
+                    
+                    dragOffset.x = e.clientX - rect.left;
+                    dragOffset.y = e.clientY - rect.top;
+                    
+                    // Bring to front when dragging starts
+                    element.style.zIndex = Date.now();
+                    
+                    e.preventDefault();
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging || linkGroup.pinned) return;
+
+                    const sidebar = document.getElementById('sidekick-sidebar');
+                    const sidebarRect = sidebar.getBoundingClientRect();
+
+                    let newX = e.clientX - sidebarRect.left - dragOffset.x;
+                    let newY = e.clientY - sidebarRect.top - dragOffset.y;
+
+                    // Keep within sidebar bounds
+                    newX = Math.max(0, Math.min(newX, sidebar.offsetWidth - element.offsetWidth));
+                    newY = Math.max(0, Math.min(newY, sidebar.offsetHeight - element.offsetHeight));
+
+                    element.style.left = newX + 'px';
+                    element.style.top = newY + 'px';
+
+                    // Update stored position
+                    linkGroup.x = newX;
+                    linkGroup.y = newY;
+                    this.saveLinkGroups();
+                });
+
+                document.addEventListener('mouseup', () => {
+                    isDragging = false;
+                });
+
+                // Title editing functionality
+                titleSpan.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.maketitleEditable(titleSpan, linkGroup);
+                });
+
+                // Resize observer to save dimensions
+                const resizeObserver = new ResizeObserver((entries) => {
+                    for (const entry of entries) {
+                        const rect = entry.contentRect;
+                        linkGroup.width = rect.width;
+                        linkGroup.height = rect.height;
+                        this.saveLinkGroups();
+                    }
+                });
+                resizeObserver.observe(element);
+
+                // Dropdown toggle
                 dropdownBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const isVisible = dropdownContent.style.display === 'block';
@@ -374,9 +492,9 @@
                         const link = linkGroup.links[linkIndex];
                         
                         navigator.clipboard.writeText(link.url).then(() => {
-                            this.core.NotificationSystem.show('Link copied to clipboard!', 'success');
+                            this.core.NotificationSystem.show('Copied', 'Link copied to clipboard!', 'success');
                         }).catch(() => {
-                            this.core.NotificationSystem.show('Failed to copy link', 'error');
+                            this.core.NotificationSystem.show('Error', 'Failed to copy link', 'error');
                         });
                     });
                 });
@@ -485,13 +603,13 @@
                     const url = urlInput.value.trim();
 
                     if (!name) {
-                        this.core.NotificationSystem.show('Please enter a link name', 'error');
+                        this.core.NotificationSystem.show('Error', 'Please enter a link name', 'error');
                         nameInput.focus();
                         return;
                     }
 
                     if (!url) {
-                        this.core.NotificationSystem.show('Please enter a URL', 'error');
+                        this.core.NotificationSystem.show('Error', 'Please enter a URL', 'error');
                         urlInput.focus();
                         return;
                     }
@@ -508,7 +626,7 @@
                     this.saveLinkGroups();
                     this.renderLinks(linkGroup);
                     modal.remove();
-                    this.core.NotificationSystem.show('Link added successfully!', 'success');
+                    this.core.NotificationSystem.show('Added', 'Link added successfully!', 'success');
                 };
 
                 saveBtn.addEventListener('click', saveLink);
@@ -537,6 +655,7 @@
                 this.saveLinkGroups();
                 this.refreshDisplay();
                 this.core.NotificationSystem.show(
+                    'Updated',
                     `Link group ${linkGroup.pinned ? 'pinned' : 'unpinned'}`, 
                     'info'
                 );
@@ -591,7 +710,7 @@
                         this.saveLinkGroups();
                         this.refreshDisplay();
                         colorModal.remove();
-                        this.core.NotificationSystem.show('Color changed!', 'success');
+                        this.core.NotificationSystem.show('Updated', 'Color changed!', 'success');
                     });
                 });
 
@@ -606,7 +725,7 @@
                     linkGroup.links.splice(linkIndex, 1);
                     this.saveLinkGroups();
                     this.renderLinks(linkGroup);
-                    this.core.NotificationSystem.show('Link removed', 'info');
+                    this.core.NotificationSystem.show('Removed', 'Link removed', 'info');
                 }
             },
 
@@ -615,8 +734,71 @@
                     this.linkGroups = this.linkGroups.filter(lg => lg.id !== linkGroup.id);
                     this.saveLinkGroups();
                     this.refreshDisplay();
-                    this.core.NotificationSystem.show('Link group deleted', 'info');
+                    this.core.NotificationSystem.show('Deleted', 'Link group removed', 'success');
                 }
+            },
+
+            maketitleEditable(titleSpan, linkGroup) {
+                // Don't edit if already editing
+                if (titleSpan.querySelector('input')) return;
+
+                const currentTitle = linkGroup.name;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentTitle;
+                input.style.cssText = `
+                    background: rgba(255, 255, 255, 0.1);
+                    border: 1px solid #555;
+                    color: #fff;
+                    font-size: 12px;
+                    font-weight: bold;
+                    padding: 2px 4px;
+                    border-radius: 3px;
+                    width: 150px;
+                    font-family: inherit;
+                `;
+
+                // Replace title with input
+                titleSpan.innerHTML = '';
+                titleSpan.appendChild(input);
+                input.focus();
+                input.select();
+
+                const saveTitle = () => {
+                    const newTitle = input.value.trim();
+                    if (newTitle && newTitle !== currentTitle) {
+                        linkGroup.name = newTitle;
+                        this.saveLinkGroups();
+                        this.core.NotificationSystem.show('Updated', 'Title changed successfully', 'success');
+                    }
+                    titleSpan.innerHTML = `🔗 ${linkGroup.name}`;
+                };
+
+                const cancelEdit = () => {
+                    titleSpan.innerHTML = `🔗 ${linkGroup.name}`;
+                };
+
+                // Save on Enter
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        saveTitle();
+                    }
+                });
+
+                // Cancel on Escape
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        e.preventDefault();
+                        cancelEdit();
+                    }
+                });
+
+                // Save on blur
+                input.addEventListener('blur', saveTitle);
+
+                // Prevent clicks from propagating
+                input.addEventListener('click', (e) => e.stopPropagation());
             },
 
             // Public methods for external use
