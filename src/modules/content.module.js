@@ -86,7 +86,14 @@
                     { icon: '✅', text: 'Add Todo List', color: '#2196F3', action: () => this.addTodoList() },
                     { icon: '⚔️', text: 'Add Attack List', color: '#f44336', action: () => this.addAttackList() },
                     { icon: '⏱️', text: 'Add Timer', color: '#ff9800', action: () => this.addTimer() },
-                    { icon: '✈️', text: 'Travel Tracker', color: '#9C27B0', action: () => this.addTravelTracker() }
+                    { icon: '✈️', text: 'Travel Tracker', color: '#9C27B0', action: () => this.addTravelTracker() },
+                    { icon: '🔗', text: 'Add Link Group', color: '#607D8B', action: () => {
+                        if (window.SidekickModules?.LinkGroup) {
+                            window.SidekickModules.LinkGroup.init();
+                        } else {
+                            alert('Link Group module not loaded!');
+                        }
+                    }}
                 ];
                 
                 menuItems.forEach(item => {
