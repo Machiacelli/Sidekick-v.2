@@ -47,7 +47,26 @@
                     this.restoreSavedContent();
                 }, 500);
                 
+                // Check module availability after a short delay
+                setTimeout(() => {
+                    this.checkModuleAvailability();
+                }, 2000);
+                
                 console.log('✅ Content Module initialized');
+            },
+
+            checkModuleAvailability() {
+                console.log('🔍 Content Module: Checking module availability...');
+                console.log('🔍 SidekickModules:', window.SidekickModules);
+                console.log('🔍 Available modules:', window.SidekickModules ? Object.keys(window.SidekickModules) : 'None');
+                
+                if (window.SidekickModules?.TravelTracker) {
+                    console.log('✅ TravelTracker module is available');
+                    console.log('✅ TravelTracker.activate exists:', !!window.SidekickModules.TravelTracker.activate);
+                } else {
+                    console.warn('⚠️ TravelTracker module NOT found');
+                    console.warn('⚠️ This means the module file is not loading from CDN');
+                }
             },
 
             showAddMenu() {
@@ -266,9 +285,22 @@
                         'Available modules': window.SidekickModules ? Object.keys(window.SidekickModules) : 'none'
                     });
                     
+                    // Show detailed debugging info
+                    const debugInfo = {
+                        'SidekickModules exists': !!window.SidekickModules,
+                        'TravelTracker exists': !!window.SidekickModules?.TravelTracker,
+                        'TravelTracker.activate exists': !!window.SidekickModules?.TravelTracker?.activate,
+                        'Available modules': window.SidekickModules ? Object.keys(window.SidekickModules) : 'none',
+                        'Current time': new Date().toISOString(),
+                        'Page URL': window.location.href
+                    };
+                    
+                    console.table(debugInfo);
+                    
+                    // Show user-friendly message with debugging info
                     NotificationSystem.show(
                         'Travel Tracker', 
-                        'Travel Tracker module not loaded. Please refresh the page and try again.', 
+                        `Module not loaded. Check console for details. Available: ${window.SidekickModules ? Object.keys(window.SidekickModules).join(', ') : 'None'}`, 
                         'error'
                     );
                 }
