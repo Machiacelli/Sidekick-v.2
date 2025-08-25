@@ -200,6 +200,7 @@
             const knownKeys = [
                 'SIDEBAR_PAGES',
                 'CURRENT_PAGE',
+                'sidekick_attacklists',  // Attack List module data
                 // Add any other keys your modules use here
             ];
             // Remove all keys starting with 'sidekick_'

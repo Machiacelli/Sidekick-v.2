@@ -345,7 +345,7 @@
                 padding: 12px 20px !important;
                 border-radius: 8px !important;
                 box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
-                z-index: 9999999 !important;
+                z-index: 99999999 !important;
                 animation: slideInRight 0.3s ease !important;
                 max-width: 300px !important;
                 font-family: 'Segoe UI', sans-serif !important;
