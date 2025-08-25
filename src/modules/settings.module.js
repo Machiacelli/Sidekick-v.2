@@ -471,52 +471,42 @@
                 const style = document.createElement('style');
                 style.id = 'travel-blocker-toggle-css';
                 style.textContent = `
-                    .travel-blocker-slider:before {
-                        position: absolute;
-                        content: "";
-                        height: 18px;
-                        width: 18px;
-                        left: 3px;
-                        bottom: 3px;
-                        background-color: white;
-                        transition: 0.3s;
-                        border-radius: 50%;
+                    .travel-blocker-slider, .block-training-slider {
+                        position: absolute !important;
+                        cursor: pointer !important;
+                        top: 0 !important;
+                        left: 0 !important;
+                        right: 0 !important;
+                        bottom: 0 !important;
+                        background-color: #ccc !important;
+                        transition: 0.3s !important;
+                        border-radius: 24px !important;
                     }
 
-                    #travel-blocker-toggle:checked + .travel-blocker-slider {
-                        background-color: #4CAF50;
+                    .travel-blocker-slider:before, .block-training-slider:before {
+                        position: absolute !important;
+                        content: "" !important;
+                        height: 18px !important;
+                        width: 18px !important;
+                        left: 3px !important;
+                        bottom: 3px !important;
+                        background-color: white !important;
+                        transition: 0.3s !important;
+                        border-radius: 50% !important;
                     }
 
-                    #travel-blocker-toggle:checked + .travel-blocker-slider:before {
-                        transform: translateX(26px);
-                    }
-
-                    .travel-blocker-slider:hover {
-                        box-shadow: 0 0 1px rgba(255,255,255,0.5);
-                    }
-
-                    .block-training-slider:before {
-                        position: absolute;
-                        content: "";
-                        height: 18px;
-                        width: 18px;
-                        left: 3px;
-                        bottom: 3px;
-                        background-color: white;
-                        transition: 0.3s;
-                        border-radius: 50%;
-                    }
-
+                    #travel-blocker-toggle:checked + .travel-blocker-slider,
                     #block-training-toggle:checked + .block-training-slider {
-                        background-color: #4CAF50;
+                        background-color: #4CAF50 !important;
                     }
 
+                    #travel-blocker-toggle:checked + .travel-blocker-slider:before,
                     #block-training-toggle:checked + .block-training-slider:before {
-                        transform: translateX(26px);
+                        transform: translateX(26px) !important;
                     }
 
-                    .block-training-slider:hover {
-                        box-shadow: 0 0 1px rgba(255,255,255,0.5);
+                    .travel-blocker-slider:hover, .block-training-slider:hover {
+                        box-shadow: 0 0 1px rgba(255,255,255,0.5) !important;
                     }
                 `;
                 document.head.appendChild(style);

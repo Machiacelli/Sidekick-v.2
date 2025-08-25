@@ -356,7 +356,15 @@
                     return '<span style="color: #888; font-size: 11px;">Loading...</span>';
                 }
 
+                if (target.data.error) {
+                    return '<span style="color: #f44336; font-size: 11px;">Error</span>';
+                }
+
                 const data = target.data;
+                
+                if (!data.status) {
+                    return '<span style="color: #888; font-size: 11px;">No Status</span>';
+                }
                 
                 // Check if player is okay (not in hospital, jail, or traveling)
                 if (data.status.state === 'Okay') {
@@ -365,13 +373,13 @@
 
                 // Hospital status
                 if (data.status.state === 'Hospital') {
-                    const timeLeft = this.formatTimeRemaining(data.status.until);
+                    const timeLeft = data.status.until ? this.formatTimeRemaining(data.status.until) : 'Unknown';
                     return `<span style="color: #f44336; font-size: 11px; font-weight: bold;">🏥 ${timeLeft}</span>`;
                 }
 
                 // Jail status
                 if (data.status.state === 'Jail') {
-                    const timeLeft = this.formatTimeRemaining(data.status.until);
+                    const timeLeft = data.status.until ? this.formatTimeRemaining(data.status.until) : 'Unknown';
                     return `<span style="color: #9C27B0; font-size: 11px; font-weight: bold;">🔒 ${timeLeft}</span>`;
                 }
 
@@ -382,7 +390,7 @@
                 }
 
                 // Other states
-                return `<span style="color: #888; font-size: 11px;">${data.status.state}</span>`;
+                return `<span style="color: #888; font-size: 11px;">${data.status.state || 'Unknown'}</span>`;
             },
 
             formatTimeRemaining(timestamp) {
@@ -409,7 +417,7 @@
                     // Going to a country
                     const country = this.extractCountryCode(destination);
                     return `${country} →`;
-                } else if (destination.includes('Returning to Torn')) {
+                } else if (destination.includes('Returning to Torn') || destination.includes('Flying back to Torn')) {
                     // Coming back from a country
                     const country = this.extractCountryCode(destination);
                     return `← ${country}`;
@@ -423,10 +431,10 @@
             },
 
             extractCountryCode(description) {
-                // Map common country names to codes
+                // Map common country names to codes (based on Torn travel destinations)
                 const countryMap = {
                     'United Arab Emirates': 'UAE',
-                    'China': 'CHN',
+                    'China': 'CHN', 
                     'Canada': 'CAN',
                     'Hawaii': 'HAW',
                     'United Kingdom': 'UK',
@@ -435,19 +443,32 @@
                     'Japan': 'JPN',
                     'Mexico': 'MEX',
                     'South Africa': 'SAF',
-                    'Cayman Islands': 'CAY'
+                    'Cayman Islands': 'CAY',
+                    'UAE': 'UAE',
+                    'UK': 'UK'
                 };
 
+                // Check for exact country name matches first
                 for (const [country, code] of Object.entries(countryMap)) {
-                    if (description.includes(country)) {
+                    if (description.toLowerCase().includes(country.toLowerCase())) {
                         return code;
                     }
                 }
 
-                // If no match found, try to extract first 3 letters of country name
-                const match = description.match(/(?:to|from|In)\s+([A-Za-z\s]+)/);
-                if (match) {
-                    return match[1].trim().substring(0, 3).toUpperCase();
+                // Try to extract country name from travel descriptions
+                const patterns = [
+                    /(?:to|from|In)\s+([A-Za-z\s]+?)(?:\s|$|\.|,)/,
+                    /Traveling to ([A-Za-z\s]+?)(?:\s|$|\.|,)/,
+                    /Flying back to Torn from ([A-Za-z\s]+?)(?:\s|$|\.|,)/,
+                    /In ([A-Za-z\s]+?)(?:\s|$|\.|,)/
+                ];
+
+                for (const pattern of patterns) {
+                    const match = description.match(pattern);
+                    if (match) {
+                        const countryName = match[1].trim();
+                        return countryName.substring(0, 3).toUpperCase();
+                    }
                 }
 
                 return '???';
@@ -763,12 +784,33 @@
             async updateTargetStatus(target) {
                 try {
                     console.log(`🎯 Fetching data for player ${target.id}...`);
-                    const data = await this.core.Api.makeRequest(`user/${target.id}?selections=basic,profile,status`);
-                    if (data) {
+                    
+                    // According to Torn API docs, we need basic,profile for name and status for current state
+                    // API format: https://api.torn.com/user/:ID?selections=basic,profile&key=:KEY
+                    const data = await this.core.Api.makeRequest(`user/${target.id}?selections=basic,profile`);
+                    
+                    if (data && !data.error) {
                         target.name = data.name || `Player ${target.id}`;
-                        target.data = data;
+                        target.data = {
+                            name: data.name,
+                            status: data.status || { state: 'Unknown', description: 'Status unavailable' },
+                            last_action: data.last_action
+                        };
                         target.lastUpdated = Date.now();
-                        console.log(`✅ Updated data for ${target.name} (${target.id})`);
+                        console.log(`✅ Updated data for ${target.name} (${target.id}):`, target.data.status);
+                    } else if (data && data.error) {
+                        console.error(`❌ API Error for player ${target.id}:`, data.error);
+                        target.name = `Player ${target.id}`;
+                        target.data = { error: data.error };
+                        
+                        // Show user-friendly error message
+                        if (data.error.code === 6) {
+                            this.core.NotificationSystem.show('Error', `Player ID ${target.id} not found`, 'error');
+                        } else if (data.error.code === 7) {
+                            this.core.NotificationSystem.show('Error', `No access to player ${target.id} data`, 'error');
+                        } else {
+                            this.core.NotificationSystem.show('Error', `API Error: ${data.error.error}`, 'error');
+                        }
                     } else {
                         console.warn(`⚠️ No data returned for player ${target.id}`);
                         target.name = `Player ${target.id}`;
@@ -778,6 +820,7 @@
                     console.error(`❌ Error fetching target data for ${target.id}:`, error);
                     target.name = `Player ${target.id}`;
                     target.data = null;
+                    this.core.NotificationSystem.show('Error', `Failed to fetch data for player ${target.id}`, 'error');
                 }
             },
 
