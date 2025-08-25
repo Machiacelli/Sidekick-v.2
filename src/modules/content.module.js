@@ -84,7 +84,13 @@
                 const menuItems = [
                     { icon: '📝', text: 'Add Notepad', color: '#4CAF50', action: () => this.addNotepad() },
                     { icon: '✅', text: 'Add Todo List', color: '#2196F3', action: () => this.addTodoList() },
-                    { icon: '⚔️', text: 'Add Attack List', color: '#f44336', action: () => this.addAttackList() },
+                    { icon: '⚔️', text: 'Add Attack List', color: '#f44336', action: () => {
+                        if (window.SidekickModules?.AttackList) {
+                            window.SidekickModules.AttackList.addNewAttackList();
+                        } else {
+                            alert('Attack List module not loaded!');
+                        }
+                    }},
                     { icon: '⏱️', text: 'Add Timer', color: '#ff9800', action: () => this.addTimer() },
                     { icon: '✈️', text: 'Travel Tracker', color: '#9C27B0', action: () => this.addTravelTracker() },
                     { icon: '🔗', text: 'Add Link Group', color: '#607D8B', action: () => {
@@ -220,26 +226,14 @@
             },
 
             addAttackList() {
-                const attackList = DataTemplates.createAttackList();
-                
-                // Create attack list element to add inside sidebar
-                const attackElement = this.createAttackListElement(attackList);
-                
-                // Add to sidebar content
-                const attackContainer = document.getElementById('sidekick-attacks');
-                if (attackContainer) {
-                    attackContainer.appendChild(attackElement);
+                // DEPRECATED: Attack lists are now handled by the AttackList module
+                console.log('⚔️ Delegating attack list creation to AttackList module...');
+                if (window.SidekickModules?.AttackList) {
+                    window.SidekickModules.AttackList.addNewAttackList();
+                } else {
+                    console.error('AttackList module not available');
+                    NotificationSystem.show('Error', 'Attack List module not available', 'error');
                 }
-                
-                // Save to current page
-                const pages = loadState(STORAGE_KEYS.SIDEBAR_PAGES, [{ notepads: [], todoLists: [], attackLists: [] }]);
-                const currentPage = loadState(STORAGE_KEYS.CURRENT_PAGE, 0);
-                
-                if (!pages[currentPage].attackLists) pages[currentPage].attackLists = [];
-                pages[currentPage].attackLists.push(attackList);
-                
-                saveState(STORAGE_KEYS.SIDEBAR_PAGES, pages);
-                NotificationSystem.show('Success', 'Attack list created!', 'info');
             },
 
             addTimer() {
