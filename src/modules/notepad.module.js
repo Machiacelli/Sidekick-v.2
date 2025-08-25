@@ -368,6 +368,12 @@
                 
                 // Save position and size function - clamp and save to global notepad object
                 const saveLayout = () => {
+                    // Prevent saving during programmatic changes
+                    if (isProgrammaticChange) {
+                        console.log('📝 Skipping save during programmatic change');
+                        return;
+                    }
+                    
                     // Clamp layout before saving to ensure no values exceed the sidebar bounds
                     const sidebar = document.getElementById('sidekick-sidebar');
                     const sidebarWidth = sidebar ? Math.max(200, sidebar.clientWidth) : 500;
@@ -389,6 +395,14 @@
 
                     const x = Math.min(Math.max(0, rawX), maxX);
                     const y = Math.min(Math.max(0, rawY), maxY);
+
+                    // Check if values actually changed before saving
+                    if (notepad.x === x && notepad.y === y && 
+                        notepad.width === width && notepad.height === height && 
+                        notepad.pinned === isPinned) {
+                        console.log('📝 No layout changes detected, skipping save');
+                        return;
+                    }
 
                     // Update the global notepad object with clamped values
                     notepad.x = x;
@@ -429,6 +443,17 @@
                     });
                 }
                 
+                // Prevent accidental saves during programmatic changes
+                let isProgrammaticChange = false;
+                const preventAccidentalSave = () => {
+                    if (!isProgrammaticChange) {
+                        isProgrammaticChange = true;
+                        setTimeout(() => {
+                            isProgrammaticChange = false;
+                        }, 100);
+                    }
+                };
+                
                 // Close button functionality
                 if (closeBtn) {
                     closeBtn.addEventListener('click', (e) => {
@@ -456,6 +481,10 @@
                         e.stopPropagation();
                         isPinned = !isPinned;
                         pinBtn.textContent = isPinned ? '📌 Unpin' : '📌 Pin';
+                        
+                        // Prevent accidental save during programmatic changes
+                        preventAccidentalSave();
+                        
                         notepadElement.style.resize = isPinned ? 'none' : 'both';
                         header.style.cursor = isPinned ? 'default' : 'move';
                         saveLayout.call(this);
@@ -503,17 +532,27 @@
                         notepadElement.style.top = newY + 'px';
                     });
                     
-                    document.addEventListener('mouseup', () => {
-                        if (isDragging) {
-                            isDragging = false;
+                                    document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        // Only save if position actually changed
+                        const currentX = notepadElement.offsetLeft;
+                        const currentY = notepadElement.offsetTop;
+                        
+                        if (Math.abs(currentX - notepad.x) > 2 || Math.abs(currentY - notepad.y) > 2) {
+                            console.log('📝 Position changed during drag, saving layout...');
                             saveLayout.call(this);
+                        } else {
+                            console.log('📝 Position change too small, not saving');
                         }
-                    });
+                    }
+                });
                 }
                 
                 // Only save notepad size on user-driven resize (mouseup after resizing)
                 let isUserResizing = false;
                 let initialSize = { width: 0, height: 0 };
+                let resizeTimeout = null;
                 
                 notepadElement.addEventListener('mousedown', (e) => {
                     // Check if the mouse is near the bottom-right corner (resize handle)
@@ -525,6 +564,7 @@
                         isUserResizing = true;
                         initialSize.width = notepadElement.offsetWidth;
                         initialSize.height = notepadElement.offsetHeight;
+                        console.log('📝 User started resizing notepad:', initialSize);
                     }
                 });
                 
@@ -532,12 +572,19 @@
                     if (isUserResizing) {
                         isUserResizing = false;
                         
-                        // Only save if size actually changed
+                        // Clear any existing timeout
+                        if (resizeTimeout) {
+                            clearTimeout(resizeTimeout);
+                        }
+                        
+                        // Only save if size actually changed significantly
                         const currentWidth = notepadElement.offsetWidth;
                         const currentHeight = notepadElement.offsetHeight;
                         
                         if (Math.abs(currentWidth - initialSize.width) > 5 || 
                             Math.abs(currentHeight - initialSize.height) > 5) {
+                            
+                            console.log('📝 Size changed significantly, saving layout...');
                             
                             // Clamp size before saving
                             const sidebar = document.getElementById('sidekick-sidebar');
@@ -550,7 +597,12 @@
                             notepadElement.style.width = Math.max(minWidth, Math.min(currentWidth, maxWidth)) + 'px';
                             notepadElement.style.height = Math.max(minHeight, Math.min(currentHeight, maxHeight)) + 'px';
                             
-                            saveLayout.call(this);
+                            // Use a small delay to ensure the resize is complete
+                            resizeTimeout = setTimeout(() => {
+                                saveLayout.call(this);
+                            }, 100);
+                        } else {
+                            console.log('📝 Size change too small, not saving');
                         }
                     }
                 });

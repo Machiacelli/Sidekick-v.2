@@ -199,13 +199,22 @@
                         // Set initial state - check both isActive and the saved state
                         if (window.SidekickModules?.RandomTarget) {
                             const savedState = window.SidekickModules.Core.loadState('random_target_active', false);
-                            randomTargetToggle.checked = savedState;
-                            console.log('✅ Random Target toggle initialized with saved state:', savedState);
+                            const moduleState = window.SidekickModules.RandomTarget.isActive;
                             
-                            // Also check if the module is actually active
-                            if (savedState && window.SidekickModules.RandomTarget.isActive) {
-                                console.log('🔄 Random Target module is active, ensuring toggle reflects this');
-                                randomTargetToggle.checked = true;
+                            // Prioritize the actual module state over saved state
+                            const shouldBeChecked = moduleState !== undefined ? moduleState : savedState;
+                            randomTargetToggle.checked = shouldBeChecked;
+                            
+                            console.log('✅ Random Target toggle initialized:', {
+                                savedState: savedState,
+                                moduleState: moduleState,
+                                finalState: shouldBeChecked
+                            });
+                            
+                            // Force update the toggle appearance
+                            if (shouldBeChecked) {
+                                randomTargetToggle.style.accentColor = '#4CAF50';
+                                randomTargetToggle.style.filter = 'brightness(1.2)';
                             }
                         } else {
                             console.warn('⚠️ RandomTarget module not available for toggle initialization');
@@ -233,6 +242,15 @@
                                 if (randomTargetToggle.checked !== shouldBeChecked) {
                                     randomTargetToggle.checked = shouldBeChecked;
                                     console.log('🔄 Random Target toggle synced to:', shouldBeChecked, '(module state:', moduleState, ', saved state:', currentState, ')');
+                                }
+                                
+                                // Update toggle appearance based on state
+                                if (shouldBeChecked) {
+                                    randomTargetToggle.style.accentColor = '#4CAF50';
+                                    randomTargetToggle.style.filter = 'brightness(1.2)';
+                                } else {
+                                    randomTargetToggle.style.accentColor = '';
+                                    randomTargetToggle.style.filter = '';
                                 }
                             }
                         }, 500); // Check every 500ms for better responsiveness
