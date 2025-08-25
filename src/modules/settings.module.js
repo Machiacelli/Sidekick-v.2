@@ -71,6 +71,13 @@
         const SettingsManager = {
             createModal() {
                 console.log('🔧 showSettingsModal called!');
+                
+                // Check if modal already exists and remove it
+                const existingModal = document.querySelector('[id*="settings_modal"]');
+                if (existingModal) {
+                    console.log('🔧 Removing existing settings modal');
+                    existingModal.remove();
+                }
                     
                 const modal = this.createCenteredModal('⚙️ API Settings', `
                     <div style="padding: 20px;">

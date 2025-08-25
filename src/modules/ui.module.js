@@ -449,7 +449,11 @@
                 setTimeout(() => {
                     const settingsButton = document.getElementById('settings-button');
                     if (settingsButton) {
-                        settingsButton.addEventListener('click', () => {
+                        // Remove any existing event listeners to prevent duplicates
+                        const newSettingsButton = settingsButton.cloneNode(true);
+                        settingsButton.parentNode.replaceChild(newSettingsButton, settingsButton);
+                        
+                        newSettingsButton.addEventListener('click', () => {
                             console.log('🔧 Settings button clicked');
                             if (window.SidekickModules?.Settings?.createModal) {
                                 window.SidekickModules.Settings.createModal();
