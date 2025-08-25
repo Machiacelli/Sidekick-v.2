@@ -91,7 +91,16 @@
                                 🔄 Refresh Points Price
                             </button>
                         </div>
-                        <button id="block-training-btn" style="width: 100%; margin: 12px 0; padding: 12px; background: linear-gradient(135deg, #FF9800, #F44336); color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer;">Block Training</button>
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin: 12px 0;">
+                            <div style="display: flex; flex-direction: column;">
+                                <span style="color: #fff; font-weight: bold; font-size: 14px;">🚫 Block Training</span>
+                                <span style="color: #aaa; font-size: 12px;">Blocks training while stacking stats</span>
+                            </div>
+                            <label class="block-training-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
+                                <input type="checkbox" id="block-training-toggle" style="opacity: 0; width: 0; height: 0;">
+                                <span class="block-training-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
+                            </label>
+                        </div>
                         <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin: 12px 0;">
                             <div style="display: flex; flex-direction: column;">
                                 <span style="color: #fff; font-weight: bold; font-size: 14px;">✈️ Travel Blocker</span>
@@ -123,21 +132,25 @@
                     const exportBtn = document.getElementById('export-data-btn');
                     const importBtn = document.getElementById('import-data-btn');
                     const clearBtn = document.getElementById('clear-all-data-btn');
-                    const blockBtn = document.getElementById('block-training-btn');
                     
                     if (testBtn) testBtn.addEventListener('click', () => this.testApiConnection());
                     if (refreshBtn) refreshBtn.addEventListener('click', () => this.refreshPointsPrice());
                     if (exportBtn) exportBtn.addEventListener('click', () => this.exportData());
                     if (importBtn) importBtn.addEventListener('click', () => this.importData());
                     if (clearBtn) clearBtn.addEventListener('click', () => this.clearAllData());
-                    if (blockBtn) {
-                        // Set initial label
-                        if (window.SidekickModules?.BlockTraining?.updateButtonLabel) {
-                            window.SidekickModules.BlockTraining.updateButtonLabel();
+
+                    // Block Training toggle
+                    const blockTrainingToggle = document.getElementById('block-training-toggle');
+                    if (blockTrainingToggle) {
+                        // Set initial state
+                        if (window.SidekickModules?.BlockTraining) {
+                            blockTrainingToggle.checked = window.SidekickModules.BlockTraining.isEnabled || false;
                         }
-                        blockBtn.addEventListener('click', () => {
+                        
+                        blockTrainingToggle.addEventListener('change', () => {
                             if (window.SidekickModules?.BlockTraining?.toggleBlockTraining) {
                                 window.SidekickModules.BlockTraining.toggleBlockTraining();
+                                console.log('🎛️ Block Training toggled:', blockTrainingToggle.checked);
                             }
                         });
                     }
@@ -381,6 +394,77 @@
                 input.click();
             },
 
+            clearAllPanels() {
+                // Remove all sidekick panels from the current view
+                const panelSelectors = [
+                    '.sidekick-notepad',
+                    '.sidekick-linkgroup', 
+                    '.sidekick-todo',
+                    '.sidekick-attack-list',
+                    '.sidekick-panel'
+                ];
+                
+                panelSelectors.forEach(selector => {
+                    const panels = document.querySelectorAll(selector);
+                    panels.forEach(panel => panel.remove());
+                });
+                
+                // Clear content area
+                const contentArea = document.getElementById('sidekick-content');
+                if (contentArea) {
+                    const children = contentArea.children;
+                    // Keep the basic structure but remove all panels
+                    Array.from(children).forEach(child => {
+                        if (child.classList.contains('sidekick-notepad') || 
+                            child.classList.contains('sidekick-linkgroup') ||
+                            child.classList.contains('sidekick-todo') ||
+                            child.classList.contains('sidekick-attack-list')) {
+                            child.remove();
+                        }
+                    });
+                }
+                
+                console.log('🗑️ Cleared all panels from view');
+            },
+
+            clearAllStorage() {
+                // Get all localStorage keys that start with 'sidekick'
+                const keysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.toLowerCase().includes('sidekick')) {
+                        keysToRemove.push(key);
+                    }
+                }
+                
+                // Remove all sidekick-related keys
+                keysToRemove.forEach(key => {
+                    localStorage.removeItem(key);
+                    console.log('🗑️ Removed localStorage key:', key);
+                });
+                
+                // Also remove other common keys
+                const commonKeys = [
+                    'travel_blocker_enabled',
+                    'oc_travel_block_enabled',
+                    'sidekick_api_key',
+                    'sidebar_pages',
+                    'current_page',
+                    'linkgroups',
+                    'notepads',
+                    'attack_lists'
+                ];
+                
+                commonKeys.forEach(key => {
+                    if (localStorage.getItem(key)) {
+                        localStorage.removeItem(key);
+                        console.log('🗑️ Removed common key:', key);
+                    }
+                });
+                
+                console.log('🗑️ Cleared all localStorage data');
+            },
+
             injectTravelBlockerCSS() {
                 if (document.getElementById('travel-blocker-toggle-css')) return;
                 
@@ -410,25 +494,65 @@
                     .travel-blocker-slider:hover {
                         box-shadow: 0 0 1px rgba(255,255,255,0.5);
                     }
+
+                    .block-training-slider:before {
+                        position: absolute;
+                        content: "";
+                        height: 18px;
+                        width: 18px;
+                        left: 3px;
+                        bottom: 3px;
+                        background-color: white;
+                        transition: 0.3s;
+                        border-radius: 50%;
+                    }
+
+                    #block-training-toggle:checked + .block-training-slider {
+                        background-color: #4CAF50;
+                    }
+
+                    #block-training-toggle:checked + .block-training-slider:before {
+                        transform: translateX(26px);
+                    }
+
+                    .block-training-slider:hover {
+                        box-shadow: 0 0 1px rgba(255,255,255,0.5);
+                    }
                 `;
                 document.head.appendChild(style);
             },
 
             clearAllData() {
-                if (confirm('Are you sure you want to clear all Sidekick data? This cannot be undone!')) {
-                    if (window.SidekickModules?.Core?.clearAllData) {
-                        window.SidekickModules.Core.clearAllData();
+                if (confirm('⚠️ WARNING: This will clear ALL Sidekick data including:\n\n• All panels and content\n• All saved pages\n• API settings\n• All stored preferences\n\nThis cannot be undone! Are you sure?')) {
+                    try {
+                        // Clear all panels from the current view
+                        this.clearAllPanels();
                         
-                        // Close settings modal
+                        // Clear all localStorage data
+                        this.clearAllStorage();
+                        
+                        // Reset core module state
+                        if (window.SidekickModules?.Core?.clearAllData) {
+                            window.SidekickModules.Core.clearAllData();
+                        }
+                        
+                        // Close settings modal and show success message
                         const modal = document.querySelector('[id*="settings_modal"]');
                         if (modal) modal.remove();
                         
+                        // Show success notification
+                        NotificationSystem.show('Success', 'All Sidekick data cleared!', 'success');
+                        
                         // Suggest page reload
-                        if (confirm('Data cleared! Reload the page to reset completely?')) {
-                            window.location.reload();
-                        }
-                    } else {
-                        NotificationSystem.show('Error', 'Clear data function not available', 'error');
+                        setTimeout(() => {
+                            if (confirm('Data cleared! Reload the page to reset completely?')) {
+                                window.location.reload();
+                            }
+                        }, 1000);
+                        
+                    } catch (error) {
+                        console.error('❌ Error clearing data:', error);
+                        NotificationSystem.show('Error', 'Failed to clear all data', 'error');
                     }
                 }
             }
