@@ -312,6 +312,25 @@
                 
                 insertPoint.insertAdjacentElement('afterend', this.statusDisplay);
                 this.updateStatusDisplay();
+                
+                // Add event listener for stop tracking button
+                this.addStopTrackingListener();
+            },
+
+            addStopTrackingListener() {
+                // Remove any existing listeners first
+                const stopBtn = document.getElementById('travel-tracker-stop-btn');
+                if (stopBtn) {
+                    // Clone the button to remove old event listeners
+                    const newStopBtn = stopBtn.cloneNode(true);
+                    stopBtn.parentNode.replaceChild(newStopBtn, stopBtn);
+                    
+                    // Add new event listener
+                    newStopBtn.addEventListener('click', () => {
+                        console.log('🛑 Stop tracking button clicked');
+                        this.removeCurrentTracker();
+                    });
+                }
             },
 
             findStatusInsertPoint() {
@@ -347,7 +366,7 @@
                         <div style="text-align: right; font-size: 11px; opacity: 0.9;">
                             ${statusInfo.detail}
                             <br>
-                            <button onclick="window.SidekickModules.TravelTracker.removeCurrentTracker()" 
+                            <button id="travel-tracker-stop-btn" 
                                     style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); 
                                            color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; 
                                            cursor: pointer; margin-top: 2px;">
@@ -428,24 +447,34 @@
             removeCurrentTracker() {
                 console.log('🗑️ Removing current tracker');
                 
-                if (this.statusDisplay) {
-                    this.statusDisplay.remove();
-                    this.statusDisplay = null;
-                }
-                
+                // Stop monitoring
                 if (this.monitoringInterval) {
                     clearInterval(this.monitoringInterval);
                     this.monitoringInterval = null;
+                    console.log('🔄 Monitoring stopped');
                 }
                 
+                // Remove status display
+                if (this.statusDisplay) {
+                    this.statusDisplay.remove();
+                    this.statusDisplay = null;
+                    console.log('📱 Status display removed');
+                }
+                
+                // Clear current tracker
                 this.currentTracker = null;
+                
+                // Save state
                 this.saveState();
                 
+                // Show success message
                 this.core.NotificationSystem.show(
                     'Travel Tracker',
-                    'Tracking stopped',
-                    'info'
+                    'Tracking stopped successfully!',
+                    'success'
                 );
+                
+                console.log('✅ Tracker completely removed');
             },
 
             showInstructions() {
