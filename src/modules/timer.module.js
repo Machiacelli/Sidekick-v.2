@@ -129,16 +129,13 @@
                                 </button>
                                 <div class="dropdown-content" style="
                                     display: none;
-                                    position: absolute;
+                                    position: fixed;
                                     background: #333;
                                     min-width: 160px;
                                     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-                                    z-index: 1001;
+                                    z-index: 100000;
                                     border-radius: 4px;
                                     border: 1px solid #555;
-                                    top: 100%;
-                                    right: 0;
-                                    margin-top: 4px;
                                     padding: 4px 0;
                                 ">
                                     <button id="refresh-cooldowns" style="
@@ -335,12 +332,21 @@
 
                 // Refresh cooldowns button (now inside dropdown)
                 panel.querySelector('#refresh-cooldowns').addEventListener('click', () => {
-                    this.fetchCooldownData();
                     this.core.NotificationSystem.show(
                         'Timer',
                         'Refreshing cooldown data...',
                         'info'
                     );
+                    this.fetchCooldownData().then(() => {
+                        if (this.cooldownData) {
+                            const activeCooldowns = Object.values(this.cooldownData).filter(time => time !== null).length;
+                            this.core.NotificationSystem.show(
+                                'Timer',
+                                `Found ${activeCooldowns} active cooldown(s)!`,
+                                'success'
+                            );
+                        }
+                    });
                     // Close dropdown after action
                     const dropdownContent = panel.querySelector('.dropdown-content');
                     if (dropdownContent) dropdownContent.style.display = 'none';
@@ -371,7 +377,33 @@
 
                 dropdownBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
+                    const isVisible = dropdownContent.style.display === 'block';
+                    
+                    if (isVisible) {
+                        dropdownContent.style.display = 'none';
+                    } else {
+                        // Position dropdown dynamically
+                        const btnRect = dropdownBtn.getBoundingClientRect();
+                        const panelRect = panel.getBoundingClientRect();
+                        
+                        // Calculate position to ensure dropdown is always visible
+                        let left = btnRect.left;
+                        let top = btnRect.bottom + 4;
+                        
+                        // Check if dropdown would go off the right edge
+                        if (left + 160 > window.innerWidth) {
+                            left = window.innerWidth - 160 - 10;
+                        }
+                        
+                        // Check if dropdown would go off the bottom edge
+                        if (top + 200 > window.innerHeight) {
+                            top = btnRect.top - 200 - 4;
+                        }
+                        
+                        dropdownContent.style.left = left + 'px';
+                        dropdownContent.style.top = top + 'px';
+                        dropdownContent.style.display = 'block';
+                    }
                 });
 
                 // Close dropdown when clicking outside
@@ -488,8 +520,12 @@
             },
 
             createCooldownTimer(type) {
+                console.log(`🔍 Creating cooldown timer for type: ${type}`);
+                console.log(`🔍 Current cooldown data:`, this.cooldownData);
+                
                 // Check if we have cooldown data for this type
                 if (!this.cooldownData || !this.cooldownData[type]) {
+                    console.log(`❌ No cooldown data for ${type}`);
                     // Try to fetch fresh data first
                     this.core.NotificationSystem.show(
                         'Timer',
@@ -499,6 +535,7 @@
                     
                     // Fetch fresh data and then try again
                     this.fetchCooldownData().then(() => {
+                        console.log(`🔄 After fetching, cooldown data:`, this.cooldownData);
                         if (this.cooldownData && this.cooldownData[type]) {
                             this.createCooldownTimer(type);
                         } else {
@@ -801,20 +838,49 @@
 
                     console.log('🔄 Fetching cooldown data from Torn API...');
                     
-                    const response = await fetch(`https://api.torn.com/user/?selections=cooldowns&key=${apiKey}`);
-                    const data = await response.json();
+                    // First test if API key is working by checking user profile
+                    try {
+                        const testResponse = await fetch(`https://api.torn.com/user/?selections=basic&key=${apiKey}`);
+                        const testData = await testResponse.json();
+                        if (testData.error) {
+                            console.warn('API key test failed:', testData.error);
+                            this.core.NotificationSystem.show(
+                                'Timer',
+                                `API Key Error: ${testData.error}. Please check your API key in settings.`,
+                                'error'
+                            );
+                            return;
+                        }
+                        console.log('✅ API key is working, user:', testData.name || 'Unknown');
+                    } catch (testError) {
+                        console.warn('Failed to test API key:', testError);
+                    }
+                    
+                    // Try the correct Torn API endpoint for cooldowns
+                    let response = await fetch(`https://api.torn.com/user/?selections=cooldowns&key=${apiKey}`);
+                    let data = await response.json();
                     
                     if (data.error) {
-                        console.warn('Failed to fetch cooldown data:', data.error);
-                        this.core.NotificationSystem.show(
-                            'Timer',
-                            `API Error: ${data.error}`,
-                            'error'
-                        );
-                        return;
+                        console.warn('Failed to fetch cooldown data from primary endpoint:', data.error);
+                        
+                        // Try alternative endpoint as fallback
+                        console.log('🔄 Trying alternative API endpoint...');
+                        response = await fetch(`https://api.torn.com/user/?selections=cooldowns&key=${apiKey}`);
+                        data = await response.json();
+                        
+                        if (data.error) {
+                            console.warn('Failed to fetch cooldown data from fallback endpoint:', data.error);
+                            this.core.NotificationSystem.show(
+                                'Timer',
+                                `API Error: ${data.error}`,
+                                'error'
+                            );
+                            return;
+                        }
                     }
                     
                     console.log('📊 Raw cooldown data:', data.cooldowns);
+                    console.log('📊 Full API response:', data);
                     
                     // Check if we have any cooldown data
                     if (!data.cooldowns || Object.keys(data.cooldowns).length === 0) {
@@ -826,11 +892,17 @@
                         };
                     } else {
                         // Convert cooldown seconds to end timestamps
+                        // Note: API returns seconds remaining, so we add to current time
                         this.cooldownData = {
-                            [this.timerTypes.MEDICAL]: data.cooldowns.medical ? Date.now() + (data.cooldowns.medical * 1000) : null,
-                            [this.timerTypes.DRUG]: data.cooldowns.drug ? Date.now() + (data.cooldowns.drug * 1000) : null,
-                            [this.timerTypes.BOOSTER]: data.cooldowns.booster ? Date.now() + (data.cooldowns.booster * 1000) : null
+                            [this.timerTypes.MEDICAL]: data.cooldowns.medical && data.cooldowns.medical > 0 ? Date.now() + (data.cooldowns.medical * 1000) : null,
+                            [this.timerTypes.DRUG]: data.cooldowns.drug && data.cooldowns.drug > 0 ? Date.now() + (data.cooldowns.drug * 1000) : null,
+                            [this.timerTypes.BOOSTER]: data.cooldowns.booster && data.cooldowns.booster > 0 ? Date.now() + (data.cooldowns.booster * 1000) : null
                         };
+                        
+                        // Log each cooldown type for debugging
+                        console.log('🏥 Medical cooldown:', data.cooldowns.medical, 'seconds remaining');
+                        console.log('💊 Drug cooldown:', data.cooldowns.drug, 'seconds remaining');
+                        console.log('💉 Booster cooldown:', data.cooldowns.booster, 'seconds remaining');
                     }
                     
                     console.log('📊 Processed cooldown data:', this.cooldownData);

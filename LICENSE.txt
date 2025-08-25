@@ -1,0 +1,19 @@
+Custom License Agreement for Sidekick
+
+Copyright (c) 2025 Machiacelli
+
+All rights reserved.
+
+This Tampermonkey script (the "Software") is the exclusive property of [Your Name].  
+You are granted a non-transferable, non-exclusive right to install and use the Software for personal, non-commercial purposes only.
+
+Restrictions:
+1. You may NOT modify, alter, reverse engineer, decompile, or create derivative works of the Software, in whole or in part, without prior written permission from the copyright holder.  
+2. You may NOT remove or alter any copyright, attribution, or licensing notices contained within the Software.  
+3. You may NOT distribute modified versions of the Software under any circumstances.  
+4. You may share the Software only in its complete, unmodified form, provided that this license is included.  
+
+Liability:
+The Software is provided "AS IS", without warranty of any kind. In no event shall the copyright holder be liable for any damages arising from the use of the Software.  
+
+By using the Software, you agree to abide by the terms of this License.
