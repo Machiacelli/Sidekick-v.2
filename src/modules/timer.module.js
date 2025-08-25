@@ -401,19 +401,13 @@
                         'Refreshing cooldown data...',
                         'info'
                     );
-                    this.fetchCooldownData().then(() => {
-                        if (this.cooldownData) {
-                            const activeCooldowns = Object.values(this.cooldownData).filter(time => time !== null).length;
-                            window.SidekickModules.Core.NotificationSystem.show(
-                                'Timer',
-                                `Found ${activeCooldowns} active cooldown(s)!`,
-                                'success'
-                            );
-                        }
+                    
+                    // Check for changes and update accordingly
+                    this.checkForCooldownsAndUpdate().then(() => {
+                        // Close dropdown after action
+                        const dropdownContent = panel.querySelector('.dropdown-content');
+                        if (dropdownContent) dropdownContent.style.display = 'none';
                     });
-                    // Close dropdown after action
-                    const dropdownContent = panel.querySelector('.dropdown-content');
-                    if (dropdownContent) dropdownContent.style.display = 'none';
                 });
 
                 // Add timer buttons
@@ -979,21 +973,8 @@
                     
                     console.log('📊 Processed cooldown data:', this.cooldownData);
                     
-                    // Show success notification
-                    const activeCooldowns = Object.values(this.cooldownData).filter(time => time !== null).length;
-                    if (activeCooldowns > 0) {
-                        window.SidekickModules.Core.NotificationSystem.show(
-                            'Timer',
-                            `Found ${activeCooldowns} active cooldown(s)!`,
-                            'success'
-                        );
-                    } else {
-                        window.SidekickModules.Core.NotificationSystem.show(
-                            'Timer',
-                            'No active cooldowns found.',
-                            'info'
-                        );
-                    }
+                                         // Don't show notifications for automatic checks (only for manual refresh)
+                     // Notifications are handled by checkForCooldownChanges and checkForCooldownsAndUpdate
                     
                     // Update timers display
                     if (this.isActive) {
@@ -1010,18 +991,217 @@
             },
 
             startUpdateLoop() {
-                // Update every second
+                // Update timer display every second
                 this.updateInterval = setInterval(() => {
                     if (this.isActive && this.timers.length > 0) {
                         this.renderTimers();
                     }
                 }, 1000);
+                
+                // Check for cooldown changes every 30 seconds (more responsive than waiting for manual refresh)
+                this.cooldownCheckInterval = setInterval(() => {
+                    if (this.isActive) {
+                        this.checkForCooldownChanges();
+                    }
+                }, 30000); // 30 seconds
             },
 
             stopUpdateLoop() {
                 if (this.updateInterval) {
                     clearInterval(this.updateInterval);
                     this.updateInterval = null;
+                }
+                if (this.cooldownCheckInterval) {
+                    clearInterval(this.cooldownCheckInterval);
+                    this.cooldownCheckInterval = null;
+                }
+            },
+
+            async checkForCooldownChanges() {
+                try {
+                    console.log('🔄 Checking for cooldown changes...');
+                    
+                    // Store previous cooldown data for comparison
+                    const previousCooldownData = { ...this.cooldownData };
+                    
+                    // Fetch fresh cooldown data
+                    await this.fetchCooldownData();
+                    
+                    // Check if any cooldowns have changed
+                    let hasChanges = false;
+                    const changes = [];
+                    
+                    if (this.cooldownData && previousCooldownData) {
+                        for (const type of Object.keys(this.cooldownData)) {
+                            const previous = previousCooldownData[type];
+                            const current = this.cooldownData[type];
+                            
+                            if (previous !== current) {
+                                hasChanges = true;
+                                
+                                if (previous === null && current !== null) {
+                                    // New cooldown started
+                                    changes.push(`${type} cooldown started`);
+                                } else if (previous !== null && current === null) {
+                                    // Cooldown ended
+                                    changes.push(`${type} cooldown ended`);
+                                } else if (previous !== null && current !== null) {
+                                    // Cooldown time changed
+                                    const previousSeconds = Math.ceil((previous - Date.now()) / 1000);
+                                    const currentSeconds = Math.ceil((current - Date.now()) / 1000);
+                                    if (Math.abs(previousSeconds - currentSeconds) > 5) { // Only notify if change > 5 seconds
+                                        changes.push(`${type} cooldown updated`);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // If there are significant changes, notify user and update timers
+                    if (hasChanges && changes.length > 0) {
+                        console.log('📊 Cooldown changes detected:', changes);
+                        
+                        // Update existing timers with new cooldown data
+                        this.updateExistingTimers();
+                        
+                        // Show notification about changes
+                        window.SidekickModules.Core.NotificationSystem.show(
+                            'Timer',
+                            `Cooldown changes detected: ${changes.join(', ')}`,
+                            'info'
+                        );
+                        
+                        // Re-render timers to show updated times
+                        if (this.isActive) {
+                            this.renderTimers();
+                        }
+                    } else {
+                        console.log('📊 No significant cooldown changes detected');
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Error checking for cooldown changes:', error);
+                }
+            },
+
+            async checkForCooldownsAndUpdate() {
+                try {
+                    console.log('🔄 Manual refresh: Checking for cooldown changes...');
+                    
+                    // Store previous cooldown data for comparison
+                    const previousCooldownData = { ...this.cooldownData };
+                    
+                    // Fetch fresh cooldown data
+                    await this.fetchCooldownData();
+                    
+                    // Check if any cooldowns have changed
+                    let hasChanges = false;
+                    const changes = [];
+                    let newCooldowns = 0;
+                    let endedCooldowns = 0;
+                    
+                    if (this.cooldownData && previousCooldownData) {
+                        for (const type of Object.keys(this.cooldownData)) {
+                            const previous = previousCooldownData[type];
+                            const current = this.cooldownData[type];
+                            
+                            if (previous !== current) {
+                                hasChanges = true;
+                                
+                                if (previous === null && current !== null) {
+                                    // New cooldown started
+                                    changes.push(`${type} cooldown started`);
+                                    newCooldowns++;
+                                } else if (previous !== null && current === null) {
+                                    // Cooldown ended
+                                    changes.push(`${type} cooldown ended`);
+                                    endedCooldowns++;
+                                } else if (previous !== null && current !== null) {
+                                    // Cooldown time changed
+                                    const previousSeconds = Math.ceil((previous - Date.now()) / 1000);
+                                    const currentSeconds = Math.ceil((current - Date.now()) / 1000);
+                                    if (Math.abs(previousSeconds - currentSeconds) > 5) {
+                                        changes.push(`${type} cooldown updated`);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Update existing timers with new cooldown data
+                    this.updateExistingTimers();
+                    
+                    // Show appropriate notification based on what was found
+                    if (hasChanges && changes.length > 0) {
+                        console.log('📊 Manual refresh detected changes:', changes);
+                        window.SidekickModules.Core.NotificationSystem.show(
+                            'Timer',
+                            `Changes detected: ${changes.join(', ')}`,
+                            'success'
+                        );
+                    } else {
+                        // Count current active cooldowns
+                        const activeCooldowns = Object.values(this.cooldownData).filter(time => time !== null).length;
+                        if (activeCooldowns > 0) {
+                            window.SidekickModules.Core.NotificationSystem.show(
+                                'Timer',
+                                `No changes detected. ${activeCooldowns} active cooldown(s) found.`,
+                                'info'
+                            );
+                        } else {
+                            window.SidekickModules.Core.NotificationSystem.show(
+                                'Timer',
+                                'No active cooldowns found.',
+                                'info'
+                            );
+                        }
+                    }
+                    
+                    // Re-render timers to show updated times
+                    if (this.isActive) {
+                        this.renderTimers();
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Error during manual refresh:', error);
+                    window.SidekickModules.Core.NotificationSystem.show(
+                        'Timer',
+                        `Refresh failed: ${error.message}`,
+                        'error'
+                    );
+                }
+            },
+
+            updateExistingTimers() {
+                console.log('🔄 Updating existing timers with new cooldown data...');
+                
+                if (!this.cooldownData || this.timers.length === 0) {
+                    return;
+                }
+                
+                let updatedCount = 0;
+                
+                this.timers.forEach(timer => {
+                    if (timer.isCooldown && this.cooldownData[timer.type]) {
+                        // Update the timer's end time with new cooldown data
+                        const oldEndTime = timer.endTime;
+                        timer.endTime = this.cooldownData[timer.type];
+                        
+                        // Log the update
+                        const oldTimeLeft = Math.ceil((oldEndTime - Date.now()) / 1000);
+                        const newTimeLeft = Math.ceil((timer.endTime - Date.now()) / 1000);
+                        
+                        if (Math.abs(oldTimeLeft - newTimeLeft) > 5) { // Only log significant changes
+                            console.log(`⏰ Updated ${timer.type} timer: ${oldTimeLeft}s → ${newTimeLeft}s`);
+                            updatedCount++;
+                        }
+                    }
+                });
+                
+                if (updatedCount > 0) {
+                    console.log(`✅ Updated ${updatedCount} existing timers`);
+                    // Save the updated state
+                    this.saveState();
                 }
             },
 
