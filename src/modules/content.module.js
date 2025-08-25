@@ -89,7 +89,7 @@
                     { icon: '✈️', text: 'Travel Tracker', color: '#9C27B0', action: () => this.addTravelTracker() },
                     { icon: '🔗', text: 'Add Link Group', color: '#607D8B', action: () => {
                         if (window.SidekickModules?.LinkGroup) {
-                            window.SidekickModules.LinkGroup.init();
+                            window.SidekickModules.LinkGroup.addNewLinkGroup();
                         } else {
                             alert('Link Group module not loaded!');
                         }
