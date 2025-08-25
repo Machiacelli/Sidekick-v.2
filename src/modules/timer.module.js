@@ -309,12 +309,12 @@
                     width: panel.offsetWidth,
                     height: panel.offsetHeight
                 };
-                this.core.saveState('timer_panel_position', position);
+                window.SidekickModules.Core.saveState('timer_panel_position', position);
             },
 
             loadPanelPosition() {
                 try {
-                    const position = this.core.loadState('timer_panel_position', { x: 10, y: 10, width: 280, height: 200 });
+                    const position = window.SidekickModules.Core.loadState('timer_panel_position', { x: 10, y: 10, width: 280, height: 200 });
                     return position;
                 } catch (error) {
                     return { x: 10, y: 10, width: 280, height: 200 };
@@ -332,7 +332,7 @@
 
                 // Refresh cooldowns button (now inside dropdown)
                 panel.querySelector('#refresh-cooldowns').addEventListener('click', () => {
-                    this.core.NotificationSystem.show(
+                    window.SidekickModules.Core.NotificationSystem.show(
                         'Timer',
                         'Refreshing cooldown data...',
                         'info'
@@ -340,7 +340,7 @@
                     this.fetchCooldownData().then(() => {
                         if (this.cooldownData) {
                             const activeCooldowns = Object.values(this.cooldownData).filter(time => time !== null).length;
-                            this.core.NotificationSystem.show(
+                            window.SidekickModules.Core.NotificationSystem.show(
                                 'Timer',
                                 `Found ${activeCooldowns} active cooldown(s)!`,
                                 'success'
@@ -433,7 +433,7 @@
 
                 // Check if timer of this type already exists
                 if (this.timers.some(t => t.type === type)) {
-                    this.core.NotificationSystem.show(
+                    window.SidekickModules.Core.NotificationSystem.show(
                         'Timer',
                         `Only one ${type} timer allowed per page`,
                         'warning'
@@ -499,7 +499,7 @@
                     const duration = parseInt(durationInput.value);
                     
                     if (!name || duration < 1) {
-                        this.core.NotificationSystem.show(
+                        window.SidekickModules.Core.NotificationSystem.show(
                             'Timer',
                             'Please enter a valid name and duration',
                             'warning'
@@ -527,7 +527,7 @@
                 if (!this.cooldownData || !this.cooldownData[type]) {
                     console.log(`❌ No cooldown data for ${type}`);
                     // Try to fetch fresh data first
-                    this.core.NotificationSystem.show(
+                    window.SidekickModules.Core.NotificationSystem.show(
                         'Timer',
                         `No cooldown data for ${type}. Fetching fresh data...`,
                         'info'
@@ -539,7 +539,7 @@
                         if (this.cooldownData && this.cooldownData[type]) {
                             this.createCooldownTimer(type);
                         } else {
-                            this.core.NotificationSystem.show(
+                            window.SidekickModules.Core.NotificationSystem.show(
                                 'Timer',
                                 `No active ${type} cooldown found. You can only add timers for active cooldowns.`,
                                 'warning'
@@ -564,7 +564,7 @@
                 this.saveState();
                 this.renderTimers();
                 
-                this.core.NotificationSystem.show(
+                window.SidekickModules.Core.NotificationSystem.show(
                     'Timer',
                     `${timer.name} timer added! Cooldown ends in ${this.formatTime(this.cooldownData[type] - Date.now())}`,
                     'success'
@@ -587,7 +587,7 @@
                 this.saveState();
                 this.renderTimers();
                 
-                this.core.NotificationSystem.show(
+                window.SidekickModules.Core.NotificationSystem.show(
                     'Timer',
                     `Custom timer "${name}" started for ${durationMinutes} minutes!`,
                     'success'
@@ -763,7 +763,7 @@
                 this.saveState();
                 this.renderTimers();
                 
-                this.core.NotificationSystem.show(
+                window.SidekickModules.Core.NotificationSystem.show(
                     'Timer',
                     'Timer removed!',
                     'info'
@@ -825,10 +825,10 @@
             async fetchCooldownData() {
                 try {
                     // Fetch cooldown data from Torn API
-                    const apiKey = this.core.getApiKey();
+                    const apiKey = window.SidekickModules.Core.loadState('sidekick_api_key', '');
                     if (!apiKey) {
                         console.warn('No API key available for cooldown data');
-                        this.core.NotificationSystem.show(
+                        window.SidekickModules.Core.NotificationSystem.show(
                             'Timer',
                             'No API key found. Please set your API key in settings first.',
                             'warning'
@@ -844,7 +844,7 @@
                         const testData = await testResponse.json();
                         if (testData.error) {
                             console.warn('API key test failed:', testData.error);
-                            this.core.NotificationSystem.show(
+                            window.SidekickModules.Core.NotificationSystem.show(
                                 'Timer',
                                 `API Key Error: ${testData.error}. Please check your API key in settings.`,
                                 'error'
@@ -870,7 +870,7 @@
                         
                         if (data.error) {
                             console.warn('Failed to fetch cooldown data from fallback endpoint:', data.error);
-                            this.core.NotificationSystem.show(
+                            window.SidekickModules.Core.NotificationSystem.show(
                                 'Timer',
                                 `API Error: ${data.error}`,
                                 'error'
@@ -910,13 +910,13 @@
                     // Show success notification
                     const activeCooldowns = Object.values(this.cooldownData).filter(time => time !== null).length;
                     if (activeCooldowns > 0) {
-                        this.core.NotificationSystem.show(
+                        window.SidekickModules.Core.NotificationSystem.show(
                             'Timer',
                             `Found ${activeCooldowns} active cooldown(s)!`,
                             'success'
                         );
                     } else {
-                        this.core.NotificationSystem.show(
+                        window.SidekickModules.Core.NotificationSystem.show(
                             'Timer',
                             'No active cooldowns found.',
                             'info'
@@ -929,7 +929,7 @@
                     }
                 } catch (error) {
                     console.error('❌ Error fetching cooldown data:', error);
-                    this.core.NotificationSystem.show(
+                    window.SidekickModules.Core.NotificationSystem.show(
                         'Timer',
                         `Failed to fetch cooldown data: ${error.message}`,
                         'error'
@@ -964,7 +964,7 @@
                         }))
                     };
                     
-                    this.core.saveState('timer_state', state);
+                    window.SidekickModules.Core.saveState('timer_state', state);
                     console.log('💾 Timer state saved');
                 } catch (error) {
                     console.error('❌ Failed to save timer state:', error);
@@ -973,7 +973,7 @@
 
             loadState() {
                 try {
-                    const state = this.core.loadState('timer_state', { timers: [] });
+                    const state = window.SidekickModules.Core.loadState('timer_state', { timers: [] });
                     this.timers = state.timers || [];
                     console.log('📂 Restored timer state:', this.timers.length, 'timers');
                 } catch (error) {
