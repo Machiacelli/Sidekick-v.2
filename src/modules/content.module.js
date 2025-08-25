@@ -249,15 +249,90 @@
                 console.log('🔍 TravelTracker exists:', !!window.SidekickModules?.TravelTracker);
                 console.log('🔍 TravelTracker activate exists:', !!window.SidekickModules?.TravelTracker?.activate);
                 
-                if (window.SidekickModules?.TravelTracker?.activate) {
-                    console.log('✅ Activating TravelTracker...');
-                    window.SidekickModules.TravelTracker.activate();
+                // Try multiple module names for compatibility
+                const travelModule = window.SidekickModules?.TravelTracker || window.SidekickModules?.FlightTracker;
+                
+                if (travelModule?.activate) {
+                    console.log('✅ Activating Travel/Flight Tracker...');
+                    travelModule.activate();
                     this.closeAddMenu();
                 } else {
-                    console.error('❌ TravelTracker module not available');
+                    console.error('❌ Travel/Flight Tracker module not available');
                     console.log('Available modules:', window.SidekickModules ? Object.keys(window.SidekickModules) : 'none');
-                    NotificationSystem.show('Travel Tracker', 'Travel tracker module not loaded! Check console for details.', 'error');
+                    
+                    // Fallback: Create a simple travel tracker inline
+                    console.log('🔄 Creating fallback travel tracker...');
+                    this.createFallbackTravelTracker();
+                    this.closeAddMenu();
                 }
+            },
+
+            createFallbackTravelTracker() {
+                NotificationSystem.show('Travel Tracker', 'Starting element selection mode...', 'info');
+                
+                // Simple fallback implementation
+                document.body.style.cursor = 'crosshair';
+                
+                const instructions = document.createElement('div');
+                instructions.id = 'travel-tracker-instructions';
+                instructions.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: #2196F3;
+                    color: white;
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    z-index: 999999;
+                    font-family: Arial, sans-serif;
+                    font-size: 14px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                `;
+                instructions.innerHTML = `
+                    <strong>✈️ Travel Tracker (Fallback Mode)</strong><br>
+                    Hover over travel status and click to track<br>
+                    <small>Click elsewhere to cancel | Module will be fully available soon</small>
+                `;
+                document.body.appendChild(instructions);
+                
+                const cleanup = () => {
+                    document.body.style.cursor = '';
+                    if (instructions) instructions.remove();
+                    document.removeEventListener('click', handleClick, true);
+                    document.removeEventListener('keydown', handleEscape);
+                };
+                
+                const handleClick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const text = e.target.textContent;
+                    if (text && (text.toLowerCase().includes('traveling') || 
+                                text.toLowerCase().includes('flying') || 
+                                text.toLowerCase().includes('abroad'))) {
+                        NotificationSystem.show('Travel Tracker', `Selected: "${text.slice(0, 50)}..." - Full tracker will be available when module loads`, 'success');
+                    } else {
+                        NotificationSystem.show('Travel Tracker', 'Please select a travel status element', 'warning');
+                    }
+                    cleanup();
+                };
+                
+                const handleEscape = (e) => {
+                    if (e.key === 'Escape') {
+                        cleanup();
+                        NotificationSystem.show('Travel Tracker', 'Selection cancelled', 'info');
+                    }
+                };
+                
+                document.addEventListener('click', handleClick, true);
+                document.addEventListener('keydown', handleEscape);
+                
+                // Auto cleanup after 30 seconds
+                setTimeout(() => {
+                    cleanup();
+                    NotificationSystem.show('Travel Tracker', 'Selection mode timed out', 'info');
+                }, 30000);
             },
 
             // === ELEMENT CREATION FUNCTIONS ===
