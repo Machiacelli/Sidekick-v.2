@@ -513,6 +513,8 @@
                 
                 // Only save notepad size on user-driven resize (mouseup after resizing)
                 let isUserResizing = false;
+                let initialSize = { width: 0, height: 0 };
+                
                 notepadElement.addEventListener('mousedown', (e) => {
                     // Check if the mouse is near the bottom-right corner (resize handle)
                     const rect = notepadElement.getBoundingClientRect();
@@ -521,21 +523,35 @@
                         e.clientY > rect.bottom - 20
                     ) {
                         isUserResizing = true;
+                        initialSize.width = notepadElement.offsetWidth;
+                        initialSize.height = notepadElement.offsetHeight;
                     }
                 });
+                
                 document.addEventListener('mouseup', () => {
                     if (isUserResizing) {
                         isUserResizing = false;
-                        // Clamp size before saving
-                        const sidebar = document.getElementById('sidekick-sidebar');
-                        const sidebarWidth = sidebar ? Math.max(200, sidebar.clientWidth) : 500;
-                        const sidebarHeight = sidebar ? Math.max(200, sidebar.clientHeight) : 600;
-                        const minWidth = 150, minHeight = 100;
-                        const maxWidth = Math.max(minWidth, sidebarWidth - 16);
-                        const maxHeight = Math.max(minHeight, sidebarHeight - 80);
-                        notepadElement.style.width = Math.max(minWidth, Math.min(notepadElement.offsetWidth, maxWidth)) + 'px';
-                        notepadElement.style.height = Math.max(minHeight, Math.min(notepadElement.offsetHeight, maxHeight)) + 'px';
-                        saveLayout.call(this);
+                        
+                        // Only save if size actually changed
+                        const currentWidth = notepadElement.offsetWidth;
+                        const currentHeight = notepadElement.offsetHeight;
+                        
+                        if (Math.abs(currentWidth - initialSize.width) > 5 || 
+                            Math.abs(currentHeight - initialSize.height) > 5) {
+                            
+                            // Clamp size before saving
+                            const sidebar = document.getElementById('sidekick-sidebar');
+                            const sidebarWidth = sidebar ? Math.max(200, sidebar.clientWidth) : 500;
+                            const sidebarHeight = sidebar ? Math.max(200, sidebar.clientHeight) : 600;
+                            const minWidth = 150, minHeight = 100;
+                            const maxWidth = Math.max(minWidth, sidebarWidth - 16);
+                            const maxHeight = Math.max(minHeight, sidebarHeight - 80);
+                            
+                            notepadElement.style.width = Math.max(minWidth, Math.min(currentWidth, maxWidth)) + 'px';
+                            notepadElement.style.height = Math.max(minHeight, Math.min(currentHeight, maxHeight)) + 'px';
+                            
+                            saveLayout.call(this);
+                        }
                     }
                 });
             },

@@ -65,11 +65,15 @@
                 
                 if (this.isActive) {
                     this.hideTargetButton();
+                    this.isActive = false;
+                    this.core.saveState('random_target_active', false);
                     this.updateSettingsToggle(false);
                     return;
                 }
 
                 this.showTargetButton();
+                this.isActive = true;
+                this.core.saveState('random_target_active', true);
                 this.updateSettingsToggle(true);
             },
 
@@ -77,6 +81,7 @@
                 if (this.targetButton) return;
                 
                 this.isActive = true;
+                this.core.saveState('random_target_active', true);
                 
                 // Load saved button position
                 const savedPosition = this.loadButtonPosition();
@@ -215,11 +220,14 @@
                     const wasActive = window.SidekickModules.Core.loadState('random_target_active', false);
                     if (wasActive) {
                         console.log('🔄 Restoring random target button state...');
+                        this.isActive = true;
                         // Small delay to ensure DOM is ready
                         setTimeout(() => {
                             this.showTargetButton();
                             this.updateSettingsToggle(true);
                         }, 500);
+                    } else {
+                        this.isActive = false;
                     }
                 } catch (error) {
                     console.error('❌ Failed to restore button state:', error);

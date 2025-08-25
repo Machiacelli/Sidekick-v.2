@@ -102,8 +102,8 @@
                 // Calculate default position and size
                 const defaultWidth = 300;
                 const defaultHeight = 200;
-                const minWidth = 250;
-                const minHeight = 150;
+                const minWidth = 180;
+                const minHeight = 120;
                 const maxWidth = 500;
                 const maxHeight = 600;
 
