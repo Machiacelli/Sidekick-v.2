@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Training Blocker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.2.0
+// @version      1.3.0
 // @description  Training blocker functionality to prevent training while stacking energy
 // @author       GitHub Copilot
 // @match        https://www.torn.com/*
@@ -53,8 +53,8 @@
             // Remove existing block if any
             removeTrainingBlock();
 
-            // Find the training section
-            const trainingSection = document.querySelector('.training-section, .training, [class*="training"], .gym, [class*="gym"]');
+            // Find the training section with better detection
+            let trainingSection = document.querySelector('.training-section, .training, [class*="training"], .gym, [class*="gym"]');
             
             if (!trainingSection) {
                 console.log('Training section not found, trying alternative selectors...');
@@ -65,20 +65,33 @@
                     'div[class*="speed"]',
                     'div[class*="defense"]',
                     '.stats-training',
-                    '.training-stats'
+                    '.training-stats',
+                    '[class*="gym"]',
+                    '[class*="training"]'
                 ];
                 
                 for (let selector of alternatives) {
                     const element = document.querySelector(selector);
                     if (element) {
                         console.log('Found training element with selector:', selector);
-                        createBlockOverlay(element);
-                        return;
+                        // Look for a parent container that encompasses the training area
+                        let parent = element.parentElement;
+                        while (parent && parent !== document.body) {
+                            if (parent.querySelectorAll('[class*="strength"], [class*="dexterity"], [class*="speed"], [class*="defense"]').length > 1) {
+                                trainingSection = parent;
+                                break;
+                            }
+                            parent = parent.parentElement;
+                        }
+                        if (!trainingSection) trainingSection = element;
+                        break;
                     }
                 }
                 
-                console.warn('No training section found to block');
-                return;
+                if (!trainingSection) {
+                    console.warn('No training section found to block');
+                    return;
+                }
             }
 
             createBlockOverlay(trainingSection);
@@ -89,7 +102,7 @@
             blockingOverlay = document.createElement('div');
             blockingOverlay.id = 'training-blocker-overlay';
             blockingOverlay.style.cssText = `
-                position: absolute;
+                position: fixed;
                 top: 0;
                 left: 0;
                 width: 100%;
@@ -98,7 +111,6 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                border-radius: 8px;
             `;
 
             // Create custom picture container
@@ -115,15 +127,30 @@
 
             blockingOverlay.appendChild(pictureContainer);
             
-            // Position the overlay relative to the target element
+            // Get the bounding rectangle of the target element
             const rect = targetElement.getBoundingClientRect();
-            blockingOverlay.style.position = 'fixed';
+            
+            // Position the overlay to cover the entire training section
             blockingOverlay.style.top = rect.top + 'px';
             blockingOverlay.style.left = rect.left + 'px';
             blockingOverlay.style.width = rect.width + 'px';
             blockingOverlay.style.height = rect.height + 'px';
             
+            // Add some padding to ensure complete coverage
+            const padding = 20;
+            blockingOverlay.style.top = (rect.top - padding) + 'px';
+            blockingOverlay.style.left = (rect.left - padding) + 'px';
+            blockingOverlay.style.width = (rect.width + padding * 2) + 'px';
+            blockingOverlay.style.height = (rect.height + padding * 2) + 'px';
+            
             document.body.appendChild(blockingOverlay);
+            
+            console.log('Training blocker positioned at:', {
+                top: blockingOverlay.style.top,
+                left: blockingOverlay.style.left,
+                width: blockingOverlay.style.width,
+                height: blockingOverlay.style.height
+            });
         }
 
         function removeTrainingBlock() {
