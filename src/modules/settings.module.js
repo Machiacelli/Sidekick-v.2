@@ -161,7 +161,7 @@
                     if (blockTrainingToggle) {
                         // Set initial state
                         if (window.SidekickModules?.BlockTraining) {
-                            blockTrainingToggle.checked = window.SidekickModules.BlockTraining.isEnabled || false;
+                            blockTrainingToggle.checked = window.SidekickModules.BlockTraining.isEnabled() || false;
                         }
                         
                         blockTrainingToggle.addEventListener('change', () => {
