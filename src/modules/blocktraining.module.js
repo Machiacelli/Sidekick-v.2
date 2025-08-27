@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Training Blocker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.1.0
+// @version      1.2.0
 // @description  Training blocker functionality to prevent training while stacking energy
 // @author       GitHub Copilot
 // @match        https://www.torn.com/*
@@ -85,7 +85,7 @@
         }
 
         function createBlockOverlay(targetElement) {
-            // Create blocking overlay with custom picture
+            // Create blocking overlay with custom picture (no black tint)
             blockingOverlay = document.createElement('div');
             blockingOverlay.id = 'training-blocker-overlay';
             blockingOverlay.style.cssText = `
@@ -94,7 +94,6 @@
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background: rgba(0, 0, 0, 0.9);
                 z-index: 9998;
                 display: flex;
                 align-items: center;
@@ -106,7 +105,7 @@
             const pictureContainer = document.createElement('div');
             pictureContainer.style.cssText = `
                 background: url('https://i.imgur.com/Ewv4zCy.jpeg') no-repeat center center;
-                background-size: contain;
+                background-size: cover;
                 width: 100%;
                 height: 100%;
                 display: flex;
