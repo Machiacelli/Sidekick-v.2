@@ -191,16 +191,18 @@
                             Loading OC status...
                         </div>
                         <div id="oc-countdown-timer" style="
-                            margin-top: 8px;
-                            padding: 8px 10px;
+                            margin-top: 4px;
+                            padding: 4px 6px;
                             background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
                             border: 1px solid #555;
-                            border-radius: 4px;
+                            border-radius: 3px;
                             text-align: center;
                             font-family: 'Courier New', monospace;
+                            display: inline-block;
+                            min-width: 80px;
                         ">
-                            <div style="font-size: 10px; color: #888; margin-bottom: 4px;">⏰ Next OC Countdown</div>
-                            <div id="oc-timer-display" style="font-size: 16px; color: #fff; font-weight: bold;">--:--:--</div>
+                            <div style="font-size: 8px; color: #888; margin-bottom: 2px;">⏰ OC</div>
+                            <div id="oc-timer-display" style="font-size: 12px; color: #fff; font-weight: bold;">--:--:--</div>
                         </div>
                     </div>
                 `;
@@ -493,28 +495,32 @@
                     }
                     
                     const data = await response.json();
-                    console.log('🔍 [DEBUG] API response:', data);
+                    console.log('🔍 [DEBUG] Full API response:', data);
                     
                     if (data.error) {
                         throw new Error(data.error.error || 'API error');
                     }
                     
-                    const ocData = data.organizedcrime;
+                    // Try different possible response structures
+                    let ocData = data.organizedcrime || data.organized_crime || data.oc || data;
+                    console.log('🔍 [DEBUG] OC data extracted:', ocData);
+                    
                     if (!ocData) {
-                        console.log('🔍 [DEBUG] No organized crime data in API response');
+                        console.log('🔍 [DEBUG] No organized crime data found in any format');
                         return {
                             message: 'No OC data available from API',
                             timeRemaining: null
                         };
                     }
 
-                    console.log('🔍 [DEBUG] OC data from API:', ocData);
-                    
-                    // Check if user is in an OC
-                    if (ocData.current && ocData.current.active) {
-                        const ocStart = ocData.current.start;
-                        const ocEnd = ocData.current.end;
+                    // Check if user is in an OC (try different property names)
+                    const currentOC = ocData.current || ocData.active || ocData.current_oc;
+                    if (currentOC && (currentOC.active || currentOC.status === 'active')) {
+                        const ocStart = currentOC.start || currentOC.start_time || currentOC.timestamp;
+                        const ocEnd = currentOC.end || currentOC.end_time || currentOC.duration;
                         const now = Math.floor(Date.now() / 1000);
+                        
+                        console.log('🔍 [DEBUG] Current OC found:', { ocStart, ocEnd, now });
                         
                         if (ocStart && ocEnd) {
                             if (now < ocStart) {
@@ -547,11 +553,14 @@
                         }
                     }
                     
-                    // Check for upcoming OC
-                    if (ocData.upcoming && ocData.upcoming.length > 0) {
-                        const nextOC = ocData.upcoming[0]; // Get the next upcoming OC
-                        const ocStart = nextOC.start;
+                    // Check for upcoming OC (try different property names)
+                    const upcomingOC = ocData.upcoming || ocData.next || ocData.scheduled;
+                    if (upcomingOC && (Array.isArray(upcomingOC) ? upcomingOC.length > 0 : upcomingOC.start)) {
+                        const nextOC = Array.isArray(upcomingOC) ? upcomingOC[0] : upcomingOC;
+                        const ocStart = nextOC.start || nextOC.start_time || nextOC.timestamp;
                         const now = Math.floor(Date.now() / 1000);
+                        
+                        console.log('🔍 [DEBUG] Upcoming OC found:', { ocStart, now });
                         
                         if (ocStart && ocStart > now) {
                             const timeRemaining = Math.ceil((ocStart - now) / 3600);
@@ -559,7 +568,7 @@
                                 message: `Next OC starts in ${timeRemaining}h`,
                                 timeRemaining: timeRemaining,
                                 ocStart: ocStart,
-                                ocEnd: nextOC.end
+                                ocEnd: nextOC.end || nextOC.end_time
                             };
                         }
                     }
@@ -653,14 +662,14 @@
                         statusDiv = document.createElement('div');
                         statusDiv.id = 'oc-status-indicator';
                         statusDiv.style.cssText = `
-                            margin-top: 8px; 
-                            padding: 6px 10px; 
+                            margin-top: 4px; 
+                            padding: 4px 6px; 
                             background: ${ocStatus.timeRemaining > 0 ? '#4CAF50' : '#f44336'}; 
                             color: white; 
-                            border-radius: 4px; 
+                            border-radius: 3px; 
                             font-weight: bold; 
                             text-align: center;
-                            font-size: 11px;
+                            font-size: 10px;
                         `;
                         container.querySelector('#oc-countdown-timer').insertAdjacentElement('beforebegin', statusDiv);
                     }
