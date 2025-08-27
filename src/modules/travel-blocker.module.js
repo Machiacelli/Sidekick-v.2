@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Travel Blocker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.1.0
+// @version      1.2.0
 // @description  Travel blocker functionality to prevent OC conflicts with live OC countdown timer
 // @author       GitHub Copilot
 // @match        https://www.torn.com/*
@@ -30,7 +30,7 @@
             DEBUG: false, // Toggle to true for detailed logs
 
             init() {
-                console.log('✈️ Initializing Travel Blocker Module v1.1.0...');
+                console.log('✈️ Initializing Travel Blocker Module v1.2.0 with OC Timer...');
                 this.core = window.SidekickModules.Core;
                 if (!this.core) {
                     console.error('❌ Core module not available for Travel Blocker');
@@ -155,8 +155,7 @@
                 const wrapper = document.querySelector('div.content-wrapper.summer');
                 if (!wrapper || wrapper.querySelector('#oc-toggle-container')) return;
 
-                // Get OC status and time remaining
-                const ocStatus = this.getOCStatus();
+                // OC status will be loaded asynchronously
                 
                 const container = document.createElement('div');
                 container.id = 'oc-toggle-container';
@@ -189,25 +188,8 @@
                             " title="${this.isEnabled ? 'Travel Blocker Active' : 'Travel Blocker Inactive'}"></div>
                         </div>
                         <div style="color: #bbb; font-size: 12px; line-height: 1.3;">
-                            ${ocStatus.message}
+                            Loading OC status...
                         </div>
-                        ${ocStatus.timeRemaining ? `
-                            <div style="
-                                margin-top: 8px; 
-                                padding: 6px 10px; 
-                                background: ${ocStatus.timeRemaining > 0 ? '#4CAF50' : '#f44336'}; 
-                                color: white; 
-                                border-radius: 4px; 
-                                font-weight: bold; 
-                                text-align: center;
-                                font-size: 11px;
-                            ">
-                                ${ocStatus.timeRemaining > 0 ? '⏰' : '⚠️'} ${ocStatus.timeRemaining > 0 ? 
-                                    `OC starts in ${ocStatus.timeRemaining}h` : 
-                                    'OC ready! Travel safely!'
-                                }
-                            </div>
-                        ` : ''}
                         <div id="oc-countdown-timer" style="
                             margin-top: 8px;
                             padding: 8px 10px;
@@ -229,6 +211,9 @@
                 
                 // Start the countdown timer
                 this.startOCCountdown();
+                
+                // Update the status display asynchronously
+                this.updateStatusDisplay();
             },
 
             getDataModel() {
@@ -382,18 +367,18 @@
             },
 
             // Get OC status and time remaining
-            getOCStatus() {
+            async getOCStatus() {
                 try {
                     console.log('🔍 [DEBUG] Getting OC status...');
                     
                     // First try to get OC data from Torn API if available
-                    if (window.SidekickModules?.Api?.makeRequest) {
-                        console.log('🔍 [DEBUG] API available, trying API method...');
-                        return this.getOCStatusFromAPI();
+                    if (window.SidekickModules?.Core?.loadState) {
+                        console.log('🔍 [DEBUG] Core available, trying API method...');
+                        return await this.getOCStatusFromAPI();
                     }
                     
                     // Fallback to page data model
-                    console.log('🔍 [DEBUG] API not available, trying page data model...');
+                    console.log('🔍 [DEBUG] Core not available, trying page data model...');
                     const dataModel = this.getDataModel();
                     console.log('🔍 [DEBUG] Data model:', dataModel);
                     
@@ -493,52 +478,101 @@
             // Get OC status from Torn API
             async getOCStatusFromAPI() {
                 try {
-                    // Get user's cooldowns to check for OC
-                    const response = await fetch('https://api.torn.com/user/?selections=cooldowns');
+                    // Get user's organized crime data using the correct API endpoint
+                    const apiKey = window.SidekickModules.Core.loadState('sidekick_api_key', '');
+                    if (!apiKey) {
+                        console.log('🔍 [DEBUG] No API key available, falling back to page data');
+                        return this.getOCStatusFromPage();
+                    }
+
+                    console.log('🔍 [DEBUG] Fetching OC data from Torn API v2...');
+                    const response = await fetch(`https://api.torn.com/v2/user/?selections=organizedcrime&key=${apiKey}`);
+                    
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}`);
                     }
                     
                     const data = await response.json();
+                    console.log('🔍 [DEBUG] API response:', data);
+                    
                     if (data.error) {
                         throw new Error(data.error.error || 'API error');
                     }
                     
-                    const cooldowns = data.cooldowns;
-                    if (!cooldowns) {
+                    const ocData = data.organizedcrime;
+                    if (!ocData) {
+                        console.log('🔍 [DEBUG] No organized crime data in API response');
                         return {
-                            message: 'No cooldown data available',
+                            message: 'No OC data available from API',
                             timeRemaining: null
                         };
                     }
+
+                    console.log('🔍 [DEBUG] OC data from API:', ocData);
                     
-                    // Check for OC cooldown
-                    const ocCooldown = cooldowns.oc;
-                    if (!ocCooldown) {
-                        return {
-                            message: 'No OC cooldown detected',
-                            timeRemaining: null
-                        };
+                    // Check if user is in an OC
+                    if (ocData.current && ocData.current.active) {
+                        const ocStart = ocData.current.start;
+                        const ocEnd = ocData.current.end;
+                        const now = Math.floor(Date.now() / 1000);
+                        
+                        if (ocStart && ocEnd) {
+                            if (now < ocStart) {
+                                // OC hasn't started yet
+                                const timeRemaining = Math.ceil((ocStart - now) / 3600);
+                                return {
+                                    message: `OC starts in ${timeRemaining}h`,
+                                    timeRemaining: timeRemaining,
+                                    ocStart: ocStart,
+                                    ocEnd: ocEnd
+                                };
+                            } else if (now >= ocStart && now < ocEnd) {
+                                // OC is currently active
+                                const timeRemaining = Math.ceil((ocEnd - now) / 3600);
+                                return {
+                                    message: `OC active for ${timeRemaining}h`,
+                                    timeRemaining: timeRemaining,
+                                    ocStart: ocStart,
+                                    ocEnd: ocEnd
+                                };
+                            } else {
+                                // OC has ended
+                                return {
+                                    message: 'OC completed. Travel is safe.',
+                                    timeRemaining: 0,
+                                    ocStart: ocStart,
+                                    ocEnd: ocEnd
+                                };
+                            }
+                        }
                     }
                     
-                    const now = Math.floor(Date.now() / 1000);
-                    const ocStart = ocCooldown.timestamp;
-                    const timeRemaining = Math.ceil((ocStart - now) / 3600); // Convert to hours
-                    
-                    if (timeRemaining > 0) {
-                        return {
-                            message: `Travel blocked: OC starts in ${timeRemaining}h`,
-                            timeRemaining: timeRemaining
-                        };
-                    } else {
-                        return {
-                            message: 'OC ready! Travel is safe.',
-                            timeRemaining: 0
-                        };
+                    // Check for upcoming OC
+                    if (ocData.upcoming && ocData.upcoming.length > 0) {
+                        const nextOC = ocData.upcoming[0]; // Get the next upcoming OC
+                        const ocStart = nextOC.start;
+                        const now = Math.floor(Date.now() / 1000);
+                        
+                        if (ocStart && ocStart > now) {
+                            const timeRemaining = Math.ceil((ocStart - now) / 3600);
+                            return {
+                                message: `Next OC starts in ${timeRemaining}h`,
+                                timeRemaining: timeRemaining,
+                                ocStart: ocStart,
+                                ocEnd: nextOC.end
+                            };
+                        }
                     }
+                    
+                    // No active or upcoming OC
+                    return {
+                        message: 'No OC scheduled. Travel is safe.',
+                        timeRemaining: null
+                    };
                     
                 } catch (error) {
                     console.error('❌ Error getting OC status from API:', error);
+                    console.log('🔍 [DEBUG] Falling back to page data method');
                     // Fallback to page data
                     return this.getOCStatusFromPage();
                 }
@@ -598,30 +632,57 @@
                 }
             },
 
-            // Update the infobox with current OC status
-            updateInfoBox() {
+            // Update the status display with current OC status
+            async updateStatusDisplay() {
                 const container = document.getElementById('oc-toggle-container');
                 if (!container) return;
 
-                const ocStatus = this.getOCStatus();
-                
-                // Update the message
-                const messageDiv = container.querySelector('div[style*="color: #bbb"]');
-                if (messageDiv) {
-                    messageDiv.textContent = ocStatus.message;
-                }
+                try {
+                    const ocStatus = await this.getOCStatus();
+                    console.log('🔍 [DEBUG] Updating status display with:', ocStatus);
+                    
+                    // Update the message
+                    const messageDiv = container.querySelector('div[style*="color: #bbb"]');
+                    if (messageDiv) {
+                        messageDiv.textContent = ocStatus.message;
+                    }
 
-                // Update the time remaining display
-                const timeDiv = container.querySelector('div[style*="background:"]');
-                if (timeDiv) {
-                    if (ocStatus.timeRemaining !== null) {
-                        timeDiv.style.background = ocStatus.timeRemaining > 0 ? '#4CAF50' : '#f44336';
-                        timeDiv.innerHTML = `${ocStatus.timeRemaining > 0 ? '⏰' : '⚠️'} ${ocStatus.timeRemaining > 0 ? 
-                            `OC starts in ${ocStatus.timeRemaining} hours` : 
-                            'OC is ready! Travel safely!'
-                        }`;
-                    } else {
-                        timeDiv.style.display = 'none';
+                    // Add status indicator if we have time remaining
+                    let statusDiv = container.querySelector('#oc-status-indicator');
+                    if (!statusDiv && ocStatus.timeRemaining !== null) {
+                        statusDiv = document.createElement('div');
+                        statusDiv.id = 'oc-status-indicator';
+                        statusDiv.style.cssText = `
+                            margin-top: 8px; 
+                            padding: 6px 10px; 
+                            background: ${ocStatus.timeRemaining > 0 ? '#4CAF50' : '#f44336'}; 
+                            color: white; 
+                            border-radius: 4px; 
+                            font-weight: bold; 
+                            text-align: center;
+                            font-size: 11px;
+                        `;
+                        container.querySelector('#oc-countdown-timer').insertAdjacentElement('beforebegin', statusDiv);
+                    }
+                    
+                    if (statusDiv) {
+                        if (ocStatus.timeRemaining !== null) {
+                            statusDiv.style.background = ocStatus.timeRemaining > 0 ? '#4CAF50' : '#f44336';
+                            statusDiv.innerHTML = `${ocStatus.timeRemaining > 0 ? '⏰' : '⚠️'} ${ocStatus.timeRemaining > 0 ? 
+                                `OC starts in ${ocStatus.timeRemaining}h` : 
+                                'OC ready! Travel safely!'
+                            }`;
+                            statusDiv.style.display = 'block';
+                        } else {
+                            statusDiv.style.display = 'none';
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ Error updating status display:', error);
+                    const messageDiv = container.querySelector('div[style*="color: #bbb"]');
+                    if (messageDiv) {
+                        messageDiv.textContent = 'Error loading OC status';
+                        messageDiv.style.color = '#f44336';
                     }
                 }
             },
@@ -642,36 +703,43 @@
                 const timerDisplay = document.getElementById('oc-timer-display');
                 if (!timerDisplay) return;
 
-                const ocStart = this.getEarliestOCStart();
-                if (!ocStart) {
+                // Get OC status from API first
+                this.getOCStatus().then(ocStatus => {
+                    console.log('🔍 [DEBUG] OC status for countdown:', ocStatus);
+                    
+                    if (!ocStatus || ocStatus.timeRemaining === null) {
+                        timerDisplay.textContent = '--:--:--';
+                        timerDisplay.style.color = '#888';
+                        return;
+                    }
+
+                    if (ocStatus.timeRemaining <= 0) {
+                        timerDisplay.textContent = '00:00:00';
+                        timerDisplay.style.color = '#4CAF50';
+                        return;
+                    }
+
+                    // Convert hours to HH:MM:SS format
+                    const totalSeconds = ocStatus.timeRemaining * 3600;
+                    const hours = Math.floor(totalSeconds / 3600);
+                    const minutes = Math.floor((totalSeconds % 3600) / 60);
+                    const seconds = totalSeconds % 60;
+
+                    timerDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    
+                    // Color coding based on time remaining
+                    if (ocStatus.timeRemaining <= 1) { // 1 hour or less
+                        timerDisplay.style.color = '#f44336'; // Red
+                    } else if (ocStatus.timeRemaining <= 2) { // 2 hours or less
+                        timerDisplay.style.color = '#ff9800'; // Orange
+                    } else {
+                        timerDisplay.style.color = '#fff'; // White
+                    }
+                }).catch(error => {
+                    console.error('❌ Error updating OC countdown:', error);
                     timerDisplay.textContent = '--:--:--';
                     timerDisplay.style.color = '#888';
-                    return;
-                }
-
-                const now = Math.floor(Date.now() / 1000);
-                const timeRemaining = ocStart - now;
-
-                if (timeRemaining <= 0) {
-                    timerDisplay.textContent = '00:00:00';
-                    timerDisplay.style.color = '#4CAF50';
-                    return;
-                }
-
-                const hours = Math.floor(timeRemaining / 3600);
-                const minutes = Math.floor((timeRemaining % 3600) / 60);
-                const seconds = timeRemaining % 60;
-
-                timerDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                
-                // Color coding based on time remaining
-                if (timeRemaining <= 3600) { // 1 hour or less
-                    timerDisplay.style.color = '#f44336'; // Red
-                } else if (timeRemaining <= 7200) { // 2 hours or less
-                    timerDisplay.style.color = '#ff9800'; // Orange
-                } else {
-                    timerDisplay.style.color = '#fff'; // White
-                }
+                });
             },
 
             // Get the earliest OC start time from all destinations
