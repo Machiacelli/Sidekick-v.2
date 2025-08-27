@@ -147,9 +147,13 @@
                         height: auto;
                         max-width: 778px;
                         max-height: 300px;
-                        object-fit: contain;
+                        object-fit: cover;
                         border-radius: 8px;
                         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                        background: transparent;
+                        display: block;
+                        margin: 0;
+                        padding: 0;
                     `;
 
                     // Set the custom image source

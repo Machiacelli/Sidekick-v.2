@@ -326,7 +326,17 @@
                                title="Attack ${target.name}">
                                 ${target.name || `Player ${target.id}`}
                             </a>
-                            <span style="font-size: 11px; color: #888;">[${target.id}]</span>
+                            <a href="https://www.torn.com/profiles.php?XID=${target.id}" 
+                               target="_blank" 
+                               style="
+                                   color: #888;
+                                   text-decoration: none;
+                                   font-size: 11px;
+                                   cursor: pointer;
+                               " 
+                               title="View ${target.name || `Player ${target.id}`} profile">
+                                [${target.id}]
+                            </a>
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px;">
                             ${statusDisplay}

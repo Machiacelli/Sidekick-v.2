@@ -100,7 +100,7 @@
                         </div>
                         <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin: 12px 0;">
                             <div style="display: flex; flex-direction: column;">
-                                <span style="color: #fff; font-weight: bold; font-size: 14px;">🚫 Block Training</span>
+                                <span style="color: #fff; font-weight: bold; font-size: 14px;">🚫 Training Blocker</span>
                                 <span style="color: #aaa; font-size: 12px;">Blocks training while stacking energy</span>
                             </div>
                             <label class="block-training-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
@@ -587,7 +587,7 @@
                         border-radius: 24px !important;
                     }
 
-                    .travel-blocker-slider:before, .block-training-slider:before {
+                    .travel-blocker-slider:before, .block-training-slider:before, .random-target-slider:before {
                         position: absolute !important;
                         content: "" !important;
                         height: 18px !important;
@@ -600,16 +600,18 @@
                     }
 
                     #travel-blocker-toggle:checked + .travel-blocker-slider,
-                    #block-training-toggle:checked + .block-training-slider {
+                    #block-training-toggle:checked + .block-training-slider,
+                    #random-target-toggle:checked + .random-target-slider {
                         background-color: #4CAF50 !important;
                     }
 
                     #travel-blocker-toggle:checked + .travel-blocker-slider:before,
-                    #block-training-toggle:checked + .block-training-slider:before {
+                    #block-training-toggle:checked + .block-training-slider:before,
+                    #random-target-toggle:checked + .random-target-slider:before {
                         transform: translateX(26px) !important;
                     }
 
-                    .travel-blocker-slider:hover, .block-training-slider:hover {
+                    .travel-blocker-slider:hover, .block-training-slider:hover, .random-target-slider:hover {
                         box-shadow: 0 0 1px rgba(255,255,255,0.5) !important;
                     }
                 `;

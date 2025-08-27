@@ -428,8 +428,26 @@
                 try {
                     const dataModel = this.getDataModel();
                     if (!dataModel || !dataModel.destinations) {
+                        // Try to find travel data in other ways
+                        const travelRoot = document.getElementById('travel-root');
+                        if (!travelRoot) {
+                            return {
+                                message: 'Travel page loading...',
+                                timeRemaining: null
+                            };
+                        }
+                        
+                        // Check if we have any travel buttons to determine if page is ready
+                        const travelButtons = document.querySelectorAll('button.torn-btn.btn-dark-bg, a.torn-btn.btn-dark-bg');
+                        if (travelButtons.length === 0) {
+                            return {
+                                message: 'Waiting for travel data...',
+                                timeRemaining: null
+                            };
+                        }
+                        
                         return {
-                            message: 'Unable to determine OC status. Please refresh the page.',
+                            message: 'Travel data available. Checking for OC conflicts...',
                             timeRemaining: null
                         };
                     }
@@ -437,10 +455,12 @@
                     // Find the earliest OC start time
                     let earliestOC = null;
                     let message = '';
+                    let hasOCConflicts = false;
 
                     dataModel.destinations.forEach(dest => {
                         ['standard', 'airstrip', 'private', 'business'].forEach(method => {
                             if (dest[method]?.ocReadyBeforeBack === true) {
+                                hasOCConflicts = true;
                                 const ocStart = dest[method]?.ocStart;
                                 if (ocStart && (!earliestOC || ocStart < earliestOC)) {
                                     earliestOC = ocStart;
@@ -449,30 +469,35 @@
                         });
                     });
 
-                    if (earliestOC) {
+                    if (hasOCConflicts && earliestOC) {
                         const now = Math.floor(Date.now() / 1000);
                         const timeRemaining = Math.ceil((earliestOC - now) / 3600); // Convert to hours
                         
                         if (timeRemaining > 0) {
-                            message = `Travel is currently blocked to prevent OC conflicts. The earliest OC starts in ${timeRemaining} hours.`;
+                            message = `Travel blocked: OC starts in ${timeRemaining}h`;
                         } else {
-                            message = 'OC is ready! Travel is now safe.';
+                            message = 'OC ready! Travel is safe.';
                         }
 
                         return {
                             message: message,
                             timeRemaining: timeRemaining
                         };
+                    } else if (hasOCConflicts) {
+                        return {
+                            message: 'OC conflicts detected. Travel blocked.',
+                            timeRemaining: null
+                        };
                     } else {
                         return {
-                            message: 'No OC conflicts detected. Travel is safe.',
+                            message: 'No OC conflicts. Travel is safe.',
                             timeRemaining: null
                         };
                     }
                 } catch (error) {
                     console.error('❌ Error getting OC status:', error);
                     return {
-                        message: 'Error determining OC status.',
+                        message: 'Error checking OC status.',
                         timeRemaining: null
                     };
                 }
