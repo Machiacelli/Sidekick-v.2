@@ -9,21 +9,22 @@
 // @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2f09272/src/modules/core.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2f09272/src/modules/ui.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2f09272/src/modules/content.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2f09272/src/modules/settings.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2f09272/src/modules/clock.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2f09272/src/modules/notepad.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2f09272/src/modules/blocktraining.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2f09272/src/modules/global-functions.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2f09272/src/modules/attacklist.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2f09272/src/modules/linkgroup.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2f09272/src/modules/travel-blocker.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2f09272/src/modules/traveltracker.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2f09272/src/modules/timer.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2f09272/src/modules/randomtarget.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2f09272/src/modules/plane-replacer.module.js
+// @require      file:///c%3A/Users/Machi/Downloads/SidekickV2/Sidekick-Script/src/modules/core.module.js
+// @require      file:///c%3A/Users/Machi/Downloads/SidekickV2/Sidekick-Script/src/modules/ui.module.js
+// @require      file:///c%3A/Users/Machi/Downloads/SidekickV2/Sidekick-Script/src/modules/content.module.js
+// @require      file:///c%3A/Users/Machi/Downloads/SidekickV2/Sidekick-Script/src/modules/settings.module.js
+// @require      file:///c%3A/Users/Machi/Downloads/SidekickV2/Sidekick-Script/src/modules/clock.module.js
+// @require      file:///c%3A/Users/Machi/Downloads/SidekickV2/Sidekick-Script/src/modules/notepad.module.js
+// @require      file:///c%3A/Users/Machi/Downloads/SidekickV2/Sidekick-Script/src/modules/blocktraining.module.js
+// @require      file:///c%3A/Users/Machi/Downloads/SidekickV2/Sidekick-Script/src/modules/global-functions.module.js
+// @require      file:///c%3A/Users/Machi/Downloads/SidekickV2/Sidekick-Script/src/modules/attacklist.module.js
+// @require      file:///c%3A/Users/Machi/Downloads/SidekickV2/Sidekick-Script/src/modules/linkgroup.module.js
+// @require      file:///c%3A/Users/Machi/Downloads/SidekickV2/Sidekick-Script/src/modules/travel-blocker.module.js
+// @require      file:///c%3A/Users/Machi/Downloads/SidekickV2/Sidekick-Script/src/modules/traveltracker.module.js
+// @require      file:///c%3A/Users/Machi/Downloads/SidekickV2/Sidekick-Script/src/modules/timer.module.js
+// @require      file:///c%3A/Users/Machi/Downloads/SidekickV2/Sidekick-Script/src/modules/randomtarget.module.js
+// @require      file:///c%3A/Users/Machi/Downloads/SidekickV2/Sidekick-Script/src/modules/plane-replacer.module.js
+// @require      file:///c%3A/Users/Machi/Downloads/SidekickV2/Sidekick-Script/src/modules/todolist.module.js
 
 // @run-at       document-end
 // ==/UserScript==
@@ -87,7 +88,7 @@
         }
 
         // Initialize other modules (modular approach: each module self-registers and is initialized here)
-        ['Settings', 'Clock', 'Notepad', 'TravelTracker', 'Timer', 'Content', 'AttackList', 'LinkGroup', 'TravelBlocker', 'RandomTarget', 'PlaneReplacer'].forEach(moduleName => {
+        ['Settings', 'Clock', 'Notepad', 'TravelTracker', 'Timer', 'Content', 'AttackList', 'LinkGroup', 'TravelBlocker', 'RandomTarget', 'PlaneReplacer', 'TodoList'].forEach(moduleName => {
             if (window.SidekickModules[moduleName]) {
                 console.log(`🔌 Initializing ${moduleName} module...`);
                 try {

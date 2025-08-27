@@ -37,6 +37,9 @@
                     return;
                 }
 
+                // Reset logging flags for new page
+                this.resetLoggingFlags();
+
                 // Load saved state
                 this.loadSettings();
                 
@@ -61,7 +64,27 @@
             },
 
             isOnTravelPage() {
-                return window.location.href.includes('/page.php?sid=travel');
+                // Check multiple indicators for travel page
+                const urlCheck = window.location.href.includes('/page.php?sid=travel');
+                const titleCheck = document.title.toLowerCase().includes('travel');
+                const contentCheck = document.querySelector('.content-wrapper.summer') !== null;
+                const travelButtonsCheck = document.querySelectorAll('button.torn-btn.btn-dark-bg, a.torn-btn.btn-dark-bg').length > 0;
+                
+                // Log the detection results (only once)
+                if (!this._hasLoggedPageDetection) {
+                    console.log('🔍 [DEBUG] Travel page detection:', {
+                        urlCheck,
+                        titleCheck,
+                        contentCheck,
+                        travelButtonsCheck,
+                        url: window.location.href,
+                        title: document.title
+                    });
+                    this._hasLoggedPageDetection = true;
+                }
+                
+                // Return true if any of the checks pass
+                return urlCheck || (titleCheck && contentCheck) || (contentCheck && travelButtonsCheck);
             },
 
             activate() {
@@ -91,7 +114,18 @@
                 const container = document.getElementById('oc-toggle-container');
                 if (container) container.remove();
 
+                // Reset logging flags for next page
+                this.resetLoggingFlags();
+
                 console.log('⏹️ Travel Blocker deactivated');
+            },
+
+            resetLoggingFlags() {
+                this._hasLoggedTravelRoot = false;
+                this._hasLoggedDataModel = false;
+                this._hasLoggedNoDataModel = false;
+                this._hasLoggedParsed = false;
+                this._hasLoggedPageDetection = false;
             },
 
             toggle() {
@@ -233,21 +267,40 @@
 
             getDataModel() {
                 const travelRoot = document.getElementById('travel-root');
-                console.log('🔍 [DEBUG] getDataModel - Travel root found:', !!travelRoot);
+                
+                // Only log once per page load to reduce spam
+                if (!this._hasLoggedTravelRoot) {
+                    console.log('🔍 [DEBUG] getDataModel - Travel root found:', !!travelRoot);
+                    this._hasLoggedTravelRoot = true;
+                }
                 
                 if (!travelRoot) return null;
 
                 try {
                     const dataModelAttr = travelRoot.getAttribute('data-model');
-                    console.log('🔍 [DEBUG] getDataModel - data-model attribute:', dataModelAttr);
+                    
+                    // Only log once per page load
+                    if (!this._hasLoggedDataModel) {
+                        console.log('🔍 [DEBUG] getDataModel - data-model attribute:', dataModelAttr);
+                        this._hasLoggedDataModel = true;
+                    }
                     
                     if (!dataModelAttr) {
-                        console.log('🔍 [DEBUG] getDataModel - No data-model attribute found');
+                        if (!this._hasLoggedNoDataModel) {
+                            console.log('🔍 [DEBUG] getDataModel - No data-model attribute found');
+                            this._hasLoggedNoDataModel = true;
+                        }
                         return null;
                     }
                     
                     const parsed = JSON.parse(dataModelAttr);
-                    console.log('🔍 [DEBUG] getDataModel - Parsed successfully:', parsed);
+                    
+                    // Only log once per page load
+                    if (!this._hasLoggedParsed) {
+                        console.log('🔍 [DEBUG] getDataModel - Parsed successfully:', parsed);
+                        this._hasLoggedParsed = true;
+                    }
+                    
                     return parsed;
                 } catch (e) {
                     console.error("❌ Failed to parse data-model:", e);
