@@ -190,7 +190,18 @@
                 if (!wrapper || wrapper.querySelector('#oc-toggle-container')) return;
 
                 // Get OC status and time remaining
-                const ocStatus = this.getOCStatus();
+                this.getOCStatus().then(ocStatus => {
+                    this.renderOCStatus(ocStatus);
+                }).catch(error => {
+                    console.error('❌ Error getting OC status:', error);
+                    this.renderOCStatus({
+                        message: 'Travel Blocker Active - Error occurred',
+                        timeRemaining: null
+                    });
+                });
+            },
+
+            renderOCStatus(ocStatus) {
                 
                 const container = document.createElement('div');
                 container.id = 'oc-toggle-container';
@@ -435,7 +446,7 @@
             },
 
             // Get OC status and time remaining
-            getOCStatus() {
+            async getOCStatus() {
                 try {
                     console.log('🔍 [DEBUG] Getting OC status...');
                     
@@ -460,7 +471,7 @@
                         if (!travelRoot) {
                             console.log('🔍 [DEBUG] Travel root not found');
                             return {
-                                message: 'Travel Blocker Active - Waiting for page data...',
+                                message: 'Travel page loading...',
                                 timeRemaining: null
                             };
                         }
@@ -472,13 +483,13 @@
                         if (travelButtons.length === 0) {
                             console.log('🔍 [DEBUG] No travel buttons found yet');
                             return {
-                                message: 'Travel Blocker Active - Page loading...',
+                                message: 'Waiting for travel data...',
                                 timeRemaining: null
                             };
                         }
                         
                         return {
-                            message: 'Travel Blocker Active - Monitoring for OC conflicts',
+                            message: 'Travel data available. Checking for OC conflicts...',
                             timeRemaining: null
                         };
                     }
@@ -707,57 +718,68 @@
                 }
             },
 
-            // Get OC status from page data as fallback
+            // Get OC status from page data model (fallback method)
             getOCStatusFromPage() {
-                const dataModel = this.getDataModel();
-                if (!dataModel || !dataModel.destinations) {
-                    return {
-                        message: 'Travel data loading...',
-                        timeRemaining: null
-                    };
-                }
-
-                // Find the earliest OC start time
-                let earliestOC = null;
-                let hasOCConflicts = false;
-
-                dataModel.destinations.forEach(dest => {
-                    ['standard', 'airstrip', 'private', 'business'].forEach(method => {
-                        if (dest[method]?.ocReadyBeforeBack === true) {
-                            hasOCConflicts = true;
-                            const ocStart = dest[method]?.ocStart;
-                            if (ocStart && (!earliestOC || ocStart < earliestOC)) {
-                                earliestOC = ocStart;
-                            }
-                        }
-                    });
-                });
-
-                if (hasOCConflicts && earliestOC) {
-                    const now = Math.floor(Date.now() / 1000);
-                    const timeRemaining = Math.ceil((earliestOC - now) / 3600);
+                try {
+                    console.log('🔍 [DEBUG] Trying page data model method...');
                     
-                    if (timeRemaining > 0) {
+                    const dataModel = this.getDataModel();
+                    if (!dataModel || !dataModel.destinations) {
+                        console.log('🔍 [DEBUG] No page data model found');
+                        return null;
+                    }
+
+                    console.log('🔍 [DEBUG] Found destinations in page data:', dataModel.destinations.length);
+                    
+                    // Find the earliest OC start time
+                    let earliestOC = null;
+                    let hasOCConflicts = false;
+
+                    dataModel.destinations.forEach((dest, index) => {
+                        ['standard', 'airstrip', 'private', 'business'].forEach(method => {
+                            if (dest[method]?.ocReadyBeforeBack === true) {
+                                hasOCConflicts = true;
+                                const ocStart = dest[method]?.ocStart;
+                                if (ocStart && (!earliestOC || ocStart < earliestOC)) {
+                                    earliestOC = ocStart;
+                                }
+                            }
+                        });
+                    });
+
+                    if (hasOCConflicts && earliestOC) {
+                        const now = Math.floor(Date.now() / 1000);
+                        const timeRemaining = Math.ceil((earliestOC - now) / 3600);
+                        
+                        if (timeRemaining > 0) {
+                            return {
+                                message: `Travel blocked: OC starts in ${timeRemaining}h`,
+                                timeRemaining: timeRemaining,
+                                status: 'blocked'
+                            };
+                        } else {
+                            return {
+                                message: 'OC ready! Travel is safe.',
+                                timeRemaining: 0,
+                                status: 'ready'
+                            };
+                        }
+                    } else if (hasOCConflicts) {
                         return {
-                            message: `Travel blocked: OC starts in ${timeRemaining}h`,
-                            timeRemaining: timeRemaining
+                            message: 'OC conflicts detected. Travel blocked.',
+                            timeRemaining: null,
+                            status: 'blocked'
                         };
                     } else {
                         return {
-                            message: 'OC ready! Travel is safe.',
-                            timeRemaining: 0
+                            message: 'No OC conflicts. Travel is safe.',
+                            timeRemaining: null,
+                            status: 'safe'
                         };
                     }
-                } else if (hasOCConflicts) {
-                    return {
-                        message: 'OC conflicts detected. Travel blocked.',
-                        timeRemaining: null
-                    };
-                } else {
-                    return {
-                        message: 'No OC conflicts. Travel is safe.',
-                        timeRemaining: null
-                    };
+                } catch (error) {
+                    console.error('❌ Error in getOCStatusFromPage:', error);
+                    return null;
                 }
             },
 
@@ -766,7 +788,14 @@
                 const container = document.getElementById('oc-toggle-container');
                 if (!container) return;
 
-                const ocStatus = this.getOCStatus();
+                this.getOCStatus().then(ocStatus => {
+                    this.updateInfoBoxContent(container, ocStatus);
+                }).catch(error => {
+                    console.error('❌ Error updating info box:', error);
+                });
+            },
+
+            updateInfoBoxContent(container, ocStatus) {
                 
                 // Update the message
                 const messageDiv = container.querySelector('div[style*="color: #bbb"]');
