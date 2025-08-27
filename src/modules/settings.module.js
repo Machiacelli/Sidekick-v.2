@@ -215,6 +215,12 @@
                             if (shouldBeChecked) {
                                 randomTargetToggle.style.accentColor = '#4CAF50';
                                 randomTargetToggle.style.filter = 'brightness(1.2)';
+                                // Update the custom slider appearance
+                                const slider = randomTargetToggle.nextElementSibling;
+                                if (slider && slider.classList.contains('random-target-slider')) {
+                                    slider.style.backgroundColor = '#4CAF50';
+                                    slider.style.boxShadow = '0 0 10px rgba(76, 175, 80, 0.5)';
+                                }
                             }
                         } else {
                             console.warn('⚠️ RandomTarget module not available for toggle initialization');
@@ -248,9 +254,21 @@
                                 if (shouldBeChecked) {
                                     randomTargetToggle.style.accentColor = '#4CAF50';
                                     randomTargetToggle.style.filter = 'brightness(1.2)';
+                                    // Update the custom slider appearance
+                                    const slider = randomTargetToggle.nextElementSibling;
+                                    if (slider && slider.classList.contains('random-target-slider')) {
+                                        slider.style.backgroundColor = '#4CAF50';
+                                        slider.style.boxShadow = '0 0 10px rgba(76, 175, 80, 0.5)';
+                                    }
                                 } else {
                                     randomTargetToggle.style.accentColor = '';
                                     randomTargetToggle.style.filter = '';
+                                    // Reset the custom slider appearance
+                                    const slider = randomTargetToggle.nextElementSibling;
+                                    if (slider && slider.classList.contains('random-target-slider')) {
+                                        slider.style.backgroundColor = '#ccc';
+                                        slider.style.boxShadow = 'none';
+                                    }
                                 }
                             }
                         }, 500); // Check every 500ms for better responsiveness

@@ -553,6 +553,7 @@
                 let isUserResizing = false;
                 let initialSize = { width: 0, height: 0 };
                 let resizeTimeout = null;
+                let lastSavedSize = { width: notepad.width || 280, height: notepad.height || 150 };
                 
                 notepadElement.addEventListener('mousedown', (e) => {
                     // Check if the mouse is near the bottom-right corner (resize handle)
@@ -577,14 +578,20 @@
                             clearTimeout(resizeTimeout);
                         }
                         
-                        // Only save if size actually changed significantly
+                        // Only save if size actually changed significantly from last saved size
                         const currentWidth = notepadElement.offsetWidth;
                         const currentHeight = notepadElement.offsetHeight;
                         
-                        if (Math.abs(currentWidth - initialSize.width) > 5 || 
-                            Math.abs(currentHeight - initialSize.height) > 5) {
-                            
-                            console.log('📝 Size changed significantly, saving layout...');
+                        const widthDiff = Math.abs(currentWidth - lastSavedSize.width);
+                        const heightDiff = Math.abs(currentHeight - lastSavedSize.height);
+                        
+                        if (widthDiff > 10 || heightDiff > 10) {
+                            console.log('📝 Size changed significantly from last saved, saving layout...', {
+                                widthDiff: widthDiff,
+                                heightDiff: heightDiff,
+                                current: { width: currentWidth, height: currentHeight },
+                                lastSaved: lastSavedSize
+                            });
                             
                             // Clamp size before saving
                             const sidebar = document.getElementById('sidekick-sidebar');
@@ -594,15 +601,24 @@
                             const maxWidth = Math.max(minWidth, sidebarWidth - 16);
                             const maxHeight = Math.max(minHeight, sidebarHeight - 80);
                             
-                            notepadElement.style.width = Math.max(minWidth, Math.min(currentWidth, maxWidth)) + 'px';
-                            notepadElement.style.height = Math.max(minHeight, Math.min(currentHeight, maxHeight)) + 'px';
+                            const clampedWidth = Math.max(minWidth, Math.min(currentWidth, maxWidth));
+                            const clampedHeight = Math.max(minHeight, Math.min(currentHeight, maxHeight));
+                            
+                            notepadElement.style.width = clampedWidth + 'px';
+                            notepadElement.style.height = clampedHeight + 'px';
+                            
+                            // Update last saved size
+                            lastSavedSize = { width: clampedWidth, height: clampedHeight };
                             
                             // Use a small delay to ensure the resize is complete
                             resizeTimeout = setTimeout(() => {
                                 saveLayout.call(this);
-                            }, 100);
+                            }, 150);
                         } else {
-                            console.log('📝 Size change too small, not saving');
+                            console.log('📝 Size change too small, not saving', {
+                                widthDiff: widthDiff,
+                                heightDiff: heightDiff
+                            });
                         }
                     }
                 });

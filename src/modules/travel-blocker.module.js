@@ -217,27 +217,79 @@
                 const wrapper = document.querySelector('div.content-wrapper.summer');
                 if (!wrapper || wrapper.querySelector('#oc-toggle-container')) return;
 
+                // Get OC status and time remaining
+                const ocStatus = this.getOCStatus();
+                
                 const container = document.createElement('div');
                 container.id = 'oc-toggle-container';
                 container.innerHTML = `
-                    <span>Travel Blocker:</span>
-                    <label class="switch">
-                        <input type="checkbox" id="oc-toggle" ${this.isEnabled ? 'checked' : ''}>
-                        <span class="slider"></span>
-                    </label>
-                    <span id="oc-status">${this.isEnabled ? 'Enabled' : 'Disabled'}</span>
+                    <div style="
+                        background: linear-gradient(135deg, #2a2a2a, #1f1f1f);
+                        border: 1px solid #444;
+                        border-radius: 8px;
+                        padding: 16px;
+                        margin: 16px 0;
+                        color: #fff;
+                        font-family: 'Segoe UI', sans-serif;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    ">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                            <h4 style="margin: 0; color: #4CAF50; font-size: 16px; font-weight: bold;">
+                                🚫 Travel Blocker Status
+                            </h4>
+                            <label class="switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
+                                <input type="checkbox" id="oc-toggle" ${this.isEnabled ? 'checked' : ''}>
+                                <span class="slider" style="
+                                    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; 
+                                    background-color: ${this.isEnabled ? '#4CAF50' : '#ccc'}; 
+                                    transition: 0.3s; border-radius: 24px;
+                                    ${this.isEnabled ? 'box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);' : ''}
+                                "></span>
+                            </label>
+                        </div>
+                        <div style="color: #bbb; font-size: 14px; line-height: 1.4;">
+                            ${ocStatus.message}
+                        </div>
+                        ${ocStatus.timeRemaining ? `
+                            <div style="
+                                margin-top: 12px; 
+                                padding: 8px 12px; 
+                                background: ${ocStatus.timeRemaining > 0 ? '#4CAF50' : '#f44336'}; 
+                                color: white; 
+                                border-radius: 6px; 
+                                font-weight: bold; 
+                                text-align: center;
+                            ">
+                                ${ocStatus.timeRemaining > 0 ? '⏰' : '⚠️'} ${ocStatus.timeRemaining > 0 ? 
+                                    `OC starts in ${ocStatus.timeRemaining} hours` : 
+                                    'OC is ready! Travel safely!'
+                                }
+                            </div>
+                        ` : ''}
+                    </div>
                 `;
 
                 const input = container.querySelector('#oc-toggle');
-                const status = container.querySelector('#oc-status');
+                const slider = container.querySelector('.slider');
 
                 input.addEventListener('change', () => {
                     this.isEnabled = input.checked;
                     this.saveSettings();
-                    status.textContent = this.isEnabled ? 'Enabled' : 'Disabled';
+                    
+                    // Update slider appearance
+                    if (this.isEnabled) {
+                        slider.style.backgroundColor = '#4CAF50';
+                        slider.style.boxShadow = '0 0 10px rgba(76, 175, 80, 0.5)';
+                    } else {
+                        slider.style.backgroundColor = '#ccc';
+                        slider.style.boxShadow = 'none';
+                    }
                     
                     const message = this.isEnabled ? 'Travel Blocker enabled' : 'Travel Blocker disabled';
                     this.core.NotificationSystem.show('Updated', message, 'info');
+                    
+                    // Refresh the infobox
+                    this.updateInfoBox();
                 });
 
                 wrapper.prepend(container);
@@ -378,6 +430,89 @@
                 });
                 
                 observer.observe(document.body, { childList: true, subtree: true });
+            },
+
+            // Get OC status and time remaining
+            getOCStatus() {
+                try {
+                    const dataModel = this.getDataModel();
+                    if (!dataModel || !dataModel.destinations) {
+                        return {
+                            message: 'Unable to determine OC status. Please refresh the page.',
+                            timeRemaining: null
+                        };
+                    }
+
+                    // Find the earliest OC start time
+                    let earliestOC = null;
+                    let message = '';
+
+                    dataModel.destinations.forEach(dest => {
+                        ['standard', 'airstrip', 'private', 'business'].forEach(method => {
+                            if (dest[method]?.ocReadyBeforeBack === true) {
+                                const ocStart = dest[method]?.ocStart;
+                                if (ocStart && (!earliestOC || ocStart < earliestOC)) {
+                                    earliestOC = ocStart;
+                                }
+                            }
+                        });
+                    });
+
+                    if (earliestOC) {
+                        const now = Math.floor(Date.now() / 1000);
+                        const timeRemaining = Math.ceil((earliestOC - now) / 3600); // Convert to hours
+                        
+                        if (timeRemaining > 0) {
+                            message = `Travel is currently blocked to prevent OC conflicts. The earliest OC starts in ${timeRemaining} hours.`;
+                        } else {
+                            message = 'OC is ready! Travel is now safe.';
+                        }
+
+                        return {
+                            message: message,
+                            timeRemaining: timeRemaining
+                        };
+                    } else {
+                        return {
+                            message: 'No OC conflicts detected. Travel is safe.',
+                            timeRemaining: null
+                        };
+                    }
+                } catch (error) {
+                    console.error('❌ Error getting OC status:', error);
+                    return {
+                        message: 'Error determining OC status.',
+                        timeRemaining: null
+                    };
+                }
+            },
+
+            // Update the infobox with current OC status
+            updateInfoBox() {
+                const container = document.getElementById('oc-toggle-container');
+                if (!container) return;
+
+                const ocStatus = this.getOCStatus();
+                
+                // Update the message
+                const messageDiv = container.querySelector('div[style*="color: #bbb"]');
+                if (messageDiv) {
+                    messageDiv.textContent = ocStatus.message;
+                }
+
+                // Update the time remaining display
+                const timeDiv = container.querySelector('div[style*="background:"]');
+                if (timeDiv) {
+                    if (ocStatus.timeRemaining !== null) {
+                        timeDiv.style.background = ocStatus.timeRemaining > 0 ? '#4CAF50' : '#f44336';
+                        timeDiv.innerHTML = `${ocStatus.timeRemaining > 0 ? '⏰' : '⚠️'} ${ocStatus.timeRemaining > 0 ? 
+                            `OC starts in ${ocStatus.timeRemaining} hours` : 
+                            'OC is ready! Travel safely!'
+                        }`;
+                    } else {
+                        timeDiv.style.display = 'none';
+                    }
+                }
             },
 
             // Public methods for external access
