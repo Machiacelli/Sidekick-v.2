@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Travel Blocker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
-// @description  Travel blocker functionality to prevent OC conflicts
+// @version      1.1.0
+// @description  Travel blocker functionality to prevent OC conflicts with live OC countdown timer
 // @author       GitHub Copilot
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -30,7 +30,7 @@
             DEBUG: false, // Toggle to true for detailed logs
 
             init() {
-                console.log('✈️ Initializing Travel Blocker Module v1.0.0...');
+                console.log('✈️ Initializing Travel Blocker Module v1.1.0...');
                 this.core = window.SidekickModules.Core;
                 if (!this.core) {
                     console.error('❌ Core module not available for Travel Blocker');
@@ -80,6 +80,12 @@
             deactivate() {
                 if (!this.isActive) return;
                 this.isActive = false;
+                
+                // Clear the countdown timer
+                if (this.ocTimerInterval) {
+                    clearInterval(this.ocTimerInterval);
+                    this.ocTimerInterval = null;
+                }
                 
                 // Remove injected elements
                 const container = document.getElementById('oc-toggle-container');
@@ -202,22 +208,50 @@
                                 }
                             </div>
                         ` : ''}
+                        <div id="oc-countdown-timer" style="
+                            margin-top: 8px;
+                            padding: 8px 10px;
+                            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+                            border: 1px solid #555;
+                            border-radius: 4px;
+                            text-align: center;
+                            font-family: 'Courier New', monospace;
+                        ">
+                            <div style="font-size: 10px; color: #888; margin-bottom: 4px;">⏰ Next OC Countdown</div>
+                            <div id="oc-timer-display" style="font-size: 16px; color: #fff; font-weight: bold;">--:--:--</div>
+                        </div>
                     </div>
                 `;
 
 
 
                 wrapper.prepend(container);
+                
+                // Start the countdown timer
+                this.startOCCountdown();
             },
 
             getDataModel() {
                 const travelRoot = document.getElementById('travel-root');
+                console.log('🔍 [DEBUG] getDataModel - Travel root found:', !!travelRoot);
+                
                 if (!travelRoot) return null;
 
                 try {
-                    return JSON.parse(travelRoot.getAttribute('data-model'));
+                    const dataModelAttr = travelRoot.getAttribute('data-model');
+                    console.log('🔍 [DEBUG] getDataModel - data-model attribute:', dataModelAttr);
+                    
+                    if (!dataModelAttr) {
+                        console.log('🔍 [DEBUG] getDataModel - No data-model attribute found');
+                        return null;
+                    }
+                    
+                    const parsed = JSON.parse(dataModelAttr);
+                    console.log('🔍 [DEBUG] getDataModel - Parsed successfully:', parsed);
+                    return parsed;
                 } catch (e) {
                     console.error("❌ Failed to parse data-model:", e);
+                    console.log('🔍 [DEBUG] getDataModel - Raw attribute value:', travelRoot.getAttribute('data-model'));
                     return null;
                 }
             },
@@ -350,17 +384,28 @@
             // Get OC status and time remaining
             getOCStatus() {
                 try {
+                    console.log('🔍 [DEBUG] Getting OC status...');
+                    
                     // First try to get OC data from Torn API if available
                     if (window.SidekickModules?.Api?.makeRequest) {
+                        console.log('🔍 [DEBUG] API available, trying API method...');
                         return this.getOCStatusFromAPI();
                     }
                     
                     // Fallback to page data model
+                    console.log('🔍 [DEBUG] API not available, trying page data model...');
                     const dataModel = this.getDataModel();
+                    console.log('🔍 [DEBUG] Data model:', dataModel);
+                    
                     if (!dataModel || !dataModel.destinations) {
+                        console.log('🔍 [DEBUG] No data model or destinations found');
+                        
                         // Try to find travel data in other ways
                         const travelRoot = document.getElementById('travel-root');
+                        console.log('🔍 [DEBUG] Travel root element:', travelRoot);
+                        
                         if (!travelRoot) {
+                            console.log('🔍 [DEBUG] Travel root not found');
                             return {
                                 message: 'Travel page loading...',
                                 timeRemaining: null
@@ -369,7 +414,10 @@
                         
                         // Check if we have any travel buttons to determine if page is ready
                         const travelButtons = document.querySelectorAll('button.torn-btn.btn-dark-bg, a.torn-btn.btn-dark-bg');
+                        console.log('🔍 [DEBUG] Travel buttons found:', travelButtons.length);
+                        
                         if (travelButtons.length === 0) {
+                            console.log('🔍 [DEBUG] No travel buttons found yet');
                             return {
                                 message: 'Waiting for travel data...',
                                 timeRemaining: null
@@ -382,22 +430,31 @@
                         };
                     }
 
+                    console.log('🔍 [DEBUG] Found destinations:', dataModel.destinations.length);
+                    
                     // Find the earliest OC start time
                     let earliestOC = null;
                     let message = '';
                     let hasOCConflicts = false;
 
-                    dataModel.destinations.forEach(dest => {
+                    dataModel.destinations.forEach((dest, index) => {
+                        console.log(`🔍 [DEBUG] Destination ${index}:`, dest);
                         ['standard', 'airstrip', 'private', 'business'].forEach(method => {
-                            if (dest[method]?.ocReadyBeforeBack === true) {
-                                hasOCConflicts = true;
-                                const ocStart = dest[method]?.ocStart;
-                                if (ocStart && (!earliestOC || ocStart < earliestOC)) {
-                                    earliestOC = ocStart;
+                            if (dest[method]) {
+                                console.log(`🔍 [DEBUG] Method ${method}:`, dest[method]);
+                                if (dest[method]?.ocReadyBeforeBack === true) {
+                                    hasOCConflicts = true;
+                                    const ocStart = dest[method]?.ocStart;
+                                    console.log(`🔍 [DEBUG] OC conflict found for ${method}, start:`, ocStart);
+                                    if (ocStart && (!earliestOC || ocStart < earliestOC)) {
+                                        earliestOC = ocStart;
+                                    }
                                 }
                             }
                         });
                     });
+
+                    console.log('🔍 [DEBUG] Has OC conflicts:', hasOCConflicts, 'Earliest OC:', earliestOC);
 
                     if (hasOCConflicts && earliestOC) {
                         const now = Math.floor(Date.now() / 1000);
@@ -567,6 +624,74 @@
                         timeDiv.style.display = 'none';
                     }
                 }
+            },
+
+            // Start the OC countdown timer
+            startOCCountdown() {
+                // Update timer every second
+                this.ocTimerInterval = setInterval(() => {
+                    this.updateOCCountdown();
+                }, 1000);
+                
+                // Initial update
+                this.updateOCCountdown();
+            },
+
+            // Update the OC countdown display
+            updateOCCountdown() {
+                const timerDisplay = document.getElementById('oc-timer-display');
+                if (!timerDisplay) return;
+
+                const ocStart = this.getEarliestOCStart();
+                if (!ocStart) {
+                    timerDisplay.textContent = '--:--:--';
+                    timerDisplay.style.color = '#888';
+                    return;
+                }
+
+                const now = Math.floor(Date.now() / 1000);
+                const timeRemaining = ocStart - now;
+
+                if (timeRemaining <= 0) {
+                    timerDisplay.textContent = '00:00:00';
+                    timerDisplay.style.color = '#4CAF50';
+                    return;
+                }
+
+                const hours = Math.floor(timeRemaining / 3600);
+                const minutes = Math.floor((timeRemaining % 3600) / 60);
+                const seconds = timeRemaining % 60;
+
+                timerDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Color coding based on time remaining
+                if (timeRemaining <= 3600) { // 1 hour or less
+                    timerDisplay.style.color = '#f44336'; // Red
+                } else if (timeRemaining <= 7200) { // 2 hours or less
+                    timerDisplay.style.color = '#ff9800'; // Orange
+                } else {
+                    timerDisplay.style.color = '#fff'; // White
+                }
+            },
+
+            // Get the earliest OC start time from all destinations
+            getEarliestOCStart() {
+                const dataModel = this.getDataModel();
+                if (!dataModel || !dataModel.destinations) return null;
+
+                let earliestOC = null;
+
+                dataModel.destinations.forEach(dest => {
+                    ['standard', 'airstrip', 'private', 'business'].forEach(method => {
+                        if (dest[method]?.ocStart) {
+                            if (!earliestOC || dest[method].ocStart < earliestOC) {
+                                earliestOC = dest[method].ocStart;
+                            }
+                        }
+                    });
+                });
+
+                return earliestOC;
             },
 
             // Public methods for external access
