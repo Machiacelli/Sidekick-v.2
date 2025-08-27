@@ -460,7 +460,7 @@
                         if (!travelRoot) {
                             console.log('🔍 [DEBUG] Travel root not found');
                             return {
-                                message: 'Travel page loading...',
+                                message: 'Travel Blocker Active - Waiting for page data...',
                                 timeRemaining: null
                             };
                         }
@@ -472,13 +472,13 @@
                         if (travelButtons.length === 0) {
                             console.log('🔍 [DEBUG] No travel buttons found yet');
                             return {
-                                message: 'Waiting for travel data...',
+                                message: 'Travel Blocker Active - Page loading...',
                                 timeRemaining: null
                             };
                         }
                         
                         return {
-                            message: 'Travel data available. Checking for OC conflicts...',
+                            message: 'Travel Blocker Active - Monitoring for OC conflicts',
                             timeRemaining: null
                         };
                     }
