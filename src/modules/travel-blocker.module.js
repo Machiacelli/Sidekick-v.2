@@ -82,8 +82,8 @@
                 this.isActive = false;
                 
                 // Remove injected elements
-                const toggle = document.getElementById('oc-toggle-container');
-                if (toggle) toggle.remove();
+                const container = document.getElementById('oc-toggle-container');
+                if (container) container.remove();
 
                 console.log('⏹️ Travel Blocker deactivated');
             },
@@ -95,72 +95,15 @@
                 const message = this.isEnabled ? 'Travel Blocker enabled' : 'Travel Blocker disabled';
                 this.core.NotificationSystem.show('Updated', message, 'info');
 
-                // Update toggle UI if it exists
-                this.updateToggleUI();
-
                 return this.isEnabled;
             },
 
-            updateToggleUI() {
-                const toggleInput = document.getElementById('oc-toggle');
-                const statusSpan = document.getElementById('oc-status');
-                
-                if (toggleInput) {
-                    toggleInput.checked = this.isEnabled;
-                }
-                if (statusSpan) {
-                    statusSpan.textContent = this.isEnabled ? 'Enabled' : 'Disabled';
-                }
-            },
+
 
             injectStyles() {
                 const style = document.createElement('style');
                 style.textContent = `
                     /* Travel Blocker Styles */
-                    .switch {
-                        position: relative;
-                        display: inline-block;
-                        width: 50px;
-                        height: 24px;
-                    }
-
-                    .switch input {
-                        opacity: 0;
-                        width: 0;
-                        height: 0;
-                    }
-
-                    .slider {
-                        position: absolute;
-                        cursor: pointer;
-                        top: 0;
-                        left: 0;
-                        right: 0;
-                        bottom: 0;
-                        background-color: #ccc;
-                        transition: 0.3s;
-                        border-radius: 24px;
-                    }
-
-                    .slider:before {
-                        position: absolute;
-                        content: "";
-                        height: 16px;
-                        width: 16px;
-                        left: 4px;
-                        bottom: 4px;
-                        background-color: white;
-                        transition: 0.3s;
-                        border-radius: 50%;
-                    }
-
-                    input:checked + .slider {
-                        background-color: #4CAF50;
-                    }
-
-                    input:checked + .slider:before {
-                        transform: translateX(26px);
-                    }
 
                     /* Disable clouds on travel page */
                     .clouds___1qX8K,
@@ -222,20 +165,22 @@
                         font-family: 'Segoe UI', sans-serif;
                         box-shadow: 0 2px 8px rgba(0,0,0,0.2);
                         max-width: 300px;
+                        position: relative;
                     ">
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                             <h4 style="margin: 0; color: #4CAF50; font-size: 14px; font-weight: bold;">
                                 🚫 Travel Blocker
                             </h4>
-                            <label class="switch" style="position: relative; display: inline-block; width: 40px; height: 20px;">
-                                <input type="checkbox" id="oc-toggle" ${this.isEnabled ? 'checked' : ''}>
-                                <span class="slider" style="
-                                    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; 
-                                    background-color: ${this.isEnabled ? '#4CAF50' : '#ccc'}; 
-                                    transition: 0.3s; border-radius: 20px;
-                                    ${this.isEnabled ? 'box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);' : ''}
-                                "></span>
-                            </label>
+                            <div style="
+                                width: 12px;
+                                height: 12px;
+                                border-radius: 50%;
+                                background-color: ${this.isEnabled ? '#4CAF50' : '#f44336'};
+                                box-shadow: 0 0 8px ${this.isEnabled ? 'rgba(76, 175, 80, 0.6)' : 'rgba(244, 67, 54, 0.6)'};
+                                position: absolute;
+                                top: 8px;
+                                right: 8px;
+                            " title="${this.isEnabled ? 'Travel Blocker Active' : 'Travel Blocker Inactive'}"></div>
                         </div>
                         <div style="color: #bbb; font-size: 12px; line-height: 1.3;">
                             ${ocStatus.message}
@@ -260,28 +205,7 @@
                     </div>
                 `;
 
-                const input = container.querySelector('#oc-toggle');
-                const slider = container.querySelector('.slider');
 
-                input.addEventListener('change', () => {
-                    this.isEnabled = input.checked;
-                    this.saveSettings();
-                    
-                    // Update slider appearance
-                    if (this.isEnabled) {
-                        slider.style.backgroundColor = '#4CAF50';
-                        slider.style.boxShadow = '0 0 10px rgba(76, 175, 80, 0.5)';
-                    } else {
-                        slider.style.backgroundColor = '#ccc';
-                        slider.style.boxShadow = 'none';
-                    }
-                    
-                    const message = this.isEnabled ? 'Travel Blocker enabled' : 'Travel Blocker disabled';
-                    this.core.NotificationSystem.show('Updated', message, 'info');
-                    
-                    // Refresh the infobox
-                    this.updateInfoBox();
-                });
 
                 wrapper.prepend(container);
             },
@@ -426,6 +350,12 @@
             // Get OC status and time remaining
             getOCStatus() {
                 try {
+                    // First try to get OC data from Torn API if available
+                    if (window.SidekickModules?.Api?.makeRequest) {
+                        return this.getOCStatusFromAPI();
+                    }
+                    
+                    // Fallback to page data model
                     const dataModel = this.getDataModel();
                     if (!dataModel || !dataModel.destinations) {
                         // Try to find travel data in other ways
@@ -498,6 +428,114 @@
                     console.error('❌ Error getting OC status:', error);
                     return {
                         message: 'Error checking OC status.',
+                        timeRemaining: null
+                    };
+                }
+            },
+
+            // Get OC status from Torn API
+            async getOCStatusFromAPI() {
+                try {
+                    // Get user's cooldowns to check for OC
+                    const response = await fetch('https://api.torn.com/user/?selections=cooldowns');
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    if (data.error) {
+                        throw new Error(data.error.error || 'API error');
+                    }
+                    
+                    const cooldowns = data.cooldowns;
+                    if (!cooldowns) {
+                        return {
+                            message: 'No cooldown data available',
+                            timeRemaining: null
+                        };
+                    }
+                    
+                    // Check for OC cooldown
+                    const ocCooldown = cooldowns.oc;
+                    if (!ocCooldown) {
+                        return {
+                            message: 'No OC cooldown detected',
+                            timeRemaining: null
+                        };
+                    }
+                    
+                    const now = Math.floor(Date.now() / 1000);
+                    const ocStart = ocCooldown.timestamp;
+                    const timeRemaining = Math.ceil((ocStart - now) / 3600); // Convert to hours
+                    
+                    if (timeRemaining > 0) {
+                        return {
+                            message: `Travel blocked: OC starts in ${timeRemaining}h`,
+                            timeRemaining: timeRemaining
+                        };
+                    } else {
+                        return {
+                            message: 'OC ready! Travel is safe.',
+                            timeRemaining: 0
+                        };
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Error getting OC status from API:', error);
+                    // Fallback to page data
+                    return this.getOCStatusFromPage();
+                }
+            },
+
+            // Get OC status from page data as fallback
+            getOCStatusFromPage() {
+                const dataModel = this.getDataModel();
+                if (!dataModel || !dataModel.destinations) {
+                    return {
+                        message: 'Travel data loading...',
+                        timeRemaining: null
+                    };
+                }
+
+                // Find the earliest OC start time
+                let earliestOC = null;
+                let hasOCConflicts = false;
+
+                dataModel.destinations.forEach(dest => {
+                    ['standard', 'airstrip', 'private', 'business'].forEach(method => {
+                        if (dest[method]?.ocReadyBeforeBack === true) {
+                            hasOCConflicts = true;
+                            const ocStart = dest[method]?.ocStart;
+                            if (ocStart && (!earliestOC || ocStart < earliestOC)) {
+                                earliestOC = ocStart;
+                            }
+                        }
+                    });
+                });
+
+                if (hasOCConflicts && earliestOC) {
+                    const now = Math.floor(Date.now() / 1000);
+                    const timeRemaining = Math.ceil((earliestOC - now) / 3600);
+                    
+                    if (timeRemaining > 0) {
+                        return {
+                            message: `Travel blocked: OC starts in ${timeRemaining}h`,
+                            timeRemaining: timeRemaining
+                        };
+                    } else {
+                        return {
+                            message: 'OC ready! Travel is safe.',
+                            timeRemaining: 0
+                        };
+                    }
+                } else if (hasOCConflicts) {
+                    return {
+                        message: 'OC conflicts detected. Travel blocked.',
+                        timeRemaining: null
+                    };
+                } else {
+                    return {
+                        message: 'No OC conflicts. Travel is safe.',
                         timeRemaining: null
                     };
                 }
