@@ -85,7 +85,7 @@
         }
 
         function createBlockOverlay(targetElement) {
-            // Create blocking overlay
+            // Create blocking overlay with custom picture
             blockingOverlay = document.createElement('div');
             blockingOverlay.id = 'training-blocker-overlay';
             blockingOverlay.style.cssText = `
@@ -102,29 +102,19 @@
                 border-radius: 8px;
             `;
 
-            // Create message container
-            const messageContainer = document.createElement('div');
-            messageContainer.style.cssText = `
-                background: linear-gradient(135deg, #2a2a2a, #1f1f1f);
-                border: 2px solid #f44336;
-                border-radius: 12px;
-                padding: 20px;
-                text-align: center;
-                color: white;
-                font-family: 'Segoe UI', sans-serif;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-                max-width: 300px;
+            // Create custom picture container
+            const pictureContainer = document.createElement('div');
+            pictureContainer.style.cssText = `
+                background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjMmEyYTIiLz4KPHRleHQgeD0iMTUwIiB5PSI0MCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI0IiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5UT1JOIFRyYWluaW5nPC90ZXh0Pgo8dGV4dCB4PSIxNTAiIHk9IjYwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPi0tIEJsb2NrZWQhPC90ZXh0Pgo8dGV4dCB4PSIxNTAiIHk9IjEwMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE2IiBmaWxsPSIjYWFhIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5UcmFpbmluZyBpcyBibG9ja2VkIHRvPC90ZXh0Pgo8dGV4dCB4PSIxNTAiIHk9IjEyMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE2IiBmaWxsPSIjYWFhIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5wcmV2ZW50IGVuZXJneSBsb3NzIHdoaWxlPC90ZXh0Pgo8dGV4dCB4PSIxNTAiIHk9IjE0MCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE2IiBmaWxsPSIjYWFhIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5zdGFja2luZy48L3RleHQ+Cjx0ZXh0IHg9IjE1MCIgeT0iMTgwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiNmNDQzMzYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlVzZSBjb2d3aGVlbCB0byB1bmJsb2NrPC90ZXh0Pgo8L3N2Zz4K') no-repeat center center;
+                background-size: contain;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             `;
 
-            messageContainer.innerHTML = `
-                <div style="font-size: 36px; margin-bottom: 15px;">🚫</div>
-                <h3 style="margin: 0 0 10px 0; color: #f44336; font-size: 18px;">Training Blocked!</h3>
-                <p style="margin: 0; color: #bbb; font-size: 14px; line-height: 1.3;">
-                    Training is blocked to prevent energy loss while stacking.
-                </p>
-            `;
-
-            blockingOverlay.appendChild(messageContainer);
+            blockingOverlay.appendChild(pictureContainer);
             
             // Position the overlay relative to the target element
             const rect = targetElement.getBoundingClientRect();
@@ -176,51 +166,7 @@
         // Load saved state
         isBlocked = loadState(STORAGE_KEY, false);
 
-        // Create and inject the training blocker button
-        function createTrainingBlockerButton() {
-            const existingBtn = document.querySelector('#training-blocker-btn');
-            if (existingBtn) return;
-
-            const btn = document.createElement('button');
-            btn.id = 'training-blocker-btn';
-            btn.textContent = isBlocked ? 'Unblock Training' : 'Block Training';
-            btn.style.cssText = `
-                position: fixed;
-                top: 120px;
-                right: 20px;
-                background: ${isBlocked ? '#f44336' : '#4CAF50'};
-                color: white;
-                border: none;
-                padding: 8px 12px;
-                border-radius: 6px;
-                cursor: pointer;
-                font-size: 12px;
-                font-weight: bold;
-                z-index: 9999;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                transition: all 0.3s ease;
-            `;
-
-            btn.addEventListener('click', () => {
-                toggleBlockTraining();
-                btn.textContent = isBlocked ? 'Unblock Training' : 'Block Training';
-                btn.style.background = isBlocked ? '#f44336' : '#4CAF50';
-            });
-
-            btn.addEventListener('mouseenter', () => {
-                btn.style.transform = 'scale(1.05)';
-                btn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.4)';
-            });
-
-            btn.addEventListener('mouseleave', () => {
-                btn.style.transform = 'scale(1)';
-                btn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
-            });
-
-            document.body.appendChild(btn);
-        }
-
-        // Restore button and block if they were previously created
+        // Restore blocking overlay if it was previously active
         function restoreTrainingBlocker() {
             if (document.readyState === 'loading') {
                 setTimeout(restoreTrainingBlocker, 50);
@@ -231,8 +177,6 @@
                 setTimeout(restoreTrainingBlocker, 100);
                 return;
             }
-
-            createTrainingBlockerButton();
             
             // Restore blocking overlay if it was active
             if (isBlocked) {
