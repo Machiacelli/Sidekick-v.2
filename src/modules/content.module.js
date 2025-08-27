@@ -625,10 +625,29 @@
                     
                     // Resize observer to save size changes
                     if (window.ResizeObserver) {
-                        const resizeObserver = new ResizeObserver(() => {
-                            if (!isPinned) {
-                                saveLayout();
-                            }
+                        let resizeTimeout;
+                        let lastSize = { width: notepadElement.offsetWidth, height: notepadElement.offsetHeight };
+                        
+                        const resizeObserver = new ResizeObserver((entries) => {
+                            if (isPinned) return; // Don't save if pinned
+                            
+                            // Clear previous timeout
+                            if (resizeTimeout) clearTimeout(resizeTimeout);
+                            
+                            // Debounce resize events to prevent excessive saves
+                            resizeTimeout = setTimeout(() => {
+                                const currentSize = { 
+                                    width: notepadElement.offsetWidth, 
+                                    height: notepadElement.offsetHeight 
+                                };
+                                
+                                // Only save if size actually changed significantly (more than 5px)
+                                if (Math.abs(currentSize.width - lastSize.width) > 5 || 
+                                    Math.abs(currentSize.height - lastSize.height) > 5) {
+                                    lastSize = currentSize;
+                                    saveLayout();
+                                }
+                            }, 100); // 100ms debounce
                         });
                         resizeObserver.observe(notepadElement);
                     }

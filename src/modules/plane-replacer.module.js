@@ -70,7 +70,8 @@
                                     // Check if the added node contains plane images
                                     if (node.querySelector && (
                                         node.querySelector('.planeImageKbn3b') ||
-                                        node.querySelector('img[src*="/images/v2/travel_agency/planes/"]')
+                                        node.querySelector('img[src*="/images/v2/travel_agency/planes/"]') ||
+                                        node.querySelector('img[src*="travel_agency/planes"]')
                                     )) {
                                         console.log('🔍 New plane image detected, attempting replacement...');
                                         setTimeout(() => this.replacePlaneImage(), 100);
@@ -86,12 +87,28 @@
                     subtree: true
                 });
 
+                // Also check periodically for any missed images
+                const periodicCheck = setInterval(() => {
+                    if (!this.isActive) {
+                        clearInterval(periodicCheck);
+                        return;
+                    }
+                    
+                    const planeImages = document.querySelectorAll('.planeImageKbn3b, img[src*="/images/v2/travel_agency/planes/"], img[src*="travel_agency/planes"]');
+                    const customPlanes = document.querySelectorAll('img[data-sidekick-replaced="true"]');
+                    
+                    if (planeImages.length > customPlanes.length) {
+                        console.log('🔍 Periodic check: Found unreplaced plane images, attempting replacement...');
+                        this.replacePlaneImage();
+                    }
+                }, 2000);
+
                 console.log('👀 Plane Replacer monitoring started');
             },
 
             replacePlaneImage() {
                 // Find all plane images on the page
-                const planeImages = document.querySelectorAll('.planeImageKbn3b, img[src*="/images/v2/travel_agency/planes/"]');
+                const planeImages = document.querySelectorAll('.planeImageKbn3b, img[src*="/images/v2/travel_agency/planes/"], img[src*="travel_agency/planes"]');
                 
                 if (planeImages.length === 0) {
                     console.log('🔍 No plane images found yet, will retry...');
@@ -101,6 +118,10 @@
                 console.log(`🎯 Found ${planeImages.length} plane image(s) to replace`);
 
                 planeImages.forEach((img, index) => {
+                    // Skip if already replaced
+                    if (img.dataset.sidekickReplaced === 'true') {
+                        return;
+                    }
                     this.replaceSinglePlaneImage(img, index);
                 });
             },
@@ -133,7 +154,7 @@
 
                     // Set the custom image source
                     // You can replace this URL with your custom plane image
-                    customPlane.src = 'https://via.placeholder.com/778x300/4CAF50/FFFFFF?text=Sidekick+Plane';
+                    customPlane.src = 'https://i.imgur.com/dRixRIO.jpeg';
                     
                     // Add a data attribute to mark this as replaced
                     customPlane.dataset.sidekickReplaced = 'true';

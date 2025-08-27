@@ -114,38 +114,14 @@
             },
 
             injectStyles() {
-                if (document.getElementById('travel-blocker-styles')) return;
-
                 const style = document.createElement('style');
-                style.id = 'travel-blocker-styles';
                 style.textContent = `
-                    .script-disabled-button {
-                        background-color: #a00 !important;
-                        color: crimson !important;
-                        font-weight: bold;
-                        text-transform: uppercase;
-                        cursor: not-allowed !important;
-                        pointer-events: none;
-                    }
-
-                    #oc-toggle-container {
-                        margin: 10px 0;
-                        padding: 6px 10px;
-                        background: #222;
-                        color: #fff;
-                        border-radius: 5px;
-                        font-size: 13px;
-                        display: inline-flex;
-                        align-items: center;
-                        gap: 8px;
-                    }
-
+                    /* Travel Blocker Styles */
                     .switch {
                         position: relative;
                         display: inline-block;
-                        width: 38px;
-                        height: 20px;
-                        flex-shrink: 0;
+                        width: 50px;
+                        height: 24px;
                     }
 
                     .switch input {
@@ -163,39 +139,52 @@
                         bottom: 0;
                         background-color: #ccc;
                         transition: 0.3s;
-                        border-radius: 34px;
+                        border-radius: 24px;
                     }
 
                     .slider:before {
                         position: absolute;
                         content: "";
-                        height: 14px;
-                        width: 14px;
-                        left: 3px;
-                        bottom: 3px;
+                        height: 16px;
+                        width: 16px;
+                        left: 4px;
+                        bottom: 4px;
                         background-color: white;
                         transition: 0.3s;
                         border-radius: 50%;
                     }
 
                     input:checked + .slider {
-                        background-color: #4caf50;
+                        background-color: #4CAF50;
                     }
 
                     input:checked + .slider:before {
-                        transform: translateX(18px);
+                        transform: translateX(26px);
                     }
 
-                    @media (max-width: 600px) {
-                        #oc-toggle-container {
-                            font-size: 12px;
-                            padding: 4px 8px;
-                            gap: 6px;
-                        }
+                    /* Disable clouds on travel page */
+                    .clouds___1qX8K,
+                    .clouds___2qX8K,
+                    .clouds___3qX8K,
+                    [class*="clouds"],
+                    .cloud-animation,
+                    .travel-clouds {
+                        display: none !important;
+                        opacity: 0 !important;
+                        visibility: hidden !important;
+                    }
 
+                    /* Hide any cloud-related elements */
+                    [class*="cloud"],
+                    [class*="Cloud"] {
+                        display: none !important;
+                    }
+
+                    /* Responsive adjustments */
+                    @media (max-width: 768px) {
                         .switch {
-                            width: 32px;
-                            height: 16px;
+                            width: 40px;
+                            height: 20px;
                         }
 
                         .slider:before {
@@ -227,42 +216,44 @@
                         background: linear-gradient(135deg, #2a2a2a, #1f1f1f);
                         border: 1px solid #444;
                         border-radius: 8px;
-                        padding: 16px;
-                        margin: 16px 0;
+                        padding: 12px;
+                        margin: 12px 0;
                         color: #fff;
                         font-family: 'Segoe UI', sans-serif;
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                        max-width: 300px;
                     ">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                            <h4 style="margin: 0; color: #4CAF50; font-size: 16px; font-weight: bold;">
-                                🚫 Travel Blocker Status
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                            <h4 style="margin: 0; color: #4CAF50; font-size: 14px; font-weight: bold;">
+                                🚫 Travel Blocker
                             </h4>
-                            <label class="switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
+                            <label class="switch" style="position: relative; display: inline-block; width: 40px; height: 20px;">
                                 <input type="checkbox" id="oc-toggle" ${this.isEnabled ? 'checked' : ''}>
                                 <span class="slider" style="
                                     position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; 
                                     background-color: ${this.isEnabled ? '#4CAF50' : '#ccc'}; 
-                                    transition: 0.3s; border-radius: 24px;
-                                    ${this.isEnabled ? 'box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);' : ''}
+                                    transition: 0.3s; border-radius: 20px;
+                                    ${this.isEnabled ? 'box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);' : ''}
                                 "></span>
                             </label>
                         </div>
-                        <div style="color: #bbb; font-size: 14px; line-height: 1.4;">
+                        <div style="color: #bbb; font-size: 12px; line-height: 1.3;">
                             ${ocStatus.message}
                         </div>
                         ${ocStatus.timeRemaining ? `
                             <div style="
-                                margin-top: 12px; 
-                                padding: 8px 12px; 
+                                margin-top: 8px; 
+                                padding: 6px 10px; 
                                 background: ${ocStatus.timeRemaining > 0 ? '#4CAF50' : '#f44336'}; 
                                 color: white; 
-                                border-radius: 6px; 
+                                border-radius: 4px; 
                                 font-weight: bold; 
                                 text-align: center;
+                                font-size: 11px;
                             ">
                                 ${ocStatus.timeRemaining > 0 ? '⏰' : '⚠️'} ${ocStatus.timeRemaining > 0 ? 
-                                    `OC starts in ${ocStatus.timeRemaining} hours` : 
-                                    'OC is ready! Travel safely!'
+                                    `OC starts in ${ocStatus.timeRemaining}h` : 
+                                    'OC ready! Travel safely!'
                                 }
                             </div>
                         ` : ''}

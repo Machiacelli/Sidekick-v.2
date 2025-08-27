@@ -94,15 +94,15 @@
                     position: fixed;
                     left: ${savedPosition.x}px;
                     top: ${savedPosition.y}px;
-                    background: linear-gradient(135deg, #4CAF50, #45a049);
+                    background: #2a2a2a;
                     color: white;
-                    border: none;
+                    border: 2px solid #4CAF50;
                     padding: 6px;
                     border-radius: 50%;
                     cursor: move;
                     font-weight: bold;
                     font-size: 16px;
-                    box-shadow: 0 4px 8px rgba(0,0,0,0.3), 0 0 15px rgba(76, 175, 80, 0.4);
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
                     z-index: 9999;
                     user-select: none;
                     transition: all 0.2s ease;
@@ -116,12 +116,14 @@
                 // Add hover effects
                 this.targetButton.addEventListener('mouseenter', () => {
                     this.targetButton.style.transform = 'scale(1.05)';
-                    this.targetButton.style.boxShadow = '0 6px 12px rgba(0,0,0,0.4), 0 0 20px rgba(76, 175, 80, 0.6)';
+                    this.targetButton.style.borderColor = '#45a049';
+                    this.targetButton.style.boxShadow = '0 6px 12px rgba(0,0,0,0.4)';
                 });
 
                 this.targetButton.addEventListener('mouseleave', () => {
                     this.targetButton.style.transform = 'scale(1)';
-                    this.targetButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3), 0 0 15px rgba(76, 175, 80, 0.4)';
+                    this.targetButton.style.borderColor = '#4CAF50';
+                    this.targetButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
                 });
 
                 // Add click event

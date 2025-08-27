@@ -1071,12 +1071,19 @@
                         // Update existing timers with new cooldown data
                         this.updateExistingTimers();
                         
-                        // Show notification about changes
-                        window.SidekickModules.Core.NotificationSystem.show(
-                            'Timer',
-                            `Cooldown changes detected: ${changes.join(', ')}`,
-                            'info'
+                        // Only show notification for significant events (start/end), not updates
+                        const significantChanges = changes.filter(change => 
+                            !change.includes('updated') && 
+                            (change.includes('started') || change.includes('ended'))
                         );
+                        
+                        if (significantChanges.length > 0) {
+                            window.SidekickModules.Core.NotificationSystem.show(
+                                'Timer',
+                                `Cooldown changes: ${significantChanges.join(', ')}`,
+                                'info'
+                            );
+                        }
                         
                         // Re-render timers to show updated times
                         if (this.isActive) {
@@ -1141,11 +1148,20 @@
                     // Show appropriate notification based on what was found
                     if (hasChanges && changes.length > 0) {
                         console.log('📊 Manual refresh detected changes:', changes);
-                        window.SidekickModules.Core.NotificationSystem.show(
-                            'Timer',
-                            `Changes detected: ${changes.join(', ')}`,
-                            'success'
+                        
+                        // Only show notification for significant events, not updates
+                        const significantChanges = changes.filter(change => 
+                            !change.includes('updated') && 
+                            (change.includes('started') || change.includes('ended'))
                         );
+                        
+                        if (significantChanges.length > 0) {
+                            window.SidekickModules.Core.NotificationSystem.show(
+                                'Timer',
+                                `Changes detected: ${significantChanges.join(', ')}`,
+                                'success'
+                            );
+                        }
                     } else {
                         // Count current active cooldowns
                         const activeCooldowns = Object.values(this.cooldownData).filter(time => time !== null).length;
