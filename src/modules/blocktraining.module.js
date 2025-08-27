@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Training Blocker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.1.0
+// @version      1.0.0
 // @description  Training blocker functionality to prevent training while stacking energy
 // @author       GitHub Copilot
 // @match        https://www.torn.com/*
@@ -30,14 +30,14 @@
         function blockTraining() {
             isBlocked = true;
             saveState(STORAGE_KEY, true);
-            createBlockingOverlay();
+            createTrainingBlock();
             notify('Training is now blocked!', 'warning');
         }
 
         function unblockTraining() {
             isBlocked = false;
             saveState(STORAGE_KEY, false);
-            removeBlockingOverlay();
+            removeTrainingBlock();
             notify('Training is now unblocked!', 'success');
         }
 
@@ -49,25 +49,57 @@
             }
         }
 
-        function createBlockingOverlay() {
-            // Remove existing overlay if any
-            removeBlockingOverlay();
+        function createTrainingBlock() {
+            // Remove existing block if any
+            removeTrainingBlock();
 
+            // Find the training section
+            const trainingSection = document.querySelector('.training-section, .training, [class*="training"], .gym, [class*="gym"]');
+            
+            if (!trainingSection) {
+                console.log('Training section not found, trying alternative selectors...');
+                // Try alternative selectors for training area
+                const alternatives = [
+                    'div[class*="strength"]',
+                    'div[class*="dexterity"]', 
+                    'div[class*="speed"]',
+                    'div[class*="defense"]',
+                    '.stats-training',
+                    '.training-stats'
+                ];
+                
+                for (let selector of alternatives) {
+                    const element = document.querySelector(selector);
+                    if (element) {
+                        console.log('Found training element with selector:', selector);
+                        createBlockOverlay(element);
+                        return;
+                    }
+                }
+                
+                console.warn('No training section found to block');
+                return;
+            }
+
+            createBlockOverlay(trainingSection);
+        }
+
+        function createBlockOverlay(targetElement) {
             // Create blocking overlay
             blockingOverlay = document.createElement('div');
             blockingOverlay.id = 'training-blocker-overlay';
             blockingOverlay.style.cssText = `
-                position: fixed;
+                position: absolute;
                 top: 0;
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background: rgba(0, 0, 0, 0.8);
+                background: rgba(0, 0, 0, 0.9);
                 z-index: 9998;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                backdrop-filter: blur(5px);
+                border-radius: 8px;
             `;
 
             // Create message container
@@ -76,54 +108,36 @@
                 background: linear-gradient(135deg, #2a2a2a, #1f1f1f);
                 border: 2px solid #f44336;
                 border-radius: 12px;
-                padding: 30px;
+                padding: 20px;
                 text-align: center;
                 color: white;
                 font-family: 'Segoe UI', sans-serif;
                 box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-                max-width: 400px;
-                animation: pulse 2s infinite;
+                max-width: 300px;
             `;
 
             messageContainer.innerHTML = `
-                <div style="font-size: 48px; margin-bottom: 20px;">🚫</div>
-                <h2 style="margin: 0 0 15px 0; color: #f44336; font-size: 24px;">Training Blocked!</h2>
-                <p style="margin: 0 0 20px 0; color: #bbb; font-size: 16px; line-height: 1.4;">
-                    Training is currently blocked to prevent energy loss while stacking.
-                    <br><br>
-                    Use the training blocker button to unblock when you're ready to train.
+                <div style="font-size: 36px; margin-bottom: 15px;">🚫</div>
+                <h3 style="margin: 0 0 10px 0; color: #f44336; font-size: 18px;">Training Blocked!</h3>
+                <p style="margin: 0; color: #bbb; font-size: 14px; line-height: 1.3;">
+                    Training is blocked to prevent energy loss while stacking.
                 </p>
-                <div style="
-                    background: #f44336;
-                    color: white;
-                    padding: 12px 24px;
-                    border-radius: 6px;
-                    font-weight: bold;
-                    font-size: 14px;
-                    display: inline-block;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                " onclick="window.SidekickModules.BlockTraining.unblockTraining()">
-                    Unblock Training
-                </div>
             `;
-
-            // Add pulse animation
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes pulse {
-                    0% { transform: scale(1); }
-                    50% { transform: scale(1.02); }
-                    100% { transform: scale(1); }
-                }
-            `;
-            document.head.appendChild(style);
 
             blockingOverlay.appendChild(messageContainer);
+            
+            // Position the overlay relative to the target element
+            const rect = targetElement.getBoundingClientRect();
+            blockingOverlay.style.position = 'fixed';
+            blockingOverlay.style.top = rect.top + 'px';
+            blockingOverlay.style.left = rect.left + 'px';
+            blockingOverlay.style.width = rect.width + 'px';
+            blockingOverlay.style.height = rect.height + 'px';
+            
             document.body.appendChild(blockingOverlay);
         }
 
-        function removeBlockingOverlay() {
+        function removeTrainingBlock() {
             if (blockingOverlay && blockingOverlay.parentNode) {
                 blockingOverlay.parentNode.removeChild(blockingOverlay);
                 blockingOverlay = null;
@@ -206,7 +220,7 @@
             document.body.appendChild(btn);
         }
 
-        // Restore button and overlay if they were previously created
+        // Restore button and block if they were previously created
         function restoreTrainingBlocker() {
             if (document.readyState === 'loading') {
                 setTimeout(restoreTrainingBlocker, 50);
@@ -222,7 +236,7 @@
             
             // Restore blocking overlay if it was active
             if (isBlocked) {
-                createBlockingOverlay();
+                createTrainingBlock();
             }
         }
 
