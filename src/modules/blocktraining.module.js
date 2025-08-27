@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Training Blocker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.5.0
+// @version      1.6.0
 // @description  Training blocker functionality to prevent training while stacking energy
 // @author       GitHub Copilot
 // @match        https://www.torn.com/*
@@ -93,7 +93,7 @@
                 left: 0;
                 width: 100%;
                 height: 100%;
-                z-index: 999999;
+                z-index: 9998;
                 display: flex;
                 align-items: center;
                 justify-content: center;
