@@ -4,7 +4,7 @@
 // @version      1.1.0
 // @description  Travel blocker functionality to prevent OC conflicts with live OC countdown timer
 // @author       Machiacelli
-// @match        https://www.torn.com/page.php?sid=travel
+// @match        https://www.torn.com/*
 // @grant        none
 // @require      none
 // ==/UserScript==
@@ -63,27 +63,21 @@
             },
 
             isOnTravelPage() {
-                // Check multiple indicators for travel page
+                // Only show on the exact travel page
                 const urlCheck = window.location.href.includes('/page.php?sid=travel');
-                const titleCheck = document.title.toLowerCase().includes('travel');
-                const contentCheck = document.querySelector('.content-wrapper.summer') !== null;
-                const travelButtonsCheck = document.querySelectorAll('button.torn-btn.btn-dark-bg, a.torn-btn.btn-dark-bg').length > 0;
                 
-                // Log the detection results (only once)
+                // Log the detection result (only once)
                 if (!this._hasLoggedPageDetection) {
                     console.log('🔍 [DEBUG] Travel page detection:', {
                         urlCheck,
-                        titleCheck,
-                        contentCheck,
-                        travelButtonsCheck,
                         url: window.location.href,
                         title: document.title
                     });
                     this._hasLoggedPageDetection = true;
                 }
                 
-                // Return true if any of the checks pass
-                return urlCheck || (titleCheck && contentCheck) || (contentCheck && travelButtonsCheck);
+                // Only return true for the exact travel page
+                return urlCheck;
             },
 
             activate() {
