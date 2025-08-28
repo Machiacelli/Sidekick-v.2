@@ -30,6 +30,7 @@
             timers: [],
             cooldownData: null,
             updateInterval: null,
+            isPinned: false,
             
             // Timer types
             timerTypes: {
@@ -235,6 +236,21 @@
                                         gap: 8px;
                                         transition: background 0.2s ease;
                                     ">⏱️ Custom Timer</button>
+                                    <div style="height: 1px; background: #555; margin: 4px 0;"></div>
+                                    <button id="pin-panel-btn" style="
+                                        background: none;
+                                        border: none;
+                                        color: #fff;
+                                        padding: 8px 12px;
+                                        width: 100%;
+                                        text-align: left;
+                                        cursor: pointer;
+                                        font-size: 12px;
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 8px;
+                                        transition: background 0.2s ease;
+                                    " title="Pin panel to stay on top">📌 Pin Panel</button>
                                 </div>
                             </div>
                             <span style="font-size: 14px;">⏰</span>
@@ -278,6 +294,15 @@
                 
                 // Load existing timers
                 this.renderTimers();
+                
+                // Update pin button text based on saved state
+                if (this.isPinned) {
+                    const pinBtn = panel.querySelector('#pin-panel-btn');
+                    if (pinBtn) {
+                        pinBtn.innerHTML = '📌 Unpin Panel';
+                        pinBtn.title = 'Unpin panel';
+                    }
+                }
                 
                 // Fetch current cooldown data immediately
                 this.fetchCooldownData();
@@ -507,6 +532,25 @@
                     });
                     refreshBtn.addEventListener('mouseleave', () => {
                         refreshBtn.style.background = 'none';
+                    });
+                }
+
+                // Pin panel button
+                const pinBtn = panel.querySelector('#pin-panel-btn');
+                if (pinBtn) {
+                    pinBtn.addEventListener('click', () => {
+                        this.togglePinPanel();
+                        // Close dropdown after action
+                        const dropdownContent = panel.querySelector('.dropdown-content');
+                        if (dropdownContent) dropdownContent.style.display = 'none';
+                    });
+                    
+                    // Hover effects
+                    pinBtn.addEventListener('mouseenter', () => {
+                        pinBtn.style.background = '#444';
+                    });
+                    pinBtn.addEventListener('mouseleave', () => {
+                        pinBtn.style.background = 'none';
                     });
                 }
             },
@@ -1285,7 +1329,8 @@
                             ...timer,
                             // Don't save DOM references
                             element: null
-                        }))
+                        })),
+                        isPinned: this.isPinned
                     };
                     
                     console.log('💾 Saving timer state:', state);
@@ -1301,7 +1346,8 @@
                     const state = window.SidekickModules.Core.loadState('timer_state', { timers: [] });
                     console.log('📂 Loaded timer state from storage:', state);
                     this.timers = state.timers || [];
-                    console.log('📂 Restored timer state:', this.timers.length, 'timers');
+                    this.isPinned = state.isPinned || false;
+                    console.log('📂 Restored timer state:', this.timers.length, 'timers, pinned:', this.isPinned);
                 } catch (error) {
                     console.error('❌ Failed to load timer state:', error);
                 }
@@ -1320,6 +1366,36 @@
                 } catch (error) {
                     console.error('❌ Failed to restore panel state:', error);
                 }
+            },
+
+            togglePinPanel() {
+                this.isPinned = !this.isPinned;
+                const panel = document.getElementById('timer-panel');
+                if (panel) {
+                    if (this.isPinned) {
+                        panel.style.zIndex = '9999';
+                        panel.style.boxShadow = '0 4px 20px rgba(255, 215, 0, 0.3)';
+                        panel.style.border = '2px solid #FFD700';
+                    } else {
+                        panel.style.zIndex = '1000';
+                        panel.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+                        panel.style.border = '1px solid #444';
+                    }
+                }
+                this.saveState();
+                
+                // Update pin button text
+                const pinBtn = document.getElementById('pin-panel-btn');
+                if (pinBtn) {
+                    pinBtn.innerHTML = this.isPinned ? '📌 Unpin Panel' : '📌 Pin Panel';
+                    pinBtn.title = this.isPinned ? 'Unpin panel' : 'Pin panel to stay on top';
+                }
+                
+                window.SidekickModules.Core.NotificationSystem.show(
+                    'Timer',
+                    this.isPinned ? 'Panel pinned! It will stay on top of other panels.' : 'Panel unpinned.',
+                    'info'
+                );
             }
         };
 
