@@ -184,19 +184,41 @@
             
             // Restore blocking overlay if it was active
             if (isBlocked) {
-                createTrainingBlock();
+                console.log('🔄 Restoring training blocker overlay...');
+                // Wait a bit longer to ensure the gym elements are fully loaded
+                setTimeout(() => {
+                    createTrainingBlock();
+                    console.log('✅ Training blocker overlay restored successfully');
+                }, 1500); // Increased delay to ensure gym elements are loaded
             }
         }
 
         // Start the training blocker
         restoreTrainingBlocker();
+        
+        // Periodic check to ensure blocking overlay is maintained
+        setInterval(() => {
+            if (isBlocked && !blockingOverlay) {
+                console.log('🔄 Periodic check: Training blocker should be active but overlay is missing, restoring...');
+                createTrainingBlock();
+            }
+        }, 5000); // Check every 5 seconds
 
         // Export module
         window.SidekickModules.BlockTraining = {
             blockTraining,
             unblockTraining,
             toggleBlockTraining,
-            isEnabled: () => isBlocked
+            isEnabled: () => isBlocked,
+            restoreTrainingBlocker: () => {
+                if (isBlocked) {
+                    console.log('🔄 Restoring training blocker from external call...');
+                    setTimeout(() => {
+                        createTrainingBlock();
+                        console.log('✅ Training blocker restored from external call');
+                    }, 1000);
+                }
+            }
         };
 
         console.log('🚫 Training Blocker module loaded');

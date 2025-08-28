@@ -295,6 +295,34 @@
                     console.log('⚠️ Notepad module not ready for panel restoration');
                 }
                 
+                // Restore to-do list panel if it was open
+                if (window.SidekickModules?.TodoList) {
+                    console.log('📋 Checking to-do list panel state...');
+                    const wasOpen = this.loadState('todo_panel_open', false);
+                    if (wasOpen) {
+                        setTimeout(() => {
+                            if (document.getElementById('sidekick-content')) {
+                                window.SidekickModules.TodoList.showTodoPanel();
+                                console.log('✅ To-Do List panel restored after navigation');
+                            }
+                        }, 1000);
+                    }
+                }
+                
+                // Restore training blocker if it was active
+                if (window.SidekickModules?.BlockTraining) {
+                    console.log('🚫 Checking training blocker state...');
+                    const isBlocked = this.loadState('blockTrainingActive', false);
+                    if (isBlocked && (window.location.href.includes('/gym') || window.location.href.includes('/training'))) {
+                        setTimeout(() => {
+                            // Trigger the restoration logic in the BlockTraining module
+                            if (window.SidekickModules.BlockTraining.restoreTrainingBlocker) {
+                                window.SidekickModules.BlockTraining.restoreTrainingBlocker();
+                            }
+                        }, 1500);
+                    }
+                }
+                
             } catch (error) {
                 console.error('❌ Error restoring panels:', error);
             }
