@@ -464,26 +464,40 @@
             },
 
             refreshDisplay() {
+                console.log('🔄 refreshDisplay() called');
+                console.log('📋 todoItems length:', this.todoItems.length);
+                console.log('📋 todoItems:', this.todoItems);
+                
                 // Don't check isActive here since we want to refresh even during panel creation
                 const content = document.getElementById('todo-content');
-                if (!content) return;
+                console.log('🔍 Found content element:', content);
+                
+                if (!content) {
+                    console.error('❌ No #todo-content element found!');
+                    return;
+                }
                 
                 if (this.todoItems.length === 0) {
+                    console.log('📋 No items to display, showing empty state');
                     this.showEmptyState(content);
                     return;
                 }
                 
+                console.log('📋 Clearing content and adding items...');
                 content.innerHTML = '';
                 
                 this.todoItems.forEach((item, index) => {
+                    console.log(`📋 Creating element for item ${index}:`, item.name);
                     const itemElement = this.createTodoItemElement(item, index);
                     content.appendChild(itemElement);
                 });
                 
-                console.log(`📋 Refreshed display with ${this.todoItems.length} todo items`);
+                console.log(`✅ Refreshed display with ${this.todoItems.length} todo items`);
+                console.log('🔍 Content element now contains:', content.children.length, 'children');
             },
 
             createTodoItemElement(item, index) {
+                console.log(`🔨 Creating element for: ${item.name} (${item.type})`);
                 const element = document.createElement('div');
                 element.className = 'todo-item';
                 element.dataset.itemId = item.id;
