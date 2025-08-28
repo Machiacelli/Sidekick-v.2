@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      1.0.0
 // @description  Replaces the plane image on Torn travel page with custom image
-// @author       GitHub Copilot
+// @author       Machiacelli
 // @match        https://www.torn.com/page.php?sid=travel
 // @match        https://*.torn.com/page.php?sid=travel
 // @grant        none

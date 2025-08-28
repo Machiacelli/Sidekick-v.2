@@ -3,9 +3,8 @@
 // @namespace    http://tampermonkey.net/
 // @version      1.1.0
 // @description  Travel blocker functionality to prevent OC conflicts with live OC countdown timer
-// @author       GitHub Copilot
-// @match        https://www.torn.com/*
-// @match        https://*.torn.com/*
+// @author       Machiacelli
+// @match        https://www.torn.com/page.php?sid=travel
 // @grant        none
 // @require      none
 // ==/UserScript==

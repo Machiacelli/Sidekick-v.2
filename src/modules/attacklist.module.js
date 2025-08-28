@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      3.1.0
 // @description  Enhanced Attack List with API integration and status tracking
-// @author       GitHub Copilot
+// @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
 // @grant        none

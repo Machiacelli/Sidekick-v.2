@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      1.6.0
 // @description  Training blocker functionality to prevent training while stacking energy
-// @author       GitHub Copilot
+// @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
 // @grant        none

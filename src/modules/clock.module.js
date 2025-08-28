@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version                  // Console spam removed       // Debug logging removed to prevent console spam
 // @description  Clock and points pricing functionality for Sidekick sidebar
-// @author       GitHub Copilot
+// @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
 // @grant        GM_addStyle

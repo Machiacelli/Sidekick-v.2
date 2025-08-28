@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      3.0.0
 // @description  Travel tracker with DOM selection, plane detection, and countdown timers - modular approach
-// @author       GitHub Copilot
+// @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
 // @grant        none

@@ -616,25 +616,19 @@
             },
 
             cleanupPanel(panel) {
-                // Clean up drag handlers
-                if (panel._dragHandlers) {
-                    const { mousedown, mousemove, mouseup, header } = panel._dragHandlers;
-                    header.removeEventListener('mousedown', mousedown);
-                    document.removeEventListener('mousemove', mousemove);
-                    document.removeEventListener('mouseup', mouseup);
-                    delete panel._dragHandlers;
+                // Clean up drag handler
+                if (panel._dragHandler) {
+                    const header = panel.querySelector('.todo-header');
+                    if (header) {
+                        header.removeEventListener('mousedown', panel._dragHandler);
+                    }
+                    delete panel._dragHandler;
                 }
                 
                 // Clean up resize observer
                 if (panel._resizeObserver) {
                     panel._resizeObserver.disconnect();
                     delete panel._resizeObserver;
-                }
-                
-                // Clean up resize handler
-                if (panel._resizeHandler) {
-                    panel.removeEventListener('resize', panel._resizeHandler);
-                    delete panel._resizeHandler;
                 }
             },
 
@@ -703,7 +697,9 @@
             },
 
             addResizeFunctionality(panel) {
-                // Add resize constraints and functionality
+                // Only add resize observer if not pinned
+                if (this.isPinned) return;
+                
                 let resizeTimeout;
                 let lastSize = { width: panel.offsetWidth, height: panel.offsetHeight };
                 
@@ -722,13 +718,13 @@
                                 height: panel.offsetHeight 
                             };
                             
-                            // Only save if size actually changed significantly (more than 10px)
-                            if (Math.abs(currentSize.width - lastSize.width) > 10 || 
-                                Math.abs(currentSize.height - lastSize.height) > 10) {
+                            // Only save if size actually changed significantly (more than 20px)
+                            if (Math.abs(currentSize.width - lastSize.width) > 20 || 
+                                Math.abs(currentSize.height - lastSize.height) > 20) {
                                 lastSize = currentSize;
                                 this.savePanelSize(panel);
                             }
-                        }, 200); // 200ms debounce for better performance
+                        }, 500); // 500ms debounce for much better performance
                     });
                     resizeObserver.observe(panel);
                     
@@ -736,52 +732,7 @@
                     panel._resizeObserver = resizeObserver;
                 }
                 
-                // Add manual resize constraints with throttling
-                let constraintTimeout;
-                const handleResize = () => {
-                    if (this.isPinned) return;
-                    
-                    // Throttle constraint checks
-                    if (constraintTimeout) return;
-                    
-                    constraintTimeout = setTimeout(() => {
-                        const sidebar = document.getElementById('sidekick-sidebar');
-                        if (!sidebar) return;
-                        
-                        const panelRect = panel.getBoundingClientRect();
-                        
-                        // Check if panel is going outside sidebar bounds
-                        let needsAdjustment = false;
-                        let newWidth = panel.offsetWidth;
-                        let newHeight = panel.offsetHeight;
-                        
-                        // Constrain width
-                        if (panelRect.left + newWidth > sidebar.offsetWidth) {
-                            newWidth = sidebar.offsetWidth - panelRect.left;
-                            needsAdjustment = true;
-                        }
-                        
-                        // Constrain height
-                        if (panelRect.top + newHeight > sidebar.offsetHeight) {
-                            newHeight = sidebar.offsetHeight - panelRect.top;
-                            needsAdjustment = true;
-                        }
-                        
-                        // Apply constraints if needed
-                        if (needsAdjustment) {
-                            panel.style.width = Math.max(250, newWidth) + 'px';
-                            panel.style.height = Math.max(150, newHeight) + 'px';
-                        }
-                        
-                        constraintTimeout = null;
-                    }, 50); // 50ms throttle
-                };
-                
-                // Listen for resize events
-                panel.addEventListener('resize', handleResize);
-                
-                // Store reference for cleanup
-                panel._resizeHandler = handleResize;
+                // Remove manual resize constraints - they're not needed and cause performance issues
             },
 
             savePanelPosition(panel) {
