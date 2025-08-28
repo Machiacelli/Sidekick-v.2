@@ -228,58 +228,59 @@
             },
 
             saveButtonPosition(button) {
-                const position = {
-                    x: parseInt(button.style.left) || 10,
-                    y: parseInt(button.style.top) || 10
-                };
+                const currentX = parseInt(button.style.left) || 10;
+                const currentY = parseInt(button.style.top) || 10;
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                const buttonSize = button.offsetWidth || 40;
                 
-                // Save both position and current viewport dimensions
-                window.SidekickModules.Core.saveState('random_target_position', position);
-                window.SidekickModules.Core.saveState('random_target_viewport', {
-                    width: window.innerWidth,
-                    height: window.innerHeight
+                // Calculate and save relative position as percentages (0-100)
+                const relativeX = Math.max(0, Math.min(100, (currentX / (viewportWidth - buttonSize)) * 100));
+                const relativeY = Math.max(0, Math.min(100, (currentY / (viewportHeight - buttonSize)) * 100));
+                
+                // Save relative position instead of absolute
+                window.SidekickModules.Core.saveState('random_target_relative_position', { 
+                    x: relativeX, 
+                    y: relativeY 
                 });
                 
-                console.log('💾 Saved button position:', position, 'viewport:', { width: window.innerWidth, height: window.innerHeight });
+                // Also save current viewport for reference
+                window.SidekickModules.Core.saveState('random_target_viewport', {
+                    width: viewportWidth,
+                    height: viewportHeight
+                });
+                
+                console.log('💾 Saved relative position:', { x: relativeX.toFixed(1) + '%', y: relativeY.toFixed(1) + '%' });
             },
 
             addViewportResizeHandler(button) {
                 // Handle viewport resize to maintain relative position
                 const handleResize = () => {
-                    // Get current button position
-                    const currentX = parseInt(button.style.left) || 10;
-                    const currentY = parseInt(button.style.top) || 10;
+                    // Get the saved relative position
+                    const relativePosition = window.SidekickModules.Core.loadState('random_target_relative_position', { x: 10, y: 10 });
                     
                     // Get current viewport dimensions
                     const viewportWidth = window.innerWidth;
                     const viewportHeight = window.innerHeight;
                     const buttonSize = button.offsetWidth || 40;
                     
-                    // Calculate relative position as percentages
-                    const relativeX = (currentX / (viewportWidth - buttonSize)) * 100;
-                    const relativeY = (currentY / (viewportHeight - buttonSize)) * 100;
+                    // Convert relative percentages to absolute pixels for new viewport
+                    const newX = Math.round((relativePosition.x / 100) * (viewportWidth - buttonSize));
+                    const newY = Math.round((relativePosition.y / 100) * (viewportHeight - buttonSize));
                     
-                    // Clamp relative values to 0-100 range
-                    const clampedRelativeX = Math.max(0, Math.min(100, relativeX));
-                    const clampedRelativeY = Math.max(0, Math.min(100, relativeY));
+                    // Ensure the position is within current viewport bounds
+                    const maxX = Math.max(0, viewportWidth - buttonSize);
+                    const maxY = Math.max(0, viewportHeight - buttonSize);
                     
-                    // Convert back to absolute pixels for new viewport
-                    const newX = Math.round((clampedRelativeX / 100) * (viewportWidth - buttonSize));
-                    const newY = Math.round((clampedRelativeY / 100) * (viewportHeight - buttonSize));
-                    
-                    // Ensure minimum values
-                    const finalX = Math.max(0, newX);
-                    const finalY = Math.max(0, newY);
+                    const finalX = Math.max(0, Math.min(newX, maxX));
+                    const finalY = Math.max(0, Math.min(newY, maxY));
                     
                     // Update button position to maintain relative location
                     button.style.left = finalX + 'px';
                     button.style.top = finalY + 'px';
                     
-                    // Save new position and viewport
-                    this.saveButtonPosition(button);
-                    
                     console.log('🎯 Maintained relative position during resize:', { 
-                        relative: { x: clampedRelativeX.toFixed(1) + '%', y: clampedRelativeY.toFixed(1) + '%' },
+                        relative: { x: relativePosition.x.toFixed(1) + '%', y: relativePosition.y.toFixed(1) + '%' },
                         absolute: { x: finalX, y: finalY }
                     });
                 };
@@ -299,49 +300,27 @@
 
             loadButtonPosition() {
                 try {
-                    const position = window.SidekickModules.Core.loadState('random_target_position', { x: 10, y: 10 });
+                    // Load relative position (percentages) instead of absolute
+                    const relativePosition = window.SidekickModules.Core.loadState('random_target_relative_position', { x: 10, y: 10 });
                     
-                    // Instead of constraining to viewport bounds, maintain relative position
-                    // This prevents the button from "jumping" when viewport changes
+                    // Get current viewport dimensions
                     const viewportWidth = window.innerWidth;
                     const viewportHeight = window.innerHeight;
                     const buttonSize = 40; // Button width/height
                     
-                    // Calculate relative position as percentages (0-100)
-                    const relativeX = (position.x / (viewportWidth - buttonSize)) * 100;
-                    const relativeY = (position.y / (viewportHeight - buttonSize)) * 100;
+                    // Convert relative percentages back to absolute pixels for current viewport
+                    const absoluteX = Math.round((relativePosition.x / 100) * (viewportWidth - buttonSize));
+                    const absoluteY = Math.round((relativePosition.y / 100) * (viewportHeight - buttonSize));
                     
-                    // Clamp relative values to 0-100 range
-                    const clampedRelativeX = Math.max(0, Math.min(100, relativeX));
-                    const clampedRelativeY = Math.max(0, Math.min(100, relativeY));
+                    // Ensure the position is within current viewport bounds
+                    const maxX = Math.max(0, viewportWidth - buttonSize);
+                    const maxY = Math.max(0, viewportHeight - buttonSize);
                     
-                    // Convert back to absolute pixels for current viewport
-                    const newX = Math.round((clampedRelativeX / 100) * (viewportWidth - buttonSize));
-                    const newY = Math.round((clampedRelativeY / 100) * (viewportHeight - buttonSize));
+                    const finalX = Math.max(0, Math.min(absoluteX, maxX));
+                    const finalY = Math.max(0, Math.min(absoluteY, maxY));
                     
-                    // Ensure minimum values
-                    const finalX = Math.max(0, newX);
-                    const finalY = Math.max(0, newY);
-                    
-                    // Only update saved position if viewport changed significantly
-                    const savedViewport = window.SidekickModules.Core.loadState('random_target_viewport', { width: 0, height: 0 });
-                    const viewportChanged = Math.abs(savedViewport.width - viewportWidth) > 50 || 
-                                          Math.abs(savedViewport.height - viewportHeight) > 50;
-                    
-                    if (viewportChanged) {
-                        console.log('🎯 Viewport changed, updating relative position');
-                        // Save new viewport dimensions
-                        window.SidekickModules.Core.saveState('random_target_viewport', { 
-                            width: viewportWidth, 
-                            height: viewportHeight 
-                        });
-                        
-                        // Save new absolute position
-                        window.SidekickModules.Core.saveState('random_target_position', { 
-                            x: finalX, 
-                            y: finalY 
-                        });
-                    }
+                    console.log('🎯 Loaded relative position:', { x: relativePosition.x.toFixed(1) + '%', y: relativePosition.y.toFixed(1) + '%' });
+                    console.log('🎯 Converted to absolute:', { x: finalX, y: finalY });
                     
                     return { x: finalX, y: finalY };
                 } catch (error) {
