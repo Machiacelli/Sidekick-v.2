@@ -342,18 +342,19 @@
                 headerControls.appendChild(dropdownBtn);
                 headerControls.appendChild(closeBtn);
                 
-                // Add dropdown content to headerControls for proper positioning
-                headerControls.appendChild(dropdownContent);
-                
                 // Create left container for dropdown and title
                 const leftContainer = document.createElement('div');
                 leftContainer.style.cssText = `
                     display: flex;
                     align-items: center;
                     gap: 8px;
+                    position: relative;
                 `;
                 leftContainer.appendChild(dropdownBtn);
                 leftContainer.appendChild(title);
+                
+                // Add dropdown content to leftContainer for proper positioning
+                leftContainer.appendChild(dropdownContent);
                 
                 header.appendChild(leftContainer);
                 header.appendChild(closeBtn);
