@@ -277,6 +277,38 @@
                 }
             },
 
+            addTodoList() {
+                console.log('📋 To-Do List button clicked - checking module availability...');
+                console.log('📋 Available modules:', window.SidekickModules ? Object.keys(window.SidekickModules) : 'No modules found');
+                
+                // Check if TodoList module is available
+                if (window.SidekickModules?.TodoList?.activate) {
+                    console.log('✅ TodoList module found - activating...');
+                    try {
+                        window.SidekickModules.TodoList.activate();
+                        this.closeAddMenu();
+                        console.log('✅ TodoList activated successfully');
+                    } catch (error) {
+                        console.error('❌ Error activating TodoList:', error);
+                        NotificationSystem.show('To-Do List', 'Error activating to-do list: ' + error.message, 'error');
+                    }
+                } else {
+                    console.error('❌ TodoList module not available');
+                    console.log('🔍 Checking what we have:', {
+                        'SidekickModules exists': !!window.SidekickModules,
+                        'TodoList exists': !!window.SidekickModules?.TodoList,
+                        'TodoList.activate exists': !!window.SidekickModules?.TodoList?.activate,
+                        'Available modules': window.SidekickModules ? Object.keys(window.SidekickModules) : 'none'
+                    });
+                    
+                    NotificationSystem.show(
+                        'To-Do List', 
+                        `Module not loaded. Check console for details. Available: ${window.SidekickModules ? Object.keys(window.SidekickModules).join(', ') : 'None'}`, 
+                        'error'
+                    );
+                }
+            },
+
             addTimer() {
                 console.log('⏰ Timer button clicked - checking module availability...');
                 console.log('⏰ Available modules:', window.SidekickModules ? Object.keys(window.SidekickModules) : 'No modules found');
