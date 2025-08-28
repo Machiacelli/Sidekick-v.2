@@ -150,7 +150,7 @@
                                 </button>
                                 <div class="dropdown-content" style="
                                     display: none;
-                                    position: absolute;
+                                    position: fixed;
                                     background: #333;
                                     min-width: 160px;
                                     max-height: 200px;
@@ -162,7 +162,7 @@
                                     overflow-y: auto;
                                     scrollbar-width: thin;
                                     scrollbar-color: #555 #333;
-                                    top: 100%;
+                                    top: 0;
                                     left: 0;
                                 ">
                                     <button id="refresh-cooldowns" style="
