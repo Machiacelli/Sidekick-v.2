@@ -371,8 +371,14 @@
                     gap: 8px;
                 `;
 
-                // Show empty state initially
-                this.showEmptyState(content);
+                // Check if we have existing todo items and show them, otherwise show empty state
+                if (this.todoItems.length > 0) {
+                    console.log(`📋 Found ${this.todoItems.length} existing todo items, restoring content...`);
+                    this.refreshDisplay();
+                } else {
+                    console.log('📋 No existing todo items, showing empty state');
+                    this.showEmptyState(content);
+                }
 
                 // Assemble panel
                 panel.appendChild(header);
@@ -452,8 +458,7 @@
             },
 
             refreshDisplay() {
-                if (!this.isActive) return;
-                
+                // Don't check isActive here since we want to refresh even during panel creation
                 const content = document.getElementById('todo-content');
                 if (!content) return;
                 
@@ -468,6 +473,8 @@
                     const itemElement = this.createTodoItemElement(item, index);
                     content.appendChild(itemElement);
                 });
+                
+                console.log(`📋 Refreshed display with ${this.todoItems.length} todo items`);
             },
 
             createTodoItemElement(item, index) {
@@ -760,7 +767,8 @@
                     console.log('📋 Loaded To-Do List state:', {
                         todoItems: this.todoItems.length,
                         lastResetDate: this.lastResetDate,
-                        isPinned: this.isPinned
+                        isPinned: this.isPinned,
+                        todoItemsData: this.todoItems
                     });
                 } catch (error) {
                     console.error('❌ Failed to load To-Do List state:', error);
