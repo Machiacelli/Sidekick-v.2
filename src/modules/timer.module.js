@@ -118,7 +118,7 @@
                     min-width: 200px;
                     min-height: 100px;
                     z-index: 1000;
-                    resize: both;
+                    resize: ${this.isPinned ? 'none' : 'both'};
                     overflow: hidden;
                 `;
 
@@ -130,7 +130,7 @@
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
-                        cursor: move;
+                        cursor: ${this.isPinned ? 'default' : 'move'};
                         height: 24px;
                         flex-shrink: 0;
                         border-radius: 7px 7px 0 0;
@@ -341,6 +341,9 @@
                 let dragOffset = { x: 0, y: 0 };
                 
                 header.addEventListener('mousedown', (e) => {
+                    // Don't allow dragging if panel is pinned
+                    if (this.isPinned) return;
+                    
                     isDragging = true;
                     const rect = panel.getBoundingClientRect();
                     dragOffset.x = e.clientX - rect.left;
@@ -349,7 +352,7 @@
                 });
                 
                 document.addEventListener('mousemove', (e) => {
-                    if (!isDragging) return;
+                    if (!isDragging || this.isPinned) return;
                     
                     const sidebar = document.getElementById('sidekick-sidebar');
                     const sidebarRect = sidebar ? sidebar.getBoundingClientRect() : { left: 0, top: 0 };
@@ -388,6 +391,9 @@
             addResizeConstraints(panel) {
                 // Create a ResizeObserver to monitor size changes
                 const resizeObserver = new ResizeObserver((entries) => {
+                    // Don't apply constraints if panel is pinned
+                    if (this.isPinned) return;
+                    
                     for (const entry of entries) {
                         const sidebar = document.getElementById('sidekick-sidebar');
                         if (!sidebar) continue;
@@ -1370,14 +1376,11 @@
                 this.isPinned = !this.isPinned;
                 const panel = document.getElementById('timer-panel');
                 if (panel) {
-                    if (this.isPinned) {
-                        panel.style.zIndex = '9999';
-                        panel.style.boxShadow = '0 4px 20px rgba(255, 215, 0, 0.3)';
-                        panel.style.border = '2px solid #FFD700';
-                    } else {
-                        panel.style.zIndex = '1000';
-                        panel.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
-                        panel.style.border = '1px solid #444';
+                    // Update resize and cursor based on pinned state
+                    panel.style.resize = this.isPinned ? 'none' : 'both';
+                    const header = panel.querySelector('.timer-header');
+                    if (header) {
+                        header.style.cursor = this.isPinned ? 'default' : 'move';
                     }
                 }
                 this.saveState();
