@@ -106,60 +106,172 @@
                 // Create panel container
                 const panel = document.createElement('div');
                 panel.id = 'sidekick-todo-panel';
-                panel.className = 'sidekick-panel';
+                panel.className = 'sidekick-todo-panel';
+                
+                // Calculate default position and size
+                const defaultWidth = 400;
+                const defaultHeight = 500;
+                const minWidth = 300;
+                const minHeight = 400;
+                const maxWidth = 600;
+                const maxHeight = 700;
+
+                // Position new panel with slight offset to avoid overlapping
+                const existingPanels = document.querySelectorAll('.sidekick-todo-panel');
+                const offset = existingPanels.length * 20;
+                const defaultX = 20 + offset;
+                const defaultY = 20 + offset;
+
+                // Use saved position or defaults
+                const savedPosition = this.core.loadState('todo_panel_position', { x: defaultX, y: defaultY });
+                const savedSize = this.core.loadState('todo_panel_size', { width: defaultWidth, height: defaultHeight });
+                
+                const desiredX = savedPosition.x || defaultX;
+                const desiredY = savedPosition.y || defaultY;
+                const desiredWidth = savedSize.width || defaultWidth;
+                const desiredHeight = savedSize.height || defaultHeight;
+
+                // Get sidebar bounds for constraining position
+                const sidebar = document.getElementById('sidekick-sidebar');
+                const sidebarRect = sidebar ? sidebar.getBoundingClientRect() : { width: 400, height: 600 };
+                const maxX = Math.max(0, sidebarRect.width - desiredWidth);
+                const maxY = Math.max(0, sidebarRect.height - desiredHeight);
+
+                // Clamp position to sidebar bounds
+                const finalX = Math.min(Math.max(0, desiredX), maxX);
+                const finalY = Math.min(Math.max(0, desiredY), maxY);
+
                 panel.style.cssText = `
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    width: 600px;
-                    max-height: 80vh;
-                    background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
-                    border: 2px solid #444;
-                    border-radius: 12px;
-                    z-index: 1000000;
-                    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+                    position: absolute;
+                    left: ${finalX}px;
+                    top: ${finalY}px;
+                    width: ${desiredWidth}px;
+                    height: ${desiredHeight}px;
+                    background: #222;
+                    border: 1px solid #444;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
                     display: flex;
                     flex-direction: column;
+                    min-width: ${minWidth}px;
+                    min-height: ${minHeight}px;
+                    max-width: ${maxWidth}px;
+                    max-height: ${maxHeight}px;
+                    z-index: ${1000 + existingPanels.length};
+                    resize: both;
                     overflow: hidden;
                 `;
 
                 // Create header
                 const header = document.createElement('div');
+                header.className = 'todo-header';
                 header.style.cssText = `
                     background: linear-gradient(135deg, #333, #555);
-                    padding: 16px 20px;
                     border-bottom: 1px solid #444;
+                    padding: 4px 8px;
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
+                    cursor: move;
+                    height: 24px;
+                    flex-shrink: 0;
+                    border-radius: 7px 7px 0 0;
                 `;
                 
-                header.innerHTML = `
-                    <h2 style="margin: 0; color: #fff; font-size: 18px; font-weight: 600;">
-                        📋 Daily To-Do List
-                    </h2>
-                    <button id="todo-close-btn" style="
-                        background: none;
-                        border: none;
-                        color: #fff;
-                        font-size: 20px;
-                        cursor: pointer;
-                        padding: 4px;
-                        border-radius: 4px;
-                        transition: background 0.2s;
-                    ">×</button>
+                const title = document.createElement('div');
+                title.style.cssText = `
+                    color: #fff;
+                    font-size: 12px;
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
                 `;
+                title.innerHTML = '📋 Daily To-Do List';
+                
+                const headerControls = document.createElement('div');
+                headerControls.style.cssText = `
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                `;
+                
+                // Dropdown menu button
+                const dropdownBtn = document.createElement('button');
+                dropdownBtn.className = 'dropdown-btn';
+                dropdownBtn.style.cssText = `
+                    background: none;
+                    border: none;
+                    color: #bbb;
+                    cursor: pointer;
+                    font-size: 12px;
+                    padding: 2px;
+                    display: flex;
+                    align-items: center;
+                `;
+                dropdownBtn.innerHTML = '▼';
+                dropdownBtn.title = 'Options';
+                
+                // Dropdown content
+                const dropdownContent = document.createElement('div');
+                dropdownContent.className = 'dropdown-content';
+                dropdownContent.style.cssText = `
+                    display: none;
+                    position: absolute;
+                    background: #333;
+                    min-width: 120px;
+                    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+                    z-index: 1001;
+                    border-radius: 4px;
+                    border: 1px solid #555;
+                    top: 100%;
+                    right: 0;
+                `;
+                
+                const resetBtn = document.createElement('button');
+                resetBtn.style.cssText = `
+                    background: none;
+                    border: none;
+                    color: #fff;
+                    padding: 8px 12px;
+                    width: 100%;
+                    text-align: left;
+                    cursor: pointer;
+                    font-size: 12px;
+                `;
+                resetBtn.innerHTML = '🔄 Reset Daily Tasks';
+                
+                const closeBtn = document.createElement('button');
+                closeBtn.style.cssText = `
+                    background: none;
+                    border: none;
+                    color: #f44336;
+                    padding: 8px 12px;
+                    width: 100%;
+                    text-align: left;
+                    cursor: pointer;
+                    font-size: 12px;
+                `;
+                closeBtn.innerHTML = '❌ Close Panel';
+                
+                dropdownContent.appendChild(resetBtn);
+                dropdownContent.appendChild(closeBtn);
+                
+                headerControls.appendChild(dropdownBtn);
+                headerControls.appendChild(dropdownContent);
+                
+                header.appendChild(title);
+                header.appendChild(headerControls);
 
                 // Create content area
                 const content = document.createElement('div');
                 content.style.cssText = `
                     flex: 1;
-                    padding: 20px;
+                    padding: 16px;
                     overflow-y: auto;
                     display: flex;
                     flex-direction: column;
-                    gap: 20px;
+                    gap: 16px;
                 `;
 
                 // Add daily tasks section
@@ -175,14 +287,23 @@
                 panel.appendChild(header);
                 panel.appendChild(content);
                 
-                // Add to page
-                document.body.appendChild(panel);
+                // Add to sidebar content area
+                const contentArea = document.getElementById('sidekick-content');
+                if (contentArea) {
+                    contentArea.appendChild(panel);
+                } else {
+                    console.error('❌ Content area not found');
+                    return;
+                }
                 
                 // Add event listeners
-                this.addPanelEventListeners(panel);
+                this.addPanelEventListeners(panel, dropdownBtn, dropdownContent, resetBtn, closeBtn);
                 
                 // Add dragging functionality
-                this.addDragging(panel);
+                this.addDragging(panel, header);
+                
+                // Add resize functionality
+                this.addResizeFunctionality(panel);
                 
                 // Mark as active
                 this.isActive = true;
@@ -206,7 +327,7 @@
                 title.style.cssText = `
                     margin: 0 0 16px 0;
                     color: #fff;
-                    font-size: 16px;
+                    font-size: 14px;
                     font-weight: 600;
                     display: flex;
                     align-items: center;
@@ -244,7 +365,7 @@
                 title.style.cssText = `
                     margin: 0 0 16px 0;
                     color: #fff;
-                    font-size: 16px;
+                    font-size: 14px;
                     font-weight: 600;
                     display: flex;
                     align-items: center;
@@ -383,25 +504,28 @@
                     gap: 8px;
                 `;
 
-                // Create checkboxes for each count
-                for (let i = 0; i < taskType.maxCount; i++) {
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.checked = i < task.completed;
-                    checkbox.style.cssText = `
-                        width: 16px;
-                        height: 16px;
-                        accent-color: ${taskType.color};
-                        cursor: pointer;
-                    `;
-                    
-                    checkbox.addEventListener('change', (e) => {
-                        this.updateDailyTask(task.type, e.target.checked ? i + 1 : i);
-                    });
-                    
-                    progress.appendChild(checkbox);
-                }
+                // Create single checkbox for each task type
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = task.completed >= taskType.maxCount;
+                checkbox.style.cssText = `
+                    width: 16px;
+                    height: 16px;
+                    accent-color: ${taskType.color};
+                    cursor: pointer;
+                `;
+                
+                checkbox.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        this.updateDailyTask(task.type, taskType.maxCount);
+                    } else {
+                        this.updateDailyTask(task.type, 0);
+                    }
+                });
+                
+                progress.appendChild(checkbox);
 
+                // Show progress counter (e.g., "2/3" for Xanax)
                 const count = document.createElement('span');
                 count.style.cssText = `
                     color: #fff;
@@ -409,7 +533,7 @@
                     min-width: 40px;
                     text-align: right;
                 `;
-                count.textContent = `${task.completed}/${taskType.maxCount}`;
+                count.textContent = `(${task.completed}/${taskType.maxCount})`;
 
                 progress.appendChild(count);
 
@@ -564,61 +688,120 @@
                 console.log('📋 To-Do List panel hidden');
             },
 
-            addPanelEventListeners(panel) {
-                const closeBtn = panel.querySelector('#todo-close-btn');
-                if (closeBtn) {
-                    closeBtn.addEventListener('click', () => this.hideTodoPanel());
-                }
+            addPanelEventListeners(panel, dropdownBtn, dropdownContent, resetBtn, closeBtn) {
+                // Dropdown functionality
+                dropdownBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
+                });
 
-                // Close on escape key
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape' && this.isActive) {
-                        this.hideTodoPanel();
+                // Close dropdown when clicking outside
+                document.addEventListener('click', () => {
+                    dropdownContent.style.display = 'none';
+                });
+
+                // Reset daily tasks
+                resetBtn.addEventListener('click', () => {
+                    if (confirm('Reset all daily tasks to 0?')) {
+                        this.dailyTasks.forEach(task => {
+                            task.completed = 0;
+                        });
+                        this.saveState();
+                        this.refreshDisplay();
+                        dropdownContent.style.display = 'none';
                     }
+                });
+
+                // Close panel
+                closeBtn.addEventListener('click', () => {
+                    this.hideTodoPanel();
+                    dropdownContent.style.display = 'none';
                 });
             },
 
-            addDragging(panel) {
+            addDragging(panel, header) {
                 let isDragging = false;
                 let dragOffset = { x: 0, y: 0 };
 
-                panel.addEventListener('mousedown', (e) => {
-                    if (e.target === panel || e.target.closest('h2')) {
-                        isDragging = true;
-                        const rect = panel.getBoundingClientRect();
-                        dragOffset.x = e.clientX - rect.left;
-                        dragOffset.y = e.clientY - rect.top;
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        panel.style.cursor = 'grabbing';
-                    }
+                header.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    const rect = panel.getBoundingClientRect();
+                    dragOffset.x = e.clientX - rect.left;
+                    dragOffset.y = e.clientY - rect.top;
+                    e.preventDefault();
                 });
 
                 document.addEventListener('mousemove', (e) => {
                     if (!isDragging) return;
                     
-                    e.preventDefault();
-                    e.stopPropagation();
+                    const sidebar = document.getElementById('sidekick-sidebar');
+                    const sidebarRect = sidebar.getBoundingClientRect();
                     
-                    const newX = e.clientX - dragOffset.x;
-                    const newY = e.clientY - dragOffset.y;
+                    let newX = e.clientX - sidebarRect.left - dragOffset.x;
+                    let newY = e.clientY - sidebarRect.top - dragOffset.y;
                     
-                    // Keep within viewport bounds
-                    const maxX = window.innerWidth - panel.offsetWidth;
-                    const maxY = window.innerHeight - panel.offsetHeight;
+                    // Keep within sidebar bounds
+                    const maxX = Math.max(0, sidebar.offsetWidth - panel.offsetWidth);
+                    const maxY = Math.max(0, sidebar.offsetHeight - panel.offsetHeight);
                     
-                    panel.style.left = Math.max(0, Math.min(newX, maxX)) + 'px';
-                    panel.style.top = Math.max(0, Math.min(newY, maxY)) + 'px';
-                    panel.style.transform = 'none';
+                    newX = Math.max(0, Math.min(newX, maxX));
+                    newY = Math.max(0, Math.min(newY, maxY));
+                    
+                    panel.style.left = newX + 'px';
+                    panel.style.top = newY + 'px';
                 });
 
                 document.addEventListener('mouseup', () => {
                     if (isDragging) {
                         isDragging = false;
-                        panel.style.cursor = 'default';
+                        this.savePanelPosition(panel);
                     }
                 });
+            },
+
+            addResizeFunctionality(panel) {
+                // Resize observer to save size changes
+                if (window.ResizeObserver) {
+                    let resizeTimeout;
+                    let lastSize = { width: panel.offsetWidth, height: panel.offsetHeight };
+                    
+                    const resizeObserver = new ResizeObserver((entries) => {
+                        // Clear previous timeout
+                        if (resizeTimeout) clearTimeout(resizeTimeout);
+                        
+                        // Debounce resize events to prevent excessive saves
+                        resizeTimeout = setTimeout(() => {
+                            const currentSize = { 
+                                width: panel.offsetWidth, 
+                                height: panel.offsetHeight 
+                            };
+                            
+                            // Only save if size actually changed significantly (more than 5px)
+                            if (Math.abs(currentSize.width - lastSize.width) > 5 || 
+                                Math.abs(currentSize.height - lastSize.height) > 5) {
+                                lastSize = currentSize;
+                                this.savePanelSize(panel);
+                            }
+                        }, 100); // 100ms debounce
+                    });
+                    resizeObserver.observe(panel);
+                }
+            },
+
+            savePanelPosition(panel) {
+                const position = {
+                    x: parseInt(panel.style.left) || 20,
+                    y: parseInt(panel.style.top) || 20
+                };
+                this.core.saveState('todo_panel_position', position);
+            },
+
+            savePanelSize(panel) {
+                const size = {
+                    width: panel.offsetWidth,
+                    height: panel.offsetHeight
+                };
+                this.core.saveState('todo_panel_size', size);
             },
 
             loadState() {
