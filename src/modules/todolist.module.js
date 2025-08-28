@@ -28,39 +28,46 @@
             version: '1.0.0',
             isActive: false,
             core: null,
-            dailyTasks: [],
-            customTasks: [],
+            todoItems: [],
             lastResetDate: null,
 
-            // Daily task definitions
-            dailyTaskTypes: {
-                xanax: {
-                    name: 'Xanax',
-                    maxCount: 3,
+            // Todo item types
+            todoItemTypes: {
+                xanax1: {
+                    name: 'Xanax 1',
                     icon: '💊',
                     color: '#FF6B6B',
-                    description: 'Daily Xanax consumption'
+                    description: 'First daily Xanax'
+                },
+                xanax2: {
+                    name: 'Xanax 2',
+                    icon: '💊',
+                    color: '#FF6B6B',
+                    description: 'Second daily Xanax'
+                },
+                xanax3: {
+                    name: 'Xanax 3',
+                    icon: '💊',
+                    color: '#FF6B6B',
+                    description: 'Third daily Xanax'
                 },
                 energyRefill: {
                     name: 'Energy Refill',
-                    maxCount: 1,
                     icon: '⚡',
                     color: '#4ECDC4',
                     description: 'Daily energy refill'
                 },
                 nerveRefill: {
                     name: 'Nerve Refill',
-                    maxCount: 1,
                     icon: '🧠',
                     color: '#45B7D1',
                     description: 'Daily nerve refill'
                 },
-                npcShop: {
-                    name: 'NPC Shop Items',
-                    maxCount: 100,
-                    icon: '🛒',
-                    color: '#96CEB4',
-                    description: 'Daily NPC shop purchases'
+                custom: {
+                    name: 'Custom Task',
+                    icon: '📝',
+                    color: '#9C27B0',
+                    description: 'Custom task (persistent)'
                 }
             },
 
@@ -78,9 +85,6 @@
                 
                 // Check if daily reset is needed
                 this.checkDailyReset();
-                
-                // Start monitoring for Torn.com activities
-                this.startActivityMonitoring();
                 
                 console.log('✅ To-Do List module initialized successfully');
                 return true;
@@ -109,12 +113,12 @@
                 panel.className = 'sidekick-todo-panel';
                 
                 // Calculate default position and size
-                const defaultWidth = 400;
-                const defaultHeight = 500;
-                const minWidth = 300;
-                const minHeight = 400;
-                const maxWidth = 600;
-                const maxHeight = 700;
+                const defaultWidth = 300;
+                const defaultHeight = 200;
+                const minWidth = 250;
+                const minHeight = 150;
+                const maxWidth = 500;
+                const maxHeight = 600;
 
                 // Position new panel with slight offset to avoid overlapping
                 const existingPanels = document.querySelectorAll('.sidekick-todo-panel');
@@ -187,7 +191,7 @@
                     align-items: center;
                     gap: 4px;
                 `;
-                title.innerHTML = '📋 Daily To-Do List';
+                title.innerHTML = '📋 To-Do List';
                 
                 const headerControls = document.createElement('div');
                 headerControls.style.cssText = `
@@ -210,7 +214,7 @@
                     align-items: center;
                 `;
                 dropdownBtn.innerHTML = '▼';
-                dropdownBtn.title = 'Options';
+                dropdownBtn.title = 'Add Todo Items';
                 
                 // Dropdown content
                 const dropdownContent = document.createElement('div');
@@ -219,7 +223,7 @@
                     display: none;
                     position: absolute;
                     background: #333;
-                    min-width: 120px;
+                    min-width: 140px;
                     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
                     z-index: 1001;
                     border-radius: 4px;
@@ -228,60 +232,76 @@
                     right: 0;
                 `;
                 
-                const resetBtn = document.createElement('button');
-                resetBtn.style.cssText = `
-                    background: none;
-                    border: none;
-                    color: #fff;
-                    padding: 8px 12px;
-                    width: 100%;
-                    text-align: left;
-                    cursor: pointer;
-                    font-size: 12px;
-                `;
-                resetBtn.innerHTML = '🔄 Reset Daily Tasks';
+                // Add todo item options
+                Object.entries(this.todoItemTypes).forEach(([key, itemType]) => {
+                    const addBtn = document.createElement('button');
+                    addBtn.style.cssText = `
+                        background: none;
+                        border: none;
+                        color: #fff;
+                        padding: 8px 12px;
+                        width: 100%;
+                        text-align: left;
+                        cursor: pointer;
+                        font-size: 12px;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    `;
+                    addBtn.innerHTML = `${itemType.icon} ${itemType.name}`;
+                    
+                    addBtn.addEventListener('click', () => {
+                        this.addTodoItem(key, itemType);
+                        dropdownContent.style.display = 'none';
+                    });
+                    
+                    dropdownContent.appendChild(addBtn);
+                });
                 
+                // Close button (X button)
                 const closeBtn = document.createElement('button');
                 closeBtn.style.cssText = `
                     background: none;
                     border: none;
                     color: #f44336;
-                    padding: 8px 12px;
-                    width: 100%;
-                    text-align: left;
                     cursor: pointer;
-                    font-size: 12px;
+                    font-size: 14px;
+                    padding: 2px;
+                    border-radius: 4px;
+                    transition: background 0.2s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 16px;
+                    height: 16px;
                 `;
-                closeBtn.innerHTML = '❌ Close Panel';
+                closeBtn.innerHTML = '×';
+                closeBtn.title = 'Close panel';
                 
-                dropdownContent.appendChild(resetBtn);
-                dropdownContent.appendChild(closeBtn);
+                closeBtn.addEventListener('click', () => {
+                    this.hideTodoPanel();
+                });
                 
                 headerControls.appendChild(dropdownBtn);
-                headerControls.appendChild(dropdownContent);
+                headerControls.appendChild(closeBtn);
                 
                 header.appendChild(title);
                 header.appendChild(headerControls);
 
                 // Create content area
                 const content = document.createElement('div');
+                content.id = 'todo-content';
                 content.style.cssText = `
                     flex: 1;
                     padding: 16px;
                     overflow-y: auto;
                     display: flex;
                     flex-direction: column;
-                    gap: 16px;
+                    gap: 8px;
                 `;
 
-                // Add daily tasks section
-                content.appendChild(this.createDailyTasksSection());
-                
-                // Add custom tasks section
-                content.appendChild(this.createCustomTasksSection());
-                
-                // Add add task button
-                content.appendChild(this.createAddTaskButton());
+                // Show empty state initially
+                this.showEmptyState(content);
 
                 // Assemble panel
                 panel.appendChild(header);
@@ -297,7 +317,7 @@
                 }
                 
                 // Add event listeners
-                this.addPanelEventListeners(panel, dropdownBtn, dropdownContent, resetBtn, closeBtn);
+                this.addPanelEventListeners(panel, dropdownBtn, dropdownContent);
                 
                 // Add dragging functionality
                 this.addDragging(panel, header);
@@ -314,146 +334,69 @@
                 console.log('✅ To-Do List panel displayed');
             },
 
-            createDailyTasksSection() {
-                const section = document.createElement('div');
-                section.style.cssText = `
-                    background: #2a2a2a;
-                    border: 1px solid #444;
-                    border-radius: 8px;
-                    padding: 16px;
-                `;
-
-                const title = document.createElement('h3');
-                title.style.cssText = `
-                    margin: 0 0 16px 0;
-                    color: #fff;
-                    font-size: 14px;
-                    font-weight: 600;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                `;
-                title.innerHTML = '🔄 Daily Tasks (Resets at 00:00 UTC)';
-
-                const tasksContainer = document.createElement('div');
-                tasksContainer.id = 'daily-tasks-container';
-                tasksContainer.style.cssText = `
-                    display: flex;
-                    flex-direction: column;
-                    gap: 12px;
-                `;
-
-                // Render daily tasks
-                this.renderDailyTasks(tasksContainer);
-
-                section.appendChild(title);
-                section.appendChild(tasksContainer);
-                
-                return section;
-            },
-
-            createCustomTasksSection() {
-                const section = document.createElement('div');
-                section.style.cssText = `
-                    background: #2a2a2a;
-                    border: 1px solid #444;
-                    border-radius: 8px;
-                    padding: 16px;
-                `;
-
-                const title = document.createElement('h3');
-                title.style.cssText = `
-                    margin: 0 0 16px 0;
-                    color: #fff;
-                    font-size: 14px;
-                    font-weight: 600;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                `;
-                title.innerHTML = '📝 Custom Tasks';
-
-                const tasksContainer = document.createElement('div');
-                tasksContainer.id = 'custom-tasks-container';
-                tasksContainer.style.cssText = `
-                    display: flex;
-                    flex-direction: column;
-                    gap: 12px;
-                `;
-
-                // Render custom tasks
-                this.renderCustomTasks(tasksContainer);
-
-                section.appendChild(title);
-                section.appendChild(tasksContainer);
-                
-                return section;
-            },
-
-            createAddTaskButton() {
-                const button = document.createElement('button');
-                button.id = 'add-custom-task-btn';
-                button.style.cssText = `
-                    background: linear-gradient(135deg, #4CAF50, #45a049);
-                    border: none;
-                    color: white;
-                    padding: 12px 20px;
-                    border-radius: 6px;
-                    cursor: pointer;
-                    font-size: 14px;
-                    font-weight: 600;
-                    transition: all 0.2s;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 8px;
-                `;
-                button.innerHTML = '➕ Add Custom Task';
-                
-                button.addEventListener('click', () => this.addCustomTask());
-                
-                return button;
-            },
-
-            renderDailyTasks(container) {
-                container.innerHTML = '';
-                
-                Object.entries(this.dailyTaskTypes).forEach(([key, taskType]) => {
-                    const task = this.dailyTasks.find(t => t.type === key) || {
-                        type: key,
-                        completed: 0,
-                        maxCount: taskType.maxCount
-                    };
-
-                    const taskElement = this.createDailyTaskElement(task, taskType);
-                    container.appendChild(taskElement);
-                });
-            },
-
-            renderCustomTasks(container) {
-                container.innerHTML = '';
-                
-                if (this.customTasks.length === 0) {
-                    const emptyMessage = document.createElement('div');
-                    emptyMessage.style.cssText = `
+            showEmptyState(content) {
+                content.innerHTML = `
+                    <div style="
                         color: #888;
                         font-style: italic;
                         text-align: center;
-                        padding: 20px;
-                    `;
-                    emptyMessage.textContent = 'No custom tasks yet. Click "Add Custom Task" to create one!';
-                    container.appendChild(emptyMessage);
+                        padding: 40px 20px;
+                        font-size: 14px;
+                    ">
+                        No todo items yet.<br>
+                        Click the ▼ menu to add items.
+                    </div>
+                `;
+            },
+
+            addTodoItem(type, itemType) {
+                console.log('📋 Adding todo item:', type, itemType.name);
+                
+                const todoItem = {
+                    id: Date.now() + Math.random(),
+                    type: type,
+                    name: itemType.name,
+                    icon: itemType.icon,
+                    color: itemType.color,
+                    description: itemType.description,
+                    completed: false,
+                    isCustom: type === 'custom',
+                    customText: type === 'custom' ? 'Custom Task' : '',
+                    createdAt: Date.now()
+                };
+
+                this.todoItems.push(todoItem);
+                this.saveState();
+                this.refreshDisplay();
+                
+                if (this.core && this.core.NotificationSystem) {
+                    this.core.NotificationSystem.show('To-Do List', `Added ${itemType.name}`, 'info', 2000);
+                }
+            },
+
+            refreshDisplay() {
+                if (!this.isActive) return;
+                
+                const content = document.getElementById('todo-content');
+                if (!content) return;
+                
+                if (this.todoItems.length === 0) {
+                    this.showEmptyState(content);
                     return;
                 }
-
-                this.customTasks.forEach((task, index) => {
-                    const taskElement = this.createCustomTaskElement(task, index);
-                    container.appendChild(taskElement);
+                
+                content.innerHTML = '';
+                
+                this.todoItems.forEach((item, index) => {
+                    const itemElement = this.createTodoItemElement(item, index);
+                    content.appendChild(itemElement);
                 });
             },
 
-            createDailyTaskElement(task, taskType) {
+            createTodoItemElement(item, index) {
                 const element = document.createElement('div');
+                element.className = 'todo-item';
+                element.dataset.itemId = item.id;
                 element.style.cssText = `
                     background: #333;
                     border: 1px solid #555;
@@ -466,10 +409,10 @@
 
                 const icon = document.createElement('span');
                 icon.style.cssText = `
-                    font-size: 20px;
-                    color: ${taskType.color};
+                    font-size: 18px;
+                    color: ${item.color};
                 `;
-                icon.textContent = taskType.icon;
+                icon.textContent = item.icon;
 
                 const info = document.createElement('div');
                 info.style.cssText = `
@@ -485,108 +428,68 @@
                     font-weight: 600;
                     font-size: 14px;
                 `;
-                name.textContent = taskType.name;
+                
+                if (item.isCustom) {
+                    // For custom tasks, make the name editable
+                    const nameInput = document.createElement('input');
+                    nameInput.type = 'text';
+                    nameInput.value = item.customText;
+                    nameInput.style.cssText = `
+                        background: transparent;
+                        border: none;
+                        color: #fff;
+                        font-weight: 600;
+                        font-size: 14px;
+                        outline: none;
+                        padding: 0;
+                    `;
+                    
+                    nameInput.addEventListener('change', (e) => {
+                        item.customText = e.target.value;
+                        this.saveState();
+                    });
+                    
+                    name.appendChild(nameInput);
+                } else {
+                    name.textContent = item.name;
+                }
 
                 const description = document.createElement('div');
                 description.style.cssText = `
                     color: #aaa;
                     font-size: 12px;
                 `;
-                description.textContent = taskType.description;
+                description.textContent = item.description;
 
                 info.appendChild(name);
                 info.appendChild(description);
 
-                const progress = document.createElement('div');
-                progress.style.cssText = `
+                const controls = document.createElement('div');
+                controls.style.cssText = `
                     display: flex;
                     align-items: center;
                     gap: 8px;
                 `;
 
-                // Create single checkbox for each task type
+                // Checkbox
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
-                checkbox.checked = task.completed >= taskType.maxCount;
+                checkbox.checked = item.completed;
                 checkbox.style.cssText = `
                     width: 16px;
                     height: 16px;
-                    accent-color: ${taskType.color};
+                    accent-color: ${item.color};
                     cursor: pointer;
                 `;
                 
                 checkbox.addEventListener('change', (e) => {
-                    if (e.target.checked) {
-                        this.updateDailyTask(task.type, taskType.maxCount);
-                    } else {
-                        this.updateDailyTask(task.type, 0);
-                    }
+                    item.completed = e.target.checked;
+                    this.saveState();
                 });
                 
-                progress.appendChild(checkbox);
+                controls.appendChild(checkbox);
 
-                // Show progress counter (e.g., "2/3" for Xanax)
-                const count = document.createElement('span');
-                count.style.cssText = `
-                    color: #fff;
-                    font-size: 12px;
-                    min-width: 40px;
-                    text-align: right;
-                `;
-                count.textContent = `(${task.completed}/${taskType.maxCount})`;
-
-                progress.appendChild(count);
-
-                element.appendChild(icon);
-                element.appendChild(info);
-                element.appendChild(progress);
-
-                return element;
-            },
-
-            createCustomTaskElement(task, index) {
-                const element = document.createElement('div');
-                element.style.cssText = `
-                    background: #333;
-                    border: 1px solid #555;
-                    border-radius: 6px;
-                    padding: 12px;
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                `;
-
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.checked = task.completed;
-                checkbox.style.cssText = `
-                    width: 16px;
-                    height: 16px;
-                    accent-color: #9C27B0;
-                    cursor: pointer;
-                `;
-                
-                checkbox.addEventListener('change', (e) => {
-                    this.updateCustomTask(index, e.target.checked);
-                });
-
-                const text = document.createElement('input');
-                text.type = 'text';
-                text.value = task.text;
-                text.style.cssText = `
-                    flex: 1;
-                    background: transparent;
-                    border: none;
-                    color: #fff;
-                    font-size: 14px;
-                    padding: 4px;
-                    outline: none;
-                `;
-                
-                text.addEventListener('change', (e) => {
-                    this.updateCustomTaskText(index, e.target.value);
-                });
-
+                // Delete button
                 const deleteBtn = document.createElement('button');
                 deleteBtn.style.cssText = `
                     background: none;
@@ -599,81 +502,26 @@
                     transition: background 0.2s;
                 `;
                 deleteBtn.innerHTML = '×';
+                deleteBtn.title = 'Delete item';
                 
                 deleteBtn.addEventListener('click', () => {
-                    this.deleteCustomTask(index);
+                    this.deleteTodoItem(index);
                 });
+                
+                controls.appendChild(deleteBtn);
 
-                element.appendChild(checkbox);
-                element.appendChild(text);
-                element.appendChild(deleteBtn);
+                element.appendChild(icon);
+                element.appendChild(info);
+                element.appendChild(controls);
 
                 return element;
             },
 
-            addCustomTask() {
-                const text = prompt('Enter custom task:');
-                if (text && text.trim()) {
-                    this.customTasks.push({
-                        text: text.trim(),
-                        completed: false,
-                        createdAt: Date.now()
-                    });
+            deleteTodoItem(index) {
+                if (confirm('Delete this todo item?')) {
+                    this.todoItems.splice(index, 1);
                     this.saveState();
                     this.refreshDisplay();
-                }
-            },
-
-            updateDailyTask(type, completed) {
-                const task = this.dailyTasks.find(t => t.type === type);
-                if (task) {
-                    task.completed = completed;
-                } else {
-                    this.dailyTasks.push({
-                        type: type,
-                        completed: completed,
-                        maxCount: this.dailyTaskTypes[type].maxCount
-                    });
-                }
-                this.saveState();
-                this.refreshDisplay();
-            },
-
-            updateCustomTask(index, completed) {
-                if (this.customTasks[index]) {
-                    this.customTasks[index].completed = completed;
-                    this.saveState();
-                    this.refreshDisplay();
-                }
-            },
-
-            updateCustomTaskText(index, text) {
-                if (this.customTasks[index] && text.trim()) {
-                    this.customTasks[index].text = text.trim();
-                    this.saveState();
-                }
-            },
-
-            deleteCustomTask(index) {
-                if (confirm('Delete this custom task?')) {
-                    this.customTasks.splice(index, 1);
-                    this.saveState();
-                    this.refreshDisplay();
-                }
-            },
-
-            refreshDisplay() {
-                if (!this.isActive) return;
-                
-                const dailyContainer = document.getElementById('daily-tasks-container');
-                const customContainer = document.getElementById('custom-tasks-container');
-                
-                if (dailyContainer) {
-                    this.renderDailyTasks(dailyContainer);
-                }
-                
-                if (customContainer) {
-                    this.renderCustomTasks(customContainer);
                 }
             },
 
@@ -688,7 +536,7 @@
                 console.log('📋 To-Do List panel hidden');
             },
 
-            addPanelEventListeners(panel, dropdownBtn, dropdownContent, resetBtn, closeBtn) {
+            addPanelEventListeners(panel, dropdownBtn, dropdownContent) {
                 // Dropdown functionality
                 dropdownBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -697,24 +545,6 @@
 
                 // Close dropdown when clicking outside
                 document.addEventListener('click', () => {
-                    dropdownContent.style.display = 'none';
-                });
-
-                // Reset daily tasks
-                resetBtn.addEventListener('click', () => {
-                    if (confirm('Reset all daily tasks to 0?')) {
-                        this.dailyTasks.forEach(task => {
-                            task.completed = 0;
-                        });
-                        this.saveState();
-                        this.refreshDisplay();
-                        dropdownContent.style.display = 'none';
-                    }
-                });
-
-                // Close panel
-                closeBtn.addEventListener('click', () => {
-                    this.hideTodoPanel();
                     dropdownContent.style.display = 'none';
                 });
             },
@@ -806,13 +636,11 @@
 
             loadState() {
                 try {
-                    this.dailyTasks = this.core.loadState('todo_daily_tasks', []);
-                    this.customTasks = this.core.loadState('todo_custom_tasks', []);
+                    this.todoItems = this.core.loadState('todo_items', []);
                     this.lastResetDate = this.core.loadState('todo_last_reset_date', null);
                     
                     console.log('📋 Loaded To-Do List state:', {
-                        dailyTasks: this.dailyTasks.length,
-                        customTasks: this.customTasks.length,
+                        todoItems: this.todoItems.length,
                         lastResetDate: this.lastResetDate
                     });
                 } catch (error) {
@@ -822,8 +650,7 @@
 
             saveState() {
                 try {
-                    this.core.saveState('todo_daily_tasks', this.dailyTasks);
-                    this.core.saveState('todo_custom_tasks', this.customTasks);
+                    this.core.saveState('todo_items', this.todoItems);
                     this.core.saveState('todo_last_reset_date', this.lastResetDate);
                     
                     console.log('💾 Saved To-Do List state');
@@ -846,26 +673,13 @@
             },
 
             resetDailyTasks() {
-                this.dailyTasks = [];
+                // Only reset non-custom tasks
+                this.todoItems.forEach(item => {
+                    if (!item.isCustom) {
+                        item.completed = false;
+                    }
+                });
                 console.log('🔄 Daily tasks reset');
-            },
-
-            startActivityMonitoring() {
-                // Monitor for Torn.com activity changes
-                // This is a basic implementation - can be enhanced with more specific detection
-                console.log('📋 Started activity monitoring');
-                
-                // Check for changes every 30 seconds
-                setInterval(() => {
-                    this.checkForActivityChanges();
-                }, 30000);
-            },
-
-            checkForActivityChanges() {
-                // This method can be enhanced to detect actual Torn.com activities
-                // For now, it's a placeholder for future implementation
-                // Could integrate with Torn API to detect Xanax usage, refills, etc.
-                console.log('📋 Checking for activity changes...');
             },
 
             restorePanelState() {
