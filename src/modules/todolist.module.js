@@ -198,6 +198,7 @@
                     display: flex;
                     align-items: center;
                     gap: 4px;
+                    position: relative;
                 `;
                 
                 // Dropdown menu button
@@ -229,7 +230,7 @@
                     border-radius: 4px;
                     border: 1px solid #555;
                     top: 100%;
-                    right: 0;
+                    left: 0;
                 `;
                 
                 // Add todo item options
@@ -247,10 +248,21 @@
                         display: flex;
                         align-items: center;
                         gap: 8px;
+                        transition: background 0.2s;
                     `;
                     addBtn.innerHTML = `${itemType.icon} ${itemType.name}`;
                     
+                    // Add hover effect
+                    addBtn.addEventListener('mouseenter', () => {
+                        addBtn.style.background = '#555';
+                    });
+                    
+                    addBtn.addEventListener('mouseleave', () => {
+                        addBtn.style.background = 'none';
+                    });
+                    
                     addBtn.addEventListener('click', () => {
+                        console.log('📋 Adding todo item:', key, itemType.name);
                         this.addTodoItem(key, itemType);
                         dropdownContent.style.display = 'none';
                     });
@@ -284,6 +296,9 @@
                 
                 headerControls.appendChild(dropdownBtn);
                 headerControls.appendChild(closeBtn);
+                
+                // Add dropdown content to header (positioned relative to headerControls)
+                headerControls.appendChild(dropdownContent);
                 
                 header.appendChild(title);
                 header.appendChild(headerControls);
@@ -540,11 +555,18 @@
                 // Dropdown functionality
                 dropdownBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
+                    console.log('📋 Dropdown button clicked, current display:', dropdownContent.style.display);
+                    const newDisplay = dropdownContent.style.display === 'block' ? 'none' : 'block';
+                    dropdownContent.style.display = newDisplay;
+                    console.log('📋 Dropdown display set to:', newDisplay);
                 });
 
                 // Close dropdown when clicking outside
-                document.addEventListener('click', () => {
+                document.addEventListener('click', (e) => {
+                    // Don't close if clicking on the dropdown button or content
+                    if (e.target === dropdownBtn || dropdownContent.contains(e.target)) {
+                        return;
+                    }
                     dropdownContent.style.display = 'none';
                 });
             },
