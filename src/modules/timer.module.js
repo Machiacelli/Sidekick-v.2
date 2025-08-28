@@ -54,8 +54,8 @@
                 // Don't start update loop until actually needed
                 // this.startUpdateLoop(); // REMOVED - will be called in lazyInit()
                 
-                // Don't restore panel state immediately
-                // this.restorePanelState(); // REMOVED - will be called in lazyInit()
+                // Restore panel state immediately (lightweight operation)
+                this.restorePanelState();
                 
                 console.log('✅ Timer module initialized successfully');
                 return true;
@@ -69,9 +69,6 @@
                 
                 // Start update loop only when needed
                 this.startUpdateLoop();
-                
-                // Restore panel state only when needed
-                this.restorePanelState();
                 
                 // Fetch cooldown data only when needed
                 this.fetchCooldownData();
@@ -1315,10 +1312,10 @@
                     const wasOpen = window.SidekickModules.Core.loadState('timer_panel_open', false);
                     if (wasOpen) {
                         console.log('🔄 Restoring timer panel state...');
-                        // Longer delay to ensure page is fully loaded and other modules are ready
+                        // Shorter delay since we're calling this immediately in init
                         setTimeout(() => {
                             this.showTimerPanel();
-                        }, 1500);
+                        }, 800);
                     }
                 } catch (error) {
                     console.error('❌ Failed to restore panel state:', error);
