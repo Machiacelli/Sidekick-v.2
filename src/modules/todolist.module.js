@@ -30,6 +30,7 @@
             core: null,
             todoItems: [],
             lastResetDate: null,
+            isPinned: false,
 
             // Todo item types
             todoItemTypes: {
@@ -162,7 +163,7 @@
                     max-width: ${maxWidth}px;
                     max-height: ${maxHeight}px;
                     z-index: ${1000 + existingPanels.length};
-                    resize: both;
+                    resize: ${this.isPinned ? 'none' : 'both'};
                     overflow: visible;
                 `;
 
@@ -176,7 +177,7 @@
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    cursor: move;
+                    cursor: ${this.isPinned ? 'default' : 'move'};
                     height: 24px;
                     flex-shrink: 0;
                     border-radius: 7px 7px 0 0;
@@ -270,6 +271,50 @@
                     dropdownContent.appendChild(addBtn);
                 });
                 
+                // Add separator
+                const separator = document.createElement('div');
+                separator.style.cssText = `
+                    height: 1px;
+                    background: #555;
+                    margin: 4px 0;
+                `;
+                dropdownContent.appendChild(separator);
+                
+                // Add pin button
+                const pinBtn = document.createElement('button');
+                pinBtn.id = 'pin-panel-btn';
+                pinBtn.style.cssText = `
+                    background: none;
+                    border: none;
+                    color: #fff;
+                    padding: 8px 12px;
+                    width: 100%;
+                    text-align: left;
+                    cursor: pointer;
+                    font-size: 12px;
+                    display: flex;
+                        align-items: center;
+                    gap: 8px;
+                    transition: background 0.2s ease;
+                `;
+                pinBtn.innerHTML = '📌 Pin Panel';
+                pinBtn.title = 'Pin panel to stay on top';
+                
+                // Add hover effects
+                pinBtn.addEventListener('mouseenter', () => {
+                    pinBtn.style.background = '#555';
+                });
+                pinBtn.addEventListener('mouseleave', () => {
+                    pinBtn.style.background = 'none';
+                });
+                
+                pinBtn.addEventListener('click', () => {
+                    this.togglePinPanel();
+                    dropdownContent.style.display = 'none';
+                });
+                
+                dropdownContent.appendChild(pinBtn);
+                
                 // Close button (X button)
                 const closeBtn = document.createElement('button');
                 closeBtn.style.cssText = `
@@ -300,8 +345,8 @@
                 // Add dropdown content to headerControls for proper positioning
                 headerControls.appendChild(dropdownContent);
                 
-                header.appendChild(headerControls);
                 header.appendChild(title);
+                header.appendChild(headerControls);
 
                 // Create content area
                 const content = document.createElement('div');
@@ -329,6 +374,12 @@
                 } else {
                     console.error('❌ Content area not found');
                     return;
+                }
+                
+                // Update pin button text based on saved state
+                if (this.isPinned) {
+                    pinBtn.innerHTML = '📌 Unpin Panel';
+                    pinBtn.title = 'Unpin panel';
                 }
                 
                 // Add event listeners
@@ -577,6 +628,9 @@
                 let dragOffset = { x: 0, y: 0 };
 
                 header.addEventListener('mousedown', (e) => {
+                    // Don't allow dragging if panel is pinned
+                    if (this.isPinned) return;
+                    
                     isDragging = true;
                     const rect = panel.getBoundingClientRect();
                     dragOffset.x = e.clientX - rect.left;
@@ -585,7 +639,7 @@
                 });
 
                 document.addEventListener('mousemove', (e) => {
-                    if (!isDragging) return;
+                    if (!isDragging || this.isPinned) return;
                     
                     const sidebar = document.getElementById('sidekick-sidebar');
                     const sidebarRect = sidebar.getBoundingClientRect();
@@ -619,6 +673,9 @@
                     let lastSize = { width: panel.offsetWidth, height: panel.offsetHeight };
                     
                     const resizeObserver = new ResizeObserver((entries) => {
+                        // Don't apply constraints if panel is pinned
+                        if (this.isPinned) return;
+                        
                         // Clear previous timeout
                         if (resizeTimeout) clearTimeout(resizeTimeout);
                         
@@ -661,10 +718,12 @@
                 try {
                     this.todoItems = this.core.loadState('todo_items', []);
                     this.lastResetDate = this.core.loadState('todo_last_reset_date', null);
+                    this.isPinned = this.core.loadState('todo_panel_pinned', false);
                     
                     console.log('📋 Loaded To-Do List state:', {
                         todoItems: this.todoItems.length,
-                        lastResetDate: this.lastResetDate
+                        lastResetDate: this.lastResetDate,
+                        isPinned: this.isPinned
                     });
                 } catch (error) {
                     console.error('❌ Failed to load To-Do List state:', error);
@@ -717,6 +776,35 @@
                 } catch (error) {
                     console.error('❌ Failed to restore panel state:', error);
                 }
+            },
+
+            togglePinPanel() {
+                this.isPinned = !this.isPinned;
+                const panel = document.getElementById('sidekick-todo-panel');
+                if (panel) {
+                    // Update resize and cursor based on pinned state
+                    panel.style.resize = this.isPinned ? 'none' : 'both';
+                    const header = panel.querySelector('.todo-header');
+                    if (header) {
+                        header.style.cursor = this.isPinned ? 'default' : 'move';
+                    }
+                }
+                
+                // Save pinned state
+                this.core.saveState('todo_panel_pinned', this.isPinned);
+                
+                // Update pin button text
+                const pinBtn = document.getElementById('pin-panel-btn');
+                if (pinBtn) {
+                    pinBtn.innerHTML = this.isPinned ? '📌 Unpin Panel' : '📌 Pin Panel';
+                    pinBtn.title = this.isPinned ? 'Unpin panel' : 'Pin panel to stay on top';
+                }
+                
+                this.core.NotificationSystem.show(
+                    'To-Do List',
+                    this.isPinned ? 'Panel pinned! It will stay on top of other panels.' : 'Panel unpinned.',
+                    'info'
+                );
             }
         };
 
