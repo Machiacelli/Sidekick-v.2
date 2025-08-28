@@ -155,7 +155,6 @@
                                     background: #333;
                                     min-width: 160px;
                                     max-height: 200px;
-                                    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
                                     z-index: 100000;
                                     border-radius: 4px;
                                     border: 1px solid #555;
@@ -591,7 +590,6 @@
                     padding: 20px;
                     border-radius: 12px;
                     font-family: 'Segoe UI', sans-serif;
-                    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
                     border: 1px solid #444;
                     z-index: 1000000;
                     min-width: 300px;
