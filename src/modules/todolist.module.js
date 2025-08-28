@@ -164,7 +164,7 @@
                     max-height: ${maxHeight}px;
                     z-index: ${1000 + existingPanels.length};
                     resize: ${this.isPinned ? 'none' : 'both'};
-                    overflow: visible;
+                    overflow: hidden;
                 `;
 
                 // Create header
@@ -678,7 +678,7 @@
             },
 
             addResizeFunctionality(panel) {
-                // Resize observer to save size changes
+                // Add resize constraints and functionality
                 if (window.ResizeObserver) {
                     let resizeTimeout;
                     let lastSize = { width: panel.offsetWidth, height: panel.offsetHeight };
@@ -707,6 +707,43 @@
                     });
                     resizeObserver.observe(panel);
                 }
+                
+                // Add manual resize constraints
+                const handleResize = () => {
+                    if (this.isPinned) return;
+                    
+                    const sidebar = document.getElementById('sidekick-sidebar');
+                    if (!sidebar) return;
+                    
+                    const sidebarRect = sidebar.getBoundingClientRect();
+                    const panelRect = panel.getBoundingClientRect();
+                    
+                    // Check if panel is going outside sidebar bounds
+                    let needsAdjustment = false;
+                    let newWidth = panel.offsetWidth;
+                    let newHeight = panel.offsetHeight;
+                    
+                    // Constrain width
+                    if (panelRect.left + newWidth > sidebar.offsetWidth) {
+                        newWidth = sidebar.offsetWidth - panelRect.left;
+                        needsAdjustment = true;
+                    }
+                    
+                    // Constrain height
+                    if (panelRect.top + newHeight > sidebar.offsetHeight) {
+                        newHeight = sidebar.offsetHeight - panelRect.top;
+                        needsAdjustment = true;
+                    }
+                    
+                    // Apply constraints if needed
+                    if (needsAdjustment) {
+                        panel.style.width = Math.max(250, newWidth) + 'px';
+                        panel.style.height = Math.max(150, newHeight) + 'px';
+                    }
+                };
+                
+                // Listen for resize events
+                panel.addEventListener('resize', handleResize);
             },
 
             savePanelPosition(panel) {
