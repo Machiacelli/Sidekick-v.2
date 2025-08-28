@@ -605,12 +605,37 @@
             hideTodoPanel() {
                 const panel = document.getElementById('sidekick-todo-panel');
                 if (panel) {
+                    // Clean up event listeners and observers
+                    this.cleanupPanel(panel);
                     panel.remove();
                 }
                 
                 this.isActive = false;
                 this.core.saveState('todo_panel_open', false);
                 console.log('📋 To-Do List panel hidden');
+            },
+
+            cleanupPanel(panel) {
+                // Clean up drag handlers
+                if (panel._dragHandlers) {
+                    const { mousedown, mousemove, mouseup, header } = panel._dragHandlers;
+                    header.removeEventListener('mousedown', mousedown);
+                    document.removeEventListener('mousemove', mousemove);
+                    document.removeEventListener('mouseup', mouseup);
+                    delete panel._dragHandlers;
+                }
+                
+                // Clean up resize observer
+                if (panel._resizeObserver) {
+                    panel._resizeObserver.disconnect();
+                    delete panel._resizeObserver;
+                }
+                
+                // Clean up resize handler
+                if (panel._resizeHandler) {
+                    panel.removeEventListener('resize', panel._resizeHandler);
+                    delete panel._resizeHandler;
+                }
             },
 
             addPanelEventListeners(panel, dropdownBtn, dropdownContent) {
@@ -679,10 +704,10 @@
 
             addResizeFunctionality(panel) {
                 // Add resize constraints and functionality
+                let resizeTimeout;
+                let lastSize = { width: panel.offsetWidth, height: panel.offsetHeight };
+                
                 if (window.ResizeObserver) {
-                    let resizeTimeout;
-                    let lastSize = { width: panel.offsetWidth, height: panel.offsetHeight };
-                    
                     const resizeObserver = new ResizeObserver((entries) => {
                         // Don't apply constraints if panel is pinned
                         if (this.isPinned) return;
@@ -697,53 +722,66 @@
                                 height: panel.offsetHeight 
                             };
                             
-                            // Only save if size actually changed significantly (more than 5px)
-                            if (Math.abs(currentSize.width - lastSize.width) > 5 || 
-                                Math.abs(currentSize.height - lastSize.height) > 5) {
+                            // Only save if size actually changed significantly (more than 10px)
+                            if (Math.abs(currentSize.width - lastSize.width) > 10 || 
+                                Math.abs(currentSize.height - lastSize.height) > 10) {
                                 lastSize = currentSize;
                                 this.savePanelSize(panel);
                             }
-                        }, 100); // 100ms debounce
+                        }, 200); // 200ms debounce for better performance
                     });
                     resizeObserver.observe(panel);
+                    
+                    // Store reference for cleanup
+                    panel._resizeObserver = resizeObserver;
                 }
                 
-                // Add manual resize constraints
+                // Add manual resize constraints with throttling
+                let constraintTimeout;
                 const handleResize = () => {
                     if (this.isPinned) return;
                     
-                    const sidebar = document.getElementById('sidekick-sidebar');
-                    if (!sidebar) return;
+                    // Throttle constraint checks
+                    if (constraintTimeout) return;
                     
-                    const sidebarRect = sidebar.getBoundingClientRect();
-                    const panelRect = panel.getBoundingClientRect();
-                    
-                    // Check if panel is going outside sidebar bounds
-                    let needsAdjustment = false;
-                    let newWidth = panel.offsetWidth;
-                    let newHeight = panel.offsetHeight;
-                    
-                    // Constrain width
-                    if (panelRect.left + newWidth > sidebar.offsetWidth) {
-                        newWidth = sidebar.offsetWidth - panelRect.left;
-                        needsAdjustment = true;
-                    }
-                    
-                    // Constrain height
-                    if (panelRect.top + newHeight > sidebar.offsetHeight) {
-                        newHeight = sidebar.offsetHeight - panelRect.top;
-                        needsAdjustment = true;
-                    }
-                    
-                    // Apply constraints if needed
-                    if (needsAdjustment) {
-                        panel.style.width = Math.max(250, newWidth) + 'px';
-                        panel.style.height = Math.max(150, newHeight) + 'px';
-                    }
+                    constraintTimeout = setTimeout(() => {
+                        const sidebar = document.getElementById('sidekick-sidebar');
+                        if (!sidebar) return;
+                        
+                        const panelRect = panel.getBoundingClientRect();
+                        
+                        // Check if panel is going outside sidebar bounds
+                        let needsAdjustment = false;
+                        let newWidth = panel.offsetWidth;
+                        let newHeight = panel.offsetHeight;
+                        
+                        // Constrain width
+                        if (panelRect.left + newWidth > sidebar.offsetWidth) {
+                            newWidth = sidebar.offsetWidth - panelRect.left;
+                            needsAdjustment = true;
+                        }
+                        
+                        // Constrain height
+                        if (panelRect.top + newHeight > sidebar.offsetHeight) {
+                            newHeight = sidebar.offsetHeight - panelRect.top;
+                            needsAdjustment = true;
+                        }
+                        
+                        // Apply constraints if needed
+                        if (needsAdjustment) {
+                            panel.style.width = Math.max(250, newWidth) + 'px';
+                            panel.style.height = Math.max(150, newHeight) + 'px';
+                        }
+                        
+                        constraintTimeout = null;
+                    }, 50); // 50ms throttle
                 };
                 
                 // Listen for resize events
                 panel.addEventListener('resize', handleResize);
+                
+                // Store reference for cleanup
+                panel._resizeHandler = handleResize;
             },
 
             savePanelPosition(panel) {
