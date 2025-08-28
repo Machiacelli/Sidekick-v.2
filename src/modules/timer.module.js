@@ -135,6 +135,10 @@
                         border-radius: 7px 7px 0 0;
                     ">
                         <div style="display: flex; align-items: center; gap: 4px;">
+                            <span style="font-size: 14px;">⏰</span>
+                            <span style="font-weight: bold; color: #4CAF50; font-size: 12px;">Timer Panel</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 4px;">
                             <div class="timer-dropdown" style="position: relative; display: inline-block;">
                                 <button class="dropdown-btn" style="
                                     background: none;
@@ -149,11 +153,6 @@
                                     ▼
                                 </button>
                             </div>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 4px;">
-                            <span style="font-size: 14px;">⏰</span>
-                            <span style="font-weight: bold; color: #4CAF50; font-size: 12px;">Timer Panel</span>
-                        </div>
                                                                  <div class="dropdown-content" style="
                                      display: none;
                                      position: fixed;
