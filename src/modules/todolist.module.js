@@ -163,7 +163,7 @@
                     max-height: ${maxHeight}px;
                     z-index: ${1000 + existingPanels.length};
                     resize: both;
-                    overflow: hidden;
+                    overflow: visible;
                 `;
 
                 // Create header
@@ -198,7 +198,6 @@
                     display: flex;
                     align-items: center;
                     gap: 4px;
-                    position: relative;
                 `;
                 
                 // Dropdown menu button
@@ -222,14 +221,14 @@
                 dropdownContent.className = 'dropdown-content';
                 dropdownContent.style.cssText = `
                     display: none;
-                    position: absolute;
+                    position: fixed;
                     background: #333;
                     min-width: 140px;
                     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-                    z-index: 1001;
+                    z-index: 9999;
                     border-radius: 4px;
                     border: 1px solid #555;
-                    top: 100%;
+                    top: 0;
                     left: 0;
                 `;
                 
@@ -297,11 +296,14 @@
                 headerControls.appendChild(dropdownBtn);
                 headerControls.appendChild(closeBtn);
                 
-                // Add dropdown content to header (positioned relative to headerControls)
-                headerControls.appendChild(dropdownContent);
-                
                 header.appendChild(title);
                 header.appendChild(headerControls);
+                
+                // Add dropdown content to sidebar content area for proper layering
+                const contentArea = document.getElementById('sidekick-content');
+                if (contentArea) {
+                    contentArea.appendChild(dropdownContent);
+                }
 
                 // Create content area
                 const content = document.createElement('div');
@@ -556,9 +558,22 @@
                 dropdownBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     console.log('📋 Dropdown button clicked, current display:', dropdownContent.style.display);
-                    const newDisplay = dropdownContent.style.display === 'block' ? 'none' : 'block';
-                    dropdownContent.style.display = newDisplay;
-                    console.log('📋 Dropdown display set to:', newDisplay);
+                    
+                    if (dropdownContent.style.display === 'block') {
+                        dropdownContent.style.display = 'none';
+                    } else {
+                        // Calculate dropdown position relative to the button
+                        const buttonRect = dropdownBtn.getBoundingClientRect();
+                        const sidebar = document.getElementById('sidekick-sidebar');
+                        const sidebarRect = sidebar ? sidebar.getBoundingClientRect() : { left: 0, top: 0 };
+                        
+                        // Position dropdown below the button
+                        dropdownContent.style.left = (buttonRect.left - sidebarRect.left) + 'px';
+                        dropdownContent.style.top = (buttonRect.bottom - sidebarRect.top + 5) + 'px';
+                        dropdownContent.style.display = 'block';
+                    }
+                    
+                    console.log('📋 Dropdown display set to:', dropdownContent.style.display);
                 });
 
                 // Close dropdown when clicking outside
