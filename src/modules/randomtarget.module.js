@@ -137,12 +137,21 @@
                 // Add to page
                 document.body.appendChild(this.targetButton);
                 
+                // Add viewport resize handler to keep button visible
+                this.addViewportResizeHandler(this.targetButton);
+                
                 // Save button active state
                 window.SidekickModules.Core.saveState('random_target_active', true);
             },
 
             hideTargetButton() {
                 if (this.targetButton) {
+                    // Clean up resize handler
+                    if (this.targetButton.viewportResizeHandler) {
+                        window.removeEventListener('resize', this.targetButton.viewportResizeHandler);
+                        this.targetButton.viewportResizeHandler = null;
+                    }
+                    
                     this.targetButton.remove();
                     this.targetButton = null;
                 }
@@ -155,13 +164,18 @@
             addDragging(button) {
                 let isDragging = false;
                 let dragOffset = { x: 0, y: 0 };
+                let hasMoved = false; // Track if button actually moved during drag
+                let startPosition = { x: 0, y: 0 }; // Track starting position
                 
                 button.addEventListener('mousedown', (e) => {
                     if (e.target === button) {
                         isDragging = true;
+                        hasMoved = false;
                         const rect = button.getBoundingClientRect();
                         dragOffset.x = e.clientX - rect.left;
                         dragOffset.y = e.clientY - rect.top;
+                        startPosition.x = rect.left;
+                        startPosition.y = rect.top;
                         e.preventDefault();
                         e.stopPropagation();
                         
@@ -179,6 +193,13 @@
                     const newX = e.clientX - dragOffset.x;
                     const newY = e.clientY - dragOffset.y;
                     
+                    // Check if button has moved significantly (more than 5 pixels)
+                    const deltaX = Math.abs(newX - startPosition.x);
+                    const deltaY = Math.abs(newY - startPosition.y);
+                    if (deltaX > 5 || deltaY > 5) {
+                        hasMoved = true;
+                    }
+                    
                     // Keep within viewport bounds
                     const maxX = window.innerWidth - button.offsetWidth;
                     const maxY = window.innerHeight - button.offsetHeight;
@@ -191,11 +212,17 @@
                     if (isDragging) {
                         isDragging = false;
                         button.style.cursor = 'move';
-                        this.saveButtonPosition(button);
+                        
+                        // Only save position if button actually moved
+                        if (hasMoved) {
+                            this.saveButtonPosition(button);
+                        }
                         
                         // Prevent click event from firing after drag
-                        e.preventDefault();
-                        e.stopPropagation();
+                        if (hasMoved) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }
                     }
                 });
             },
@@ -208,10 +235,81 @@
                 window.SidekickModules.Core.saveState('random_target_position', position);
             },
 
+            addViewportResizeHandler(button) {
+                // Handle viewport resize to keep button visible
+                const handleResize = () => {
+                    const currentX = parseInt(button.style.left) || 10;
+                    const currentY = parseInt(button.style.top) || 10;
+                    
+                    // Get current viewport bounds
+                    const maxX = window.innerWidth - button.offsetWidth;
+                    const maxY = window.innerHeight - button.offsetHeight;
+                    
+                    // Check if button is outside viewport bounds
+                    let needsReposition = false;
+                    let newX = currentX;
+                    let newY = currentY;
+                    
+                    if (currentX > maxX) {
+                        newX = maxX;
+                        needsReposition = true;
+                    }
+                    
+                    if (currentY > maxY) {
+                        newY = maxY;
+                        needsReposition = true;
+                    }
+                    
+                    // Ensure minimum values
+                    if (newX < 0) {
+                        newX = 0;
+                        needsReposition = true;
+                    }
+                    
+                    if (newY < 0) {
+                        newY = 0;
+                        needsReposition = true;
+                    }
+                    
+                    // Reposition button if needed
+                    if (needsReposition) {
+                        console.log('🎯 Repositioning button due to viewport resize');
+                        button.style.left = newX + 'px';
+                        button.style.top = newY + 'px';
+                        
+                        // Save new position
+                        this.saveButtonPosition(button);
+                    }
+                };
+                
+                // Add resize event listener
+                window.addEventListener('resize', handleResize);
+                
+                // Store reference for cleanup
+                button.viewportResizeHandler = handleResize;
+            },
+
             loadButtonPosition() {
                 try {
                     const position = window.SidekickModules.Core.loadState('random_target_position', { x: 10, y: 10 });
-                    return position;
+                    
+                    // Ensure position is within current viewport bounds
+                    const maxX = window.innerWidth - 40; // 40px is button width
+                    const maxY = window.innerHeight - 40; // 40px is button height
+                    
+                    // Constrain position to viewport
+                    const constrainedPosition = {
+                        x: Math.max(0, Math.min(position.x, maxX)),
+                        y: Math.max(0, Math.min(position.y, maxY))
+                    };
+                    
+                    // If position was constrained, save the new position
+                    if (constrainedPosition.x !== position.x || constrainedPosition.y !== position.y) {
+                        console.log('🎯 Constraining button position to viewport bounds');
+                        window.SidekickModules.Core.saveState('random_target_position', constrainedPosition);
+                    }
+                    
+                    return constrainedPosition;
                 } catch (error) {
                     return { x: 10, y: 10 };
                 }

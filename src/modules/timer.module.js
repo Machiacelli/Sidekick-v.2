@@ -48,22 +48,43 @@
                     return false;
                 }
 
-                // Load saved timers
+                // Load saved timers (lightweight operation)
                 this.loadState();
                 
-                // Start update loop
-                this.startUpdateLoop();
+                // Don't start update loop until actually needed
+                // this.startUpdateLoop(); // REMOVED - will be called in lazyInit()
                 
-                // Check if panel was previously open and restore it
-                this.restorePanelState();
+                // Don't restore panel state immediately
+                // this.restorePanelState(); // REMOVED - will be called in lazyInit()
                 
                 console.log('✅ Timer module initialized successfully');
                 return true;
             },
 
+            // Add new method for lazy initialization
+            lazyInit() {
+                if (this.isLazyInitialized) return;
+                
+                console.log('⏰ Performing lazy initialization...');
+                
+                // Start update loop only when needed
+                this.startUpdateLoop();
+                
+                // Restore panel state only when needed
+                this.restorePanelState();
+                
+                // Fetch cooldown data only when needed
+                this.fetchCooldownData();
+                
+                this.isLazyInitialized = true;
+            },
+
             // Main activation method - called when user clicks Timer button
             activate() {
                 console.log('⏰ Timer module activated!');
+                
+                // Perform lazy initialization when user first activates
+                this.lazyInit();
                 
                 if (this.isActive) {
                     this.hideTimerPanel();
@@ -252,11 +273,11 @@
                     document.body.appendChild(panel);
                 }
                 
-                                 // Add event listeners
-                 this.addPanelEventListeners();
-                 
-                 // Add custom scrollbar styling
-                 this.addCustomScrollbarStyles();
+                                                 // Add event listeners
+                this.addPanelEventListeners();
+                
+                // Add custom scrollbar styling
+                this.addCustomScrollbarStyles();
                 
                 // Load existing timers
                 this.renderTimers();
@@ -264,11 +285,14 @@
                 // Fetch current cooldown data immediately
                 this.fetchCooldownData();
                 
-                // Add dragging functionality
-                this.addDragging(panel);
-                
-                // Add resize constraints to prevent going outside sidebar
-                this.addResizeConstraints(panel);
+                // Defer heavy UI operations to improve performance
+                requestAnimationFrame(() => {
+                    // Add dragging functionality
+                    this.addDragging(panel);
+                    
+                    // Add resize constraints to prevent going outside sidebar
+                    this.addResizeConstraints(panel);
+                });
                 
                 // Save panel open state
                 window.SidekickModules.Core.saveState('timer_panel_open', true);
@@ -896,19 +920,23 @@
             },
 
             async fetchCooldownData() {
+                // Don't block initialization - return immediately if no API key
+                const apiKey = window.SidekickModules.Core.loadState('sidekick_api_key', '');
+                if (!apiKey) {
+                    console.warn('No API key available for cooldown data');
+                    return;
+                }
+
+                // Use a flag to prevent multiple simultaneous calls
+                if (this.isFetchingCooldowns) {
+                    console.log('⏳ Cooldown fetch already in progress...');
+                    return;
+                }
+                
+                this.isFetchingCooldowns = true;
+                
                 try {
                     // Fetch cooldown data from Torn API
-                    const apiKey = window.SidekickModules.Core.loadState('sidekick_api_key', '');
-                    if (!apiKey) {
-                        console.warn('No API key available for cooldown data');
-                        window.SidekickModules.Core.NotificationSystem.show(
-                            'Timer',
-                            'No API key found. Please set your API key in settings first.',
-                            'warning'
-                        );
-                        return;
-                    }
-
                     console.log('🔄 Fetching cooldown data from Torn API...');
                     
                     // First test if API key is working by checking user profile
@@ -980,8 +1008,8 @@
                     
                     console.log('📊 Processed cooldown data:', this.cooldownData);
                     
-                                         // Don't show notifications for automatic checks (only for manual refresh)
-                     // Notifications are handled by checkForCooldownChanges and checkForCooldownsAndUpdate
+                    // Don't show notifications for automatic checks (only for manual refresh)
+                    // Notifications are handled by checkForCooldownChanges and checkForCooldownsAndUpdate
                     
                     // Update timers display
                     if (this.isActive) {
@@ -994,23 +1022,25 @@
                         `Failed to fetch cooldown data: ${error.message}`,
                         'error'
                     );
+                } finally {
+                    this.isFetchingCooldowns = false;
                 }
             },
 
             startUpdateLoop() {
-                // Update timer display every second
+                // Update timer display every second (only when active and has timers)
                 this.updateInterval = setInterval(() => {
                     if (this.isActive && this.timers.length > 0) {
                         this.renderTimers();
                     }
                 }, 1000);
                 
-                // Check for cooldown changes every 30 seconds (more responsive than waiting for manual refresh)
+                // Check for cooldown changes every 60 seconds (reduced frequency for better performance)
                 this.cooldownCheckInterval = setInterval(() => {
                     if (this.isActive) {
                         this.checkForCooldownChanges();
                     }
-                }, 30000); // 30 seconds
+                }, 60000); // 60 seconds (increased from 30 seconds)
             },
 
             stopUpdateLoop() {
@@ -1285,10 +1315,10 @@
                     const wasOpen = window.SidekickModules.Core.loadState('timer_panel_open', false);
                     if (wasOpen) {
                         console.log('🔄 Restoring timer panel state...');
-                        // Small delay to ensure DOM is ready
+                        // Longer delay to ensure page is fully loaded and other modules are ready
                         setTimeout(() => {
                             this.showTimerPanel();
-                        }, 500);
+                        }, 1500);
                     }
                 } catch (error) {
                     console.error('❌ Failed to restore panel state:', error);
