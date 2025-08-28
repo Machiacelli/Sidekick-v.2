@@ -232,85 +232,120 @@
                     x: parseInt(button.style.left) || 10,
                     y: parseInt(button.style.top) || 10
                 };
+                
+                // Save both position and current viewport dimensions
                 window.SidekickModules.Core.saveState('random_target_position', position);
+                window.SidekickModules.Core.saveState('random_target_viewport', {
+                    width: window.innerWidth,
+                    height: window.innerHeight
+                });
+                
+                console.log('💾 Saved button position:', position, 'viewport:', { width: window.innerWidth, height: window.innerHeight });
             },
 
             addViewportResizeHandler(button) {
-                // Handle viewport resize to keep button visible
+                // Handle viewport resize to maintain relative position
                 const handleResize = () => {
+                    // Get current button position
                     const currentX = parseInt(button.style.left) || 10;
                     const currentY = parseInt(button.style.top) || 10;
                     
-                    // Get current viewport bounds
-                    const maxX = window.innerWidth - button.offsetWidth;
-                    const maxY = window.innerHeight - button.offsetHeight;
+                    // Get current viewport dimensions
+                    const viewportWidth = window.innerWidth;
+                    const viewportHeight = window.innerHeight;
+                    const buttonSize = button.offsetWidth || 40;
                     
-                    // Check if button is outside viewport bounds
-                    let needsReposition = false;
-                    let newX = currentX;
-                    let newY = currentY;
+                    // Calculate relative position as percentages
+                    const relativeX = (currentX / (viewportWidth - buttonSize)) * 100;
+                    const relativeY = (currentY / (viewportHeight - buttonSize)) * 100;
                     
-                    if (currentX > maxX) {
-                        newX = maxX;
-                        needsReposition = true;
-                    }
+                    // Clamp relative values to 0-100 range
+                    const clampedRelativeX = Math.max(0, Math.min(100, relativeX));
+                    const clampedRelativeY = Math.max(0, Math.min(100, relativeY));
                     
-                    if (currentY > maxY) {
-                        newY = maxY;
-                        needsReposition = true;
-                    }
+                    // Convert back to absolute pixels for new viewport
+                    const newX = Math.round((clampedRelativeX / 100) * (viewportWidth - buttonSize));
+                    const newY = Math.round((clampedRelativeY / 100) * (viewportHeight - buttonSize));
                     
                     // Ensure minimum values
-                    if (newX < 0) {
-                        newX = 0;
-                        needsReposition = true;
-                    }
+                    const finalX = Math.max(0, newX);
+                    const finalY = Math.max(0, newY);
                     
-                    if (newY < 0) {
-                        newY = 0;
-                        needsReposition = true;
-                    }
+                    // Update button position to maintain relative location
+                    button.style.left = finalX + 'px';
+                    button.style.top = finalY + 'px';
                     
-                    // Reposition button if needed
-                    if (needsReposition) {
-                        console.log('🎯 Repositioning button due to viewport resize');
-                        button.style.left = newX + 'px';
-                        button.style.top = newY + 'px';
-                        
-                        // Save new position
-                        this.saveButtonPosition(button);
-                    }
+                    // Save new position and viewport
+                    this.saveButtonPosition(button);
+                    
+                    console.log('🎯 Maintained relative position during resize:', { 
+                        relative: { x: clampedRelativeX.toFixed(1) + '%', y: clampedRelativeY.toFixed(1) + '%' },
+                        absolute: { x: finalX, y: finalY }
+                    });
                 };
                 
-                // Add resize event listener
-                window.addEventListener('resize', handleResize);
+                // Add resize event listener with debouncing for performance
+                let resizeTimeout;
+                const debouncedHandleResize = () => {
+                    clearTimeout(resizeTimeout);
+                    resizeTimeout = setTimeout(handleResize, 100);
+                };
+                
+                window.addEventListener('resize', debouncedHandleResize);
                 
                 // Store reference for cleanup
-                button.viewportResizeHandler = handleResize;
+                button.viewportResizeHandler = debouncedHandleResize;
             },
 
             loadButtonPosition() {
                 try {
                     const position = window.SidekickModules.Core.loadState('random_target_position', { x: 10, y: 10 });
                     
-                    // Ensure position is within current viewport bounds
-                    const maxX = window.innerWidth - 40; // 40px is button width
-                    const maxY = window.innerHeight - 40; // 40px is button height
+                    // Instead of constraining to viewport bounds, maintain relative position
+                    // This prevents the button from "jumping" when viewport changes
+                    const viewportWidth = window.innerWidth;
+                    const viewportHeight = window.innerHeight;
+                    const buttonSize = 40; // Button width/height
                     
-                    // Constrain position to viewport
-                    const constrainedPosition = {
-                        x: Math.max(0, Math.min(position.x, maxX)),
-                        y: Math.max(0, Math.min(position.y, maxY))
-                    };
+                    // Calculate relative position as percentages (0-100)
+                    const relativeX = (position.x / (viewportWidth - buttonSize)) * 100;
+                    const relativeY = (position.y / (viewportHeight - buttonSize)) * 100;
                     
-                    // If position was constrained, save the new position
-                    if (constrainedPosition.x !== position.x || constrainedPosition.y !== position.y) {
-                        console.log('🎯 Constraining button position to viewport bounds');
-                        window.SidekickModules.Core.saveState('random_target_position', constrainedPosition);
+                    // Clamp relative values to 0-100 range
+                    const clampedRelativeX = Math.max(0, Math.min(100, relativeX));
+                    const clampedRelativeY = Math.max(0, Math.min(100, relativeY));
+                    
+                    // Convert back to absolute pixels for current viewport
+                    const newX = Math.round((clampedRelativeX / 100) * (viewportWidth - buttonSize));
+                    const newY = Math.round((clampedRelativeY / 100) * (viewportHeight - buttonSize));
+                    
+                    // Ensure minimum values
+                    const finalX = Math.max(0, newX);
+                    const finalY = Math.max(0, newY);
+                    
+                    // Only update saved position if viewport changed significantly
+                    const savedViewport = window.SidekickModules.Core.loadState('random_target_viewport', { width: 0, height: 0 });
+                    const viewportChanged = Math.abs(savedViewport.width - viewportWidth) > 50 || 
+                                          Math.abs(savedViewport.height - viewportHeight) > 50;
+                    
+                    if (viewportChanged) {
+                        console.log('🎯 Viewport changed, updating relative position');
+                        // Save new viewport dimensions
+                        window.SidekickModules.Core.saveState('random_target_viewport', { 
+                            width: viewportWidth, 
+                            height: viewportHeight 
+                        });
+                        
+                        // Save new absolute position
+                        window.SidekickModules.Core.saveState('random_target_position', { 
+                            x: finalX, 
+                            y: finalY 
+                        });
                     }
                     
-                    return constrainedPosition;
+                    return { x: finalX, y: finalY };
                 } catch (error) {
+                    console.error('❌ Error loading button position:', error);
                     return { x: 10, y: 10 };
                 }
             },
