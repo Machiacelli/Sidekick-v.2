@@ -148,6 +148,94 @@
                                 " title="Options">
                                     ▼
                                 </button>
+                                <div class="dropdown-content" style="
+                                    display: none;
+                                    position: absolute;
+                                    background: #333;
+                                    min-width: 160px;
+                                    max-height: 200px;
+                                    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+                                    z-index: 100000;
+                                    border-radius: 4px;
+                                    border: 1px solid #555;
+                                    padding: 4px 0;
+                                    overflow-y: auto;
+                                    scrollbar-width: thin;
+                                    scrollbar-color: #555 #333;
+                                    top: 100%;
+                                    left: 0;
+                                ">
+                                    <button id="refresh-cooldowns" style="
+                                        background: none;
+                                        border: none;
+                                        color: #fff;
+                                        padding: 8px 12px;
+                                        width: 100%;
+                                        text-align: left;
+                                        cursor: pointer;
+                                        font-size: 12px;
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 8px;
+                                        transition: background 0.2s ease;
+                                    " title="Refresh Cooldowns">🔄 Refresh Cooldowns</button>
+                                    <button class="timer-add-btn" data-type="medical" style="
+                                        background: none;
+                                        border: none;
+                                        color: #fff;
+                                        padding: 8px 12px;
+                                        width: 100%;
+                                        text-align: left;
+                                        cursor: pointer;
+                                        font-size: 12px;
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 8px;
+                                        transition: background 0.2s ease;
+                                    ">🏥 Medical Cooldown</button>
+                                    <button class="timer-add-btn" data-type="drug" style="
+                                        background: none;
+                                        border: none;
+                                        color: #fff;
+                                        padding: 8px 12px;
+                                        width: 100%;
+                                        text-align: left;
+                                        cursor: pointer;
+                                        font-size: 12px;
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 8px;
+                                        transition: background 0.2s ease;
+                                    ">💊 Drug Cooldown</button>
+                                    <button class="timer-add-btn" data-type="booster" style="
+                                        background: none;
+                                        border: none;
+                                        color: #fff;
+                                        padding: 8px 12px;
+                                        width: 100%;
+                                        text-align: left;
+                                        cursor: pointer;
+                                        font-size: 12px;
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 8px;
+                                        transition: background 0.2s ease;
+                                    ">💉 Booster Cooldown</button>
+                                    <button class="timer-add-btn" data-type="custom" style="
+                                        background: none;
+                                        border: none;
+                                        color: #fff;
+                                        padding: 8px 12px;
+                                        width: 100%;
+                                        text-align: left;
+                                        cursor: pointer;
+                                        font-size: 12px;
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 8px;
+                                        transition: background 0.2s ease;
+                                    ">⏱️ Custom Timer</button>
+                                </div>
                             </div>
                             <span style="font-size: 14px;">⏰</span>
                             <span style="font-weight: bold; color: #4CAF50; font-size: 12px;">Timer Panel</span>
