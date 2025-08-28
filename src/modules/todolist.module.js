@@ -371,18 +371,19 @@
                     gap: 8px;
                 `;
 
-                // Check if we have existing todo items and show them, otherwise show empty state
-                if (this.todoItems.length > 0) {
+                // Assemble panel first
+                panel.appendChild(header);
+                panel.appendChild(content);
+                
+                // Now check if we have existing todo items and show them, otherwise show empty state
+                console.log(`📋 Checking todo items in showTodoPanel: ${this.todoItems.length} items found`);
+                if (this.todoItems && this.todoItems.length > 0) {
                     console.log(`📋 Found ${this.todoItems.length} existing todo items, restoring content...`);
                     this.refreshDisplay();
                 } else {
                     console.log('📋 No existing todo items, showing empty state');
                     this.showEmptyState(content);
                 }
-
-                // Assemble panel
-                panel.appendChild(header);
-                panel.appendChild(content);
                 
                 // Add to sidebar content area
                 const contentArea = document.getElementById('sidekick-content');
@@ -770,6 +771,15 @@
                         isPinned: this.isPinned,
                         todoItemsData: this.todoItems
                     });
+                    
+                    // Additional debug: Check if items are actually loaded
+                    if (this.todoItems && this.todoItems.length > 0) {
+                        console.log('📋 Todo items details:', this.todoItems.map(item => ({
+                            name: item.name,
+                            completed: item.completed,
+                            type: item.type
+                        })));
+                    }
                 } catch (error) {
                     console.error('❌ Failed to load To-Do List state:', error);
                 }
