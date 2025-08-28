@@ -345,8 +345,8 @@
                 // Add dropdown content to headerControls for proper positioning
                 headerControls.appendChild(dropdownContent);
                 
-                header.appendChild(title);
                 header.appendChild(headerControls);
+                header.appendChild(title);
 
                 // Create content area
                 const content = document.createElement('div');
