@@ -196,6 +196,75 @@
         // Start the training blocker
         restoreTrainingBlocker();
         
+        // Enhanced restoration function for better persistence
+        function enhancedRestoreTrainingBlocker() {
+            if (!isBlocked) return;
+            
+            console.log('🔄 Enhanced restoration: Checking if training blocker needs to be restored...');
+            
+            // Check if we're on a gym/training page
+            const isGymPage = window.location.href.includes('/gym') || 
+                             window.location.href.includes('/training') ||
+                             document.querySelector('#gymroot') ||
+                             document.querySelector('.training-section') ||
+                             document.querySelector('.training') ||
+                             document.querySelector('.gym');
+            
+            if (isGymPage) {
+                console.log('🏋️ Gym page detected, restoring training blocker...');
+                // Multiple attempts with increasing delays to ensure success
+                setTimeout(() => createTrainingBlock(), 1000);
+                setTimeout(() => {
+                    if (!blockingOverlay) {
+                        console.log('🔄 Second attempt to restore training blocker...');
+                        createTrainingBlock();
+                    }
+                }, 3000);
+                setTimeout(() => {
+                    if (!blockingOverlay) {
+                        console.log('🔄 Third attempt to restore training blocker...');
+                        createTrainingBlock();
+                    }
+                }, 6000);
+            } else {
+                console.log('📄 Not on gym page, training blocker not needed');
+            }
+        }
+        
+        // Call enhanced restoration for better persistence
+        enhancedRestoreTrainingBlocker();
+        
+        // Listen for URL changes to restore blocker when navigating to gym pages
+        let currentUrl = window.location.href;
+        setInterval(() => {
+            if (window.location.href !== currentUrl) {
+                currentUrl = window.location.href;
+                console.log('🧭 URL changed, checking if training blocker needs restoration...');
+                setTimeout(enhancedRestoreTrainingBlocker, 1000);
+            }
+        }, 1000);
+        
+        // Also listen for DOM changes that might indicate gym elements appeared
+        const domObserver = new MutationObserver((mutations) => {
+            if (!isBlocked) return;
+            
+            // Check if gym elements appeared
+            const hasGymElements = document.querySelector('#gymroot') || 
+                                 document.querySelector('.training-section') ||
+                                 document.querySelector('.training') ||
+                                 document.querySelector('.gym');
+            
+            if (hasGymElements && !blockingOverlay) {
+                console.log('🔍 DOM change detected: Gym elements found, restoring training blocker...');
+                setTimeout(() => createTrainingBlock(), 500);
+            }
+        });
+        
+        domObserver.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+        
         // Periodic check to ensure blocking overlay is maintained
         setInterval(() => {
             if (isBlocked && !blockingOverlay) {
