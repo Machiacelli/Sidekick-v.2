@@ -189,70 +189,173 @@
                 container.id = 'oc-toggle-container';
                 container.innerHTML = `
                     <div style="
-                        background: linear-gradient(135deg, #2a2a2a, #1f1f1f);
-                        border: 1px solid #444;
-                        border-radius: 8px;
-                        padding: 12px;
-                        margin: 12px 0;
+                        background: linear-gradient(135deg, rgba(42, 42, 42, 0.95), rgba(31, 31, 31, 0.95));
+                        border: 1px solid rgba(68, 68, 68, 0.7);
+                        border-radius: 12px;
+                        padding: 16px;
+                        margin: 16px 0;
                         color: #fff;
-                        font-family: 'Segoe UI', sans-serif;
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-                        max-width: 300px;
+                        font-family: 'Segoe UI', 'Inter', sans-serif;
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+                        backdrop-filter: blur(10px);
+                        max-width: 400px;
                         position: relative;
+                        overflow: hidden;
                     ">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                            <h4 style="margin: 0; color: #4CAF50; font-size: 14px; font-weight: bold;">
-                                🚫 Travel Blocker
-                            </h4>
-                            <div style="
-                                width: 12px;
-                                height: 12px;
-                                border-radius: 50%;
-                                background-color: ${this.isEnabled ? '#4CAF50' : '#f44336'};
-                                box-shadow: 0 0 8px ${this.isEnabled ? 'rgba(76, 175, 80, 0.6)' : 'rgba(244, 67, 54, 0.6)'};
-                                position: absolute;
-                                top: 8px;
-                                right: 8px;
-                            " title="${this.isEnabled ? 'Travel Blocker Active' : 'Travel Blocker Inactive'}"></div>
-                        </div>
-                        <div style="color: #bbb; font-size: 12px; line-height: 1.3;">
-                            ${ocStatus.message}
-                        </div>
-                        ${ocStatus.timeRemaining ? `
-                            <div style="
-                                margin-top: 8px; 
-                                padding: 6px 10px; 
-                                background: ${ocStatus.timeRemaining > 0 ? '#4CAF50' : '#f44336'}; 
-                                color: white; 
-                                border-radius: 4px; 
-                                font-weight: bold; 
-                                text-align: center;
-                                font-size: 11px;
-                            ">
-                                ${ocStatus.timeRemaining > 0 ? '⏰' : '⚠️'} ${ocStatus.timeRemaining > 0 ? 
-                                    `OC starts in ${ocStatus.timeRemaining}h` : 
-                                    'OC ready! Travel safely!'
-                                }
+                        <!-- Header with status indicator -->
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <h3 style="margin: 0; color: #4CAF50; font-size: 16px; font-weight: 600;">
+                                    �️ Travel Intelligence
+                                </h3>
+                                <div style="
+                                    width: 8px;
+                                    height: 8px;
+                                    border-radius: 50%;
+                                    background-color: ${this.isEnabled ? '#4CAF50' : '#f44336'};
+                                    box-shadow: 0 0 10px ${this.isEnabled ? 'rgba(76, 175, 80, 0.8)' : 'rgba(244, 67, 54, 0.8)'};
+                                    animation: pulse 2s infinite;
+                                " title="${this.isEnabled ? 'Protection Active' : 'Protection Inactive'}"></div>
                             </div>
-                        ` : ''}
-                        <div id="oc-countdown-timer" style="
-                            margin-top: 8px;
-                            padding: 8px 10px;
-                            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
-                            border: 1px solid #555;
-                            border-radius: 4px;
-                            text-align: center;
-                            font-family: 'Courier New', monospace;
+                            <div style="font-size: 10px; color: #888; opacity: 0.7;">
+                                Last updated: ${new Date().toLocaleTimeString()}
+                            </div>
+                        </div>
+
+                        <!-- OC Status Card -->
+                        <div style="
+                            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+                            border-radius: 8px;
+                            padding: 12px;
+                            margin-bottom: 12px;
+                            border: 1px solid rgba(255,255,255,0.1);
                         ">
-                            <div style="font-size: 10px; color: #888; margin-bottom: 4px;">⏰ Next OC Countdown</div>
-                            <div id="oc-timer-display" style="font-size: 16px; color: #fff; font-weight: bold;">--:--:--</div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <span style="font-size: 12px;">🎯</span>
+                                <span style="font-size: 12px; font-weight: 500; color: #fff;">Organized Crime Status</span>
+                            </div>
+                            <div style="color: #e0e0e0; font-size: 13px; line-height: 1.4;">
+                                ${ocStatus.message}
+                            </div>
+                        </div>
+
+                        <!-- Live Countdown Timer -->
+                        <div id="oc-countdown-timer" style="
+                            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+                            border: 1px solid rgba(76, 175, 80, 0.3);
+                            border-radius: 8px;
+                            padding: 12px;
+                            text-align: center;
+                            margin-bottom: 12px;
+                        ">
+                            <div style="font-size: 11px; color: #4CAF50; margin-bottom: 6px; font-weight: 500;">
+                                ⏰ NEXT OC COUNTDOWN
+                            </div>
+                            <div id="oc-timer-display" style="
+                                font-size: 18px; 
+                                color: #fff; 
+                                font-weight: 700; 
+                                font-family: 'Courier New', monospace;
+                                letter-spacing: 1px;
+                            ">--:--:--</div>
+                        </div>
+
+                        <!-- Flight Calculator -->
+                        <div id="flight-calculator" style="
+                            background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05));
+                            border: 1px solid rgba(33, 150, 243, 0.3);
+                            border-radius: 8px;
+                            padding: 12px;
+                            margin-bottom: 8px;
+                        ">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <span style="font-size: 12px;">✈️</span>
+                                <span style="font-size: 12px; font-weight: 500; color: #2196F3;">Flight Time Calculator</span>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                                <select id="destination-select" style="
+                                    background: rgba(255,255,255,0.1);
+                                    border: 1px solid rgba(255,255,255,0.2);
+                                    border-radius: 4px;
+                                    color: #fff;
+                                    padding: 4px 8px;
+                                    font-size: 11px;
+                                    flex: 1;
+                                    min-width: 120px;
+                                ">
+                                    <option value="1">Mexico (1h)</option>
+                                    <option value="2">Cayman Islands (2h)</option>
+                                    <option value="3">Canada (3h)</option>
+                                    <option value="4">Hawaii (4h)</option>
+                                    <option value="5">United Kingdom (5h)</option>
+                                    <option value="6">Argentina (6h)</option>
+                                    <option value="7">Switzerland (7h)</option>
+                                    <option value="8">Japan (8h)</option>
+                                    <option value="9">China (9h)</option>
+                                    <option value="10">UAE (10h)</option>
+                                    <option value="11">South Africa (11h)</option>
+                                </select>
+                                <button id="calculate-flight" style="
+                                    background: #2196F3;
+                                    border: none;
+                                    border-radius: 4px;
+                                    color: white;
+                                    padding: 4px 8px;
+                                    font-size: 11px;
+                                    cursor: pointer;
+                                    transition: background 0.2s;
+                                " onmouseover="this.style.background='#1976D2'" onmouseout="this.style.background='#2196F3'">
+                                    Calculate
+                                </button>
+                            </div>
+                            <div id="flight-result" style="
+                                margin-top: 8px;
+                                padding: 6px 8px;
+                                background: rgba(255,255,255,0.05);
+                                border-radius: 4px;
+                                font-size: 11px;
+                                color: #e0e0e0;
+                                display: none;
+                            "></div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div style="display: flex; gap: 8px; justify-content: center;">
+                            <button id="refresh-oc-data" style="
+                                background: rgba(76, 175, 80, 0.2);
+                                border: 1px solid rgba(76, 175, 80, 0.5);
+                                border-radius: 6px;
+                                color: #4CAF50;
+                                padding: 6px 12px;
+                                font-size: 11px;
+                                cursor: pointer;
+                                transition: all 0.2s;
+                                font-weight: 500;
+                            " onmouseover="this.style.background='rgba(76, 175, 80, 0.3)'" onmouseout="this.style.background='rgba(76, 175, 80, 0.2)'">
+                                🔄 Refresh
+                            </button>
                         </div>
                     </div>
+
+                    <style>
+                        @keyframes pulse {
+                            0%, 100% { opacity: 1; }
+                            50% { opacity: 0.5; }
+                        }
+                        
+                        #destination-select:focus {
+                            outline: none;
+                            border-color: rgba(33, 150, 243, 0.6);
+                            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+                        }
+                    </style>
                 `;
 
-
-
                 wrapper.prepend(container);
+                
+                // Add event listeners
+                this.setupFlightCalculator();
+                this.setupRefreshButton();
                 
                 // Start the countdown timer
                 this.startOCCountdown();
@@ -567,7 +670,7 @@
                     }
 
                     console.log('🔍 [DEBUG] Fetching OC data from Torn API v2...');
-                    const response = await fetch(`https://api.torn.com/v2/user/organizedcrime?key=${apiKey}`);
+                    const response = await fetch(`https://api.torn.com/v2/user/?selections=organizedcrime&key=${apiKey}`);
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}`);
                     }
@@ -868,6 +971,108 @@
                 });
 
                 return earliestOC;
+            },
+
+            // Setup flight calculator functionality
+            setupFlightCalculator() {
+                const calculateBtn = document.getElementById('calculate-flight');
+                const destinationSelect = document.getElementById('destination-select');
+                const resultDiv = document.getElementById('flight-result');
+
+                if (!calculateBtn || !destinationSelect || !resultDiv) return;
+
+                calculateBtn.addEventListener('click', () => {
+                    const flightHours = parseInt(destinationSelect.value);
+                    const destination = destinationSelect.options[destinationSelect.selectedIndex].text;
+                    
+                    // Get current OC status
+                    const ocStatus = this.getOCStatus();
+                    
+                    if (ocStatus.timeRemaining && ocStatus.timeRemaining > 0) {
+                        const totalTripTime = flightHours * 2; // Round trip
+                        const timeUntilOC = ocStatus.timeRemaining;
+                        
+                        const canMakeTrip = totalTripTime < timeUntilOC;
+                        const timeBuffer = timeUntilOC - totalTripTime;
+                        
+                        resultDiv.style.display = 'block';
+                        
+                        if (canMakeTrip) {
+                            resultDiv.style.borderLeft = '3px solid #4CAF50';
+                            resultDiv.innerHTML = `
+                                <div style="color: #4CAF50; font-weight: bold; margin-bottom: 4px;">✅ SAFE TO TRAVEL</div>
+                                <div style="font-size: 10px; color: #ccc;">
+                                    • ${destination}: ${flightHours}h each way<br>
+                                    • Round trip: ${totalTripTime}h total<br>
+                                    • Buffer time: ${timeBuffer.toFixed(1)}h before OC<br>
+                                    • Next OC: ${timeUntilOC}h from now
+                                </div>
+                            `;
+                        } else {
+                            resultDiv.style.borderLeft = '3px solid #f44336';
+                            resultDiv.innerHTML = `
+                                <div style="color: #f44336; font-weight: bold; margin-bottom: 4px;">⚠️ RISKY TRAVEL</div>
+                                <div style="font-size: 10px; color: #ccc;">
+                                    • ${destination}: ${flightHours}h each way<br>
+                                    • Round trip: ${totalTripTime}h total<br>
+                                    • Shortage: ${Math.abs(timeBuffer).toFixed(1)}h over OC time<br>
+                                    • Next OC: ${timeUntilOC}h from now
+                                </div>
+                            `;
+                        }
+                    } else {
+                        resultDiv.style.display = 'block';
+                        resultDiv.style.borderLeft = '3px solid #2196F3';
+                        resultDiv.innerHTML = `
+                            <div style="color: #2196F3; font-weight: bold; margin-bottom: 4px;">ℹ️ NO OC SCHEDULED</div>
+                            <div style="font-size: 10px; color: #ccc;">
+                                • ${destination}: ${flightHours}h each way<br>
+                                • Round trip: ${totalTripTime}h total<br>
+                                • No organized crime conflicts detected
+                            </div>
+                        `;
+                    }
+                });
+            },
+
+            // Setup refresh button functionality
+            setupRefreshButton() {
+                const refreshBtn = document.getElementById('refresh-oc-data');
+                if (!refreshBtn) return;
+
+                refreshBtn.addEventListener('click', async () => {
+                    refreshBtn.innerHTML = '🔄 Refreshing...';
+                    refreshBtn.disabled = true;
+                    
+                    try {
+                        // Force refresh of OC data
+                        const ocStatus = await this.getOCStatusFromAPI();
+                        
+                        // Update the display
+                        this.updateInfoBox();
+                        
+                        // Update last refreshed time
+                        const timeDiv = document.querySelector('#oc-toggle-container div[style*="Last updated"]');
+                        if (timeDiv) {
+                            timeDiv.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+                        }
+                        
+                        // Show success feedback
+                        refreshBtn.innerHTML = '✅ Updated';
+                        setTimeout(() => {
+                            refreshBtn.innerHTML = '🔄 Refresh';
+                            refreshBtn.disabled = false;
+                        }, 2000);
+                        
+                    } catch (error) {
+                        console.error('Failed to refresh OC data:', error);
+                        refreshBtn.innerHTML = '❌ Failed';
+                        setTimeout(() => {
+                            refreshBtn.innerHTML = '🔄 Refresh';
+                            refreshBtn.disabled = false;
+                        }, 2000);
+                    }
+                });
             },
 
             // Public methods for external access
