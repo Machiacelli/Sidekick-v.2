@@ -40,41 +40,45 @@
 
             // Todo item types
             todoItemTypes: {
-                xanax1: {
-                    name: 'Xanax 1',
+                xanax: {
+                    name: 'Xanax',
                     icon: '💊',
                     color: '#FF6B6B',
-                    description: 'First daily Xanax'
-                },
-                xanax2: {
-                    name: 'Xanax 2',
-                    icon: '💊',
-                    color: '#FF6B6B',
-                    description: 'Second daily Xanax'
-                },
-                xanax3: {
-                    name: 'Xanax 3',
-                    icon: '💊',
-                    color: '#FF6B6B',
-                    description: 'Third daily Xanax'
+                    description: 'Daily Xanax (3x per day)',
+                    maxCompletions: 3,
+                    isMultiCompletion: true
                 },
                 energyRefill: {
                     name: 'Energy Refill',
                     icon: '⚡',
                     color: '#4ECDC4',
-                    description: 'Daily energy refill'
+                    description: 'Daily energy refill',
+                    maxCompletions: 1,
+                    isMultiCompletion: false
                 },
                 nerveRefill: {
                     name: 'Nerve Refill',
                     icon: '🧠',
                     color: '#45B7D1',
-                    description: 'Daily nerve refill'
+                    description: 'Daily nerve refill',
+                    maxCompletions: 1,
+                    isMultiCompletion: false
+                },
+                npcStores: {
+                    name: 'NPC Store Purchases',
+                    icon: '🏪',
+                    color: '#FFA726',
+                    description: 'NPC store purchases (100x per day)',
+                    maxCompletions: 100,
+                    isMultiCompletion: true
                 },
                 custom: {
                     name: 'Custom Task',
                     icon: '📝',
                     color: '#9C27B0',
-                    description: 'Custom task (persistent)'
+                    description: 'Custom task (persistent)',
+                    maxCompletions: 1,
+                    isMultiCompletion: false
                 }
             },
 
@@ -93,11 +97,8 @@
                 // Check if daily reset is needed
                 this.checkDailyReset();
                 
-                // Initialize API integration if key is available
-                const savedApiKey = this.core.loadState('todo_api_key', null);
-                if (savedApiKey) {
-                    this.initApiIntegration(savedApiKey);
-                }
+                // Initialize API integration using settings API key
+                this.initApiIntegration();
                 
                 // Show panel immediately if it was previously open (like other modules)
                 this.restorePanelState();
@@ -295,52 +296,6 @@
                 `;
                 dropdownContent.appendChild(separator);
                 
-                // Add API configuration button
-                const apiBtn = document.createElement('button');
-                apiBtn.style.cssText = `
-                    background: none;
-                    border: none;
-                    color: #fff;
-                    padding: 8px 12px;
-                    width: 100%;
-                    text-align: left;
-                    cursor: pointer;
-                    font-size: 12px;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    transition: background 0.2s ease;
-                `;
-                
-                // Update button based on API status
-                const updateApiButton = () => {
-                    if (this.apiEnabled) {
-                        apiBtn.innerHTML = '🔗 API: Enabled';
-                        apiBtn.style.color = '#4CAF50';
-                        apiBtn.title = 'API auto-completion is active. Click to reconfigure.';
-                    } else {
-                        apiBtn.innerHTML = '🔗 Setup API';
-                        apiBtn.style.color = '#fff';
-                        apiBtn.title = 'Configure API key for auto-completion';
-                    }
-                };
-                updateApiButton();
-                
-                // Add hover effects
-                apiBtn.addEventListener('mouseenter', () => {
-                    apiBtn.style.background = '#555';
-                });
-                apiBtn.addEventListener('mouseleave', () => {
-                    apiBtn.style.background = 'none';
-                });
-                
-                apiBtn.addEventListener('click', () => {
-                    this.showApiConfigDialog();
-                    dropdownContent.style.display = 'none';
-                });
-                
-                dropdownContent.appendChild(apiBtn);
-                
                 // Add pin button
                 const pinBtn = document.createElement('button');
                 pinBtn.id = 'pin-panel-btn';
@@ -512,6 +467,9 @@
                     color: itemType.color,
                     description: itemType.description,
                     completed: false,
+                    completedCount: 0, // Track number of completions
+                    maxCompletions: itemType.maxCompletions || 1,
+                    isMultiCompletion: itemType.isMultiCompletion || false,
                     isCustom: type === 'custom',
                     customText: type === 'custom' ? 'Custom Task' : '',
                     createdAt: Date.now()
@@ -625,12 +583,38 @@
                     name.textContent = item.name;
                 }
 
+                // Description with progress for multi-completion items
                 const description = document.createElement('div');
                 description.style.cssText = `
                     color: #aaa;
                     font-size: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
                 `;
-                description.textContent = item.description;
+                
+                if (item.isMultiCompletion) {
+                    // Add progress indicator for multi-completion items
+                    const progressText = document.createElement('span');
+                    progressText.textContent = item.description;
+                    
+                    const progressIndicator = document.createElement('span');
+                    progressIndicator.style.cssText = `
+                        background: #444;
+                        border-radius: 10px;
+                        padding: 2px 8px;
+                        font-size: 11px;
+                        font-weight: 600;
+                        color: ${item.completedCount >= item.maxCompletions ? '#4CAF50' : item.color};
+                        border: 1px solid ${item.completedCount >= item.maxCompletions ? '#4CAF50' : item.color};
+                    `;
+                    progressIndicator.textContent = `${item.completedCount}/${item.maxCompletions}`;
+                    
+                    description.appendChild(progressText);
+                    description.appendChild(progressIndicator);
+                } else {
+                    description.textContent = item.description;
+                }
 
                 info.appendChild(name);
                 info.appendChild(description);
@@ -642,23 +626,81 @@
                     gap: 8px;
                 `;
 
-                // Checkbox
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.checked = item.completed;
-                checkbox.style.cssText = `
-                    width: 16px;
-                    height: 16px;
-                    accent-color: ${item.color};
-                    cursor: pointer;
-                `;
-                
-                checkbox.addEventListener('change', (e) => {
-                    item.completed = e.target.checked;
-                    this.saveState();
-                });
-                
-                controls.appendChild(checkbox);
+                // For multi-completion items, show progress circles instead of checkbox
+                if (item.isMultiCompletion) {
+                    const progressContainer = document.createElement('div');
+                    progressContainer.style.cssText = `
+                        display: flex;
+                        gap: 3px;
+                        align-items: center;
+                    `;
+                    
+                    // Create progress circles
+                    for (let i = 0; i < item.maxCompletions && i < 10; i++) { // Limit to 10 visual indicators
+                        const circle = document.createElement('div');
+                        circle.style.cssText = `
+                            width: 8px;
+                            height: 8px;
+                            border-radius: 50%;
+                            background: ${i < item.completedCount ? item.color : '#555'};
+                            border: 1px solid ${item.color};
+                            cursor: pointer;
+                            transition: all 0.2s ease;
+                        `;
+                        
+                        circle.addEventListener('click', () => {
+                            // Toggle completion state
+                            if (i < item.completedCount) {
+                                // Clicking on a completed circle - reduce count
+                                item.completedCount = i;
+                            } else {
+                                // Clicking on an incomplete circle - set count to this position + 1
+                                item.completedCount = i + 1;
+                            }
+                            
+                            // Update overall completion status
+                            item.completed = item.completedCount >= item.maxCompletions;
+                            
+                            this.saveState();
+                            this.refreshDisplay();
+                        });
+                        
+                        progressContainer.appendChild(circle);
+                    }
+                    
+                    // If maxCompletions > 10, show "..." and number
+                    if (item.maxCompletions > 10) {
+                        const moreIndicator = document.createElement('span');
+                        moreIndicator.style.cssText = `
+                            color: #aaa;
+                            font-size: 10px;
+                            margin-left: 4px;
+                        `;
+                        moreIndicator.textContent = `...${item.maxCompletions}`;
+                        progressContainer.appendChild(moreIndicator);
+                    }
+                    
+                    controls.appendChild(progressContainer);
+                } else {
+                    // Regular checkbox for single-completion items
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = item.completed;
+                    checkbox.style.cssText = `
+                        width: 16px;
+                        height: 16px;
+                        accent-color: ${item.color};
+                        cursor: pointer;
+                    `;
+                    
+                    checkbox.addEventListener('change', (e) => {
+                        item.completed = e.target.checked;
+                        item.completedCount = e.target.checked ? 1 : 0;
+                        this.saveState();
+                    });
+                    
+                    controls.appendChild(checkbox);
+                }
 
                 // Delete button
                 const deleteBtn = document.createElement('button');
@@ -1011,9 +1053,16 @@
                 // Only reset non-custom tasks
                 this.todoItems.forEach(item => {
                     if (!item.isCustom) {
-                        item.completed = false;
+                        if (item.isMultiCompletion) {
+                            item.completedCount = 0;
+                            item.completed = false;
+                        } else {
+                            item.completed = false;
+                        }
                     }
                 });
+                this.saveTodoItems();
+                this.updateDisplay();
                 console.log('🔄 Daily tasks reset');
             },
 
@@ -1073,22 +1122,25 @@
 
             // ===== API INTEGRATION METHODS =====
             
-            // Initialize API integration
-            initApiIntegration(apiKey) {
+            // Initialize API integration using settings API key
+            initApiIntegration() {
                 console.log('🔗 Initializing Todo List API integration...');
+                
+                // Get API key from settings
+                const apiKey = this.core.loadState(this.core.STORAGE_KEYS.API_KEY, '');
                 this.apiKey = apiKey;
                 this.apiEnabled = !!apiKey;
                 
                 if (this.apiEnabled) {
+                    console.log('✅ API integration enabled - using settings API key');
+                    
                     // Load baseline stats for daily tracking
                     this.loadDailyStatsBaseline();
                     
                     // Start periodic API checks (every 30 seconds to respect cache)
                     this.startApiChecking();
-                    
-                    console.log('✅ API integration initialized');
                 } else {
-                    console.log('ℹ️ API integration disabled (no key provided)');
+                    console.log('ℹ️ API integration disabled - no API key in settings');
                 }
             },
             
@@ -1192,18 +1244,22 @@
             checkXanaxCompletion(cooldowns, personalstats) {
                 let completions = 0;
                 
+                // Find the Xanax item
+                const xanaxItem = this.todoItems.find(item => item.type === 'xanax');
+                if (!xanaxItem) return 0;
+                
                 // Get current daily Xanax count
                 const currentXanaxCount = this.getDailyXanaxCount(personalstats);
                 
-                // Mark completed Xanax items
-                ['xanax1', 'xanax2', 'xanax3'].forEach((xanaxType, index) => {
-                    const item = this.todoItems.find(item => item.type === xanaxType && !item.completed);
-                    if (item && currentXanaxCount > index) {
-                        item.completed = true;
-                        completions++;
-                        console.log(`✅ Auto-completed: ${item.name}`);
-                    }
-                });
+                // Update completion count if it has increased
+                if (currentXanaxCount > xanaxItem.completedCount) {
+                    const previousCount = xanaxItem.completedCount;
+                    xanaxItem.completedCount = Math.min(currentXanaxCount, xanaxItem.maxCompletions);
+                    xanaxItem.completed = xanaxItem.completedCount >= xanaxItem.maxCompletions;
+                    
+                    completions = xanaxItem.completedCount - previousCount;
+                    console.log(`✅ Auto-completed: ${xanaxItem.name} (${xanaxItem.completedCount}/${xanaxItem.maxCompletions})`);
+                }
                 
                 return completions;
             },
@@ -1232,8 +1288,23 @@
             
             // Check NPC Store purchases completion
             checkNpcStoreCompletion(personalstats) {
-                // For now, we'll implement a simple version
-                // TODO: Implement proper daily tracking of cityitemsbought
+                const npcItem = this.todoItems.find(item => item.type === 'npcStores');
+                if (!npcItem) return 0;
+                
+                // Get current daily NPC store purchases
+                const currentPurchases = this.getDailyNpcPurchases(personalstats);
+                
+                // Update completion count if it has increased
+                if (currentPurchases > npcItem.completedCount) {
+                    const previousCount = npcItem.completedCount;
+                    npcItem.completedCount = Math.min(currentPurchases, npcItem.maxCompletions);
+                    npcItem.completed = npcItem.completedCount >= npcItem.maxCompletions;
+                    
+                    const completions = npcItem.completedCount - previousCount;
+                    console.log(`✅ Auto-completed: ${npcItem.name} (${npcItem.completedCount}/${npcItem.maxCompletions})`);
+                    return completions;
+                }
+                
                 return 0;
             },
             
@@ -1291,167 +1362,6 @@
                 } catch (error) {
                     console.error('❌ Failed to fetch daily stats baseline:', error);
                 }
-            },
-            
-            // Show API configuration dialog
-            showApiConfigDialog() {
-                const modal = document.createElement('div');
-                modal.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 0, 0, 0.7);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 999999;
-                `;
-                
-                const dialog = document.createElement('div');
-                dialog.style.cssText = `
-                    background: #222;
-                    border: 1px solid #444;
-                    border-radius: 8px;
-                    padding: 24px;
-                    max-width: 500px;
-                    width: 90%;
-                    color: #fff;
-                    font-family: Arial, sans-serif;
-                `;
-                
-                dialog.innerHTML = `
-                    <h3 style="margin: 0 0 16px 0; color: #fff;">🔗 Todo List API Configuration</h3>
-                    <p style="margin: 0 0 16px 0; color: #ccc; font-size: 14px;">
-                        Enable automatic todo completion by providing your Torn API key.
-                        This will auto-complete tasks when you:
-                    </p>
-                    <ul style="margin: 0 0 16px 0; color: #aaa; font-size: 13px;">
-                        <li>Take Xanax (detects via drug cooldowns)</li>
-                        <li>Use Energy/Nerve refills (detects via refill status)</li>
-                        <li>Buy from NPC stores (detects via personal stats)</li>
-                    </ul>
-                    <div style="margin: 16px 0;">
-                        <label style="display: block; margin-bottom: 8px; color: #fff; font-size: 14px;">
-                            API Key (Minimal Access Required):
-                        </label>
-                        <input type="text" id="api-key-input" placeholder="Enter your 16-character API key" 
-                               value="${this.apiKey || ''}"
-                               style="
-                                   width: calc(100% - 16px);
-                                   padding: 8px;
-                                   background: #333;
-                                   border: 1px solid #555;
-                                   border-radius: 4px;
-                                   color: #fff;
-                                   font-family: monospace;
-                                   font-size: 14px;
-                               ">
-                    </div>
-                    <div style="margin: 16px 0 0 0; display: flex; gap: 12px; justify-content: flex-end;">
-                        <button id="api-cancel-btn" style="
-                            background: #666;
-                            border: none;
-                            color: #fff;
-                            padding: 8px 16px;
-                            border-radius: 4px;
-                            cursor: pointer;
-                            font-size: 14px;
-                        ">Cancel</button>
-                        <button id="api-save-btn" style="
-                            background: #4CAF50;
-                            border: none;
-                            color: #fff;
-                            padding: 8px 16px;
-                            border-radius: 4px;
-                            cursor: pointer;
-                            font-size: 14px;
-                        ">Save</button>
-                        ${this.apiEnabled ? `
-                        <button id="api-disable-btn" style="
-                            background: #f44336;
-                            border: none;
-                            color: #fff;
-                            padding: 8px 16px;
-                            border-radius: 4px;
-                            cursor: pointer;
-                            font-size: 14px;
-                        ">Disable</button>
-                        ` : ''}
-                    </div>
-                    <div style="margin: 16px 0 0 0; padding: 12px; background: #333; border-radius: 4px;">
-                        <small style="color: #aaa;">
-                            <strong>Privacy:</strong> Your API key is stored locally in your browser only. 
-                            No data is sent to external servers. 
-                            <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" style="color: #4CAF50;">Get API Key</a>
-                        </small>
-                    </div>
-                `;
-                
-                modal.appendChild(dialog);
-                document.body.appendChild(modal);
-                
-                // Event handlers
-                document.getElementById('api-cancel-btn').onclick = () => modal.remove();
-                
-                document.getElementById('api-save-btn').onclick = () => {
-                    const keyInput = document.getElementById('api-key-input');
-                    const apiKey = keyInput.value.trim();
-                    
-                    if (apiKey && apiKey.length === 16) {
-                        this.saveApiKey(apiKey);
-                        modal.remove();
-                        
-                        if (this.core?.NotificationSystem) {
-                            this.core.NotificationSystem.show(
-                                'API Configuration',
-                                'API key saved! Auto-completion is now enabled.',
-                                'success'
-                            );
-                        }
-                    } else if (apiKey) {
-                        alert('Please enter a valid 16-character API key.');
-                    } else {
-                        // Empty key - disable API
-                        this.disableApi();
-                        modal.remove();
-                    }
-                };
-                
-                if (this.apiEnabled) {
-                    document.getElementById('api-disable-btn').onclick = () => {
-                        this.disableApi();
-                        modal.remove();
-                        
-                        if (this.core?.NotificationSystem) {
-                            this.core.NotificationSystem.show(
-                                'API Configuration',
-                                'API integration disabled.',
-                                'info'
-                            );
-                        }
-                    };
-                }
-                
-                // Close on background click
-                modal.onclick = (e) => {
-                    if (e.target === modal) modal.remove();
-                };
-            },
-            
-            // Save API key and initialize integration
-            saveApiKey(apiKey) {
-                this.core.saveState('todo_api_key', apiKey);
-                this.initApiIntegration(apiKey);
-            },
-            
-            // Disable API integration
-            disableApi() {
-                this.apiEnabled = false;
-                this.apiKey = null;
-                this.core.saveState('todo_api_key', null);
-                console.log('🔗 API integration disabled');
             },
 
             // Debug function to check storage state
