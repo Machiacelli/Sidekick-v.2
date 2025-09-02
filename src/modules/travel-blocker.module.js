@@ -128,7 +128,28 @@
                 const message = this.isEnabled ? 'Travel Blocker enabled' : 'Travel Blocker disabled';
                 this.core.NotificationSystem.show('Updated', message, 'info');
 
+                // Handle UI visibility based on enabled state
+                if (this.isOnTravelPage()) {
+                    if (this.isEnabled) {
+                        // Re-inject the UI if not present
+                        if (!document.querySelector('#oc-toggle-container')) {
+                            this.injectToggle();
+                        }
+                    } else {
+                        // Remove the UI if disabled
+                        this.removeToggle();
+                    }
+                }
+
                 return this.isEnabled;
+            },
+
+            removeToggle() {
+                const container = document.querySelector('#oc-toggle-container');
+                if (container) {
+                    container.remove();
+                    if (this.DEBUG) console.log('🗑️ Travel Blocker UI removed');
+                }
             },
 
 
@@ -181,6 +202,12 @@
             injectToggle() {
                 const wrapper = document.querySelector('div.content-wrapper.summer');
                 if (!wrapper || wrapper.querySelector('#oc-toggle-container')) return;
+
+                // Skip injection if module is disabled
+                if (!this.isEnabled) {
+                    if (this.DEBUG) console.log('🚫 Travel Blocker UI injection skipped - module disabled');
+                    return;
+                }
 
                 // Get OC status and time remaining
                 const ocStatus = this.getOCStatus();

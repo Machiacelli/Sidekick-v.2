@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Modular - Full Featured Sidebar
 // @namespace    http://tampermonkey.net/
-// @version      5.13.2
+// @version      5.13.3
 // @description  Modular version of Sidekick - Enhanced Torn.com sidebar with tools
 // @author       Machiacelli
 // @match        https://www.torn.com/*
@@ -9,22 +9,22 @@
 // @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@7c7abec/src/modules/core.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@7c7abec/src/modules/ui.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@7c7abec/src/modules/content.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@7c7abec/src/modules/settings.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@7c7abec/src/modules/clock.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@7c7abec/src/modules/notepad.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@7c7abec/src/modules/blocktraining.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@7c7abec/src/modules/global-functions.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@7c7abec/src/modules/attacklist.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@7c7abec/src/modules/linkgroup.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@7c7abec/src/modules/travel-blocker.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@7c7abec/src/modules/traveltracker.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@7c7abec/src/modules/timer.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@7c7abec/src/modules/randomtarget.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@7c7abec/src/modules/plane-replacer.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@7c7abec/src/modules/todolist.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2306497/src/modules/core.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2306497/src/modules/ui.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2306497/src/modules/content.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2306497/src/modules/settings.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2306497/src/modules/clock.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2306497/src/modules/notepad.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2306497/src/modules/blocktraining.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2306497/src/modules/global-functions.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2306497/src/modules/attacklist.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2306497/src/modules/linkgroup.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2306497/src/modules/travel-blocker.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2306497/src/modules/traveltracker.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2306497/src/modules/timer.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2306497/src/modules/randomtarget.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2306497/src/modules/plane-replacer.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2306497/src/modules/todolist.module.js
 
 // @run-at       document-end
 // ==/UserScript==
@@ -32,10 +32,10 @@
 (function() {
     'use strict';
 
-    console.log("🚀 SIDEKICK MODULAR STARTING v5.13.1 - " + new Date().toLocaleTimeString());
-    console.log("✈️ IMPROVED: Travel Blocker now shows status indicator instead of bulky switch!");
-    console.log("⏰ IMPROVED: Timer panel loads immediately and appears by default!");
-    console.log("🎛️ INTEGRATION: Full modular architecture, settings toggle, persistent storage, travel page detection");
+    console.log("🚀 SIDEKICK MODULAR STARTING v5.13.3 - " + new Date().toLocaleTimeString());
+    console.log("🔧 FIXED: Travel Blocker now properly respects enable/disable settings!");
+    console.log("🚫 IMPROVED: UI is completely removed when module is disabled!");
+    console.log("⚡ ENHANCED: Better modular integration and state management!");
     console.log("💾 FIXED: To-Do List and Gym Blocker now persist content and state across page refreshes!");
     console.log("📦 Checking modules availability...");
     console.log("📦 window.SidekickModules =", typeof window.SidekickModules);
