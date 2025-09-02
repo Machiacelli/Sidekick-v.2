@@ -19,7 +19,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@aace25a/src/modules/global-functions.module.js
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@aace25a/src/modules/attacklist.module.js
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@aace25a/src/modules/linkgroup.module.js
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@922bb8e/src/modules/travel-blocker.module.js
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2e2d31d/src/modules/travel-blocker.module.js
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@aace25a/src/modules/traveltracker.module.js
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@aace25a/src/modules/timer.module.js
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@aace25a/src/modules/randomtarget.module.js
