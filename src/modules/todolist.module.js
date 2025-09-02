@@ -375,8 +375,21 @@
                 panel.appendChild(header);
                 panel.appendChild(content);
                 
+                // Add to sidebar content area BEFORE trying to populate content
+                const contentArea = document.getElementById('sidekick-content');
+                if (contentArea) {
+                    contentArea.appendChild(panel);
+                } else {
+                    console.error('❌ Content area not found');
+                    return;
+                }
+                
                 // Debug: Check storage state before deciding what to show
                 this.debugStorageState();
+                
+                // Force reload state to ensure we have the latest data
+                console.log('🔄 Force reloading state before display...');
+                this.loadState();
                 
                 // Now check if we have existing todo items and show them, otherwise show empty state
                 console.log(`📋 Checking todo items in showTodoPanel: ${this.todoItems.length} items found`);
@@ -386,15 +399,6 @@
                 } else {
                     console.log('📋 No existing todo items, showing empty state');
                     this.showEmptyState(content);
-                }
-                
-                // Add to sidebar content area
-                const contentArea = document.getElementById('sidekick-content');
-                if (contentArea) {
-                    contentArea.appendChild(panel);
-                } else {
-                    console.error('❌ Content area not found');
-                    return;
                 }
                 
                 // Update pin button text based on saved state
@@ -468,32 +472,34 @@
                 console.log('📋 todoItems length:', this.todoItems.length);
                 console.log('📋 todoItems:', this.todoItems);
                 
-                // Don't check isActive here since we want to refresh even during panel creation
-                const content = document.getElementById('todo-content');
-                console.log('🔍 Found content element:', content);
-                
-                if (!content) {
-                    console.error('❌ No #todo-content element found!');
-                    return;
-                }
-                
-                if (this.todoItems.length === 0) {
-                    console.log('📋 No items to display, showing empty state');
-                    this.showEmptyState(content);
-                    return;
-                }
-                
-                console.log('📋 Clearing content and adding items...');
-                content.innerHTML = '';
-                
-                this.todoItems.forEach((item, index) => {
-                    console.log(`📋 Creating element for item ${index}:`, item.name);
-                    const itemElement = this.createTodoItemElement(item, index);
-                    content.appendChild(itemElement);
-                });
-                
-                console.log(`✅ Refreshed display with ${this.todoItems.length} todo items`);
-                console.log('🔍 Content element now contains:', content.children.length, 'children');
+                // Wait a moment for DOM to be ready
+                setTimeout(() => {
+                    const content = document.getElementById('todo-content');
+                    console.log('🔍 Found content element:', content);
+                    
+                    if (!content) {
+                        console.error('❌ No #todo-content element found!');
+                        return;
+                    }
+                    
+                    if (this.todoItems.length === 0) {
+                        console.log('📋 No items to display, showing empty state');
+                        this.showEmptyState(content);
+                        return;
+                    }
+                    
+                    console.log('📋 Clearing content and adding items...');
+                    content.innerHTML = '';
+                    
+                    this.todoItems.forEach((item, index) => {
+                        console.log(`📋 Creating element for item ${index}:`, item.name);
+                        const itemElement = this.createTodoItemElement(item, index);
+                        content.appendChild(itemElement);
+                    });
+                    
+                    console.log(`✅ Refreshed display with ${this.todoItems.length} todo items`);
+                    console.log('🔍 Content element now contains:', content.children.length, 'children');
+                }, 50); // Small delay to ensure DOM is ready
             },
 
             createTodoItemElement(item, index) {
@@ -782,44 +788,57 @@
                 try {
                     console.log('📋 Starting load process...');
                     
-                    // Always try localStorage first as primary storage
-                    try {
-                        const savedItems = localStorage.getItem('todo_items');
-                        const savedResetDate = localStorage.getItem('todo_last_reset_date');
-                        const savedPinned = localStorage.getItem('todo_panel_pinned');
-                        
-                        if (savedItems) {
-                            this.todoItems = JSON.parse(savedItems);
-                            console.log('📋 Loaded To-Do List state from localStorage:', this.todoItems.length, 'items');
-                        } else {
-                            this.todoItems = [];
-                            console.log('📋 No saved items found in localStorage, starting with empty array');
-                        }
-                        
-                        this.lastResetDate = savedResetDate ? JSON.parse(savedResetDate) : null;
-                        this.isPinned = savedPinned ? JSON.parse(savedPinned) : false;
-                    } catch (localError) {
-                        console.error('❌ Failed to load from localStorage:', localError);
-                        this.todoItems = [];
-                        this.lastResetDate = null;
-                        this.isPinned = false;
-                    }
+                    // Primary storage: try core module first (more reliable in this context)
+                    let itemsLoaded = false;
                     
-                    // Also try to load from core module if available (for compatibility)
                     if (this.core && this.core.loadState) {
                         try {
                             const coreItems = this.core.loadState('todo_items', null);
-                            if (coreItems && coreItems.length > 0) {
-                                console.log('📋 Core module also has items:', coreItems.length);
-                                // Use core module items if localStorage was empty
-                                if (this.todoItems.length === 0) {
-                                    this.todoItems = coreItems;
-                                    console.log('📋 Using core module items since localStorage was empty');
-                                }
+                            const coreResetDate = this.core.loadState('todo_last_reset_date', null);
+                            const corePinned = this.core.loadState('todo_panel_pinned', false);
+                            
+                            if (coreItems && Array.isArray(coreItems)) {
+                                this.todoItems = coreItems;
+                                this.lastResetDate = coreResetDate;
+                                this.isPinned = corePinned;
+                                itemsLoaded = true;
+                                console.log('📋 Loaded To-Do List state from core module:', this.todoItems.length, 'items');
                             }
                         } catch (coreError) {
-                            console.warn('⚠️ Core module load failed, but localStorage succeeded:', coreError);
+                            console.warn('⚠️ Core module load failed:', coreError);
                         }
+                    }
+                    
+                    // Fallback: try localStorage if core module failed or returned no data
+                    if (!itemsLoaded) {
+                        try {
+                            const savedItems = localStorage.getItem('todo_items');
+                            const savedResetDate = localStorage.getItem('todo_last_reset_date');
+                            const savedPinned = localStorage.getItem('todo_panel_pinned');
+                            
+                            if (savedItems) {
+                                this.todoItems = JSON.parse(savedItems);
+                                this.lastResetDate = savedResetDate ? JSON.parse(savedResetDate) : null;
+                                this.isPinned = savedPinned ? JSON.parse(savedPinned) : false;
+                                console.log('📋 Loaded To-Do List state from localStorage:', this.todoItems.length, 'items');
+                            } else {
+                                this.todoItems = [];
+                                this.lastResetDate = null;
+                                this.isPinned = false;
+                                console.log('📋 No saved items found, starting with empty array');
+                            }
+                        } catch (localError) {
+                            console.error('❌ Failed to load from localStorage:', localError);
+                            this.todoItems = [];
+                            this.lastResetDate = null;
+                            this.isPinned = false;
+                        }
+                    }
+                    
+                    // Ensure todoItems is always an array
+                    if (!Array.isArray(this.todoItems)) {
+                        console.warn('⚠️ todoItems was not an array, resetting to empty array');
+                        this.todoItems = [];
                     }
                     
                     console.log('📋 Final loaded state:', {
@@ -851,26 +870,49 @@
                     console.log('📋 Current todoItems to save:', this.todoItems);
                     console.log('📋 todoItems length:', this.todoItems.length);
                     
-                    // Always save to localStorage as primary storage
-                    localStorage.setItem('todo_items', JSON.stringify(this.todoItems));
-                    localStorage.setItem('todo_last_reset_date', JSON.stringify(this.lastResetDate));
-                    console.log('💾 Saved To-Do List state to localStorage');
+                    // Ensure todoItems is always an array
+                    if (!Array.isArray(this.todoItems)) {
+                        console.warn('⚠️ todoItems was not an array during save, resetting to empty array');
+                        this.todoItems = [];
+                    }
                     
-                    // Also try to save using core module if available
+                    // Primary save: use core module (more reliable in this context)
+                    let coreSaved = false;
                     if (this.core && this.core.saveState) {
                         try {
                             this.core.saveState('todo_items', this.todoItems);
                             this.core.saveState('todo_last_reset_date', this.lastResetDate);
-                            console.log('💾 Also saved To-Do List state via core module');
+                            this.core.saveState('todo_panel_pinned', this.isPinned);
+                            coreSaved = true;
+                            console.log('💾 Saved To-Do List state via core module');
                         } catch (coreError) {
-                            console.warn('⚠️ Core module save failed, but localStorage succeeded:', coreError);
+                            console.warn('⚠️ Core module save failed:', coreError);
                         }
                     }
                     
-                    // Verify the save worked by reading it back
-                    const savedItems = localStorage.getItem('todo_items');
-                    const savedCount = savedItems ? JSON.parse(savedItems).length : 0;
-                    console.log('✅ Save verification - localStorage now contains:', savedCount, 'items');
+                    // Also save to localStorage as backup
+                    try {
+                        localStorage.setItem('todo_items', JSON.stringify(this.todoItems));
+                        localStorage.setItem('todo_last_reset_date', JSON.stringify(this.lastResetDate));
+                        localStorage.setItem('todo_panel_pinned', JSON.stringify(this.isPinned));
+                        console.log('💾 Also saved To-Do List state to localStorage');
+                    } catch (localError) {
+                        console.warn('⚠️ localStorage save failed:', localError);
+                        if (!coreSaved) {
+                            throw localError; // Only throw if both methods failed
+                        }
+                    }
+                    
+                    // Verify the save worked by reading it back from the primary source
+                    if (this.core && this.core.loadState) {
+                        const savedItems = this.core.loadState('todo_items', []);
+                        const savedCount = Array.isArray(savedItems) ? savedItems.length : 0;
+                        console.log('✅ Save verification - core module now contains:', savedCount, 'items');
+                    } else {
+                        const savedItems = localStorage.getItem('todo_items');
+                        const savedCount = savedItems ? JSON.parse(savedItems).length : 0;
+                        console.log('✅ Save verification - localStorage now contains:', savedCount, 'items');
+                    }
                     
                     // Debug: Log what we saved
                     console.log('📋 Successfully saved todo items:', {
@@ -881,9 +923,10 @@
                     console.error('❌ Failed to save To-Do List state:', error);
                     // Last resort: try localStorage directly
                     try {
-                        localStorage.setItem('todo_items', JSON.stringify(this.todoItems));
+                        localStorage.setItem('todo_items', JSON.stringify(this.todoItems || []));
                         localStorage.setItem('todo_last_reset_date', JSON.stringify(this.lastResetDate));
-                        console.log('💾 Saved To-Do List state via localStorage after error');
+                        localStorage.setItem('todo_panel_pinned', JSON.stringify(this.isPinned));
+                        console.log('💾 Saved To-Do List state via localStorage as last resort');
                     } catch (localError) {
                         console.error('❌ Failed to save even to localStorage:', localError);
                     }
