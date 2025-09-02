@@ -55,7 +55,7 @@
                 // Don't start update loop until actually needed
                 // this.startUpdateLoop(); // REMOVED - will be called in lazyInit()
                 
-                // Restore panel state immediately (lightweight operation)
+                // Show panel immediately if it was previously open (like other modules)
                 this.restorePanelState();
                 
                 console.log('✅ Timer module initialized successfully');
@@ -1361,11 +1361,9 @@
                 try {
                     const wasOpen = window.SidekickModules.Core.loadState('timer_panel_open', false);
                     if (wasOpen) {
-                        console.log('🔄 Restoring timer panel state...');
-                        // Much faster restoration to match other panels
-                        setTimeout(() => {
-                            this.showTimerPanel();
-                        }, 100);
+                        console.log('🔄 Restoring timer panel state immediately...');
+                        // Show panel immediately like other modules (no delay)
+                        this.showTimerPanel();
                     }
                 } catch (error) {
                     console.error('❌ Failed to restore panel state:', error);

@@ -87,6 +87,9 @@
                 // Check if daily reset is needed
                 this.checkDailyReset();
                 
+                // Show panel immediately if it was previously open (like other modules)
+                this.restorePanelState();
+                
                 console.log('✅ To-Do List module initialized successfully');
                 return true;
             },
@@ -960,24 +963,21 @@
                 try {
                     const wasOpen = this.core.loadState('todo_panel_open', false);
                     if (wasOpen) {
-                        console.log('🔄 Restoring To-Do List panel state...');
-                        // Much faster restoration to match other panels
-                        setTimeout(() => {
-                            // Check if we're on a page where the sidebar is available
-                            if (document.getElementById('sidekick-content')) {
-                                this.showTodoPanel();
-                                console.log('✅ To-Do List panel restored successfully');
-                            } else {
-                                console.log('⏳ Sidebar not ready yet, retrying...');
-                                // Quick retry if needed
-                                setTimeout(() => {
-                                    if (document.getElementById('sidekick-content')) {
-                                        this.showTodoPanel();
-                                        console.log('✅ To-Do List panel restored on retry');
-                                    }
-                                }, 200);
-                            }
-                        }, 100); // Much faster initial delay
+                        console.log('🔄 Restoring To-Do List panel state immediately...');
+                        // Show panel immediately like other modules (no delay)
+                        if (document.getElementById('sidekick-content')) {
+                            this.showTodoPanel();
+                            console.log('✅ To-Do List panel restored successfully');
+                        } else {
+                            console.log('⏳ Sidebar not ready yet, will retry...');
+                            // Quick single retry if DOM not ready yet
+                            setTimeout(() => {
+                                if (document.getElementById('sidekick-content')) {
+                                    this.showTodoPanel();
+                                    console.log('✅ To-Do List panel restored on retry');
+                                }
+                            }, 100);
+                        }
                     }
                 } catch (error) {
                     console.error('❌ Failed to restore panel state:', error);
@@ -1053,20 +1053,6 @@
 
         // Initialize module
         TodoListModule.init();
-        
-        // Restore panel state if it was previously open
-        TodoListModule.restorePanelState();
-        
-        // Quick fallback restoration attempt if needed
-        setTimeout(() => {
-            if (TodoListModule.core.loadState('todo_panel_open', false) && !TodoListModule.isActive) {
-                console.log('🔄 Fallback restoration attempt for To-Do List panel...');
-                if (document.getElementById('sidekick-content')) {
-                    TodoListModule.showTodoPanel();
-                    console.log('✅ To-Do List panel restored on fallback attempt');
-                }
-            }
-        }, 500); // Much faster fallback
     });
 
 })();
