@@ -635,49 +635,53 @@
                         align-items: center;
                     `;
                     
-                    // Create progress circles
-                    for (let i = 0; i < item.maxCompletions && i < 10; i++) { // Limit to 10 visual indicators
-                        const circle = document.createElement('div');
-                        circle.style.cssText = `
-                            width: 8px;
-                            height: 8px;
-                            border-radius: 50%;
-                            background: ${i < item.completedCount ? item.color : '#555'};
-                            border: 1px solid ${item.color};
-                            cursor: pointer;
-                            transition: all 0.2s ease;
+                    // For tasks with many completions (>5), show only numerical count
+                    if (item.maxCompletions > 5) {
+                        const numberDisplay = document.createElement('span');
+                        numberDisplay.style.cssText = `
+                            color: ${item.completedCount >= item.maxCompletions ? '#4CAF50' : item.color};
+                            font-size: 12px;
+                            font-weight: bold;
+                            background: rgba(255,255,255,0.1);
+                            padding: 2px 6px;
+                            border-radius: 10px;
+                            border: 1px solid ${item.completedCount >= item.maxCompletions ? '#4CAF50' : item.color};
                         `;
-                        
-                        circle.addEventListener('click', () => {
-                            // Toggle completion state
-                            if (i < item.completedCount) {
-                                // Clicking on a completed circle - reduce count
-                                item.completedCount = i;
-                            } else {
-                                // Clicking on an incomplete circle - set count to this position + 1
-                                item.completedCount = i + 1;
-                            }
+                        numberDisplay.textContent = `${item.completedCount}/${item.maxCompletions}`;
+                        progressContainer.appendChild(numberDisplay);
+                    } else {
+                        // Create progress circles for tasks with 5 or fewer completions
+                        for (let i = 0; i < item.maxCompletions; i++) {
+                            const circle = document.createElement('div');
+                            circle.style.cssText = `
+                                width: 8px;
+                                height: 8px;
+                                border-radius: 50%;
+                                background: ${i < item.completedCount ? item.color : '#555'};
+                                border: 1px solid ${item.color};
+                                cursor: pointer;
+                                transition: all 0.2s ease;
+                            `;
                             
-                            // Update overall completion status
-                            item.completed = item.completedCount >= item.maxCompletions;
+                            circle.addEventListener('click', () => {
+                                // Toggle completion state
+                                if (i < item.completedCount) {
+                                    // Clicking on a completed circle - reduce count
+                                    item.completedCount = i;
+                                } else {
+                                    // Clicking on an incomplete circle - set count to this position + 1
+                                    item.completedCount = i + 1;
+                                }
+                                
+                                // Update overall completion status
+                                item.completed = item.completedCount >= item.maxCompletions;
+                                
+                                this.saveState();
+                                this.refreshDisplay();
+                            });
                             
-                            this.saveState();
-                            this.refreshDisplay();
-                        });
-                        
-                        progressContainer.appendChild(circle);
-                    }
-                    
-                    // If maxCompletions > 10, show "..." and number
-                    if (item.maxCompletions > 10) {
-                        const moreIndicator = document.createElement('span');
-                        moreIndicator.style.cssText = `
-                            color: #aaa;
-                            font-size: 10px;
-                            margin-left: 4px;
-                        `;
-                        moreIndicator.textContent = `...${item.maxCompletions}`;
-                        progressContainer.appendChild(moreIndicator);
+                            progressContainer.appendChild(circle);
+                        }
                     }
                     
                     controls.appendChild(progressContainer);
