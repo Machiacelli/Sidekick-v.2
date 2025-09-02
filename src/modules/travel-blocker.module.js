@@ -273,54 +273,149 @@
                 observer.observe(document.body, { childList: true, subtree: true });
             },
 
-            // Get OC data from page and update timer
+            // Get OC data from page and update timer - FIXED VERSION
             getOCDataFromPage() {
                 try {
+                    // Method 1: Try to get from Torn's global user data (most reliable)
+                    if (window.user && window.user.criminalrecord) {
+                        const ocData = window.user.criminalrecord;
+                        
+                        // Check if user is currently in cooldown
+                        if (ocData.time_ready) {
+                            const timeRemaining = ocData.time_ready - Math.floor(Date.now() / 1000);
+                            if (timeRemaining > 0) {
+                                return this.formatOCTime(timeRemaining);
+                            } else {
+                                return { timeText: 'Ready!', statusText: 'OC available now' };
+                            }
+                        }
+                        
+                        // Alternative structure check
+                        if (ocData.time_left && ocData.time_left > 0) {
+                            return this.formatOCTime(ocData.time_left);
+                        }
+                        
+                        // If no cooldown, OC is ready
+                        return { timeText: 'Ready!', statusText: 'OC available now' };
+                    }
+
+                    // Method 2: Try to get from travel page data model (if available)
                     const travelRoot = document.querySelector('#travel-root');
-                    if (!travelRoot) {
-                        return { timeText: '--:--:--', statusText: 'Travel page not found' };
-                    }
-
-                    const dataModel = travelRoot.getAttribute('data-model');
-                    if (!dataModel) {
-                        return { timeText: '--:--:--', statusText: 'No travel data available' };
-                    }
-
-                    const data = JSON.parse(dataModel.replace(/&quot;/g, '"'));
-                    
-                    // Find current location and check OC status
-                    if (data.destinations) {
-                        for (const [country, details] of Object.entries(data.destinations)) {
-                            if (details.active && details.active.ocReadyBeforeBack !== undefined) {
-                                if (details.active.ocReadyBeforeBack) {
-                                    return { timeText: 'Ready!', statusText: 'OC available before return' };
-                                } else {
-                                    // Calculate time remaining based on travel end time
-                                    const currentTime = Date.now() / 1000;
-                                    const travelEndTime = details.active.timestamp;
-                                    const ocReadyTime = travelEndTime + (6 * 60 * 60); // OC ready 6 hours after travel ends
-                                    const timeRemaining = ocReadyTime - currentTime;
-                                    
+                    if (travelRoot) {
+                        const dataModel = travelRoot.getAttribute('data-model');
+                        if (dataModel) {
+                            const data = JSON.parse(dataModel.replace(/&quot;/g, '"'));
+                            
+                            // Check if user has OC data in travel model
+                            if (data.user && data.user.criminalrecord) {
+                                const ocData = data.user.criminalrecord;
+                                if (ocData.time_ready) {
+                                    const timeRemaining = ocData.time_ready - Math.floor(Date.now() / 1000);
                                     if (timeRemaining > 0) {
-                                        const hours = Math.floor(timeRemaining / 3600);
-                                        const minutes = Math.floor((timeRemaining % 3600) / 60);
-                                        const seconds = Math.floor(timeRemaining % 60);
-                                        return { 
-                                            timeText: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`,
-                                            statusText: 'Time until next OC'
-                                        };
+                                        return this.formatOCTime(timeRemaining);
                                     } else {
-                                        return { timeText: 'Ready!', statusText: 'OC should be available' };
+                                        return { timeText: 'Ready!', statusText: 'OC available now' };
                                     }
+                                }
+                                if (ocData.time_left && ocData.time_left > 0) {
+                                    return this.formatOCTime(ocData.time_left);
                                 }
                             }
                         }
                     }
+
+                    // Method 3: Try to extract from page elements (comprehensive search)
+                    const timerSelectors = [
+                        '[class*="crime"]',
+                        '[class*="organized"]',
+                        '[id*="crime"]',
+                        '[data-testid*="crime"]',
+                        '.cooldown',
+                        '.timer',
+                        'span[title*="crime"]',
+                        'div[title*="crime"]'
+                    ];
                     
-                    return { timeText: '--:--:--', statusText: 'Not traveling' };
+                    for (const selector of timerSelectors) {
+                        const elements = document.querySelectorAll(selector);
+                        for (const element of elements) {
+                            const text = element.textContent;
+                            if (text && text.includes(':')) {
+                                // Try to extract time pattern HH:MM:SS
+                                const timeMatch = text.match(/(\d{1,2}):(\d{2}):(\d{2})/);
+                                if (timeMatch) {
+                                    return { 
+                                        timeText: `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}:${timeMatch[3]}`, 
+                                        statusText: 'OC countdown from page' 
+                                    };
+                                }
+                            }
+                        }
+                    }
+
+                    // Method 4: Make a direct API call if we have an API key
+                    if (this.core && this.core.loadState('sidekick_api_key', '')) {
+                        this.fetchOCFromAPI().then(result => {
+                            if (result && result.timeText !== '--:--:--') {
+                                // Update the timer with API data
+                                this.updateTimerDisplay(result.timeText);
+                            }
+                        }).catch(err => {
+                            if (this.DEBUG) console.log('API call failed:', err);
+                        });
+                    }
+                    
+                    return { timeText: '--:--:--', statusText: 'No OC data found' };
                 } catch (error) {
-                    console.error('Error getting OC data from page:', error);
+                    if (this.DEBUG) console.error('Error getting OC data from page:', error);
                     return { timeText: '--:--:--', statusText: 'Error loading OC data' };
+                }
+            },
+
+            // Format OC time remaining into HH:MM:SS
+            formatOCTime(seconds) {
+                const hours = Math.floor(seconds / 3600);
+                const minutes = Math.floor((seconds % 3600) / 60);
+                const secs = Math.floor(seconds % 60);
+                return { 
+                    timeText: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`,
+                    statusText: 'Time until next OC'
+                };
+            },
+
+            // Fetch OC data from Torn API (async)
+            async fetchOCFromAPI() {
+                try {
+                    const apiKey = this.core.loadState('sidekick_api_key', '');
+                    if (!apiKey) return null;
+
+                    const response = await fetch(`https://api.torn.com/user/?selections=criminalrecord&key=${apiKey}`);
+                    const data = await response.json();
+                    
+                    if (data.criminalrecord && data.criminalrecord.organized_crime) {
+                        const ocData = data.criminalrecord.organized_crime;
+                        if (ocData.time_ready) {
+                            const timeRemaining = ocData.time_ready - Math.floor(Date.now() / 1000);
+                            if (timeRemaining > 0) {
+                                return this.formatOCTime(timeRemaining);
+                            } else {
+                                return { timeText: 'Ready!', statusText: 'OC available now' };
+                            }
+                        }
+                    }
+                    return null;
+                } catch (error) {
+                    if (this.DEBUG) console.error('API fetch error:', error);
+                    return null;
+                }
+            },
+
+            // Update timer display directly
+            updateTimerDisplay(timeText) {
+                const timerDisplay = document.getElementById('oc-timer-display');
+                if (timerDisplay && timeText !== '--:--:--') {
+                    timerDisplay.textContent = timeText;
+                    timerDisplay.style.color = timeText === 'Ready!' ? '#4CAF50' : '#fff';
                 }
             },
 
@@ -335,24 +430,87 @@
                 this.updateOCCountdown();
             },
 
-            // Update the OC countdown display
+            // Update the OC countdown display - IMPROVED VERSION
             updateOCCountdown() {
                 const timerDisplay = document.getElementById('oc-timer-display');
                 if (!timerDisplay) return;
 
-                // Get OC data from page using simplified approach
+                // Get OC data from page using improved method
                 const ocData = this.getOCDataFromPage();
                 
-                timerDisplay.textContent = ocData.timeText;
-                
-                // Set color based on status
-                if (ocData.timeText === 'Ready!' || ocData.timeText === '00:00:00') {
-                    timerDisplay.style.color = '#4CAF50';
-                } else if (ocData.timeText === '--:--:--') {
-                    timerDisplay.style.color = '#888';
+                if (ocData && ocData.timeText) {
+                    timerDisplay.textContent = ocData.timeText;
+                    
+                    // Set color based on status
+                    if (ocData.timeText === 'Ready!' || ocData.timeText === '00:00:00') {
+                        timerDisplay.style.color = '#4CAF50';
+                    } else if (ocData.timeText === '--:--:--') {
+                        timerDisplay.style.color = '#888';
+                    } else {
+                        timerDisplay.style.color = '#fff';
+                    }
+
+                    // Debug logging (only every 30 seconds to avoid spam)
+                    if (this.DEBUG && Math.floor(Date.now() / 1000) % 30 === 0) {
+                        console.log(`⏰ OC Timer: ${ocData.timeText} | Status: ${ocData.statusText}`);
+                        this.debugOCDataSources(); // Show what data sources are available
+                    }
                 } else {
-                    timerDisplay.style.color = '#fff';
+                    timerDisplay.textContent = '--:--:--';
+                    timerDisplay.style.color = '#888';
+                    
+                    if (this.DEBUG) {
+                        console.log('⚠️ No OC data available for timer update');
+                        this.debugOCDataSources(); // Show what data sources are available
+                    }
                 }
+            },
+
+            // Debug method to check all available OC data sources
+            debugOCDataSources() {
+                console.log('=== OC Data Source Debug ===');
+                
+                // Check window.user
+                if (window.user) {
+                    console.log('✅ window.user exists');
+                    if (window.user.criminalrecord) {
+                        console.log('✅ window.user.criminalrecord exists:', window.user.criminalrecord);
+                    } else {
+                        console.log('❌ window.user.criminalrecord missing');
+                    }
+                } else {
+                    console.log('❌ window.user missing');
+                }
+                
+                // Check travel root data
+                const travelRoot = document.querySelector('#travel-root');
+                if (travelRoot) {
+                    console.log('✅ #travel-root exists');
+                    const dataModel = travelRoot.getAttribute('data-model');
+                    if (dataModel) {
+                        console.log('✅ data-model attribute exists, length:', dataModel.length);
+                        try {
+                            const data = JSON.parse(dataModel.replace(/&quot;/g, '"'));
+                            if (data.user && data.user.criminalrecord) {
+                                console.log('✅ travel data has criminalrecord:', data.user.criminalrecord);
+                            } else {
+                                console.log('❌ travel data missing criminalrecord');
+                            }
+                        } catch (e) {
+                            console.log('❌ travel data parse error:', e);
+                        }
+                    } else {
+                        console.log('❌ data-model attribute missing');
+                    }
+                } else {
+                    console.log('❌ #travel-root missing');
+                }
+                
+                // Check for timer elements on page
+                const timerElements = document.querySelectorAll('[class*="crime"], [class*="organized"], .timer, .cooldown');
+                console.log(`Found ${timerElements.length} potential timer elements on page`);
+                
+                console.log('=== End Debug ===');
             },
 
             // Keep the travel blocking functionality
