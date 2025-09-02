@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Modular - Full Featured Sidebar
 // @namespace    http://tampermonkey.net/
-// @version      5.15.0
+// @version      5.16.0
 // @description  Modular version of Sidekick - Enhanced Torn.com sidebar with tools
 // @author       Machiacelli
 // @match        https://www.torn.com/*
@@ -32,10 +32,10 @@
 (function() {
     'use strict';
 
-    console.log("🚀 SIDEKICK MODULAR STARTING v5.15.0 - " + new Date().toLocaleTimeString());
-    console.log("🔄 REVERTED: Travel Blocker back to simple OC button only!");
-    console.log("🚫 SIMPLIFIED: Just the working OC toggle button on travel page!");
-    console.log("🗑️ REMOVED: Complex countdown timer and UI elements!");
+    console.log("🚀 SIDEKICK MODULAR STARTING v5.16.0 - " + new Date().toLocaleTimeString());
+    console.log("🎯 FINAL FIX: Travel Blocker now SETTINGS ONLY - no buttons!");
+    console.log("🚫 NO UI: Only controlled by the existing settings toggle!");
+    console.log("✅ CLEAN: Applies OC restrictions automatically when enabled!");
     console.log("💾 FIXED: To-Do List and Gym Blocker now persist content and state across page refreshes!");
     console.log("📦 Checking modules availability...");
     console.log("📦 window.SidekickModules =", typeof window.SidekickModules);
