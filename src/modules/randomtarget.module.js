@@ -126,8 +126,8 @@
                     this.targetButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
                 });
 
-                // Add click event
-                this.targetButton.addEventListener('click', () => {
+                // Add double-click event (changed from single click)
+                this.targetButton.addEventListener('dblclick', () => {
                     this.findTarget();
                 });
 
