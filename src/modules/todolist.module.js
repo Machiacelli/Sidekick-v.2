@@ -961,7 +961,7 @@
                     const wasOpen = this.core.loadState('todo_panel_open', false);
                     if (wasOpen) {
                         console.log('🔄 Restoring To-Do List panel state...');
-                        // Wait for the page to be fully loaded and DOM to be ready
+                        // Much faster restoration to match other panels
                         setTimeout(() => {
                             // Check if we're on a page where the sidebar is available
                             if (document.getElementById('sidekick-content')) {
@@ -969,15 +969,15 @@
                                 console.log('✅ To-Do List panel restored successfully');
                             } else {
                                 console.log('⏳ Sidebar not ready yet, retrying...');
-                                // Retry after a longer delay
+                                // Quick retry if needed
                                 setTimeout(() => {
                                     if (document.getElementById('sidekick-content')) {
                                         this.showTodoPanel();
                                         console.log('✅ To-Do List panel restored on retry');
                                     }
-                                }, 2000);
+                                }, 200);
                             }
-                        }, 1000); // Increased delay to ensure page is fully loaded
+                        }, 100); // Much faster initial delay
                     }
                 } catch (error) {
                     console.error('❌ Failed to restore panel state:', error);
@@ -1057,7 +1057,7 @@
         // Restore panel state if it was previously open
         TodoListModule.restorePanelState();
         
-        // Additional restoration attempt with longer delay as fallback
+        // Quick fallback restoration attempt if needed
         setTimeout(() => {
             if (TodoListModule.core.loadState('todo_panel_open', false) && !TodoListModule.isActive) {
                 console.log('🔄 Fallback restoration attempt for To-Do List panel...');
@@ -1066,7 +1066,7 @@
                     console.log('✅ To-Do List panel restored on fallback attempt');
                 }
             }
-        }, 3000);
+        }, 500); // Much faster fallback
     });
 
 })();

@@ -1362,10 +1362,10 @@
                     const wasOpen = window.SidekickModules.Core.loadState('timer_panel_open', false);
                     if (wasOpen) {
                         console.log('🔄 Restoring timer panel state...');
-                        // Shorter delay since we're calling this immediately in init
+                        // Much faster restoration to match other panels
                         setTimeout(() => {
                             this.showTimerPanel();
-                        }, 800);
+                        }, 100);
                     }
                 } catch (error) {
                     console.error('❌ Failed to restore panel state:', error);
