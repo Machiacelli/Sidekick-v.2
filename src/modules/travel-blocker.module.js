@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Travel Blocker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.1.0
+// @version      1.1.1
 // @description  Travel blocker functionality to prevent OC conflicts with live OC countdown timer
 // @author       Machiacelli
 // @match        https://www.torn.com/*
@@ -29,7 +29,7 @@
             DEBUG: false, // Toggle to true for detailed logs
 
             init() {
-                console.log('✈️ Initializing Travel Blocker Module v1.1.0...');
+                console.log('✈️ Initializing Travel Blocker Module v1.1.1...');
                 this.core = window.SidekickModules.Core;
                 if (!this.core) {
                     console.error('❌ Core module not available for Travel Blocker');
@@ -86,7 +86,14 @@
 
                 console.log('🚀 Travel Blocker activated on travel page');
                 this.injectStyles();
-                this.injectToggle();
+                
+                // Only inject UI if module is enabled
+                if (this.isEnabled) {
+                    this.injectToggle();
+                } else {
+                    console.log('🚫 Travel Blocker UI not injected - module disabled');
+                }
+                
                 this.setupClickInterceptor();
 
                 // Monitor for page changes
@@ -136,8 +143,9 @@
                             this.injectToggle();
                         }
                     } else {
-                        // Remove the UI if disabled
+                        // Remove the UI immediately when disabled
                         this.removeToggle();
+                        console.log('🗑️ Travel Blocker UI removed - module disabled');
                     }
                 }
 
@@ -149,6 +157,13 @@
                 if (container) {
                     container.remove();
                     if (this.DEBUG) console.log('🗑️ Travel Blocker UI removed');
+                }
+                
+                // Clear the countdown timer when removing UI
+                if (this.ocTimerInterval) {
+                    clearInterval(this.ocTimerInterval);
+                    this.ocTimerInterval = null;
+                    if (this.DEBUG) console.log('⏹️ OC countdown timer cleared');
                 }
             },
 
@@ -599,8 +614,11 @@
             setupPageMonitor() {
                 // Monitor for DOM changes to re-inject toggle if needed
                 const observer = new MutationObserver(() => {
-                    if (this.isOnTravelPage() && !document.getElementById('oc-toggle-container')) {
+                    if (this.isOnTravelPage() && this.isEnabled && !document.getElementById('oc-toggle-container')) {
                         this.injectToggle();
+                    } else if (this.isOnTravelPage() && !this.isEnabled && document.getElementById('oc-toggle-container')) {
+                        // Remove UI if module was disabled
+                        this.removeToggle();
                     }
                 });
                 
