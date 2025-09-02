@@ -405,6 +405,56 @@
                 }
             },
 
+            getOCDataFromPage() {
+                try {
+                    const travelRoot = document.querySelector('#travel-root');
+                    if (!travelRoot) {
+                        return { timeText: '--:--:--', statusText: 'Travel page not found' };
+                    }
+
+                    const dataModel = travelRoot.getAttribute('data-model');
+                    if (!dataModel) {
+                        return { timeText: '--:--:--', statusText: 'No travel data available' };
+                    }
+
+                    const data = JSON.parse(dataModel.replace(/&quot;/g, '"'));
+                    
+                    // Find current location and check OC status
+                    if (data.destinations) {
+                        for (const [country, details] of Object.entries(data.destinations)) {
+                            if (details.active && details.active.ocReadyBeforeBack !== undefined) {
+                                if (details.active.ocReadyBeforeBack) {
+                                    return { timeText: 'Ready!', statusText: 'OC available before return' };
+                                } else {
+                                    // Calculate time remaining based on travel end time
+                                    const currentTime = Date.now() / 1000;
+                                    const travelEndTime = details.active.timestamp;
+                                    const ocReadyTime = travelEndTime + (6 * 60 * 60); // OC ready 6 hours after travel ends
+                                    const timeRemaining = ocReadyTime - currentTime;
+                                    
+                                    if (timeRemaining > 0) {
+                                        const hours = Math.floor(timeRemaining / 3600);
+                                        const minutes = Math.floor((timeRemaining % 3600) / 60);
+                                        const seconds = Math.floor(timeRemaining % 60);
+                                        return { 
+                                            timeText: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`,
+                                            statusText: 'Time until next OC'
+                                        };
+                                    } else {
+                                        return { timeText: 'Ready!', statusText: 'OC should be available' };
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    return { timeText: '--:--:--', statusText: 'Not traveling' };
+                } catch (error) {
+                    console.error('Error getting OC data from page:', error);
+                    return { timeText: '--:--:--', statusText: 'Error loading OC data' };
+                }
+            },
+
             disableContinueButton(country, method) {
                 const buttons = document.querySelectorAll("a.torn-btn.btn-dark-bg, button.torn-btn.btn-dark-bg");
 
@@ -921,35 +971,18 @@
                 const timerDisplay = document.getElementById('oc-timer-display');
                 if (!timerDisplay) return;
 
-                const ocStart = this.getEarliestOCStart();
-                if (!ocStart) {
-                    timerDisplay.textContent = '--:--:--';
-                    timerDisplay.style.color = '#888';
-                    return;
-                }
-
-                const now = Math.floor(Date.now() / 1000);
-                const timeRemaining = ocStart - now;
-
-                if (timeRemaining <= 0) {
-                    timerDisplay.textContent = '00:00:00';
-                    timerDisplay.style.color = '#4CAF50';
-                    return;
-                }
-
-                const hours = Math.floor(timeRemaining / 3600);
-                const minutes = Math.floor((timeRemaining % 3600) / 60);
-                const seconds = timeRemaining % 60;
-
-                timerDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                // Get OC data from page using simplified approach
+                const ocData = this.getOCDataFromPage();
                 
-                // Color coding based on time remaining
-                if (timeRemaining <= 3600) { // 1 hour or less
-                    timerDisplay.style.color = '#f44336'; // Red
-                } else if (timeRemaining <= 7200) { // 2 hours or less
-                    timerDisplay.style.color = '#ff9800'; // Orange
+                timerDisplay.textContent = ocData.timeText;
+                
+                // Set color based on status
+                if (ocData.timeText === 'Ready!' || ocData.timeText === '00:00:00') {
+                    timerDisplay.style.color = '#4CAF50';
+                } else if (ocData.timeText === '--:--:--') {
+                    timerDisplay.style.color = '#888';
                 } else {
-                    timerDisplay.style.color = '#fff'; // White
+                    timerDisplay.style.color = '#fff';
                 }
             },
 
