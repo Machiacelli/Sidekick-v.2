@@ -1273,10 +1273,17 @@
             // Check NPC Store purchases completion
             checkNpcStoreCompletion(personalstats) {
                 const npcItem = this.todoItems.find(item => item.type === 'npcStores');
-                if (!npcItem) return 0;
+                if (!npcItem) {
+                    console.log('🛒 No NPC store item found in todo list');
+                    return 0;
+                }
                 
                 // Get current daily NPC store purchases
                 const currentPurchases = this.getDailyNpcPurchases(personalstats);
+                
+                console.log(`🛒 NPC Store Check: Current purchases today: ${currentPurchases}, Completed count: ${npcItem.completedCount}`);
+                console.log(`🛒 Personal stats cityitemsbought: ${personalstats.cityitemsbought || 0}`);
+                console.log(`🛒 Baseline cityitemsbought: ${this.dailyStatsBaseline?.cityitemsbought || 0}`);
                 
                 // Update completion count if it has increased
                 if (currentPurchases > npcItem.completedCount) {
@@ -1302,6 +1309,18 @@
                 const baselineXanax = this.dailyStatsBaseline.xantaken || 0;
                 
                 return Math.max(0, currentXanax - baselineXanax);
+            },
+
+            // Get current daily NPC store purchases by comparing with baseline
+            getDailyNpcPurchases(personalstats) {
+                if (!this.dailyStatsBaseline) {
+                    return 0;
+                }
+                
+                const currentPurchases = personalstats.cityitemsbought || 0;
+                const baselinePurchases = this.dailyStatsBaseline.cityitemsbought || 0;
+                
+                return Math.max(0, currentPurchases - baselinePurchases);
             },
             
             // Load or create daily stats baseline
