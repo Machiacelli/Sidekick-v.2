@@ -593,28 +593,8 @@
                     gap: 8px;
                 `;
                 
-                if (item.isMultiCompletion) {
-                    // Add progress indicator for multi-completion items
-                    const progressText = document.createElement('span');
-                    progressText.textContent = item.description;
-                    
-                    const progressIndicator = document.createElement('span');
-                    progressIndicator.style.cssText = `
-                        background: #444;
-                        border-radius: 10px;
-                        padding: 2px 8px;
-                        font-size: 11px;
-                        font-weight: 600;
-                        color: ${item.completedCount >= item.maxCompletions ? '#4CAF50' : item.color};
-                        border: 1px solid ${item.completedCount >= item.maxCompletions ? '#4CAF50' : item.color};
-                    `;
-                    progressIndicator.textContent = `${item.completedCount}/${item.maxCompletions}`;
-                    
-                    description.appendChild(progressText);
-                    description.appendChild(progressIndicator);
-                } else {
-                    description.textContent = item.description;
-                }
+                // Use regular description for all items (progress is shown in the progress container)
+                description.textContent = item.description;
 
                 info.appendChild(name);
                 info.appendChild(description);
