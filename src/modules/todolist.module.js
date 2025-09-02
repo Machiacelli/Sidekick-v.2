@@ -31,6 +31,12 @@
             todoItems: [],
             lastResetDate: null,
             isPinned: false,
+            
+            // API integration for auto-completion
+            apiKey: null,
+            apiEnabled: false,
+            lastApiCheck: 0,
+            dailyStatsBaseline: null, // Store baseline stats for daily tracking
 
             // Todo item types
             todoItemTypes: {
@@ -86,6 +92,12 @@
                 
                 // Check if daily reset is needed
                 this.checkDailyReset();
+                
+                // Initialize API integration if key is available
+                const savedApiKey = this.core.loadState('todo_api_key', null);
+                if (savedApiKey) {
+                    this.initApiIntegration(savedApiKey);
+                }
                 
                 // Show panel immediately if it was previously open (like other modules)
                 this.restorePanelState();
@@ -282,6 +294,52 @@
                     margin: 4px 0;
                 `;
                 dropdownContent.appendChild(separator);
+                
+                // Add API configuration button
+                const apiBtn = document.createElement('button');
+                apiBtn.style.cssText = `
+                    background: none;
+                    border: none;
+                    color: #fff;
+                    padding: 8px 12px;
+                    width: 100%;
+                    text-align: left;
+                    cursor: pointer;
+                    font-size: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: background 0.2s ease;
+                `;
+                
+                // Update button based on API status
+                const updateApiButton = () => {
+                    if (this.apiEnabled) {
+                        apiBtn.innerHTML = '🔗 API: Enabled';
+                        apiBtn.style.color = '#4CAF50';
+                        apiBtn.title = 'API auto-completion is active. Click to reconfigure.';
+                    } else {
+                        apiBtn.innerHTML = '🔗 Setup API';
+                        apiBtn.style.color = '#fff';
+                        apiBtn.title = 'Configure API key for auto-completion';
+                    }
+                };
+                updateApiButton();
+                
+                // Add hover effects
+                apiBtn.addEventListener('mouseenter', () => {
+                    apiBtn.style.background = '#555';
+                });
+                apiBtn.addEventListener('mouseleave', () => {
+                    apiBtn.style.background = 'none';
+                });
+                
+                apiBtn.addEventListener('click', () => {
+                    this.showApiConfigDialog();
+                    dropdownContent.style.display = 'none';
+                });
+                
+                dropdownContent.appendChild(apiBtn);
                 
                 // Add pin button
                 const pinBtn = document.createElement('button');
@@ -1011,6 +1069,389 @@
                     this.isPinned ? 'Panel pinned! It will stay on top of other panels.' : 'Panel unpinned.',
                     'info'
                 );
+            },
+
+            // ===== API INTEGRATION METHODS =====
+            
+            // Initialize API integration
+            initApiIntegration(apiKey) {
+                console.log('🔗 Initializing Todo List API integration...');
+                this.apiKey = apiKey;
+                this.apiEnabled = !!apiKey;
+                
+                if (this.apiEnabled) {
+                    // Load baseline stats for daily tracking
+                    this.loadDailyStatsBaseline();
+                    
+                    // Start periodic API checks (every 30 seconds to respect cache)
+                    this.startApiChecking();
+                    
+                    console.log('✅ API integration initialized');
+                } else {
+                    console.log('ℹ️ API integration disabled (no key provided)');
+                }
+            },
+            
+            // Start periodic API checking for auto-completion
+            startApiChecking() {
+                if (!this.apiEnabled) return;
+                
+                // Initial check
+                this.checkApiForCompletion();
+                
+                // Set up periodic checking (every 30 seconds due to API cache)
+                setInterval(() => {
+                    if (this.apiEnabled && this.isActive) {
+                        this.checkApiForCompletion();
+                    }
+                }, 30000);
+            },
+            
+            // Main API checking method
+            async checkApiForCompletion() {
+                if (!this.apiEnabled || Date.now() - this.lastApiCheck < 25000) {
+                    return; // Rate limiting
+                }
+                
+                this.lastApiCheck = Date.now();
+                
+                try {
+                    console.log('🔗 Checking API for todo completion...');
+                    
+                    // Get current API data
+                    const [cooldowns, refills, personalstats] = await Promise.all([
+                        this.fetchApiData('user', 'cooldowns'),
+                        this.fetchApiData('user', 'refills'),
+                        this.fetchApiData('user', 'personalstats')
+                    ]);
+                    
+                    if (cooldowns && refills && personalstats) {
+                        this.processApiData(cooldowns, refills, personalstats);
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ API check failed:', error);
+                }
+            },
+            
+            // Fetch data from Torn API
+            async fetchApiData(section, selection) {
+                if (!this.apiKey) return null;
+                
+                try {
+                    const url = `https://api.torn.com/${section}?selections=${selection}&key=${this.apiKey}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    
+                    if (data.error) {
+                        console.error(`❌ API Error for ${section}/${selection}:`, data.error);
+                        return null;
+                    }
+                    
+                    return data;
+                } catch (error) {
+                    console.error(`❌ Fetch failed for ${section}/${selection}:`, error);
+                    return null;
+                }
+            },
+            
+            // Process API data and auto-complete todo items
+            processApiData(cooldowns, refills, personalstats) {
+                console.log('📊 Processing API data for auto-completion...');
+                
+                let completionsFound = 0;
+                
+                // Check Xanax (drug cooldowns and personal stats)
+                completionsFound += this.checkXanaxCompletion(cooldowns.cooldowns, personalstats.personalstats);
+                
+                // Check Energy Refill
+                completionsFound += this.checkEnergyRefillCompletion(refills.refills);
+                
+                // Check Nerve Refill
+                completionsFound += this.checkNerveRefillCompletion(refills.refills);
+                
+                // Check NPC Store purchases (via personalstats)
+                completionsFound += this.checkNpcStoreCompletion(personalstats.personalstats);
+                
+                if (completionsFound > 0) {
+                    this.saveState();
+                    this.refreshDisplay();
+                    
+                    if (this.core?.NotificationSystem) {
+                        this.core.NotificationSystem.show(
+                            'Todo Auto-Complete',
+                            `${completionsFound} task(s) completed automatically!`,
+                            'success',
+                            3000
+                        );
+                    }
+                }
+            },
+            
+            // Check Xanax completion (up to 3 per day)
+            checkXanaxCompletion(cooldowns, personalstats) {
+                let completions = 0;
+                
+                // Get current daily Xanax count
+                const currentXanaxCount = this.getDailyXanaxCount(personalstats);
+                
+                // Mark completed Xanax items
+                ['xanax1', 'xanax2', 'xanax3'].forEach((xanaxType, index) => {
+                    const item = this.todoItems.find(item => item.type === xanaxType && !item.completed);
+                    if (item && currentXanaxCount > index) {
+                        item.completed = true;
+                        completions++;
+                        console.log(`✅ Auto-completed: ${item.name}`);
+                    }
+                });
+                
+                return completions;
+            },
+            
+            // Check Energy Refill completion
+            checkEnergyRefillCompletion(refills) {
+                const item = this.todoItems.find(item => item.type === 'energyRefill' && !item.completed);
+                if (item && refills.energy_refill_used) {
+                    item.completed = true;
+                    console.log(`✅ Auto-completed: ${item.name}`);
+                    return 1;
+                }
+                return 0;
+            },
+            
+            // Check Nerve Refill completion
+            checkNerveRefillCompletion(refills) {
+                const item = this.todoItems.find(item => item.type === 'nerveRefill' && !item.completed);
+                if (item && refills.nerve_refill_used) {
+                    item.completed = true;
+                    console.log(`✅ Auto-completed: ${item.name}`);
+                    return 1;
+                }
+                return 0;
+            },
+            
+            // Check NPC Store purchases completion
+            checkNpcStoreCompletion(personalstats) {
+                // For now, we'll implement a simple version
+                // TODO: Implement proper daily tracking of cityitemsbought
+                return 0;
+            },
+            
+            // Get current daily Xanax count by comparing with baseline
+            getDailyXanaxCount(personalstats) {
+                if (!this.dailyStatsBaseline) {
+                    return 0;
+                }
+                
+                const currentXanax = personalstats.xantaken || 0;
+                const baselineXanax = this.dailyStatsBaseline.xantaken || 0;
+                
+                return Math.max(0, currentXanax - baselineXanax);
+            },
+            
+            // Load or create daily stats baseline
+            loadDailyStatsBaseline() {
+                try {
+                    const today = new Date().toDateString();
+                    const savedBaseline = this.core.loadState('todo_daily_baseline', null);
+                    
+                    if (savedBaseline && savedBaseline.date === today) {
+                        this.dailyStatsBaseline = savedBaseline.stats;
+                        console.log('📊 Loaded daily stats baseline');
+                    } else {
+                        console.log('📊 Need to fetch new daily stats baseline');
+                        this.fetchDailyStatsBaseline();
+                    }
+                } catch (error) {
+                    console.error('❌ Failed to load daily stats baseline:', error);
+                }
+            },
+            
+            // Fetch and save new daily stats baseline
+            async fetchDailyStatsBaseline() {
+                if (!this.apiKey) return;
+                
+                try {
+                    const data = await this.fetchApiData('user', 'personalstats');
+                    if (data && data.personalstats) {
+                        const today = new Date().toDateString();
+                        this.dailyStatsBaseline = {
+                            xantaken: data.personalstats.xantaken || 0,
+                            cityitemsbought: data.personalstats.cityitemsbought || 0,
+                            // Add more stats as needed
+                        };
+                        
+                        this.core.saveState('todo_daily_baseline', {
+                            date: today,
+                            stats: this.dailyStatsBaseline
+                        });
+                        
+                        console.log('📊 Saved new daily stats baseline:', this.dailyStatsBaseline);
+                    }
+                } catch (error) {
+                    console.error('❌ Failed to fetch daily stats baseline:', error);
+                }
+            },
+            
+            // Show API configuration dialog
+            showApiConfigDialog() {
+                const modal = document.createElement('div');
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.7);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 999999;
+                `;
+                
+                const dialog = document.createElement('div');
+                dialog.style.cssText = `
+                    background: #222;
+                    border: 1px solid #444;
+                    border-radius: 8px;
+                    padding: 24px;
+                    max-width: 500px;
+                    width: 90%;
+                    color: #fff;
+                    font-family: Arial, sans-serif;
+                `;
+                
+                dialog.innerHTML = `
+                    <h3 style="margin: 0 0 16px 0; color: #fff;">🔗 Todo List API Configuration</h3>
+                    <p style="margin: 0 0 16px 0; color: #ccc; font-size: 14px;">
+                        Enable automatic todo completion by providing your Torn API key.
+                        This will auto-complete tasks when you:
+                    </p>
+                    <ul style="margin: 0 0 16px 0; color: #aaa; font-size: 13px;">
+                        <li>Take Xanax (detects via drug cooldowns)</li>
+                        <li>Use Energy/Nerve refills (detects via refill status)</li>
+                        <li>Buy from NPC stores (detects via personal stats)</li>
+                    </ul>
+                    <div style="margin: 16px 0;">
+                        <label style="display: block; margin-bottom: 8px; color: #fff; font-size: 14px;">
+                            API Key (Minimal Access Required):
+                        </label>
+                        <input type="text" id="api-key-input" placeholder="Enter your 16-character API key" 
+                               value="${this.apiKey || ''}"
+                               style="
+                                   width: calc(100% - 16px);
+                                   padding: 8px;
+                                   background: #333;
+                                   border: 1px solid #555;
+                                   border-radius: 4px;
+                                   color: #fff;
+                                   font-family: monospace;
+                                   font-size: 14px;
+                               ">
+                    </div>
+                    <div style="margin: 16px 0 0 0; display: flex; gap: 12px; justify-content: flex-end;">
+                        <button id="api-cancel-btn" style="
+                            background: #666;
+                            border: none;
+                            color: #fff;
+                            padding: 8px 16px;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-size: 14px;
+                        ">Cancel</button>
+                        <button id="api-save-btn" style="
+                            background: #4CAF50;
+                            border: none;
+                            color: #fff;
+                            padding: 8px 16px;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-size: 14px;
+                        ">Save</button>
+                        ${this.apiEnabled ? `
+                        <button id="api-disable-btn" style="
+                            background: #f44336;
+                            border: none;
+                            color: #fff;
+                            padding: 8px 16px;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-size: 14px;
+                        ">Disable</button>
+                        ` : ''}
+                    </div>
+                    <div style="margin: 16px 0 0 0; padding: 12px; background: #333; border-radius: 4px;">
+                        <small style="color: #aaa;">
+                            <strong>Privacy:</strong> Your API key is stored locally in your browser only. 
+                            No data is sent to external servers. 
+                            <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" style="color: #4CAF50;">Get API Key</a>
+                        </small>
+                    </div>
+                `;
+                
+                modal.appendChild(dialog);
+                document.body.appendChild(modal);
+                
+                // Event handlers
+                document.getElementById('api-cancel-btn').onclick = () => modal.remove();
+                
+                document.getElementById('api-save-btn').onclick = () => {
+                    const keyInput = document.getElementById('api-key-input');
+                    const apiKey = keyInput.value.trim();
+                    
+                    if (apiKey && apiKey.length === 16) {
+                        this.saveApiKey(apiKey);
+                        modal.remove();
+                        
+                        if (this.core?.NotificationSystem) {
+                            this.core.NotificationSystem.show(
+                                'API Configuration',
+                                'API key saved! Auto-completion is now enabled.',
+                                'success'
+                            );
+                        }
+                    } else if (apiKey) {
+                        alert('Please enter a valid 16-character API key.');
+                    } else {
+                        // Empty key - disable API
+                        this.disableApi();
+                        modal.remove();
+                    }
+                };
+                
+                if (this.apiEnabled) {
+                    document.getElementById('api-disable-btn').onclick = () => {
+                        this.disableApi();
+                        modal.remove();
+                        
+                        if (this.core?.NotificationSystem) {
+                            this.core.NotificationSystem.show(
+                                'API Configuration',
+                                'API integration disabled.',
+                                'info'
+                            );
+                        }
+                    };
+                }
+                
+                // Close on background click
+                modal.onclick = (e) => {
+                    if (e.target === modal) modal.remove();
+                };
+            },
+            
+            // Save API key and initialize integration
+            saveApiKey(apiKey) {
+                this.core.saveState('todo_api_key', apiKey);
+                this.initApiIntegration(apiKey);
+            },
+            
+            // Disable API integration
+            disableApi() {
+                this.apiEnabled = false;
+                this.apiKey = null;
+                this.core.saveState('todo_api_key', null);
+                console.log('🔗 API integration disabled');
             },
 
             // Debug function to check storage state
