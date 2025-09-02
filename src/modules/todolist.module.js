@@ -149,8 +149,14 @@
                 
                 const desiredX = savedPosition.x || defaultX;
                 const desiredY = savedPosition.y || defaultY;
-                const desiredWidth = savedSize.width || defaultWidth;
-                const desiredHeight = savedSize.height || defaultHeight;
+                
+                // Validate and constrain saved size
+                let desiredWidth = savedSize.width || defaultWidth;
+                let desiredHeight = savedSize.height || defaultHeight;
+                
+                // Ensure size stays within reasonable bounds
+                desiredWidth = Math.max(minWidth, Math.min(maxWidth, desiredWidth));
+                desiredHeight = Math.max(minHeight, Math.min(maxHeight, desiredHeight));
 
                 // Get sidebar bounds for constraining position
                 const sidebar = document.getElementById('sidekick-sidebar');
@@ -330,6 +336,72 @@
                 });
                 
                 dropdownContent.appendChild(pinBtn);
+                
+                // Add Reset Baseline button
+                const resetBaselineBtn = document.createElement('button');
+                resetBaselineBtn.style.cssText = `
+                    background: none;
+                    border: none;
+                    color: #fff;
+                    padding: 8px 12px;
+                    width: 100%;
+                    text-align: left;
+                    cursor: pointer;
+                    font-size: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: background 0.2s ease;
+                `;
+                resetBaselineBtn.innerHTML = '🔄 Reset API Baseline';
+                resetBaselineBtn.title = 'Reset daily stats baseline for API tracking';
+                
+                resetBaselineBtn.addEventListener('mouseenter', () => {
+                    resetBaselineBtn.style.background = '#555';
+                });
+                resetBaselineBtn.addEventListener('mouseleave', () => {
+                    resetBaselineBtn.style.background = 'none';
+                });
+                
+                resetBaselineBtn.addEventListener('click', () => {
+                    this.resetDailyBaseline();
+                    dropdownContent.style.display = 'none';
+                });
+                
+                dropdownContent.appendChild(resetBaselineBtn);
+                
+                // Add Debug NPC button
+                const debugNpcBtn = document.createElement('button');
+                debugNpcBtn.style.cssText = `
+                    background: none;
+                    border: none;
+                    color: #fff;
+                    padding: 8px 12px;
+                    width: 100%;
+                    text-align: left;
+                    cursor: pointer;
+                    font-size: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: background 0.2s ease;
+                `;
+                debugNpcBtn.innerHTML = '🛒 Debug NPC Tracking';
+                debugNpcBtn.title = 'Show NPC store tracking debug info';
+                
+                debugNpcBtn.addEventListener('mouseenter', () => {
+                    debugNpcBtn.style.background = '#555';
+                });
+                debugNpcBtn.addEventListener('mouseleave', () => {
+                    debugNpcBtn.style.background = 'none';
+                });
+                
+                debugNpcBtn.addEventListener('click', () => {
+                    this.debugNpcTracking();
+                    dropdownContent.style.display = 'none';
+                });
+                
+                dropdownContent.appendChild(debugNpcBtn);
                 
                 // Close button (X button)
                 const closeBtn = document.createElement('button');
@@ -864,11 +936,24 @@
             },
 
             savePanelSize(panel) {
+                const minWidth = 250;
+                const maxWidth = 500;
+                const minHeight = 200;
+                const maxHeight = 800;
+                
                 const size = {
-                    width: panel.offsetWidth,
-                    height: panel.offsetHeight
+                    width: Math.max(minWidth, Math.min(maxWidth, panel.offsetWidth)),
+                    height: Math.max(minHeight, Math.min(maxHeight, panel.offsetHeight))
                 };
-                this.core.saveState('todo_panel_size', size);
+                
+                // Only save if size is reasonable (prevent weird resizing bugs)
+                if (size.width >= minWidth && size.width <= maxWidth && 
+                    size.height >= minHeight && size.height <= maxHeight) {
+                    this.core.saveState('todo_panel_size', size);
+                    console.log('📏 Saved panel size:', size);
+                } else {
+                    console.warn('📏 Ignoring invalid panel size:', panel.offsetWidth, 'x', panel.offsetHeight);
+                }
             },
 
             loadState() {
@@ -1365,6 +1450,79 @@
                 } catch (error) {
                     console.error('❌ Failed to fetch daily stats baseline:', error);
                 }
+            },
+
+            // Reset daily stats baseline (useful if baseline was set before purchases)
+            async resetDailyBaseline() {
+                try {
+                    console.log('🔄 Resetting daily stats baseline...');
+                    this.dailyStatsBaseline = null;
+                    this.core.saveState('todo_daily_baseline', null);
+                    
+                    // Fetch new baseline
+                    await this.fetchDailyStatsBaseline();
+                    
+                    // Refresh todo display
+                    this.updateDisplay();
+                    
+                    if (this.core?.NotificationSystem) {
+                        this.core.NotificationSystem.show(
+                            'Baseline Reset',
+                            'Daily stats baseline has been reset. NPC tracking will now count from current stats.',
+                            'success'
+                        );
+                    } else {
+                        console.log('✅ Daily baseline reset successfully');
+                    }
+                } catch (error) {
+                    console.error('❌ Failed to reset baseline:', error);
+                }
+            },
+
+            // Debug NPC tracking to help troubleshoot issues
+            async debugNpcTracking() {
+                console.log('🛒 === NPC TRACKING DEBUG ===');
+                
+                // Check if API is enabled
+                console.log('🔑 API Enabled:', this.apiEnabled);
+                console.log('🔑 API Key:', this.apiKey ? '***' + this.apiKey.slice(-4) : 'Not set');
+                
+                // Check baseline
+                console.log('📊 Daily Baseline:', this.dailyStatsBaseline);
+                
+                // Check NPC todo item
+                const npcItem = this.todoItems.find(item => item.type === 'npcStores');
+                console.log('📋 NPC Todo Item:', npcItem);
+                
+                // Fetch current stats
+                if (this.apiKey) {
+                    try {
+                        const data = await this.fetchApiData('user', 'personalstats');
+                        if (data && data.personalstats) {
+                            const currentPurchases = data.personalstats.cityitemsbought || 0;
+                            const baselinePurchases = this.dailyStatsBaseline?.cityitemsbought || 0;
+                            const dailyPurchases = Math.max(0, currentPurchases - baselinePurchases);
+                            
+                            console.log('🛒 Current cityitemsbought:', currentPurchases);
+                            console.log('🛒 Baseline cityitemsbought:', baselinePurchases);
+                            console.log('🛒 Calculated daily purchases:', dailyPurchases);
+                            
+                            if (this.core?.NotificationSystem) {
+                                this.core.NotificationSystem.show(
+                                    'NPC Debug Info',
+                                    `Daily purchases: ${dailyPurchases}/100 (Current: ${currentPurchases}, Baseline: ${baselinePurchases})`,
+                                    'info'
+                                );
+                            }
+                        }
+                    } catch (error) {
+                        console.error('❌ Failed to fetch current stats:', error);
+                    }
+                } else {
+                    console.log('❌ No API key available for debugging');
+                }
+                
+                console.log('🛒 === END NPC DEBUG ===');
             },
 
             // Debug function to check storage state
