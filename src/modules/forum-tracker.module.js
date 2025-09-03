@@ -81,8 +81,11 @@
                 pos2 = pos4 - e.clientY;
                 pos3 = e.clientX;
                 pos4 = e.clientY;
-                element.style.top = (element.offsetTop - pos2) + "px";
-                element.style.left = (element.offsetLeft - pos1) + "px";
+                const newTop = (element.offsetTop - pos2) + "px";
+                const newLeft = (element.offsetLeft - pos1) + "px";
+                element.style.top = newTop;
+                element.style.left = newLeft;
+                console.log('🖱️ Dragging - New position:', newLeft, newTop);
             }
             
             function closeDragElement() {
@@ -131,7 +134,13 @@
         // Load panel position and size
         loadPanelState() {
             try {
+                console.log('📖 Attempting to load panel state...');
+                console.log('📖 Core module available:', !!window.SidekickModules?.Core);
+                console.log('📖 getData method available:', !!window.SidekickModules?.Core?.getData);
+                
                 const saved = window.SidekickModules?.Core?.getData('forumTrackerPanelState');
+                console.log('📖 Raw saved data:', saved);
+                
                 const result = saved || { x: 20, y: 20, width: 320, height: 420 };
                 console.log('📖 Loading panel state:', result);
                 return result;
@@ -275,6 +284,18 @@
                                     font-size: 12px;
                                 ">
                                     🗑️ Clear All
+                                </button>
+                                <button class="debug-save-position-btn" style="
+                                    background: none;
+                                    border: none;
+                                    color: #ffc107;
+                                    padding: 8px 12px;
+                                    width: 100%;
+                                    text-align: left;
+                                    cursor: pointer;
+                                    font-size: 12px;
+                                ">
+                                    🔧 Debug Save Position
                                 </button>
                             </div>
                         </div>
@@ -489,6 +510,18 @@
                     e.stopPropagation();
                     if (dropdownContent) dropdownContent.style.display = 'none';
                     this.clearAllBookmarks();
+                });
+            }
+
+            // Debug save position button
+            const debugSaveBtn = panel.querySelector('.debug-save-position-btn');
+            if (debugSaveBtn) {
+                debugSaveBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (dropdownContent) dropdownContent.style.display = 'none';
+                    console.log('🔧 Manual save triggered');
+                    this.savePanelState();
+                    this.showNotification('💾 Position saved manually!', 'success');
                 });
             }
 
