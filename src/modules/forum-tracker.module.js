@@ -587,6 +587,16 @@
                 
                 // Common selectors for forum thread titles in Torn
                 const titleSelectors = [
+                    // Torn-specific selectors
+                    '.content-wrapper h4',
+                    '.forum-thread h4',
+                    '.title___ h4',
+                    '.content-title h4',
+                    '.content-wrapper .title',
+                    '.forum-content h4',
+                    '.thread-title h4',
+                    
+                    // Generic fallbacks
                     'h4[class*="title"]',
                     '.forum-thread-title',
                     '.title___',
@@ -614,6 +624,20 @@
                     if (pageTitle && pageTitle !== 'TORN' && pageTitle !== 'Torn') {
                         title = pageTitle;
                         console.log('📋 Using page title:', title);
+                    }
+                }
+                
+                // Last resort: scan for any text that looks like a thread title
+                if (title === 'Forum Thread') {
+                    console.log('📋 Last resort: scanning for thread-like text');
+                    const possibleTitles = document.querySelectorAll('h1, h2, h3, h4, h5, .title, .heading, [class*="title"], [class*="thread"]');
+                    for (let element of possibleTitles) {
+                        const text = element.textContent.trim();
+                        if (text.length > 10 && text.length < 200 && !text.toLowerCase().includes('forum') && !text.toLowerCase().includes('torn')) {
+                            title = text;
+                            console.log('📋 Found potential title:', title);
+                            break;
+                        }
                     }
                 }
                 
