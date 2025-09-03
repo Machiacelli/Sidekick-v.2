@@ -17,7 +17,6 @@
         init() {
             console.log('📋 Initializing Forum Tracker Module v1.0.0...');
             this.loadBookmarks();
-            this.createForumPanel();
             this.addForumButtons();
             this.isActive = true;
             console.log('✅ Forum Tracker module initialized');
@@ -27,6 +26,26 @@
             this.removeForumPanel();
             this.removeForumButtons();
             this.isActive = false;
+        },
+
+        // Activate method for use by content module
+        activate() {
+            console.log('📋 Forum Tracker module activated!');
+            
+            // Show the forum tracker panel
+            this.showForumPanel();
+        },
+
+        showForumPanel() {
+            // Check if panel already exists
+            if (document.getElementById('forum-tracker-content')) {
+                console.log('📋 Forum Tracker panel already exists');
+                return;
+            }
+
+            // Create the panel
+            this.createForumPanel();
+            console.log('📋 Forum Tracker panel created and shown');
         },
 
         // Load bookmarks from storage

@@ -391,30 +391,23 @@
                 console.log('📋 Forum Tracker button clicked - checking module availability...');
                 console.log('📋 Available modules:', window.SidekickModules ? Object.keys(window.SidekickModules) : 'No modules found');
                 
-                // Check if ForumTracker module is available and show the panel
-                if (window.SidekickModules?.ForumTracker) {
-                    console.log('✅ ForumTracker module found - showing panel...');
+                // Check if ForumTracker module is available
+                if (window.SidekickModules?.ForumTracker?.activate) {
+                    console.log('✅ ForumTracker module found - activating...');
                     try {
-                        // Check if UI module has the capability to show panels
-                        if (window.SidekickModules?.UI?.showPanel) {
-                            window.SidekickModules.UI.showPanel('forum-tracker');
-                        } else {
-                            // Fallback: just recreate the panel if it doesn't exist
-                            if (!document.getElementById('forum-tracker-content')) {
-                                window.SidekickModules.ForumTracker.createForumPanel();
-                            }
-                        }
+                        window.SidekickModules.ForumTracker.activate();
                         this.closeAddMenu();
-                        console.log('✅ Forum Tracker panel displayed successfully');
+                        console.log('✅ Forum Tracker activated successfully');
                     } catch (error) {
-                        console.error('❌ Error showing Forum Tracker:', error);
-                        NotificationSystem.show('Forum Tracker', 'Error showing forum tracker: ' + error.message, 'error');
+                        console.error('❌ Error activating Forum Tracker:', error);
+                        NotificationSystem.show('Forum Tracker', 'Error activating forum tracker: ' + error.message, 'error');
                     }
                 } else {
                     console.error('❌ ForumTracker module not available');
                     console.log('🔍 Checking what we have:', {
                         'SidekickModules exists': !!window.SidekickModules,
                         'ForumTracker exists': !!window.SidekickModules?.ForumTracker,
+                        'ForumTracker.activate exists': !!window.SidekickModules?.ForumTracker?.activate,
                         'Available modules': window.SidekickModules ? Object.keys(window.SidekickModules) : 'none'
                     });
                     
