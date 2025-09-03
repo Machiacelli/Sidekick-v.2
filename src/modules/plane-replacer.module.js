@@ -31,13 +31,15 @@
             
             // Configuration for custom plane images - targeting only the plane, not the background
             config: {
-                // Custom plane image - should be a plane without background, roughly 100-150px wide
-                customPlaneUrl: 'https://i.imgur.com/9vhJJpT.png', // Transparent plane PNG
-                customPlaneUrlJpeg: 'https://i.imgur.com/dRixRIO.jpeg', // Original for reference
+                // Custom plane image - using your working imgur JPEG link
+                customPlaneUrl: 'https://i.imgur.com/dRixRIO.jpeg', // Your working imgur link
+                customPlaneUrlJpeg: 'https://i.imgur.com/dRixRIO.jpeg', // Keep original for reference
                 // Fallback small plane SVG (plane only, no background)
                 fallbackPlaneUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMTIwIDQwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0xMCAyMEwxMCAxNUwyNSAxMEw0NSA4TDY1IDhMODUgOEwxMDAgMTBMMTEwIDE1TDExNSAyMEwxMTAgMjVMMTAwIDMwTDg1IDMyTDY1IDMyTDQ1IDMyTDI1IDMwTDEwIDI1TDEwIDIwWiIgZmlsbD0iIzY2NjY2NiIgc3Ryb2tlPSIjMzMzMzMzIiBzdHJva2Utd2lkdGg9IjEiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSIyMCIgcj0iOCIgZmlsbD0iIzk5OTk5OSIgY2xhc3M9InByb3BlbGxlciIvPjwvc3ZnPg==',
                 // Enable spinning propeller animation
                 enableSpinningPropeller: true,
+                // Enable white background removal for JPEG images
+                removeWhiteBackground: true,
                 // Plane positioning within the 778x300 frame (approximate center)
                 planePosition: {
                     left: '50%', // Center horizontally
@@ -201,6 +203,23 @@
                     customPlane.onload = () => {
                         console.log('✅ Custom plane overlay loaded successfully');
                         
+                        // Apply white background removal for JPEG images
+                        if (this.config.removeWhiteBackground) {
+                            // Strong filters to remove white background and improve contrast
+                            const filters = [
+                                'contrast(1.5)',           // Increase contrast
+                                'saturate(1.3)',          // Boost colors
+                                'brightness(0.9)',        // Slightly darken
+                                'drop-shadow(0 2px 4px rgba(0,0,0,0.4))'  // Add shadow for definition
+                            ];
+                            
+                            customPlane.style.filter = filters.join(' ');
+                            customPlane.style.mixBlendMode = 'multiply';  // Helps remove white backgrounds
+                            customPlane.style.backgroundColor = 'transparent';
+                            
+                            console.log('🎨 Applied white background removal filters');
+                        }
+                        
                         // Add spinning propeller animation if enabled
                         if (this.config.enableSpinningPropeller) {
                             this.addSpinningPropeller(customPlane);
@@ -341,6 +360,74 @@
                 }
                 
                 return this.config.enableSpinningPropeller;
+            },
+
+            // Method to toggle white background removal
+            toggleBackgroundRemoval() {
+                this.config.removeWhiteBackground = !this.config.removeWhiteBackground;
+                
+                console.log(`🎨 Background removal ${this.config.removeWhiteBackground ? 'enabled' : 'disabled'}`);
+                
+                // Apply to existing planes
+                const customPlanes = document.querySelectorAll('img[data-sidekick-replaced="true"]');
+                customPlanes.forEach(plane => {
+                    if (this.config.removeWhiteBackground) {
+                        const filters = [
+                            'contrast(1.5)',
+                            'saturate(1.3)',
+                            'brightness(0.9)',
+                            'drop-shadow(0 2px 4px rgba(0,0,0,0.4))'
+                        ];
+                        plane.style.filter = filters.join(' ');
+                        plane.style.mixBlendMode = 'multiply';
+                        plane.style.backgroundColor = 'transparent';
+                    } else {
+                        plane.style.filter = '';
+                        plane.style.mixBlendMode = '';
+                        plane.style.backgroundColor = '';
+                    }
+                });
+                
+                return this.config.removeWhiteBackground;
+            },
+
+            // Method to test different background removal techniques
+            testBackgroundRemoval(technique = 'default') {
+                const customPlanes = document.querySelectorAll('img[data-sidekick-replaced="true"]');
+                
+                const techniques = {
+                    'default': {
+                        filter: 'contrast(1.5) saturate(1.3) brightness(0.9) drop-shadow(0 2px 4px rgba(0,0,0,0.4))',
+                        mixBlendMode: 'multiply'
+                    },
+                    'strong': {
+                        filter: 'contrast(2.0) saturate(1.5) brightness(0.8) hue-rotate(5deg) drop-shadow(0 2px 6px rgba(0,0,0,0.5))',
+                        mixBlendMode: 'multiply'
+                    },
+                    'screen': {
+                        filter: 'contrast(1.3) saturate(1.2) brightness(1.1) drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+                        mixBlendMode: 'screen'
+                    },
+                    'darken': {
+                        filter: 'contrast(1.4) saturate(1.3) brightness(0.85) drop-shadow(0 2px 4px rgba(0,0,0,0.4))',
+                        mixBlendMode: 'darken'
+                    },
+                    'none': {
+                        filter: '',
+                        mixBlendMode: ''
+                    }
+                };
+                
+                if (techniques[technique]) {
+                    console.log(`🧪 Testing background removal technique: ${technique}`);
+                    customPlanes.forEach(plane => {
+                        plane.style.filter = techniques[technique].filter;
+                        plane.style.mixBlendMode = techniques[technique].mixBlendMode;
+                        plane.style.backgroundColor = 'transparent';
+                    });
+                } else {
+                    console.warn(`⚠️ Unknown technique: ${technique}. Available: ${Object.keys(techniques).join(', ')}`);
+                }
             },
 
             // Method to adjust plane position
