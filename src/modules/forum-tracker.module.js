@@ -577,6 +577,33 @@
             this.showNotification('✅ Forum bookmark added', 'success');
         },
 
+        // Clean title text from CSS, SVG, and other unwanted content
+        cleanTitleText(text) {
+            if (!text) return '';
+            
+            // Remove CSS content (anything between .cls- and })
+            text = text.replace(/\.cls-[^}]*}/g, '');
+            
+            // Remove inline CSS (style blocks)
+            text = text.replace(/<style[^>]*>.*?<\/style>/gi, '');
+            
+            // Remove SVG-related content
+            text = text.replace(/fill:#[a-fA-F0-9]{3,6};?/g, '');
+            text = text.replace(/opacity:[0-9.]+;?/g, '');
+            
+            // Remove common CSS properties that leak into text
+            text = text.replace(/(fill|opacity|stroke|width|height):[^;]+;?/g, '');
+            
+            // Remove multiple spaces and newlines
+            text = text.replace(/\s+/g, ' ').trim();
+            
+            // Remove leading/trailing special characters
+            text = text.replace(/^[^\w\s]+|[^\w\s]+$/g, '').trim();
+            
+            console.log('🧹 Cleaned title text:', text);
+            return text;
+        },
+
         // Extract forum information from current page
         extractForumInfo() {
             try {
@@ -612,9 +639,16 @@
                 for (const selector of titleSelectors) {
                     const element = document.querySelector(selector);
                     if (element && element.textContent.trim()) {
-                        title = element.textContent.trim();
-                        console.log(`📋 Found title with selector "${selector}":`, title);
-                        break;
+                        let rawTitle = element.textContent.trim();
+                        
+                        // Clean up CSS and SVG content
+                        rawTitle = this.cleanTitleText(rawTitle);
+                        
+                        if (rawTitle && rawTitle.length > 3) {
+                            title = rawTitle;
+                            console.log(`📋 Found title with selector "${selector}":`, title);
+                            break;
+                        }
                     }
                 }
                 
@@ -632,9 +666,16 @@
                     console.log('📋 Last resort: scanning for thread-like text');
                     const possibleTitles = document.querySelectorAll('h1, h2, h3, h4, h5, .title, .heading, [class*="title"], [class*="thread"]');
                     for (let element of possibleTitles) {
-                        const text = element.textContent.trim();
-                        if (text.length > 10 && text.length < 200 && !text.toLowerCase().includes('forum') && !text.toLowerCase().includes('torn')) {
-                            title = text;
+                        let rawText = element.textContent.trim();
+                        
+                        // Clean the text
+                        const cleanText = this.cleanTitleText(rawText);
+                        
+                        if (cleanText.length > 10 && cleanText.length < 200 && 
+                            !cleanText.toLowerCase().includes('forum') && 
+                            !cleanText.toLowerCase().includes('torn') &&
+                            !cleanText.includes('.cls-')) {
+                            title = cleanText;
                             console.log('📋 Found potential title:', title);
                             break;
                         }
@@ -692,6 +733,9 @@
                     section = forumSections[forumId];
                     console.log('📋 Found section from forum ID:', section);
                 }
+
+                // Final cleanup of the title
+                title = this.cleanTitleText(title);
 
                 const result = {
                     title: title.length > 60 ? title.substring(0, 60) + '...' : title,
