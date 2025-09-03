@@ -120,11 +120,11 @@
             console.log('💾 Saving panel state:', state);
 
             try {
-                if (window.SidekickModules?.Core?.setData) {
-                    window.SidekickModules.Core.setData('forumTrackerPanelState', state);
+                if (window.SidekickModules?.Core?.saveState) {
+                    window.SidekickModules.Core.saveState('forumTrackerPanelState', state);
                     console.log('✅ Panel state saved successfully');
                 } else {
-                    console.log('⚠️ SidekickModules.Core.setData not available');
+                    console.log('⚠️ SidekickModules.Core.saveState not available');
                 }
             } catch (error) {
                 console.error('❌ Failed to save panel state:', error);
@@ -136,9 +136,9 @@
             try {
                 console.log('📖 Attempting to load panel state...');
                 console.log('📖 Core module available:', !!window.SidekickModules?.Core);
-                console.log('📖 getData method available:', !!window.SidekickModules?.Core?.getData);
+                console.log('📖 loadState method available:', !!window.SidekickModules?.Core?.loadState);
                 
-                const saved = window.SidekickModules?.Core?.getData('forumTrackerPanelState');
+                const saved = window.SidekickModules?.Core?.loadState('forumTrackerPanelState');
                 console.log('📖 Raw saved data:', saved);
                 
                 const result = saved || { x: 20, y: 20, width: 320, height: 420 };
@@ -153,7 +153,7 @@
         // Load bookmarks from storage
         loadBookmarks() {
             try {
-                const saved = window.SidekickModules?.Core?.getData('forumBookmarks');
+                const saved = window.SidekickModules?.Core?.loadState('forumBookmarks');
                 this.bookmarks = saved || [];
                 console.log(`📋 Loaded ${this.bookmarks.length} forum bookmarks`);
             } catch (error) {
@@ -165,8 +165,8 @@
         // Save bookmarks to storage
         saveBookmarks() {
             try {
-                if (window.SidekickModules?.Core?.setData) {
-                    window.SidekickModules.Core.setData('forumBookmarks', this.bookmarks);
+                if (window.SidekickModules?.Core?.saveState) {
+                    window.SidekickModules.Core.saveState('forumBookmarks', this.bookmarks);
                     console.log(`💾 Saved ${this.bookmarks.length} forum bookmarks`);
                 }
             } catch (error) {
@@ -614,6 +614,9 @@
         cleanTitleText(text) {
             if (!text) return '';
             
+            console.log('🧹 Original text:', text);
+            let originalText = text;
+            
             // Remove CSS content (anything between .cls- and })
             text = text.replace(/\.cls-[^}]*}/g, '');
             
@@ -633,7 +636,8 @@
             // Remove leading/trailing special characters
             text = text.replace(/^[^\w\s]+|[^\w\s]+$/g, '').trim();
             
-            console.log('🧹 Cleaned title text:', text);
+            console.log('🧹 Cleaned text:', text);
+            console.log('🧹 Change detected:', originalText !== text);
             return text;
         },
 
