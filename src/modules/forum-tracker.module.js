@@ -137,10 +137,10 @@
                 box-shadow: 0 2px 8px rgba(0,0,0,0.3);
                 display: flex;
                 flex-direction: column;
-                min-width: 250px;
-                min-height: 200px;
-                max-width: 500px;
-                max-height: 600px;
+                min-width: 150px;
+                min-height: 100px;
+                max-width: 800px;
+                max-height: 800px;
                 z-index: 1000;
                 resize: both;
                 overflow: hidden;
