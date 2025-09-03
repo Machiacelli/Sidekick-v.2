@@ -12,11 +12,18 @@
         isActive: false,
         isExpanded: false,
         bookmarks: [],
+        panelState: { x: 20, y: 20, width: 320, height: 420 }, // Panel position/size state
         
         // Module lifecycle
         init() {
             console.log('📋 Initializing Forum Tracker Module v1.0.0...');
+            this.core = window.SidekickModules.Core;
+            if (!this.core) {
+                console.error('❌ Core module not available for Forum Tracker');
+                return;
+            }
             this.loadBookmarks();
+            this.loadPanelState();
             this.addForumButtons();
             this.isActive = true;
             console.log('✅ Forum Tracker module initialized');
@@ -110,21 +117,21 @@
                 return;
             }
 
-            const state = {
+            this.panelState = {
                 x: parseInt(panel.style.left) || 20,
                 y: parseInt(panel.style.top) || 20,
                 width: panel.offsetWidth,
                 height: panel.offsetHeight
             };
 
-            console.log('💾 Saving panel state:', state);
+            console.log('💾 Saving panel state:', this.panelState);
 
             try {
-                if (window.SidekickModules?.Core?.saveState) {
-                    window.SidekickModules.Core.saveState('forumTrackerPanelState', state);
+                if (this.core?.saveState) {
+                    this.core.saveState('forumTrackerPanelState', this.panelState);
                     console.log('✅ Panel state saved successfully');
                 } else {
-                    console.log('⚠️ SidekickModules.Core.saveState not available');
+                    console.log('⚠️ Core.saveState not available');
                 }
             } catch (error) {
                 console.error('❌ Failed to save panel state:', error);
@@ -135,25 +142,28 @@
         loadPanelState() {
             try {
                 console.log('📖 Attempting to load panel state...');
-                console.log('📖 Core module available:', !!window.SidekickModules?.Core);
-                console.log('📖 loadState method available:', !!window.SidekickModules?.Core?.loadState);
+                console.log('📖 Core module available:', !!this.core);
+                console.log('📖 loadState method available:', !!this.core?.loadState);
                 
-                const saved = window.SidekickModules?.Core?.loadState('forumTrackerPanelState');
+                const saved = this.core?.loadState('forumTrackerPanelState');
                 console.log('📖 Raw saved data:', saved);
                 
-                const result = saved || { x: 20, y: 20, width: 320, height: 420 };
-                console.log('📖 Loading panel state:', result);
-                return result;
+                if (saved) {
+                    this.panelState = saved;
+                } else {
+                    this.panelState = { x: 20, y: 20, width: 320, height: 420 };
+                }
+                console.log('📖 Loading panel state:', this.panelState);
             } catch (error) {
                 console.error('❌ Failed to load panel state:', error);
-                return { x: 20, y: 20, width: 320, height: 420 };
+                this.panelState = { x: 20, y: 20, width: 320, height: 420 };
             }
         },
 
         // Load bookmarks from storage
         loadBookmarks() {
             try {
-                const saved = window.SidekickModules?.Core?.loadState('forumBookmarks');
+                const saved = this.core?.loadState('forumBookmarks');
                 this.bookmarks = saved || [];
                 console.log(`📋 Loaded ${this.bookmarks.length} forum bookmarks`);
             } catch (error) {
@@ -165,8 +175,8 @@
         // Save bookmarks to storage
         saveBookmarks() {
             try {
-                if (window.SidekickModules?.Core?.saveState) {
-                    window.SidekickModules.Core.saveState('forumBookmarks', this.bookmarks);
+                if (this.core?.saveState) {
+                    this.core.saveState('forumBookmarks', this.bookmarks);
                     console.log(`💾 Saved ${this.bookmarks.length} forum bookmarks`);
                 }
             } catch (error) {
@@ -183,7 +193,7 @@
             }
 
             // Load saved panel state
-            const panelState = this.loadPanelState();
+            const panelState = this.panelState;
 
             // Create forum tracker panel in sidebar style (like LinkGroup module)
             const panel = document.createElement('div');
