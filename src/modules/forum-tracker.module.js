@@ -99,11 +99,13 @@
                 document.removeEventListener('mouseup', closeDragElement);
                 document.removeEventListener('mousemove', elementDrag);
                 // Save position after dragging
+                console.log('🖱️ Drag ended - calling savePanelState');
                 self.savePanelState();
             }
 
             // Add resize observer to save size changes
             const resizeObserver = new ResizeObserver(() => {
+                console.log('📏 Resize detected - calling savePanelState');
                 self.savePanelState();
             });
             resizeObserver.observe(element);
@@ -111,11 +113,14 @@
 
         // Save panel position and size
         savePanelState() {
+            console.log('💾 savePanelState() called');
             const panel = document.getElementById('forum-tracker-panel');
             if (!panel) {
                 console.log('⚠️ Panel not found when trying to save state');
                 return;
             }
+
+            console.log('💾 Previous panel state:', this.panelState);
 
             this.panelState = {
                 x: parseInt(panel.style.left) || 20,
@@ -124,12 +129,14 @@
                 height: panel.offsetHeight
             };
 
-            console.log('💾 Saving panel state:', this.panelState);
+            console.log('💾 New panel state:', this.panelState);
+            console.log('💾 Core available:', !!this.core);
+            console.log('💾 saveState method available:', !!this.core?.saveState);
 
             try {
                 if (this.core?.saveState) {
                     this.core.saveState('forumTrackerPanelState', this.panelState);
-                    console.log('✅ Panel state saved successfully');
+                    console.log('✅ Panel state saved successfully to Core');
                 } else {
                     console.log('⚠️ Core.saveState not available');
                 }
