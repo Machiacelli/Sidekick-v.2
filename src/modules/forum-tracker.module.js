@@ -37,15 +37,56 @@
         },
 
         showForumPanel() {
-            // Check if panel already exists
-            if (document.getElementById('forum-tracker-content')) {
-                console.log('📋 Forum Tracker panel already exists');
-                return;
+            console.log('📋 Showing Forum Tracker panel...');
+            
+            let panel = document.getElementById('forum-tracker-panel');
+            if (!panel) {
+                this.createForumPanel();
+                panel = document.getElementById('forum-tracker-panel');
             }
+            
+            if (panel) {
+                panel.style.display = 'flex';
+                // Refresh the bookmarks list
+                const bookmarksList = document.getElementById('forum-bookmarks-list');
+                if (bookmarksList) {
+                    bookmarksList.innerHTML = this.renderBookmarksList();
+                    this.attachEventListeners();
+                }
+            }
+        },
 
-            // Create the panel
-            this.createForumPanel();
-            console.log('📋 Forum Tracker panel created and shown');
+        // Make panel draggable (like Timer module)
+        makeDraggable(element) {
+            const header = element.querySelector('.forum-tracker-header');
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            
+            header.addEventListener('mousedown', dragMouseDown);
+            
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.addEventListener('mouseup', closeDragElement);
+                document.addEventListener('mousemove', elementDrag);
+            }
+            
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                element.style.top = (element.offsetTop - pos2) + "px";
+                element.style.left = (element.offsetLeft - pos1) + "px";
+            }
+            
+            function closeDragElement() {
+                document.removeEventListener('mouseup', closeDragElement);
+                document.removeEventListener('mousemove', elementDrag);
+            }
         },
 
         // Load bookmarks from storage
@@ -74,29 +115,135 @@
 
         // Create the forum tracker panel in sidebar
         createForumPanel() {
-            if (!window.SidekickModules?.UI?.addPanel) {
-                console.warn('⚠️ UI module not available for Forum Tracker');
+            // Check if panel already exists
+            if (document.getElementById('forum-tracker-panel')) {
+                console.log('📋 Forum Tracker panel already exists');
                 return;
             }
 
-            const panelContent = `
-                <div id="forum-tracker-content">
-                    <div class="forum-tracker-header">
-                        <h4>📋 Forum Tracker</h4>
-                        <button id="add-forum-bookmark" class="sk-btn sk-btn-small">+ Add Current</button>
+            // Create forum tracker panel in sidebar style (like Timer module)
+            const panel = document.createElement('div');
+            panel.id = 'forum-tracker-panel';
+            panel.className = 'sidebar-item';
+            panel.style.cssText = `
+                position: absolute;
+                left: 10px;
+                top: 10px;
+                width: 300px;
+                height: 400px;
+                background: #2a2a2a;
+                border: 1px solid #444;
+                border-radius: 8px;
+                display: flex;
+                flex-direction: column;
+                min-width: 250px;
+                min-height: 200px;
+                z-index: 1000;
+                resize: both;
+                overflow: hidden;
+            `;
+
+            panel.innerHTML = `
+                <div class="forum-tracker-header" style="
+                    background: #333;
+                    border-bottom: 1px solid #555;
+                    padding: 8px 12px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    cursor: move;
+                    height: 32px;
+                    flex-shrink: 0;
+                    border-radius: 7px 7px 0 0;
+                ">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 16px;">📋</span>
+                        <span style="color: #2196F3; font-weight: bold; font-size: 14px;">Forum Tracker</span>
                     </div>
+                    <div style="display: flex; gap: 4px;">
+                        <button id="add-forum-bookmark" style="
+                            background: #4CAF50;
+                            border: none;
+                            color: white;
+                            padding: 4px 8px;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-size: 10px;
+                            font-weight: bold;
+                        ">+ Add Current</button>
+                        <button class="close-btn" style="
+                            background: #f44336;
+                            border: none;
+                            color: white;
+                            padding: 2px 6px;
+                            border-radius: 3px;
+                            cursor: pointer;
+                            font-size: 12px;
+                            font-weight: bold;
+                        ">×</button>
+                    </div>
+                </div>
+                <div id="forum-tracker-content" style="
+                    flex: 1;
+                    padding: 12px;
+                    overflow-y: auto;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                ">
                     <div id="forum-bookmarks-list">
                         ${this.renderBookmarksList()}
                     </div>
-                    <div class="forum-tracker-footer">
-                        <button id="add-manual-bookmark" class="sk-btn sk-btn-small">+ Manual Add</button>
-                        <button id="clear-forum-bookmarks" class="sk-btn sk-btn-small sk-btn-danger">Clear All</button>
+                    <div class="forum-tracker-footer" style="
+                        display: flex;
+                        justify-content: space-between;
+                        gap: 8px;
+                        margin-top: auto;
+                        padding-top: 8px;
+                        border-top: 1px solid #333;
+                    ">
+                        <button id="add-manual-bookmark" style="
+                            flex: 1;
+                            padding: 6px;
+                            font-size: 10px;
+                            background: #2196F3;
+                            border: none;
+                            color: white;
+                            border-radius: 4px;
+                            cursor: pointer;
+                        ">+ Manual Add</button>
+                        <button id="clear-forum-bookmarks" style="
+                            flex: 1;
+                            padding: 6px;
+                            font-size: 10px;
+                            background: #f44336;
+                            border: none;
+                            color: white;
+                            border-radius: 4px;
+                            cursor: pointer;
+                        ">Clear All</button>
                     </div>
                 </div>
             `;
 
-            window.SidekickModules.UI.addPanel('forum-tracker', '📋 Forum Tracker', panelContent, false);
+            // Add to sidebar content area (like Timer module)
+            const sidebarContent = document.getElementById('sidekick-content');
+            if (sidebarContent) {
+                sidebarContent.appendChild(panel);
+                console.log('📋 Forum Tracker panel added to sidebar');
+            } else {
+                // Fallback: add to body
+                document.body.appendChild(panel);
+                console.log('📋 Forum Tracker panel added to body (fallback)');
+            }
+
+            // Add dragging functionality
+            this.makeDraggable(panel);
+            
+            // Attach event listeners
             this.attachEventListeners();
+            
+            // Add styles
             this.addForumTrackerStyles();
         },
 
@@ -125,6 +272,17 @@
 
         // Add event listeners
         attachEventListeners() {
+            // Close button
+            const closeBtn = document.querySelector('#forum-tracker-panel .close-btn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    const panel = document.getElementById('forum-tracker-panel');
+                    if (panel) {
+                        panel.style.display = 'none';
+                    }
+                });
+            }
+
             // Add current page button
             const addCurrentBtn = document.getElementById('add-forum-bookmark');
             if (addCurrentBtn) {
