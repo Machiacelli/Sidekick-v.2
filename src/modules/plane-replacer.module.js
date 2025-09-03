@@ -46,10 +46,10 @@
                     top: '45%',  // Slightly above center vertically
                     transform: 'translate(-50%, -50%)'
                 },
-                // Estimated plane size (the actual plane in the image, not the full 778x300)
+                // Estimated plane size (much larger to properly cover original plane)
                 planeSize: {
-                    width: '120px',  // Approximate width of just the plane
-                    height: '40px'   // Approximate height of just the plane
+                    width: '200px',  // Increased to cover the original plane better
+                    height: '80px'   // Increased proportionally
                 }
             },
 
@@ -205,19 +205,23 @@
                         
                         // Apply white background removal for JPEG images
                         if (this.config.removeWhiteBackground) {
-                            // Strong filters to remove white background and improve contrast
+                            // Very strong filters to completely remove white background
                             const filters = [
-                                'contrast(1.5)',           // Increase contrast
-                                'saturate(1.3)',          // Boost colors
-                                'brightness(0.9)',        // Slightly darken
-                                'drop-shadow(0 2px 4px rgba(0,0,0,0.4))'  // Add shadow for definition
+                                'contrast(2.5)',           // Very high contrast
+                                'saturate(2.0)',          // Boost colors significantly
+                                'brightness(0.7)',        // Darken to remove white
+                                'hue-rotate(10deg)',      // Slight hue adjustment
+                                'drop-shadow(0 3px 8px rgba(0,0,0,0.6))'  // Strong shadow
                             ];
                             
                             customPlane.style.filter = filters.join(' ');
-                            customPlane.style.mixBlendMode = 'multiply';  // Helps remove white backgrounds
+                            customPlane.style.mixBlendMode = 'multiply';  // Strong white removal
                             customPlane.style.backgroundColor = 'transparent';
                             
-                            console.log('🎨 Applied white background removal filters');
+                            // Additional CSS to ensure white pixels become transparent
+                            customPlane.style.isolation = 'isolate';
+                            
+                            console.log('🎨 Applied strong white background removal filters');
                         }
                         
                         // Add spinning propeller animation if enabled
@@ -373,18 +377,21 @@
                 customPlanes.forEach(plane => {
                     if (this.config.removeWhiteBackground) {
                         const filters = [
-                            'contrast(1.5)',
-                            'saturate(1.3)',
-                            'brightness(0.9)',
-                            'drop-shadow(0 2px 4px rgba(0,0,0,0.4))'
+                            'contrast(2.5)',
+                            'saturate(2.0)',
+                            'brightness(0.7)',
+                            'hue-rotate(10deg)',
+                            'drop-shadow(0 3px 8px rgba(0,0,0,0.6))'
                         ];
                         plane.style.filter = filters.join(' ');
                         plane.style.mixBlendMode = 'multiply';
                         plane.style.backgroundColor = 'transparent';
+                        plane.style.isolation = 'isolate';
                     } else {
                         plane.style.filter = '';
                         plane.style.mixBlendMode = '';
                         plane.style.backgroundColor = '';
+                        plane.style.isolation = '';
                     }
                 });
                 
@@ -397,20 +404,24 @@
                 
                 const techniques = {
                     'default': {
-                        filter: 'contrast(1.5) saturate(1.3) brightness(0.9) drop-shadow(0 2px 4px rgba(0,0,0,0.4))',
+                        filter: 'contrast(2.5) saturate(2.0) brightness(0.7) hue-rotate(10deg) drop-shadow(0 3px 8px rgba(0,0,0,0.6))',
                         mixBlendMode: 'multiply'
                     },
-                    'strong': {
-                        filter: 'contrast(2.0) saturate(1.5) brightness(0.8) hue-rotate(5deg) drop-shadow(0 2px 6px rgba(0,0,0,0.5))',
+                    'extreme': {
+                        filter: 'contrast(3.0) saturate(2.5) brightness(0.6) hue-rotate(15deg) drop-shadow(0 4px 10px rgba(0,0,0,0.8))',
                         mixBlendMode: 'multiply'
                     },
                     'screen': {
-                        filter: 'contrast(1.3) saturate(1.2) brightness(1.1) drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+                        filter: 'contrast(2.0) saturate(1.8) brightness(1.2) drop-shadow(0 2px 6px rgba(0,0,0,0.5))',
                         mixBlendMode: 'screen'
                     },
                     'darken': {
-                        filter: 'contrast(1.4) saturate(1.3) brightness(0.85) drop-shadow(0 2px 4px rgba(0,0,0,0.4))',
+                        filter: 'contrast(2.2) saturate(1.9) brightness(0.75) drop-shadow(0 3px 6px rgba(0,0,0,0.5))',
                         mixBlendMode: 'darken'
+                    },
+                    'overlay': {
+                        filter: 'contrast(2.0) saturate(1.7) brightness(0.8) drop-shadow(0 2px 6px rgba(0,0,0,0.5))',
+                        mixBlendMode: 'overlay'
                     },
                     'none': {
                         filter: '',
@@ -458,6 +469,18 @@
                     plane.style.width = width;
                     plane.style.height = height;
                 });
+            },
+
+            // Quick method to make plane larger for better coverage
+            makePlaneLarger() {
+                console.log('📏 Making plane larger for better coverage...');
+                this.adjustPlaneSize('250px', '100px');
+            },
+
+            // Quick method to make plane smaller if too large
+            makePlaneSmaller() {
+                console.log('📏 Making plane smaller...');
+                this.adjustPlaneSize('150px', '60px');
             },
 
             // Method to get original plane image dimensions for reference
