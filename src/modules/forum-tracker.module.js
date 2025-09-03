@@ -63,6 +63,8 @@
             
             header.addEventListener('mousedown', dragMouseDown);
             
+            const self = this;
+            
             function dragMouseDown(e) {
                 e = e || window.event;
                 e.preventDefault();
@@ -86,6 +88,46 @@
             function closeDragElement() {
                 document.removeEventListener('mouseup', closeDragElement);
                 document.removeEventListener('mousemove', elementDrag);
+                // Save position after dragging
+                self.savePanelState();
+            }
+
+            // Add resize observer to save size changes
+            const resizeObserver = new ResizeObserver(() => {
+                self.savePanelState();
+            });
+            resizeObserver.observe(element);
+        },
+
+        // Save panel position and size
+        savePanelState() {
+            const panel = document.getElementById('forum-tracker-panel');
+            if (!panel) return;
+
+            const state = {
+                x: parseInt(panel.style.left) || 20,
+                y: parseInt(panel.style.top) || 20,
+                width: panel.offsetWidth,
+                height: panel.offsetHeight
+            };
+
+            try {
+                if (window.SidekickModules?.Core?.setData) {
+                    window.SidekickModules.Core.setData('forumTrackerPanelState', state);
+                }
+            } catch (error) {
+                console.error('❌ Failed to save panel state:', error);
+            }
+        },
+
+        // Load panel position and size
+        loadPanelState() {
+            try {
+                const saved = window.SidekickModules?.Core?.getData('forumTrackerPanelState');
+                return saved || { x: 20, y: 20, width: 320, height: 420 };
+            } catch (error) {
+                console.error('❌ Failed to load panel state:', error);
+                return { x: 20, y: 20, width: 320, height: 420 };
             }
         },
 
@@ -121,16 +163,19 @@
                 return;
             }
 
+            // Load saved panel state
+            const panelState = this.loadPanelState();
+
             // Create forum tracker panel in sidebar style (like LinkGroup module)
             const panel = document.createElement('div');
             panel.id = 'forum-tracker-panel';
             panel.className = 'sidebar-item';
             panel.style.cssText = `
                 position: absolute;
-                left: 20px;
-                top: 20px;
-                width: 320px;
-                height: 420px;
+                left: ${panelState.x}px;
+                top: ${panelState.y}px;
+                width: ${panelState.width}px;
+                height: ${panelState.height}px;
                 background: #222;
                 border: 1px solid #444;
                 border-radius: 8px;
@@ -512,32 +557,90 @@
         // Extract forum information from current page
         extractForumInfo() {
             try {
-                // Try to get thread title from page
-                const titleElement = document.querySelector('h4[class*="title"]') || 
-                                   document.querySelector('.forum-thread-title') ||
-                                   document.querySelector('h3') ||
-                                   document.querySelector('h4');
+                // Try to get thread title from various page elements
+                let title = 'Forum Thread';
                 
-                const title = titleElement ? titleElement.textContent.trim() : 'Forum Thread';
+                // Common selectors for forum thread titles in Torn
+                const titleSelectors = [
+                    'h4[class*="title"]',
+                    '.forum-thread-title',
+                    '.title___',
+                    'h3',
+                    'h4',
+                    '[class*="title"]',
+                    '.content-title',
+                    '.thread-title'
+                ];
                 
-                // Try to determine forum section
-                const breadcrumbs = document.querySelectorAll('.breadcrumb a, nav a');
-                let section = 'Forums';
-                
-                for (let crumb of breadcrumbs) {
-                    if (crumb.textContent.includes('Forum') && !crumb.textContent.includes('Home')) {
-                        section = crumb.textContent.trim();
+                for (const selector of titleSelectors) {
+                    const element = document.querySelector(selector);
+                    if (element && element.textContent.trim()) {
+                        title = element.textContent.trim();
                         break;
                     }
                 }
+                
+                // If still no title, try to extract from page title
+                if (title === 'Forum Thread' && document.title) {
+                    const pageTitle = document.title.replace('TORN - ', '').trim();
+                    if (pageTitle && pageTitle !== 'TORN') {
+                        title = pageTitle;
+                    }
+                }
+                
+                // Try to determine forum section from URL or breadcrumbs
+                let section = 'Forums';
+                
+                // Extract from URL parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                const forumId = urlParams.get('f');
+                const threadId = urlParams.get('t');
+                
+                // Try breadcrumbs first
+                const breadcrumbSelectors = [
+                    '.breadcrumb a',
+                    'nav a',
+                    '[class*="breadcrumb"] a',
+                    '.forum-nav a'
+                ];
+                
+                for (const selector of breadcrumbSelectors) {
+                    const breadcrumbs = document.querySelectorAll(selector);
+                    for (let crumb of breadcrumbs) {
+                        const text = crumb.textContent.trim();
+                        if (text.includes('Forum') && !text.includes('Home') && text !== 'Forums') {
+                            section = text;
+                            break;
+                        }
+                    }
+                    if (section !== 'Forums') break;
+                }
+                
+                // Forum ID mapping for common sections
+                const forumSections = {
+                    '1': 'General Discussion',
+                    '2': 'Game Discussion', 
+                    '3': 'Guides & Tutorials',
+                    '4': 'Help & Support',
+                    '5': 'Bug Reports',
+                    '15': 'Trade Chat',
+                    '19': 'Faction Forums'
+                };
+                
+                if (forumId && forumSections[forumId]) {
+                    section = forumSections[forumId];
+                }
 
                 return {
-                    title: title.length > 50 ? title.substring(0, 50) + '...' : title,
+                    title: title.length > 60 ? title.substring(0, 60) + '...' : title,
                     section: section
                 };
             } catch (error) {
                 console.error('Error extracting forum info:', error);
-                return null;
+                return {
+                    title: 'Forum Thread',
+                    section: 'Forums'
+                };
             }
         },
 
