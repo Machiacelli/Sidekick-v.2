@@ -102,7 +102,10 @@
         // Save panel position and size
         savePanelState() {
             const panel = document.getElementById('forum-tracker-panel');
-            if (!panel) return;
+            if (!panel) {
+                console.log('⚠️ Panel not found when trying to save state');
+                return;
+            }
 
             const state = {
                 x: parseInt(panel.style.left) || 20,
@@ -111,9 +114,14 @@
                 height: panel.offsetHeight
             };
 
+            console.log('💾 Saving panel state:', state);
+
             try {
                 if (window.SidekickModules?.Core?.setData) {
                     window.SidekickModules.Core.setData('forumTrackerPanelState', state);
+                    console.log('✅ Panel state saved successfully');
+                } else {
+                    console.log('⚠️ SidekickModules.Core.setData not available');
                 }
             } catch (error) {
                 console.error('❌ Failed to save panel state:', error);
@@ -124,7 +132,9 @@
         loadPanelState() {
             try {
                 const saved = window.SidekickModules?.Core?.getData('forumTrackerPanelState');
-                return saved || { x: 20, y: 20, width: 320, height: 420 };
+                const result = saved || { x: 20, y: 20, width: 320, height: 420 };
+                console.log('📖 Loading panel state:', result);
+                return result;
             } catch (error) {
                 console.error('❌ Failed to load panel state:', error);
                 return { x: 20, y: 20, width: 320, height: 420 };
@@ -312,6 +322,13 @@
             // Add dragging functionality
             this.makeDraggable(panel);
             
+            // Add resize observer to save size changes
+            const self = this;
+            const resizeObserver = new ResizeObserver(() => {
+                self.savePanelState();
+            });
+            resizeObserver.observe(panel);
+            
             // Attach panel event listeners (dropdown, close button) - only once
             this.attachPanelEventListeners();
             
@@ -369,15 +386,17 @@
                             <span>${this.formatDate(bookmark.lastVisit)}</span>
                         </div>
                     </div>
-                    <div style="display: flex; gap: 4px; flex-shrink: 0;">
+                    <div style="display: flex; gap: 2px; flex-shrink: 0;">
                         <button class="visit-bookmark" data-url="${bookmark.url}" style="
                             background: #4CAF50;
                             border: none;
                             color: white;
-                            padding: 4px 8px;
-                            border-radius: 3px;
+                            padding: 2px 4px;
+                            border-radius: 2px;
                             cursor: pointer;
-                            font-size: 11px;
+                            font-size: 9px;
+                            min-width: 20px;
+                            height: 18px;
                         " title="Visit forum thread">
                             📖
                         </button>
@@ -385,10 +404,12 @@
                             background: #2196F3;
                             border: none;
                             color: white;
-                            padding: 4px 8px;
-                            border-radius: 3px;
+                            padding: 2px 4px;
+                            border-radius: 2px;
                             cursor: pointer;
-                            font-size: 11px;
+                            font-size: 9px;
+                            min-width: 20px;
+                            height: 18px;
                         " title="Copy link">
                             📋
                         </button>
@@ -396,10 +417,12 @@
                             background: #f44336;
                             border: none;
                             color: white;
-                            padding: 4px 8px;
-                            border-radius: 3px;
+                            padding: 2px 4px;
+                            border-radius: 2px;
                             cursor: pointer;
-                            font-size: 11px;
+                            font-size: 9px;
+                            min-width: 20px;
+                            height: 18px;
                         " title="Remove bookmark">
                             ×
                         </button>
@@ -557,6 +580,8 @@
         // Extract forum information from current page
         extractForumInfo() {
             try {
+                console.log('🔍 Extracting forum info from:', window.location.href);
+                
                 // Try to get thread title from various page elements
                 let title = 'Forum Thread';
                 
@@ -566,27 +591,34 @@
                     '.forum-thread-title',
                     '.title___',
                     'h3',
-                    'h4',
+                    'h4', 
                     '[class*="title"]',
                     '.content-title',
-                    '.thread-title'
+                    '.thread-title',
+                    'h1',
+                    'h2'
                 ];
                 
                 for (const selector of titleSelectors) {
                     const element = document.querySelector(selector);
                     if (element && element.textContent.trim()) {
                         title = element.textContent.trim();
+                        console.log(`📋 Found title with selector "${selector}":`, title);
                         break;
                     }
                 }
                 
                 // If still no title, try to extract from page title
                 if (title === 'Forum Thread' && document.title) {
-                    const pageTitle = document.title.replace('TORN - ', '').trim();
-                    if (pageTitle && pageTitle !== 'TORN') {
+                    const pageTitle = document.title.replace('TORN - ', '').replace('Torn - ', '').trim();
+                    if (pageTitle && pageTitle !== 'TORN' && pageTitle !== 'Torn') {
                         title = pageTitle;
+                        console.log('📋 Using page title:', title);
                     }
                 }
+                
+                // Clean up the title
+                title = title.replace(/^\s*[-•]\s*/, '').trim(); // Remove leading bullets/dashes
                 
                 // Try to determine forum section from URL or breadcrumbs
                 let section = 'Forums';
@@ -596,20 +628,25 @@
                 const forumId = urlParams.get('f');
                 const threadId = urlParams.get('t');
                 
+                console.log('🔍 URL params - Forum ID:', forumId, 'Thread ID:', threadId);
+                
                 // Try breadcrumbs first
                 const breadcrumbSelectors = [
                     '.breadcrumb a',
                     'nav a',
                     '[class*="breadcrumb"] a',
-                    '.forum-nav a'
+                    '.forum-nav a',
+                    'a[href*="forums.php"]'
                 ];
                 
                 for (const selector of breadcrumbSelectors) {
                     const breadcrumbs = document.querySelectorAll(selector);
                     for (let crumb of breadcrumbs) {
                         const text = crumb.textContent.trim();
-                        if (text.includes('Forum') && !text.includes('Home') && text !== 'Forums') {
+                        console.log('🔍 Checking breadcrumb:', text);
+                        if (text.length > 3 && !text.includes('Home') && !text.includes('Forum') && text !== 'Forums') {
                             section = text;
+                            console.log('📋 Found section from breadcrumb:', section);
                             break;
                         }
                     }
@@ -629,12 +666,16 @@
                 
                 if (forumId && forumSections[forumId]) {
                     section = forumSections[forumId];
+                    console.log('📋 Found section from forum ID:', section);
                 }
 
-                return {
+                const result = {
                     title: title.length > 60 ? title.substring(0, 60) + '...' : title,
                     section: section
                 };
+                
+                console.log('📋 Final forum info:', result);
+                return result;
             } catch (error) {
                 console.error('Error extracting forum info:', error);
                 return {
