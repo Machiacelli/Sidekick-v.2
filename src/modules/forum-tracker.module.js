@@ -51,7 +51,7 @@
                 const bookmarksContainer = document.getElementById('forum-bookmarks-container');
                 if (bookmarksContainer) {
                     bookmarksContainer.innerHTML = this.renderBookmarksList();
-                    this.attachEventListeners();
+                    this.attachBookmarkEventListeners();
                 }
             }
         },
@@ -267,8 +267,11 @@
             // Add dragging functionality
             this.makeDraggable(panel);
             
-            // Attach event listeners
-            this.attachEventListeners();
+            // Attach panel event listeners (dropdown, close button) - only once
+            this.attachPanelEventListeners();
+            
+            // Attach bookmark event listeners
+            this.attachBookmarkEventListeners();
         },
 
         // Render the bookmarks list
@@ -360,8 +363,8 @@
             `).join('');
         },
 
-        // Add event listeners
-        attachEventListeners() {
+        // Add panel event listeners (dropdown, close button) - called once
+        attachPanelEventListeners() {
             const panel = document.getElementById('forum-tracker-panel');
             if (!panel) return;
 
@@ -396,7 +399,7 @@
             if (addCurrentBtn) {
                 addCurrentBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    dropdownContent.style.display = 'none';
+                    if (dropdownContent) dropdownContent.style.display = 'none';
                     this.addCurrentPage();
                 });
             }
@@ -406,7 +409,7 @@
             if (manualAddBtn) {
                 manualAddBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    dropdownContent.style.display = 'none';
+                    if (dropdownContent) dropdownContent.style.display = 'none';
                     this.showManualAddDialog();
                 });
             }
@@ -416,15 +419,33 @@
             if (clearBtn) {
                 clearBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    dropdownContent.style.display = 'none';
+                    if (dropdownContent) dropdownContent.style.display = 'none';
                     this.clearAllBookmarks();
                 });
             }
 
+            // Close dropdown when clicking outside
+            document.addEventListener('click', () => {
+                if (dropdownContent) {
+                    dropdownContent.style.display = 'none';
+                }
+            });
+        },
+
+        // Add bookmark event listeners (for dynamic content) - called on refresh
+        attachBookmarkEventListeners() {
+            const panel = document.getElementById('forum-tracker-panel');
+            if (!panel) return;
+
             // Bookmark actions (delegated events)
             const bookmarksContainer = panel.querySelector('#forum-bookmarks-container');
             if (bookmarksContainer) {
-                bookmarksContainer.addEventListener('click', (e) => {
+                // Remove existing listeners to prevent duplicates
+                const newContainer = bookmarksContainer.cloneNode(true);
+                bookmarksContainer.parentNode.replaceChild(newContainer, bookmarksContainer);
+                
+                // Add new listeners
+                newContainer.addEventListener('click', (e) => {
                     if (e.target.classList.contains('visit-bookmark')) {
                         const url = e.target.dataset.url;
                         this.visitBookmark(url);
@@ -437,13 +458,11 @@
                     }
                 });
             }
+        },
 
-            // Close dropdown when clicking outside
-            document.addEventListener('click', () => {
-                if (dropdownContent) {
-                    dropdownContent.style.display = 'none';
-                }
-            });
+        // Legacy method for backward compatibility
+        attachEventListeners() {
+            this.attachBookmarkEventListeners();
         },
 
         // Add current forum page as bookmark
@@ -599,8 +618,8 @@
             const listContainer = document.getElementById('forum-bookmarks-container');
             if (listContainer) {
                 listContainer.innerHTML = this.renderBookmarksList();
-                // Re-attach event listeners after refreshing content
-                this.attachEventListeners();
+                // Re-attach only bookmark event listeners after refreshing content
+                this.attachBookmarkEventListeners();
             }
         },
 
