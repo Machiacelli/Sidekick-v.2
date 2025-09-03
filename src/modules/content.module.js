@@ -140,7 +140,8 @@
                         } else {
                             alert('Link Group module not loaded!');
                         }
-                    }}
+                    }},
+                    { icon: '📋', text: 'Forum Tracker', color: '#2196F3', action: () => this.addForumTracker() }
                 ];
                 
                 menuItems.forEach(item => {
@@ -380,6 +381,45 @@
                     // Show user-friendly message with debugging info
                     NotificationSystem.show(
                         'Travel Tracker', 
+                        `Module not loaded. Check console for details. Available: ${window.SidekickModules ? Object.keys(window.SidekickModules).join(', ') : 'None'}`, 
+                        'error'
+                    );
+                }
+            },
+
+            addForumTracker() {
+                console.log('📋 Forum Tracker button clicked - checking module availability...');
+                console.log('📋 Available modules:', window.SidekickModules ? Object.keys(window.SidekickModules) : 'No modules found');
+                
+                // Check if ForumTracker module is available and show the panel
+                if (window.SidekickModules?.ForumTracker) {
+                    console.log('✅ ForumTracker module found - showing panel...');
+                    try {
+                        // Check if UI module has the capability to show panels
+                        if (window.SidekickModules?.UI?.showPanel) {
+                            window.SidekickModules.UI.showPanel('forum-tracker');
+                        } else {
+                            // Fallback: just recreate the panel if it doesn't exist
+                            if (!document.getElementById('forum-tracker-content')) {
+                                window.SidekickModules.ForumTracker.createForumPanel();
+                            }
+                        }
+                        this.closeAddMenu();
+                        console.log('✅ Forum Tracker panel displayed successfully');
+                    } catch (error) {
+                        console.error('❌ Error showing Forum Tracker:', error);
+                        NotificationSystem.show('Forum Tracker', 'Error showing forum tracker: ' + error.message, 'error');
+                    }
+                } else {
+                    console.error('❌ ForumTracker module not available');
+                    console.log('🔍 Checking what we have:', {
+                        'SidekickModules exists': !!window.SidekickModules,
+                        'ForumTracker exists': !!window.SidekickModules?.ForumTracker,
+                        'Available modules': window.SidekickModules ? Object.keys(window.SidekickModules) : 'none'
+                    });
+                    
+                    NotificationSystem.show(
+                        'Forum Tracker', 
                         `Module not loaded. Check console for details. Available: ${window.SidekickModules ? Object.keys(window.SidekickModules).join(', ') : 'None'}`, 
                         'error'
                     );
