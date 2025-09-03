@@ -48,9 +48,9 @@
             if (panel) {
                 panel.style.display = 'flex';
                 // Refresh the bookmarks list
-                const bookmarksList = document.getElementById('forum-bookmarks-list');
-                if (bookmarksList) {
-                    bookmarksList.innerHTML = this.renderBookmarksList();
+                const bookmarksContainer = document.getElementById('forum-bookmarks-container');
+                if (bookmarksContainer) {
+                    bookmarksContainer.innerHTML = this.renderBookmarksList();
                     this.attachEventListeners();
                 }
             }
@@ -121,23 +121,26 @@
                 return;
             }
 
-            // Create forum tracker panel in sidebar style (like Timer module)
+            // Create forum tracker panel in sidebar style (like LinkGroup module)
             const panel = document.createElement('div');
             panel.id = 'forum-tracker-panel';
             panel.className = 'sidebar-item';
             panel.style.cssText = `
                 position: absolute;
-                left: 10px;
-                top: 10px;
-                width: 300px;
-                height: 400px;
-                background: #2a2a2a;
+                left: 20px;
+                top: 20px;
+                width: 320px;
+                height: 420px;
+                background: #222;
                 border: 1px solid #444;
                 border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
                 display: flex;
                 flex-direction: column;
                 min-width: 250px;
                 min-height: 200px;
+                max-width: 500px;
+                max-height: 600px;
                 z-index: 1000;
                 resize: both;
                 overflow: hidden;
@@ -145,88 +148,112 @@
 
             panel.innerHTML = `
                 <div class="forum-tracker-header" style="
-                    background: #333;
+                    background: #2196F3;
                     border-bottom: 1px solid #555;
-                    padding: 8px 12px;
+                    padding: 4px 8px;
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
                     cursor: move;
-                    height: 32px;
+                    height: 24px;
                     flex-shrink: 0;
                     border-radius: 7px 7px 0 0;
                 ">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 16px;">📋</span>
-                        <span style="color: #2196F3; font-weight: bold; font-size: 14px;">Forum Tracker</span>
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <div class="forum-dropdown" style="position: relative; display: inline-block;">
+                            <button class="dropdown-btn" style="
+                                background: none;
+                                border: none;
+                                color: #bbb;
+                                cursor: pointer;
+                                font-size: 12px;
+                                padding: 2px;
+                                display: flex;
+                                align-items: center;
+                            " title="Options">
+                                ▼
+                            </button>
+                            <div class="dropdown-content" style="
+                                display: none;
+                                position: absolute;
+                                background: #333;
+                                min-width: 140px;
+                                box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+                                z-index: 1001;
+                                border-radius: 4px;
+                                border: 1px solid #555;
+                                top: 100%;
+                                left: 0;
+                            ">
+                                <button class="add-current-forum-btn" style="
+                                    background: none;
+                                    border: none;
+                                    color: #fff;
+                                    padding: 8px 12px;
+                                    width: 100%;
+                                    text-align: left;
+                                    cursor: pointer;
+                                    font-size: 12px;
+                                ">
+                                    📋 Add Current Page
+                                </button>
+                                <button class="add-manual-forum-btn" style="
+                                    background: none;
+                                    border: none;
+                                    color: #fff;
+                                    padding: 8px 12px;
+                                    width: 100%;
+                                    text-align: left;
+                                    cursor: pointer;
+                                    font-size: 12px;
+                                ">
+                                    ✏️ Manual Add
+                                </button>
+                                <button class="clear-all-forums-btn" style="
+                                    background: none;
+                                    border: none;
+                                    color: #fff;
+                                    padding: 8px 12px;
+                                    width: 100%;
+                                    text-align: left;
+                                    cursor: pointer;
+                                    font-size: 12px;
+                                ">
+                                    🗑️ Clear All
+                                </button>
+                            </div>
+                        </div>
+                        <span style="color: #fff; font-size: 12px; font-weight: bold;">📋 Forum Tracker</span>
                     </div>
-                    <div style="display: flex; gap: 4px;">
-                        <button id="add-forum-bookmark" style="
-                            background: #4CAF50;
-                            border: none;
-                            color: white;
-                            padding: 4px 8px;
-                            border-radius: 4px;
-                            cursor: pointer;
-                            font-size: 10px;
-                            font-weight: bold;
-                        ">+ Add Current</button>
-                        <button class="close-btn" style="
-                            background: #f44336;
-                            border: none;
-                            color: white;
-                            padding: 2px 6px;
-                            border-radius: 3px;
-                            cursor: pointer;
-                            font-size: 12px;
-                            font-weight: bold;
-                        ">×</button>
-                    </div>
-                </div>
-                <div id="forum-tracker-content" style="
-                    flex: 1;
-                    padding: 12px;
-                    overflow-y: auto;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 8px;
-                ">
-                    <div id="forum-bookmarks-list">
-                        ${this.renderBookmarksList()}
-                    </div>
-                    <div class="forum-tracker-footer" style="
+                    <button class="close-btn" style="
+                        background: none;
+                        border: none;
+                        color: #f44336;
+                        cursor: pointer;
+                        font-size: 14px;
+                        padding: 0;
+                        width: 16px;
+                        height: 16px;
                         display: flex;
-                        justify-content: space-between;
-                        gap: 8px;
-                        margin-top: auto;
-                        padding-top: 8px;
-                        border-top: 1px solid #333;
-                    ">
-                        <button id="add-manual-bookmark" style="
-                            flex: 1;
-                            padding: 6px;
-                            font-size: 10px;
-                            background: #2196F3;
-                            border: none;
-                            color: white;
-                            border-radius: 4px;
-                            cursor: pointer;
-                        ">+ Manual Add</button>
-                        <button id="clear-forum-bookmarks" style="
-                            flex: 1;
-                            padding: 6px;
-                            font-size: 10px;
-                            background: #f44336;
-                            border: none;
-                            color: white;
-                            border-radius: 4px;
-                            cursor: pointer;
-                        ">Clear All</button>
+                        align-items: center;
+                        justify-content: center;
+                        opacity: 0.7;
+                    " title="Close forum tracker">×</button>
+                </div>
+                <div class="forum-tracker-content" style="
+                    padding: 8px;
+                    background: #1a1a1a;
+                    border-radius: 0 0 7px 7px;
+                    flex: 1;
+                    overflow-y: auto;
+                ">
+                    <div id="forum-bookmarks-container">
+                        ${this.renderBookmarksList()}
                     </div>
                 </div>
             `;
 
-            // Add to sidebar content area (like Timer module)
+            // Add to sidebar content area (like LinkGroup module)
             const sidebarContent = document.getElementById('sidekick-content');
             if (sidebarContent) {
                 sidebarContent.appendChild(panel);
@@ -242,29 +269,92 @@
             
             // Attach event listeners
             this.attachEventListeners();
-            
-            // Add styles
-            this.addForumTrackerStyles();
         },
 
         // Render the bookmarks list
         renderBookmarksList() {
             if (this.bookmarks.length === 0) {
-                return '<div class="no-bookmarks">No forum bookmarks yet.<br><small>Visit a forum thread and click "+ Add Current"</small></div>';
+                return `
+                    <div style="
+                        color: #888;
+                        font-style: italic;
+                        text-align: center;
+                        padding: 12px;
+                    ">
+                        No forum bookmarks yet. Click the dropdown to add a new bookmark.
+                    </div>
+                `;
             }
 
             return this.bookmarks.map((bookmark, index) => `
-                <div class="forum-bookmark" data-index="${index}">
-                    <div class="bookmark-info">
-                        <div class="bookmark-title">${bookmark.title}</div>
-                        <div class="bookmark-meta">
-                            <span class="forum-section">${bookmark.section}</span>
-                            <span class="last-visit">${this.formatDate(bookmark.lastVisit)}</span>
+                <div class="forum-bookmark" style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 8px;
+                    margin-bottom: 6px;
+                    background: #333;
+                    border-radius: 4px;
+                    border: 1px solid #555;
+                ">
+                    <div style="flex: 1; margin-right: 8px; overflow: hidden;">
+                        <div style="
+                            color: #4FC3F7;
+                            font-size: 13px;
+                            font-weight: bold;
+                            margin-bottom: 2px;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                        " title="${bookmark.title}">
+                            ${bookmark.title}
+                        </div>
+                        <div style="
+                            color: #888;
+                            font-size: 11px;
+                            display: flex;
+                            gap: 8px;
+                            align-items: center;
+                        ">
+                            <span style="color: #FFC107;">${bookmark.section}</span>
+                            <span>•</span>
+                            <span>${this.formatDate(bookmark.lastVisit)}</span>
                         </div>
                     </div>
-                    <div class="bookmark-actions">
-                        <button class="visit-bookmark sk-btn sk-btn-tiny" data-url="${bookmark.url}">Visit</button>
-                        <button class="remove-bookmark sk-btn sk-btn-tiny sk-btn-danger" data-index="${index}">×</button>
+                    <div style="display: flex; gap: 4px; flex-shrink: 0;">
+                        <button class="visit-bookmark" data-url="${bookmark.url}" style="
+                            background: #4CAF50;
+                            border: none;
+                            color: white;
+                            padding: 4px 8px;
+                            border-radius: 3px;
+                            cursor: pointer;
+                            font-size: 11px;
+                        " title="Visit forum thread">
+                            📖
+                        </button>
+                        <button class="copy-bookmark" data-url="${bookmark.url}" style="
+                            background: #2196F3;
+                            border: none;
+                            color: white;
+                            padding: 4px 8px;
+                            border-radius: 3px;
+                            cursor: pointer;
+                            font-size: 11px;
+                        " title="Copy link">
+                            📋
+                        </button>
+                        <button class="remove-bookmark" data-index="${index}" style="
+                            background: #f44336;
+                            border: none;
+                            color: white;
+                            padding: 4px 8px;
+                            border-radius: 3px;
+                            cursor: pointer;
+                            font-size: 11px;
+                        " title="Remove bookmark">
+                            ×
+                        </button>
                     </div>
                 </div>
             `).join('');
@@ -272,48 +362,88 @@
 
         // Add event listeners
         attachEventListeners() {
+            const panel = document.getElementById('forum-tracker-panel');
+            if (!panel) return;
+
+            // Dropdown toggle
+            const dropdownBtn = panel.querySelector('.dropdown-btn');
+            const dropdownContent = panel.querySelector('.dropdown-content');
+            
+            if (dropdownBtn && dropdownContent) {
+                dropdownBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isVisible = dropdownContent.style.display === 'block';
+                    
+                    // Hide all other dropdowns
+                    document.querySelectorAll('.dropdown-content').forEach(dropdown => {
+                        dropdown.style.display = 'none';
+                    });
+                    
+                    dropdownContent.style.display = isVisible ? 'none' : 'block';
+                });
+            }
+
             // Close button
-            const closeBtn = document.querySelector('#forum-tracker-panel .close-btn');
+            const closeBtn = panel.querySelector('.close-btn');
             if (closeBtn) {
                 closeBtn.addEventListener('click', () => {
-                    const panel = document.getElementById('forum-tracker-panel');
-                    if (panel) {
-                        panel.style.display = 'none';
-                    }
+                    panel.style.display = 'none';
                 });
             }
 
             // Add current page button
-            const addCurrentBtn = document.getElementById('add-forum-bookmark');
+            const addCurrentBtn = panel.querySelector('.add-current-forum-btn');
             if (addCurrentBtn) {
-                addCurrentBtn.addEventListener('click', () => this.addCurrentPage());
+                addCurrentBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdownContent.style.display = 'none';
+                    this.addCurrentPage();
+                });
             }
 
             // Manual add button
-            const manualAddBtn = document.getElementById('add-manual-bookmark');
+            const manualAddBtn = panel.querySelector('.add-manual-forum-btn');
             if (manualAddBtn) {
-                manualAddBtn.addEventListener('click', () => this.showManualAddDialog());
+                manualAddBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdownContent.style.display = 'none';
+                    this.showManualAddDialog();
+                });
             }
 
             // Clear all button
-            const clearBtn = document.getElementById('clear-forum-bookmarks');
+            const clearBtn = panel.querySelector('.clear-all-forums-btn');
             if (clearBtn) {
-                clearBtn.addEventListener('click', () => this.clearAllBookmarks());
+                clearBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdownContent.style.display = 'none';
+                    this.clearAllBookmarks();
+                });
             }
 
             // Bookmark actions (delegated events)
-            const bookmarksList = document.getElementById('forum-bookmarks-list');
-            if (bookmarksList) {
-                bookmarksList.addEventListener('click', (e) => {
+            const bookmarksContainer = panel.querySelector('#forum-bookmarks-container');
+            if (bookmarksContainer) {
+                bookmarksContainer.addEventListener('click', (e) => {
                     if (e.target.classList.contains('visit-bookmark')) {
                         const url = e.target.dataset.url;
                         this.visitBookmark(url);
+                    } else if (e.target.classList.contains('copy-bookmark')) {
+                        const url = e.target.dataset.url;
+                        this.copyBookmarkUrl(url);
                     } else if (e.target.classList.contains('remove-bookmark')) {
                         const index = parseInt(e.target.dataset.index);
                         this.removeBookmark(index);
                     }
                 });
             }
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', () => {
+                if (dropdownContent) {
+                    dropdownContent.style.display = 'none';
+                }
+            });
         },
 
         // Add current forum page as bookmark
@@ -435,6 +565,15 @@
             window.open(url, '_blank');
         },
 
+        // Copy bookmark URL to clipboard
+        copyBookmarkUrl(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                this.showNotification('📋 URL copied to clipboard', 'success');
+            }).catch(() => {
+                this.showNotification('❌ Failed to copy URL', 'error');
+            });
+        },
+
         // Remove a bookmark
         removeBookmark(index) {
             if (confirm('Remove this forum bookmark?')) {
@@ -457,9 +596,11 @@
 
         // Refresh the bookmarks list display
         refreshBookmarksList() {
-            const listContainer = document.getElementById('forum-bookmarks-list');
+            const listContainer = document.getElementById('forum-bookmarks-container');
             if (listContainer) {
                 listContainer.innerHTML = this.renderBookmarksList();
+                // Re-attach event listeners after refreshing content
+                this.attachEventListeners();
             }
         },
 
