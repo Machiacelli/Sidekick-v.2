@@ -285,11 +285,14 @@
                     document.body.appendChild(panel);
                 }
                 
-                                                 // Add event listeners
+                // Add event listeners
                 this.addPanelEventListeners();
                 
                 // Add custom scrollbar styling
                 this.addCustomScrollbarStyles();
+                
+                // Initialize update loop and fetch data when panel is shown
+                this.lazyInit();
                 
                 // Load existing timers
                 this.renderTimers();
