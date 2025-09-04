@@ -82,13 +82,48 @@
         // Shop Configuration
         getShopList() {
             return [
-                { id: 'sweet-shop', name: '🍭 Sweet Shop', district: 'Red Light' },
-                { id: 'clothes-shop', name: '👕 Clothes Shop', district: 'Red Light' },
-                { id: 'cyber-force', name: '💻 Cyber Force', district: 'Red Light' },
-                { id: 'super-store', name: '🛒 Super Store', district: 'Downtown' },
-                { id: 'big-als', name: '🏪 Big Al\'s Gun Shop', district: 'Downtown' },
-                { id: 'jewelry', name: '💎 Jewelry Store', district: 'City Center' },
-                { id: 'pawn-shop', name: '🏛️ Pawn Shop', district: 'Historical' }
+                { 
+                    id: 'sweet-shop', 
+                    name: '🍭 Sweet Shop', 
+                    district: 'Red Light',
+                    securities: ['cameras', 'guards', 'locks']
+                },
+                { 
+                    id: 'clothes-shop', 
+                    name: '👕 Clothes Shop', 
+                    district: 'Red Light',
+                    securities: ['cameras', 'guards', 'locks']
+                },
+                { 
+                    id: 'cyber-force', 
+                    name: '💻 Cyber Force', 
+                    district: 'Red Light',
+                    securities: ['cameras', 'guards', 'locks']
+                },
+                { 
+                    id: 'super-store', 
+                    name: '🛒 Super Store', 
+                    district: 'Downtown',
+                    securities: ['cameras', 'guards', 'locks']
+                },
+                { 
+                    id: 'big-als', 
+                    name: '🏪 Big Al\'s Gun Shop', 
+                    district: 'Downtown',
+                    securities: ['cameras', 'guards', 'locks']
+                },
+                { 
+                    id: 'jewelry', 
+                    name: '💎 Jewelry Store', 
+                    district: 'City Center',
+                    securities: ['cameras', 'guards', 'locks']
+                },
+                { 
+                    id: 'pawn-shop', 
+                    name: '🏛️ Pawn Shop', 
+                    district: 'Historical',
+                    securities: ['cameras', 'guards', 'locks']
+                }
             ];
         },
 
@@ -96,17 +131,26 @@
             return loadState('shoplifting.alerts', {});
         },
 
-        setShopAlert(shopId, enabled) {
+        setShopAlert(shopId, alertType, enabled) {
             const alerts = this.getShopAlerts();
-            alerts[shopId] = enabled;
+            if (!alerts[shopId]) alerts[shopId] = {};
+            alerts[shopId][alertType] = enabled;
             saveState('shoplifting.alerts', alerts);
+        },
+
+        getSecurityIcons() {
+            return {
+                cameras: '📹',
+                guards: '👮',
+                locks: '🔒'
+            };
         },
 
         // API Methods
         async testApiConnection() {
-            const apiKey = this.getApiKey();
+            const apiKey = this.getApiKey() || loadState('apiKey', ''); // Fall back to main API key
             if (!apiKey) {
-                throw new Error('Please enter a shoplifting API key first');
+                throw new Error('Please enter an API key in General settings first');
             }
             
             try {
@@ -159,7 +203,8 @@
 
         async checkShopliftingSecurity() {
             const settings = this.getSettings();
-            const { apiKey, alerts } = settings;
+            const apiKey = settings.apiKey || loadState('apiKey', ''); // Use main API key as fallback
+            const alerts = settings.alerts;
             
             if (!apiKey || Object.keys(alerts).length === 0) {
                 return;
@@ -193,29 +238,55 @@
                 'pawn-shop': 'Pawn Shop'
             };
             
-            Object.entries(alerts).forEach(([shopId, enabled]) => {
-                if (!enabled) return;
+            Object.entries(alerts).forEach(([shopId, shopAlerts]) => {
+                if (!shopAlerts || typeof shopAlerts !== 'object') return;
                 
                 const shopName = shopMap[shopId];
                 const shopData = Object.values(shopliftingData).find(shop => 
                     shop.name && shop.name.includes(shopName.replace(/🎭|🍭|👕|💻|🛒|🏪|💎|🏛️/g, '').trim())
                 );
                 
-                if (shopData && shopData.security === 'Low') {
-                    this.triggerShopliftingAlert(shopName, shopData);
+                if (!shopData) return;
+                
+                // Check for "all security down" alert
+                if (shopAlerts.all && this.isAllSecurityDown(shopData)) {
+                    this.triggerShopliftingAlert(shopName, 'All security is down!', shopData);
                 }
+                
+                // Check individual security types
+                ['cameras', 'guards', 'locks'].forEach(securityType => {
+                    if (shopAlerts[securityType] && this.isSecurityDown(shopData, securityType)) {
+                        const securityIcons = this.getSecurityIcons();
+                        this.triggerShopliftingAlert(
+                            shopName, 
+                            `${securityIcons[securityType]} ${securityType} security is down!`, 
+                            shopData
+                        );
+                    }
+                });
             });
         },
 
-        triggerShopliftingAlert(shopName, shopData) {
+        isAllSecurityDown(shopData) {
+            // Check if all security measures are down
+            return shopData.security === 'Low' || 
+                   (shopData.cameras === 'Down' && shopData.guards === 'Down' && shopData.locks === 'Down');
+        },
+
+        isSecurityDown(shopData, securityType) {
+            // Check if specific security type is down
+            return shopData[securityType] === 'Down';
+        },
+
+        triggerShopliftingAlert(shopName, message, shopData) {
             const settings = this.getSettings();
             const { soundEnabled, autoRedirect } = settings;
             
             // Show notification
             if (NotificationSystem) {
                 NotificationSystem.show(
-                    '🚨 Low Security Alert!', 
-                    `${shopName} security is LOW! Perfect time to shoplift.`, 
+                    `🚨 ${shopName} Alert!`, 
+                    message, 
                     'warning',
                     10000
                 );

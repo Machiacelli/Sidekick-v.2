@@ -635,33 +635,66 @@
                 const ShopliftingModule = window.SidekickModules.Shoplifting;
                 const shops = ShopliftingModule.getShopList();
                 const savedAlerts = ShopliftingModule.getShopAlerts();
+                const securityIcons = ShopliftingModule.getSecurityIcons();
                 
-                container.innerHTML = shops.map(shop => `
-                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0;">
-                        <span style="color: #ccc; font-size: 12px;">${shop.name}</span>
-                        <label style="position: relative; display: inline-block; width: 30px; height: 16px;">
-                            <input type="checkbox" id="shop-${shop.id}" data-shop="${shop.id}" 
-                                   style="opacity: 0; width: 0; height: 0;" ${savedAlerts[shop.id] ? 'checked' : ''}>
-                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; 
-                                         background-color: ${savedAlerts[shop.id] ? '#4CAF50' : '#ccc'}; 
-                                         transition: 0.3s; border-radius: 16px;"></span>
-                        </label>
-                    </div>
-                `).join('');
-                
-                // Add event listeners for shop toggles
-                shops.forEach(shop => {
-                    const toggle = document.getElementById(`shop-${shop.id}`);
-                    if (toggle) {
-                        toggle.addEventListener('change', (e) => {
-                            ShopliftingModule.setShopAlert(shop.id, e.target.checked);
+                container.innerHTML = shops.map(shop => {
+                    const shopAlerts = savedAlerts[shop.id] || {};
+                    
+                    return `
+                        <div style="background: #2a2a2a; border-radius: 8px; padding: 12px; margin: 8px 0;">
+                            <!-- Shop Name (clickable for all alerts) -->
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                                <span class="shop-name-btn" data-shop="${shop.id}" 
+                                      style="color: #fff; font-weight: bold; font-size: 13px; cursor: pointer; padding: 4px 8px; border-radius: 4px; background: ${shopAlerts.all ? '#4CAF50' : '#555'}; transition: all 0.3s;">
+                                    ${shop.name}
+                                </span>
+                                <small style="color: #888; font-size: 11px;">${shop.district}</small>
+                            </div>
                             
-                            const slider = toggle.nextElementSibling;
-                            if (slider) {
-                                slider.style.backgroundColor = e.target.checked ? '#4CAF50' : '#ccc';
-                            }
-                        });
-                    }
+                            <!-- Individual Security Controls -->
+                            <div style="display: flex; gap: 8px; justify-content: center;">
+                                ${shop.securities.map(security => `
+                                    <div class="security-btn" data-shop="${shop.id}" data-security="${security}"
+                                         style="display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 6px; border-radius: 4px; background: ${shopAlerts[security] ? '#4CAF50' : '#555'}; transition: all 0.3s; min-width: 40px;">
+                                        <span style="font-size: 16px;">${securityIcons[security]}</span>
+                                        <span style="font-size: 9px; color: #ccc; text-transform: capitalize;">${security}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Add event listeners for shop name buttons (all security)
+                container.querySelectorAll('.shop-name-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const shopId = e.target.getAttribute('data-shop');
+                        const currentState = savedAlerts[shopId]?.all || false;
+                        const newState = !currentState;
+                        
+                        ShopliftingModule.setShopAlert(shopId, 'all', newState);
+                        
+                        // Update visual state
+                        e.target.style.background = newState ? '#4CAF50' : '#555';
+                        
+                        // Update the saved alerts reference
+                        this.generateShopAlertSettings(); // Refresh the display
+                    });
+                });
+                
+                // Add event listeners for individual security buttons
+                container.querySelectorAll('.security-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const shopId = e.currentTarget.getAttribute('data-shop');
+                        const security = e.currentTarget.getAttribute('data-security');
+                        const currentState = savedAlerts[shopId]?.[security] || false;
+                        const newState = !currentState;
+                        
+                        ShopliftingModule.setShopAlert(shopId, security, newState);
+                        
+                        // Update visual state
+                        e.currentTarget.style.background = newState ? '#4CAF50' : '#555';
+                    });
                 });
             },
             
