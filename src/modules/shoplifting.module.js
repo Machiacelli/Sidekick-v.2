@@ -154,24 +154,42 @@
             }
 
             try {
+                // First test with basic user info to verify API key works
+                const basicResponse = await fetch(`https://api.torn.com/user/?selections=basic&key=${apiKey}`);
+                const basicData = await basicResponse.json();
+                
+                if (basicData.error) {
+                    throw new Error(`API key error: ${basicData.error.error}`);
+                }
+                
+                // Now test shoplifting specific endpoint
                 const response = await fetch(`https://api.torn.com/user/?selections=shoplifting&key=${apiKey}`);
                 const data = await response.json();
                 
                 if (data.error) {
                     if (data.error.code === 2) {
-                        throw new Error('API key does not have shoplifting permissions. Please create a new API key with "shoplifting" selection enabled.');
+                        throw new Error(`API key works but missing shoplifting permission. 
+
+SOLUTION:
+1. Go to: https://www.torn.com/preferences.php#tab=api
+2. Find your API key and click "Edit"
+3. Check the "shoplifting" box in the selections
+4. Click "Edit key" to save
+5. Come back and test again
+
+Your API key is valid but needs the shoplifting selection enabled.`);
                     }
-                    throw new Error(data.error.error);
+                    throw new Error(`Shoplifting API error: ${data.error.error}`);
                 }
                 
                 if (data.shoplifting) {
-                    return { success: true, message: 'Shoplifting API test successful!' };
+                    return { success: true, message: 'Shoplifting API test successful! Ready to monitor shops.' };
                 } else {
-                    return { success: true, message: 'API key works but no shoplifting data available', warning: true };
+                    return { success: true, message: 'API key works but no shoplifting data available yet.', warning: true };
                 }
             } catch (error) {
                 console.error('❌ Shoplifting API test failed:', error);
-                throw new Error(`Shoplifting API test failed: ${error.message}`);
+                throw error;
             }
         },
 
