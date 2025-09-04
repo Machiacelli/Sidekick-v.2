@@ -79,58 +79,83 @@
                     existingModal.remove();
                 }
                     
-                const modal = this.createCenteredModal('⚙️ API Settings', `
-                    <div style="padding: 20px;">
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; color: #aaa; font-weight: bold; font-size: 14px;">Torn API Key:</label>
-                            <input type="text" id="api-key-input" value="${loadState(STORAGE_KEYS.API_KEY, '')}" 
-                                   placeholder="Enter your Torn API key here..."
-                                   style="width: 100%; background: #333; border: 1px solid #555; color: #fff; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 14px; box-sizing: border-box;">
-                            <div style="font-size: 12px; color: #666; margin-top: 6px;">
-                                Get your API key from: <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" style="color: #4CAF50; text-decoration: none;">Torn Preferences</a>
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-                            <button id="test-api-btn" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #2196F3, #1976D2); border: none; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">
-                                🧪 Test API Connection
+                const modal = this.createCenteredModal('⚙️ Sidekick Settings', `
+                    <div style="padding: 0;">
+                        <!-- Tab Navigation -->
+                        <div style="display: flex; border-bottom: 1px solid #444; background: #333;">
+                            <button id="general-tab" class="settings-tab active" style="flex: 1; padding: 15px 20px; background: #2a2a2a; border: none; color: #fff; font-weight: bold; cursor: pointer; border-bottom: 3px solid #4CAF50; font-size: 14px;">
+                                ⚙️ General
                             </button>
-                            <button id="refresh-price-btn" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #4CAF50, #388E3C); border: none; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">
-                                🔄 Refresh Points Price
+                            <button id="shoplifting-tab" class="settings-tab" style="flex: 1; padding: 15px 20px; background: #333; border: none; color: #aaa; font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; font-size: 14px;">
+                                🏪 Shoplifting Alert
                             </button>
                         </div>
-                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin: 12px 0;">
-                            <div style="display: flex; flex-direction: column;">
-                                <span style="color: #fff; font-weight: bold; font-size: 14px;">🚫 Training Blocker</span>
-                                <span style="color: #aaa; font-size: 12px;">Blocks training while stacking energy</span>
+                        
+                        <!-- General Tab Content -->
+                        <div id="general-content" class="tab-content" style="padding: 20px; display: block;">
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; color: #aaa; font-weight: bold; font-size: 14px;">Torn API Key:</label>
+                                <input type="text" id="api-key-input" value="${loadState(STORAGE_KEYS.API_KEY, '')}" 
+                                       placeholder="Enter your Torn API key here..."
+                                       style="width: 100%; background: #333; border: 1px solid #555; color: #fff; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 14px; box-sizing: border-box;">
+                                <div style="font-size: 12px; color: #666; margin-top: 6px;">
+                                    Get your API key from: <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" style="color: #4CAF50; text-decoration: none;">Torn Preferences</a>
+                                </div>
                             </div>
-                            <label class="block-training-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
-                                <input type="checkbox" id="block-training-toggle" style="opacity: 0; width: 0; height: 0;">
-                                <span class="block-training-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
-                            </label>
-                        </div>
-                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin: 12px 0;">
-                            <div style="display: flex; flex-direction: column;">
-                                <span style="color: #fff; font-weight: bold; font-size: 14px;">✈️ Travel Blocker</span>
-                                <span style="color: #aaa; font-size: 12px;">Prevents travel that conflicts with OC timing</span>
+                            <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+                                <button id="test-api-btn" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #2196F3, #1976D2); border: none; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">
+                                    🧪 Test API Connection
+                                </button>
+                                <button id="refresh-price-btn" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #4CAF50, #388E3C); border: none; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">
+                                    🔄 Refresh Points Price
+                                </button>
                             </div>
-                            <label class="travel-blocker-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
-                                <input type="checkbox" id="travel-blocker-toggle" style="opacity: 0; width: 0; height: 0;">
-                                <span class="travel-blocker-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
-                            </label>
-                        </div>
-                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin: 12px 0;">
-                            <div style="display: flex; flex-direction: column;">
-                                <span style="color: #fff; font-weight: bold; font-size: 14px;">🎯 Random Target</span>
-                                <span style="color: #aaa; font-size: 12px;">Gives a random target for chains</span>
-                            </div>
-                            <label class="random-target-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
-                                <input type="checkbox" id="random-target-toggle" style="opacity: 0; width: 0; height: 0;">
-                                <span class="random-target-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
-                            </label>
-                        </div>
-                        <div style="border-top: 1px solid #444; margin: 20px 0; padding-top: 20px;">
-                            <h4 style="color: #aaa; margin: 0 0 12px 0; font-size: 14px; font-weight: bold;">🏪 Shoplifting Monitor</h4>
+                            
+                            <h4 style="color: #aaa; margin: 20px 0 12px 0; font-size: 14px; font-weight: bold;">Module Settings</h4>
                             <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin: 12px 0;">
+                                <div style="display: flex; flex-direction: column;">
+                                    <span style="color: #fff; font-weight: bold; font-size: 14px;">🚫 Training Blocker</span>
+                                    <span style="color: #aaa; font-size: 12px;">Blocks training while stacking energy</span>
+                                </div>
+                                <label class="block-training-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
+                                    <input type="checkbox" id="block-training-toggle" style="opacity: 0; width: 0; height: 0;">
+                                    <span class="block-training-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
+                                </label>
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin: 12px 0;">
+                                <div style="display: flex; flex-direction: column;">
+                                    <span style="color: #fff; font-weight: bold; font-size: 14px;">✈️ Travel Blocker</span>
+                                    <span style="color: #aaa; font-size: 12px;">Prevents travel that conflicts with OC timing</span>
+                                </div>
+                                <label class="travel-blocker-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
+                                    <input type="checkbox" id="travel-blocker-toggle" style="opacity: 0; width: 0; height: 0;">
+                                    <span class="travel-blocker-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
+                                </label>
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin: 12px 0;">
+                                <div style="display: flex; flex-direction: column;">
+                                    <span style="color: #fff; font-weight: bold; font-size: 14px;">🎯 Random Target</span>
+                                    <span style="color: #aaa; font-size: 12px;">Gives a random target for chains</span>
+                                </div>
+                                <label class="random-target-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
+                                    <input type="checkbox" id="random-target-toggle" style="opacity: 0; width: 0; height: 0;">
+                                    <span class="random-target-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
+                                </label>
+                            </div>
+                            
+                            <div style="border-top: 1px solid #444; margin: 20px 0; padding-top: 20px;">
+                                <h4 style="color: #aaa; margin: 0 0 12px 0; font-size: 14px; font-weight: bold;">Data Management</h4>
+                                <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                                    <button id="export-data-btn" style="flex: 1; padding: 10px; background: #555; border: 1px solid #666; color: white; border-radius: 6px; cursor: pointer; font-size: 13px;">📤 Export Data</button>
+                                    <button id="import-data-btn" style="flex: 1; padding: 10px; background: #555; border: 1px solid #666; color: white; border-radius: 6px; cursor: pointer; font-size: 13px;">📥 Import Data</button>
+                                </div>
+                                <button id="clear-all-data-btn" style="width: 100%; padding: 10px; background: #d32f2f; border: 1px solid #f44336; color: white; border-radius: 6px; cursor: pointer; font-size: 13px;">🗑️ Clear All Data</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Shoplifting Tab Content -->
+                        <div id="shoplifting-content" class="tab-content" style="padding: 20px; display: none;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin-bottom: 20px;">
                                 <div style="display: flex; flex-direction: column;">
                                     <span style="color: #fff; font-weight: bold; font-size: 14px;">🚨 Security Alerts</span>
                                     <span style="color: #aaa; font-size: 12px;">Get notified when shop security goes down</span>
@@ -140,21 +165,15 @@
                                     <span class="shoplifting-monitor-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
                                 </label>
                             </div>
-                            <div id="shoplifting-config" style="display: none; margin: 12px 0;">
-                                <div style="background: #333; border-radius: 6px; padding: 15px; margin: 12px 0;">
-                                    <label style="display: block; margin-bottom: 8px; color: #aaa; font-weight: bold; font-size: 14px;">Shoplifting API Key:</label>
-                                    <input type="text" id="shoplifting-api-key-input" value=""
-                                           placeholder="Enter API key for shoplifting data..."
-                                           style="width: 100%; background: #2a2a2a; border: 1px solid #555; color: #fff; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 14px; box-sizing: border-box;">
-                                    <div style="font-size: 12px; color: #666; margin-top: 6px;">
-                                        <a href="https://www.torn.com/preferences.php#tab=api?step=addNewKey&title=ShopliftingAPI&torn=shoplifting" target="_blank" style="color: #4CAF50; text-decoration: none;">🔗 Create Shoplifting API Key</a>
-                                    </div>
-                                    <button id="test-shoplifting-api-btn" style="width: 100%; margin-top: 10px; padding: 10px; background: linear-gradient(135deg, #2196F3, #1976D2); border: none; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
-                                        🧪 Test Shoplifting API
-                                    </button>
-                                </div>
+                            
+                            <div id="shoplifting-config" style="display: none;">
                                 <div style="background: #333; border-radius: 6px; padding: 15px; margin: 12px 0;">
                                     <h5 style="color: #aaa; margin: 0 0 12px 0; font-size: 13px; font-weight: bold;">📍 Shop Monitoring Settings</h5>
+                                    <div style="font-size: 12px; color: #666; margin-bottom: 15px; padding: 10px; background: #2a2a2a; border-radius: 4px; border-left: 3px solid #4CAF50;">
+                                        <strong>How to use:</strong><br>
+                                        • Click shop name for "all security down" alerts<br>
+                                        • Click individual security icons (📹 cameras, 👮 guards, 🔒 locks) for specific alerts
+                                    </div>
                                     <div id="shop-alert-settings" style="display: grid; gap: 8px;">
                                         <!-- Shop settings will be dynamically generated -->
                                     </div>
@@ -183,19 +202,14 @@
                                 </div>
                             </div>
                         </div>
-                        <div style="border-top: 1px solid #444; margin: 20px 0; padding-top: 20px;">
-                            <h4 style="color: #aaa; margin: 0 0 12px 0; font-size: 14px; font-weight: bold;">Data Management</h4>
-                            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-                                <button id="export-data-btn" style="flex: 1; padding: 10px; background: #555; border: 1px solid #666; color: white; border-radius: 6px; cursor: pointer; font-size: 13px;">📤 Export Data</button>
-                                <button id="import-data-btn" style="flex: 1; padding: 10px; background: #555; border: 1px solid #666; color: white; border-radius: 6px; cursor: pointer; font-size: 13px;">📥 Import Data</button>
-                            </div>
-                            <button id="clear-all-data-btn" style="width: 100%; padding: 10px; background: #d32f2f; border: 1px solid #f44336; color: white; border-radius: 6px; cursor: pointer; font-size: 13px;">🗑️ Clear All Data</button>
-                        </div>
                     </div>
                 `, 'settings_modal');
                 
                 // Inject CSS for travel blocker toggle
                 this.injectTravelBlockerCSS();
+                
+                // Add tab switching functionality
+                this.setupTabSwitching();
                 
                 // Add event listeners to buttons after modal is created
                 setTimeout(() => {
@@ -829,7 +843,18 @@
                 const style = document.createElement('style');
                 style.id = 'travel-blocker-toggle-css';
                 style.textContent = `
-                    .travel-blocker-slider, .block-training-slider {
+                    /* Tab styling */
+                    .settings-tab {
+                        transition: all 0.3s ease !important;
+                    }
+                    .settings-tab:hover {
+                        background: #2a2a2a !important;
+                        color: #fff !important;
+                    }
+                    
+                    /* All slider backgrounds */
+                    .travel-blocker-slider, .block-training-slider, .random-target-slider,
+                    .shoplifting-monitor-slider, .notification-sound-slider, .auto-redirect-slider {
                         position: absolute !important;
                         cursor: pointer !important;
                         top: 0 !important;
@@ -841,7 +866,9 @@
                         border-radius: 24px !important;
                     }
 
-                    .travel-blocker-slider:before, .block-training-slider:before, .random-target-slider:before {
+                    /* White dots on all sliders */
+                    .travel-blocker-slider:before, .block-training-slider:before, .random-target-slider:before,
+                    .shoplifting-monitor-slider:before, .notification-sound-slider:before, .auto-redirect-slider:before {
                         position: absolute !important;
                         content: "" !important;
                         height: 18px !important;
@@ -851,25 +878,86 @@
                         background-color: white !important;
                         transition: 0.3s !important;
                         border-radius: 50% !important;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
                     }
 
+                    /* Smaller toggles for notification settings */
+                    .notification-sound-slider:before, .auto-redirect-slider:before {
+                        height: 14px !important;
+                        width: 14px !important;
+                        left: 3px !important;
+                        bottom: 3px !important;
+                    }
+
+                    /* Green background when checked */
                     #travel-blocker-toggle:checked + .travel-blocker-slider,
                     #block-training-toggle:checked + .block-training-slider,
-                    #random-target-toggle:checked + .random-target-slider {
+                    #random-target-toggle:checked + .random-target-slider,
+                    #shoplifting-monitor-toggle:checked + .shoplifting-monitor-slider,
+                    #notification-sound-toggle:checked + .notification-sound-slider,
+                    #auto-redirect-toggle:checked + .auto-redirect-slider {
                         background-color: #4CAF50 !important;
                     }
 
+                    /* Move white dot when checked */
                     #travel-blocker-toggle:checked + .travel-blocker-slider:before,
                     #block-training-toggle:checked + .block-training-slider:before,
-                    #random-target-toggle:checked + .random-target-slider:before {
+                    #random-target-toggle:checked + .random-target-slider:before,
+                    #shoplifting-monitor-toggle:checked + .shoplifting-monitor-slider:before {
                         transform: translateX(26px) !important;
                     }
 
-                    .travel-blocker-slider:hover, .block-training-slider:hover, .random-target-slider:hover {
+                    /* Smaller movement for smaller toggles */
+                    #notification-sound-toggle:checked + .notification-sound-slider:before,
+                    #auto-redirect-toggle:checked + .auto-redirect-slider:before {
+                        transform: translateX(20px) !important;
+                    }
+
+                    /* Hover effects */
+                    .travel-blocker-slider:hover, .block-training-slider:hover, .random-target-slider:hover,
+                    .shoplifting-monitor-slider:hover, .notification-sound-slider:hover, .auto-redirect-slider:hover {
                         box-shadow: 0 0 1px rgba(255,255,255,0.5) !important;
                     }
                 `;
                 document.head.appendChild(style);
+            },
+
+            setupTabSwitching() {
+                // Tab switching functionality
+                const generalTab = document.getElementById('general-tab');
+                const shopliftingTab = document.getElementById('shoplifting-tab');
+                const generalContent = document.getElementById('general-content');
+                const shopliftingContent = document.getElementById('shoplifting-content');
+
+                if (generalTab && shopliftingTab && generalContent && shopliftingContent) {
+                    generalTab.addEventListener('click', () => {
+                        // Switch to General tab
+                        generalTab.style.background = '#2a2a2a';
+                        generalTab.style.color = '#fff';
+                        generalTab.style.borderBottom = '3px solid #4CAF50';
+                        
+                        shopliftingTab.style.background = '#333';
+                        shopliftingTab.style.color = '#aaa';
+                        shopliftingTab.style.borderBottom = '3px solid transparent';
+                        
+                        generalContent.style.display = 'block';
+                        shopliftingContent.style.display = 'none';
+                    });
+
+                    shopliftingTab.addEventListener('click', () => {
+                        // Switch to Shoplifting tab
+                        shopliftingTab.style.background = '#2a2a2a';
+                        shopliftingTab.style.color = '#fff';
+                        shopliftingTab.style.borderBottom = '3px solid #4CAF50';
+                        
+                        generalTab.style.background = '#333';
+                        generalTab.style.color = '#aaa';
+                        generalTab.style.borderBottom = '3px solid transparent';
+                        
+                        generalContent.style.display = 'none';
+                        shopliftingContent.style.display = 'block';
+                    });
+                }
             },
 
             clearAllData() {
