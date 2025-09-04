@@ -64,14 +64,6 @@
                     maxCompletions: 1,
                     isMultiCompletion: false
                 },
-                npcStores: {
-                    name: 'NPC Store Purchases',
-                    icon: '🏪',
-                    color: '#FFA726',
-                    description: 'NPC store purchases (100x per day)',
-                    maxCompletions: 100,
-                    isMultiCompletion: true
-                },
                 custom: {
                     name: 'Custom Task',
                     icon: '📝',
@@ -1225,9 +1217,6 @@
                 // Check Nerve Refill
                 completionsFound += this.checkNerveRefillCompletion(refills.refills);
                 
-                // Check NPC Store purchases (via personalstats)
-                completionsFound += this.checkNpcStoreCompletion(personalstats.personalstats);
-                
                 if (completionsFound > 0) {
                     this.saveState();
                     this.refreshDisplay();
@@ -1289,35 +1278,6 @@
                 return 0;
             },
             
-            // Check NPC Store purchases completion
-            checkNpcStoreCompletion(personalstats) {
-                const npcItem = this.todoItems.find(item => item.type === 'npcStores');
-                if (!npcItem) {
-                    console.log('🛒 No NPC store item found in todo list');
-                    return 0;
-                }
-                
-                // Get current daily NPC store purchases
-                const currentPurchases = this.getDailyNpcPurchases(personalstats);
-                
-                console.log(`🛒 NPC Store Check: Current purchases today: ${currentPurchases}, Completed count: ${npcItem.completedCount}`);
-                console.log(`🛒 Personal stats cityitemsbought: ${personalstats.cityitemsbought || 0}`);
-                console.log(`🛒 Baseline cityitemsbought: ${this.dailyStatsBaseline?.cityitemsbought || 0}`);
-                
-                // Update completion count if it has increased
-                if (currentPurchases > npcItem.completedCount) {
-                    const previousCount = npcItem.completedCount;
-                    npcItem.completedCount = Math.min(currentPurchases, npcItem.maxCompletions);
-                    npcItem.completed = npcItem.completedCount >= npcItem.maxCompletions;
-                    
-                    const completions = npcItem.completedCount - previousCount;
-                    console.log(`✅ Auto-completed: ${npcItem.name} (${npcItem.completedCount}/${npcItem.maxCompletions})`);
-                    return completions;
-                }
-                
-                return 0;
-            },
-            
             // Get current daily Xanax count by comparing with baseline
             getDailyXanaxCount(personalstats) {
                 if (!this.dailyStatsBaseline) {
@@ -1328,18 +1288,6 @@
                 const baselineXanax = this.dailyStatsBaseline.xantaken || 0;
                 
                 return Math.max(0, currentXanax - baselineXanax);
-            },
-
-            // Get current daily NPC store purchases by comparing with baseline
-            getDailyNpcPurchases(personalstats) {
-                if (!this.dailyStatsBaseline) {
-                    return 0;
-                }
-                
-                const currentPurchases = personalstats.cityitemsbought || 0;
-                const baselinePurchases = this.dailyStatsBaseline.cityitemsbought || 0;
-                
-                return Math.max(0, currentPurchases - baselinePurchases);
             },
             
             // Load or create daily stats baseline
