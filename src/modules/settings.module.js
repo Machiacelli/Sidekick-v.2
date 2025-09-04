@@ -500,20 +500,16 @@
             },
 
             exportData() {
+                const ShopliftingModule = window.SidekickModules?.Shoplifting;
+                const shopliftingSettings = ShopliftingModule ? ShopliftingModule.getSettings() : {};
+                
                 const data = {
                     settings: {
                         apiKey: loadState(STORAGE_KEYS.API_KEY, ''),
                         blockTraining: loadState('blockTraining', false),
                         travelBlocker: loadState('travelBlocker', false),
                         randomTarget: loadState('randomTarget', false),
-                        shoplifting: {
-                            enabled: loadState('shoplifting.enabled', false),
-                            apiKey: loadState('shoplifting.apiKey', ''),
-                            soundEnabled: loadState('shoplifting.soundEnabled', true),
-                            autoRedirect: loadState('shoplifting.autoRedirect', false),
-                            checkInterval: loadState('shoplifting.checkInterval', 1),
-                            alerts: loadState('shoplifting.alerts', {})
-                        }
+                        shoplifting: shopliftingSettings
                     },
                     todoList: loadState('sidekick_todos', []),
                     timerData: loadState('timers', []),
@@ -531,7 +527,7 @@
                 NotificationSystem.show('Success', 'Data exported successfully!', 'info');
             },
             
-            // Shoplifting Monitor Functions
+            // Shoplifting Monitor UI Interface Functions
             initShopliftingMonitor() {
                 const toggle = document.getElementById('shoplifting-monitor-toggle');
                 const config = document.getElementById('shoplifting-config');
@@ -543,24 +539,27 @@
                 
                 if (!toggle) return;
                 
-                // Load saved settings
-                const enabled = loadState('shoplifting.enabled', false);
-                const apiKey = loadState('shoplifting.apiKey', '');
-                const soundEnabled = loadState('shoplifting.soundEnabled', true);
-                const autoRedirect = loadState('shoplifting.autoRedirect', false);
-                const checkInterval = loadState('shoplifting.checkInterval', 1);
+                // Wait for Shoplifting module to be available
+                if (!window.SidekickModules?.Shoplifting) {
+                    setTimeout(() => this.initShopliftingMonitor(), 100);
+                    return;
+                }
                 
-                toggle.checked = enabled;
-                if (config) config.style.display = enabled ? 'block' : 'none';
-                if (apiKeyInput) apiKeyInput.value = apiKey;
-                if (soundToggle) soundToggle.checked = soundEnabled;
-                if (redirectToggle) redirectToggle.checked = autoRedirect;
-                if (intervalInput) intervalInput.value = checkInterval;
+                const ShopliftingModule = window.SidekickModules.Shoplifting;
+                const settings = ShopliftingModule.getSettings();
+                
+                // Load current settings from shoplifting module
+                toggle.checked = settings.enabled;
+                if (config) config.style.display = settings.enabled ? 'block' : 'none';
+                if (apiKeyInput) apiKeyInput.value = settings.apiKey;
+                if (soundToggle) soundToggle.checked = settings.soundEnabled;
+                if (redirectToggle) redirectToggle.checked = settings.autoRedirect;
+                if (intervalInput) intervalInput.value = settings.checkInterval;
                 
                 // Update slider appearance
-                this.updateShopliftingSlider(toggle, enabled);
-                this.updateShopliftingSlider(soundToggle, soundEnabled);
-                this.updateShopliftingSlider(redirectToggle, autoRedirect);
+                this.updateShopliftingSlider(toggle, settings.enabled);
+                this.updateShopliftingSlider(soundToggle, settings.soundEnabled);
+                this.updateShopliftingSlider(redirectToggle, settings.autoRedirect);
                 
                 // Generate shop alert settings
                 this.generateShopAlertSettings();
@@ -569,21 +568,15 @@
                 if (toggle) {
                     toggle.addEventListener('change', (e) => {
                         const isEnabled = e.target.checked;
-                        saveState('shoplifting.enabled', isEnabled);
+                        ShopliftingModule.setEnabled(isEnabled);
                         if (config) config.style.display = isEnabled ? 'block' : 'none';
                         this.updateShopliftingSlider(toggle, isEnabled);
-                        
-                        if (isEnabled) {
-                            this.startShopliftingMonitor();
-                        } else {
-                            this.stopShopliftingMonitor();
-                        }
                     });
                 }
                 
                 if (apiKeyInput) {
                     apiKeyInput.addEventListener('change', (e) => {
-                        saveState('shoplifting.apiKey', e.target.value.trim());
+                        ShopliftingModule.setApiKey(e.target.value.trim());
                     });
                 }
                 
@@ -593,14 +586,22 @@
                 
                 if (soundToggle) {
                     soundToggle.addEventListener('change', (e) => {
-                        saveState('shoplifting.soundEnabled', e.target.checked);
+                        const currentSettings = ShopliftingModule.getSettings();
+                        ShopliftingModule.updateSettings({
+                            ...currentSettings,
+                            soundEnabled: e.target.checked
+                        });
                         this.updateShopliftingSlider(soundToggle, e.target.checked);
                     });
                 }
                 
                 if (redirectToggle) {
                     redirectToggle.addEventListener('change', (e) => {
-                        saveState('shoplifting.autoRedirect', e.target.checked);
+                        const currentSettings = ShopliftingModule.getSettings();
+                        ShopliftingModule.updateSettings({
+                            ...currentSettings,
+                            autoRedirect: e.target.checked
+                        });
                         this.updateShopliftingSlider(redirectToggle, e.target.checked);
                     });
                 }
@@ -609,13 +610,12 @@
                     intervalInput.addEventListener('change', (e) => {
                         const value = Math.max(1, Math.min(10, parseInt(e.target.value) || 1));
                         e.target.value = value;
-                        saveState('shoplifting.checkInterval', value);
+                        const currentSettings = ShopliftingModule.getSettings();
+                        ShopliftingModule.updateSettings({
+                            ...currentSettings,
+                            checkInterval: value
+                        });
                     });
-                }
-                
-                // Start monitoring if enabled
-                if (enabled) {
-                    this.startShopliftingMonitor();
                 }
             },
             
@@ -630,19 +630,11 @@
             
             generateShopAlertSettings() {
                 const container = document.getElementById('shop-alert-settings');
-                if (!container) return;
+                if (!container || !window.SidekickModules?.Shoplifting) return;
                 
-                const shops = [
-                    { id: 'sweet-shop', name: '🍭 Sweet Shop', district: 'Red Light' },
-                    { id: 'clothes-shop', name: '👕 Clothes Shop', district: 'Red Light' },
-                    { id: 'cyber-force', name: '💻 Cyber Force', district: 'Red Light' },
-                    { id: 'super-store', name: '🛒 Super Store', district: 'Downtown' },
-                    { id: 'big-als', name: '🏪 Big Al\'s Gun Shop', district: 'Downtown' },
-                    { id: 'jewelry', name: '💎 Jewelry Store', district: 'City Center' },
-                    { id: 'pawn-shop', name: '🏛️ Pawn Shop', district: 'Historical' }
-                ];
-                
-                const savedAlerts = loadState('shoplifting.alerts', {});
+                const ShopliftingModule = window.SidekickModules.Shoplifting;
+                const shops = ShopliftingModule.getShopList();
+                const savedAlerts = ShopliftingModule.getShopAlerts();
                 
                 container.innerHTML = shops.map(shop => `
                     <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0;">
@@ -662,9 +654,7 @@
                     const toggle = document.getElementById(`shop-${shop.id}`);
                     if (toggle) {
                         toggle.addEventListener('change', (e) => {
-                            const alerts = loadState('shoplifting.alerts', {});
-                            alerts[shop.id] = e.target.checked;
-                            saveState('shoplifting.alerts', alerts);
+                            ShopliftingModule.setShopAlert(shop.id, e.target.checked);
                             
                             const slider = toggle.nextElementSibling;
                             if (slider) {
@@ -676,171 +666,21 @@
             },
             
             async testShopliftingApi() {
-                const apiKey = loadState('shoplifting.apiKey', '');
-                if (!apiKey) {
-                    NotificationSystem.show('Error', 'Please enter a shoplifting API key first', 'error');
+                if (!window.SidekickModules?.Shoplifting) {
+                    NotificationSystem.show('Error', 'Shoplifting module not loaded', 'error');
                     return;
                 }
                 
                 try {
-                    NotificationSystem.show('Testing', 'Testing shoplifting API...', 'info');
-                    
-                    const response = await fetch(`https://api.torn.com/user/?selections=shoplifting&key=${apiKey}`);
-                    const data = await response.json();
-                    
-                    if (data.error) {
-                        throw new Error(data.error.error);
-                    }
-                    
-                    if (data.shoplifting) {
-                        NotificationSystem.show('Success', 'Shoplifting API test successful!', 'info');
+                    const result = await window.SidekickModules.Shoplifting.testApiConnection();
+                    if (result.warning) {
+                        NotificationSystem.show('Success', result.message, 'warning');
                     } else {
-                        NotificationSystem.show('Warning', 'API key works but no shoplifting data available', 'warning');
+                        NotificationSystem.show('Success', result.message, 'info');
                     }
                 } catch (error) {
-                    console.error('❌ Shoplifting API test failed:', error);
-                    NotificationSystem.show('Error', `Shoplifting API test failed: ${error.message}`, 'error');
+                    NotificationSystem.show('Error', error.message, 'error');
                 }
-            },
-            
-            startShopliftingMonitor() {
-                this.stopShopliftingMonitor(); // Clear any existing interval
-                
-                const checkInterval = loadState('shoplifting.checkInterval', 1) * 60 * 1000; // Convert to milliseconds
-                
-                this.shopliftingInterval = setInterval(() => {
-                    this.checkShopliftingSecurity();
-                }, checkInterval);
-                
-                // Check immediately
-                this.checkShopliftingSecurity();
-                
-                console.log('🏪 Shoplifting monitor started');
-            },
-            
-            stopShopliftingMonitor() {
-                if (this.shopliftingInterval) {
-                    clearInterval(this.shopliftingInterval);
-                    this.shopliftingInterval = null;
-                    console.log('🏪 Shoplifting monitor stopped');
-                }
-            },
-            
-            async checkShopliftingSecurity() {
-                const apiKey = loadState('shoplifting.apiKey', '');
-                const alerts = loadState('shoplifting.alerts', {});
-                
-                if (!apiKey || Object.keys(alerts).length === 0) {
-                    return;
-                }
-                
-                try {
-                    const response = await fetch(`https://api.torn.com/user/?selections=shoplifting&key=${apiKey}`);
-                    const data = await response.json();
-                    
-                    if (data.error) {
-                        console.error('Shoplifting API error:', data.error);
-                        return;
-                    }
-                    
-                    if (data.shoplifting) {
-                        this.processShopliftingData(data.shoplifting, alerts);
-                    }
-                } catch (error) {
-                    console.error('Failed to check shoplifting security:', error);
-                }
-            },
-            
-            processShopliftingData(shopliftingData, alerts) {
-                const shopMap = {
-                    'sweet-shop': 'Sweet Shop',
-                    'clothes-shop': 'Clothes Shop', 
-                    'cyber-force': 'Cyber Force',
-                    'super-store': 'Super Store',
-                    'big-als': 'Big Al\'s Gun Shop',
-                    'jewelry': 'Jewelry Store',
-                    'pawn-shop': 'Pawn Shop'
-                };
-                
-                Object.entries(alerts).forEach(([shopId, enabled]) => {
-                    if (!enabled) return;
-                    
-                    const shopName = shopMap[shopId];
-                    const shopData = Object.values(shopliftingData).find(shop => 
-                        shop.name && shop.name.includes(shopName.replace(/🎭|🍭|👕|💻|🛒|🏪|💎|🏛️/g, '').trim())
-                    );
-                    
-                    if (shopData && shopData.security === 'Low') {
-                        this.triggerShopliftingAlert(shopName, shopData);
-                    }
-                });
-            },
-            
-            triggerShopliftingAlert(shopName, shopData) {
-                const soundEnabled = loadState('shoplifting.soundEnabled', true);
-                const autoRedirect = loadState('shoplifting.autoRedirect', false);
-                
-                // Show notification
-                NotificationSystem.show(
-                    '🚨 Low Security Alert!', 
-                    `${shopName} security is LOW! Perfect time to shoplift.`, 
-                    'warning',
-                    10000
-                );
-                
-                // Play sound if enabled
-                if (soundEnabled) {
-                    this.playNotificationSound();
-                }
-                
-                // Auto-redirect if enabled
-                if (autoRedirect) {
-                    setTimeout(() => {
-                        window.location.href = 'https://www.torn.com/crimes.php';
-                    }, 2000);
-                }
-            },
-            
-            playNotificationSound() {
-                try {
-                    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMhBDiS4/PEeSkEK4rQ8tDEfDMFLYnN8tmHNgcZa7j165pQFQ1QqeHutmMdBj+V4/PHeSUDLYfN8tiIIUgHAwACAAAA');
-                    audio.volume = 0.3;
-                    audio.play().catch(console.error);
-                } catch (error) {
-                    console.error('Failed to play notification sound:', error);
-                }
-            },
-            
-            exportData() {
-                const data = {
-                    settings: {
-                        apiKey: loadState(STORAGE_KEYS.API_KEY, ''),
-                        blockTraining: loadState('blockTraining', false),
-                        travelBlocker: loadState('travelBlocker', false),
-                        randomTarget: loadState('randomTarget', false),
-                        shoplifting: {
-                            enabled: loadState('shoplifting.enabled', false),
-                            apiKey: loadState('shoplifting.apiKey', ''),
-                            soundEnabled: loadState('shoplifting.soundEnabled', true),
-                            autoRedirect: loadState('shoplifting.autoRedirect', false),
-                            checkInterval: loadState('shoplifting.checkInterval', 1),
-                            alerts: loadState('shoplifting.alerts', {})
-                        }
-                    },
-                    todoList: loadState('sidekick_todos', []),
-                    timerData: loadState('timers', []),
-                    linkGroupData: loadState('linkGroups', [])
-                };
-                
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'sidekick-data-' + new Date().toISOString().split('T')[0] + '.json';
-                a.click();
-                URL.revokeObjectURL(url);
-                
-                NotificationSystem.show('Success', 'Data exported successfully!', 'info');
             },
 
             importData() {
