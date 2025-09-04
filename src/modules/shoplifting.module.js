@@ -158,6 +158,9 @@
                 const data = await response.json();
                 
                 if (data.error) {
+                    if (data.error.code === 2) {
+                        throw new Error('API key does not have shoplifting permissions. Please create a new API key with "shoplifting" selection enabled.');
+                    }
                     throw new Error(data.error.error);
                 }
                 
@@ -215,7 +218,12 @@
                 const data = await response.json();
                 
                 if (data.error) {
-                    console.error('Shoplifting API error:', data.error);
+                    if (data.error.code === 2) {
+                        console.error('🔑 Shoplifting API error: API key does not have shoplifting permissions');
+                        NotificationSystem.show('API Error', 'API key missing shoplifting permissions. Check settings.', 'error');
+                    } else {
+                        console.error('Shoplifting API error:', data.error);
+                    }
                     return;
                 }
                 

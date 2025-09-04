@@ -173,7 +173,8 @@
                                            placeholder="Enter API key for shoplifting data..."
                                            style="width: 100%; background: #2a2a2a; border: 1px solid #555; color: #fff; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 14px; box-sizing: border-box;">
                                     <div style="font-size: 12px; color: #666; margin-top: 6px;">
-                                        <a href="https://www.torn.com/preferences.php#tab=api?step=addNewKey&title=ShopliftingAPI&torn=shoplifting" target="_blank" style="color: #4CAF50; text-decoration: none;">🔗 Create Shoplifting API Key</a>
+                                        <a href="https://www.torn.com/preferences.php#tab=api?step=addNewKey&title=ShopliftingAPI&torn=shoplifting" target="_blank" style="color: #4CAF50; text-decoration: none;">🔗 Create Shoplifting API Key</a><br>
+                                        <span style="color: #ff9800; font-size: 11px;">⚠️ Must enable "shoplifting" selection when creating the API key</span>
                                     </div>
                                     <button id="test-shoplifting-api-btn" style="width: 100%; margin-top: 10px; padding: 10px; background: linear-gradient(135deg, #2196F3, #1976D2); border: none; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
                                         🧪 Test Shoplifting API
