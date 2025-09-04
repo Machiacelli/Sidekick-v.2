@@ -148,11 +148,11 @@
 
         // API Methods
         async testApiConnection() {
-            const apiKey = this.getApiKey() || loadState('apiKey', ''); // Fall back to main API key
+            const apiKey = this.getApiKey();
             if (!apiKey) {
-                throw new Error('Please enter an API key in General settings first');
+                throw new Error('Please enter a Shoplifting API key first');
             }
-            
+
             try {
                 const response = await fetch(`https://api.torn.com/user/?selections=shoplifting&key=${apiKey}`);
                 const data = await response.json();
@@ -203,7 +203,7 @@
 
         async checkShopliftingSecurity() {
             const settings = this.getSettings();
-            const apiKey = settings.apiKey || loadState('apiKey', ''); // Use main API key as fallback
+            const apiKey = settings.apiKey;
             const alerts = settings.alerts;
             
             if (!apiKey || Object.keys(alerts).length === 0) {

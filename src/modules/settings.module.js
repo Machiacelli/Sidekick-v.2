@@ -168,6 +168,18 @@
                             
                             <div id="shoplifting-config" style="display: none;">
                                 <div style="background: #333; border-radius: 6px; padding: 15px; margin: 12px 0;">
+                                    <label style="display: block; margin-bottom: 8px; color: #aaa; font-weight: bold; font-size: 14px;">Shoplifting API Key:</label>
+                                    <input type="text" id="shoplifting-api-key-input" value=""
+                                           placeholder="Enter API key for shoplifting data..."
+                                           style="width: 100%; background: #2a2a2a; border: 1px solid #555; color: #fff; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 14px; box-sizing: border-box;">
+                                    <div style="font-size: 12px; color: #666; margin-top: 6px;">
+                                        <a href="https://www.torn.com/preferences.php#tab=api?step=addNewKey&title=ShopliftingAPI&torn=shoplifting" target="_blank" style="color: #4CAF50; text-decoration: none;">🔗 Create Shoplifting API Key</a>
+                                    </div>
+                                    <button id="test-shoplifting-api-btn" style="width: 100%; margin-top: 10px; padding: 10px; background: linear-gradient(135deg, #2196F3, #1976D2); border: none; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
+                                        🧪 Test Shoplifting API
+                                    </button>
+                                </div>
+                                <div style="background: #333; border-radius: 6px; padding: 15px; margin: 12px 0;">
                                     <h5 style="color: #aaa; margin: 0 0 12px 0; font-size: 13px; font-weight: bold;">📍 Shop Monitoring Settings</h5>
                                     <div style="font-size: 12px; color: #666; margin-bottom: 15px; padding: 10px; background: #2a2a2a; border-radius: 4px; border-left: 3px solid #4CAF50;">
                                         <strong>How to use:</strong><br>
