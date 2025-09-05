@@ -23,7 +23,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@ca33239/src/modules/timer.module.js?v=2
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@ca33239/src/modules/randomtarget.module.js?v=2
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@ca33239/src/modules/plane-replacer.module.js?v=2
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@ca33239/src/modules/autogym.module.js?v=3
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@622e785/src/modules/autogym.module.js?v=4
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@ca33239/src/modules/todolist.module.js?v=2
 // @run-at       document-end
 // ==/UserScript==
