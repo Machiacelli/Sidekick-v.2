@@ -422,22 +422,27 @@
                         // Sync toggle with module state
                         setInterval(() => {
                             if (window.SidekickModules?.AutoGym && autoGymToggle) {
-                                const currentState = window.SidekickModules.AutoGym.enabled;
+                                const module = window.SidekickModules.AutoGym;
                                 
-                                if (autoGymToggle.checked !== currentState) {
-                                    autoGymToggle.checked = currentState;
-                                    console.log('🔄 Auto Gym toggle synced to:', currentState);
-                                }
-                                
-                                // Update toggle appearance
-                                const slider = autoGymToggle.nextElementSibling;
-                                if (slider && slider.classList.contains('auto-gym-slider')) {
-                                    if (currentState) {
-                                        slider.style.backgroundColor = '#4CAF50';
-                                        slider.style.boxShadow = '0 0 10px rgba(76, 175, 80, 0.5)';
-                                    } else {
-                                        slider.style.backgroundColor = '#ccc';
-                                        slider.style.boxShadow = 'none';
+                                // Only sync if module is initialized
+                                if (module.initialized) {
+                                    const currentState = module.enabled;
+                                    
+                                    if (autoGymToggle.checked !== currentState) {
+                                        autoGymToggle.checked = currentState;
+                                        console.log('🔄 Auto Gym toggle synced to:', currentState);
+                                    }
+                                    
+                                    // Update toggle appearance
+                                    const slider = autoGymToggle.nextElementSibling;
+                                    if (slider && slider.classList.contains('auto-gym-slider')) {
+                                        if (currentState) {
+                                            slider.style.backgroundColor = '#4CAF50';
+                                            slider.style.boxShadow = '0 0 10px rgba(76, 175, 80, 0.5)';
+                                        } else {
+                                            slider.style.backgroundColor = '#ccc';
+                                            slider.style.boxShadow = 'none';
+                                        }
                                     }
                                 }
                             }
