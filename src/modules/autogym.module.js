@@ -26,12 +26,10 @@
         const AutoGymModule = {
             name: 'AutoGym',
             version: '1.0.0',
-            isActive: false,
             enabled: false,
-            currentGym: null,
             originalFetch: null,
             
-            // Gym data from the original script - all 33 gyms with stat multipliers
+            // Original gym data with stat multipliers
             gymInfo: {
                 1: { 'str': 2, 'spe': 2, 'def': 2, 'dex': 2 },
                 2: { 'str': 2.4, 'spe': 2.4, 'def': 2.7, 'dex': 2.4 },
@@ -68,14 +66,6 @@
                 33: { 'str': 3.4, 'spe': 3.4, 'def': 4.6, 'dex': 0 }
             },
 
-            // Store best gyms for each stat (pre-calculated for performance)
-            bestGyms: {
-                'str': [],
-                'def': [],
-                'spe': [],
-                'dex': []
-            },
-
             init() {
                 console.log('🏋️ Initializing Auto Gym Module v1.0.0...');
                 this.core = window.SidekickModules.Core;
@@ -88,84 +78,24 @@
                 // Load saved settings
                 this.enabled = this.core.loadState('autoGymEnabled') || false;
                 
-                // Pre-calculate best gyms for each stat
-                this.calculateBestGyms();
-                
-                // Only activate on gym page
-                if (window.location.href.includes('/gym.php')) {
-                    this.activate();
-                }
-
                 console.log('✅ Auto Gym module initialized');
                 return true;
             },
 
-            activate() {
-                if (this.isActive) return;
-                
-                console.log('🏋️ Auto Gym activated on gym page');
-                this.isActive = true;
-                
-                if (this.enabled) {
-                    this.enableAutoGym();
-                }
-            },
-
-            // Pre-calculate the best gyms for each stat (sorted by multiplier, then by ID)
-            calculateBestGyms() {
-                const stats = ['str', 'def', 'spe', 'dex'];
-                
-                stats.forEach(stat => {
-                    const gymsForStat = [];
-                    
-                    for (const gymId in this.gymInfo) {
-                        const multiplier = this.gymInfo[gymId][stat];
-                        if (multiplier > 0) {
-                            gymsForStat.push({
-                                id: parseInt(gymId),
-                                multiplier: multiplier
-                            });
-                        }
-                    }
-                    
-                    // Sort by multiplier (highest first), then by ID (highest first for tiebreaker)
-                    gymsForStat.sort((a, b) => {
-                        if (a.multiplier === b.multiplier) {
-                            return b.id - a.id;
-                        }
-                        return b.multiplier - a.multiplier;
-                    });
-                    
-                    this.bestGyms[stat] = gymsForStat;
-                });
-                
-                console.log('🎯 Best gyms calculated:', this.bestGyms);
-            },
-
-            // Find the best available gym for a stat
+            // Find best gym for a stat
             findBestGym(stat) {
-                const gymList = this.bestGyms[stat];
+                let bestGym = null;
+                let bestMultiplier = 0;
                 
-                for (const gym of gymList) {
-                    // Check if gym is available (not locked)
-                    if (gym.id > 24 && gym.id < 32) {
-                        // Special gyms - check if they're locked
-                        const gymElement = document.querySelector(`[class*='gym-${gym.id}']`);
-                        if (gymElement) {
-                            const isLocked = Array.from(gymElement.parentElement.classList)
-                                .some(className => className.includes('locked'));
-                            
-                            if (!isLocked) {
-                                return gym.id;
-                            }
-                        }
-                    } else {
-                        // Regular gyms
-                        return gym.id;
+                for (const gymId in this.gymInfo) {
+                    const multiplier = this.gymInfo[gymId][stat];
+                    if (multiplier > bestMultiplier) {
+                        bestMultiplier = multiplier;
+                        bestGym = parseInt(gymId);
                     }
                 }
                 
-                return null;
+                return bestGym;
             },
 
             // Enable auto gym switching by intercepting fetch requests
@@ -180,21 +110,34 @@
                     if (args[0].includes('/gym.php?step=train') && args[1] && args[1].body) {
                         try {
                             const requestData = JSON.parse(args[1].body);
-                            const stat = requestData.stat.substring(0, 3); // Get first 3 chars (str, def, spe, dex)
+                            let stat = requestData.stat;
+                            
+                            // Map stat names to short codes
+                            if (stat.includes('strength')) stat = 'str';
+                            else if (stat.includes('defense')) stat = 'def';
+                            else if (stat.includes('speed')) stat = 'spe';
+                            else if (stat.includes('dexterity')) stat = 'dex';
+                            else stat = stat.substring(0, 3); // fallback
                             
                             console.log(`🎯 Training ${stat}, finding best gym...`);
                             
                             const bestGymId = self.findBestGym(stat);
                             
-                            if (bestGymId && bestGymId !== self.currentGym) {
-                                console.log(`🔄 Switching from gym ${self.currentGym} to gym ${bestGymId} for ${stat} training`);
+                            if (bestGymId) {
+                                console.log(`� Switching to best gym for ${stat}: ${bestGymId}`);
                                 
                                 // Switch gym first
-                                const switchResult = await self.switchGym(bestGymId);
-                                if (!switchResult.success) {
-                                    console.warn('⚠️ Gym switch failed, training with current gym');
-                                } else {
+                                try {
+                                    await fetch('/gym.php', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/x-www-form-urlencoded',
+                                        },
+                                        body: `step=changeGym&gymID=${bestGymId}`
+                                    });
                                     console.log('✅ Gym switched successfully');
+                                } catch (error) {
+                                    console.warn('⚠️ Gym switch failed:', error);
                                 }
                             }
                             
@@ -204,30 +147,7 @@
                     }
                     
                     // Continue with original request
-                    const result = await self.originalFetch(...args);
-                    
-                    // Track gym changes and current gym
-                    if (args[0].includes('/gym.php?step=getInitialGymInfo')) {
-                        try {
-                            const jsonData = await result.clone().json();
-                            self.processGymData(jsonData);
-                        } catch (error) {
-                            console.error('❌ Error processing gym info:', error);
-                        }
-                    } else if (args[0].includes('/gym.php?step=changeGym')) {
-                        try {
-                            const jsonData = await result.clone().json();
-                            if (jsonData.success && args[1] && args[1].body) {
-                                const requestData = JSON.parse(args[1].body);
-                                self.currentGym = parseInt(requestData.gymID);
-                                console.log(`📍 Current gym updated to: ${self.currentGym}`);
-                            }
-                        } catch (error) {
-                            console.error('❌ Error processing gym change:', error);
-                        }
-                    }
-                    
-                    return result;
+                    return self.originalFetch(...args);
                 };
                 
                 console.log('🔄 Auto gym switching enabled');
@@ -239,87 +159,6 @@
                     window.fetch = this.originalFetch;
                     this.originalFetch = null;
                     console.log('⏹️ Auto gym switching disabled');
-                }
-            },
-
-            // Process initial gym data to find current gym
-            processGymData(gymData) {
-                try {
-                    const classList = ['specialist', 'heavyweight', 'middleweight', 'lightweight', 'jail'];
-                    
-                    for (const gymClass of classList) {
-                        if (gymData.gyms[gymClass]) {
-                            for (const gym of gymData.gyms[gymClass]) {
-                                if (gym.status === 'active') {
-                                    this.currentGym = gym.id;
-                                    console.log(`📍 Current gym detected: ${gym.id} (${gym.name})`);
-                                    return;
-                                }
-                            }
-                        }
-                    }
-                } catch (error) {
-                    console.error('❌ Error processing gym data:', error);
-                }
-            },
-
-            // Switch to specific gym
-            async switchGym(gymId) {
-                try {
-                    const response = await fetch('/gym.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: `step=changeGym&gymID=${gymId}`
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        this.currentGym = gymId;
-                        this.updateGymUI(gymId);
-                    }
-                    
-                    return result;
-                    
-                } catch (error) {
-                    console.error('❌ Error switching gym:', error);
-                    return { success: false, message: 'Network error' };
-                }
-            },
-
-            // Update gym UI elements after switching
-            updateGymUI(gymId) {
-                try {
-                    // Update active gym button styling
-                    const currentActive = document.querySelector('[class*=\'active\'][class^=\'gymButton\']');
-                    const newActive = document.querySelector(`[class*='gym-${gymId}']`);
-                    
-                    if (currentActive && newActive) {
-                        // Remove active class from current
-                        const activeClass = Array.from(currentActive.classList)
-                            .find(className => className.includes('active'));
-                        
-                        if (activeClass) {
-                            currentActive.classList.remove(activeClass);
-                            newActive.parentElement.classList.add(activeClass);
-                        }
-                    }
-                    
-                    // Update gym logo
-                    const logos = document.querySelectorAll('[class^=\'logo\'] img');
-                    for (const logo of logos) {
-                        if (logo.src.includes('/gym/')) {
-                            const srcParts = logo.src.split('/');
-                            srcParts[srcParts.length - 1] = `${gymId}.png`;
-                            logo.src = srcParts.join('/');
-                            break;
-                        }
-                    }
-                    
-                } catch (error) {
-                    console.error('❌ Error updating gym UI:', error);
                 }
             },
 
@@ -343,35 +182,8 @@
             getStatus() {
                 return {
                     enabled: this.enabled,
-                    active: this.isActive,
-                    currentGym: this.currentGym,
-                    onGymPage: window.location.href.includes('/gym.php'),
-                    bestGyms: this.bestGyms
+                    onGymPage: window.location.href.includes('/gym.php')
                 };
-            },
-
-            // Manual gym switch for testing
-            async manualSwitch(stat) {
-                if (!this.enabled) {
-                    console.warn('⚠️ Auto gym is disabled');
-                    return false;
-                }
-                
-                const bestGym = this.findBestGym(stat);
-                if (bestGym && bestGym !== this.currentGym) {
-                    console.log(`🔄 Manually switching to best gym for ${stat}: ${bestGym}`);
-                    const result = await this.switchGym(bestGym);
-                    return result.success;
-                }
-                
-                console.log(`✅ Already at best gym for ${stat}`);
-                return true;
-            },
-
-            // Get best gym for a stat
-            getBestGymFor(stat) {
-                const best = this.bestGyms[stat]?.[0];
-                return best ? { id: best.id, multiplier: best.multiplier } : null;
             }
         };
 
@@ -382,14 +194,5 @@
         window.SidekickModules.AutoGym = AutoGymModule;
 
         console.log('🏋️ Auto Gym module registered globally');
-        
-        // Auto-initialize when DOM is ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                setTimeout(() => AutoGymModule.init(), 500);
-            });
-        } else {
-            setTimeout(() => AutoGymModule.init(), 500);
-        }
     });
 })();
