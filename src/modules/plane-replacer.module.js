@@ -31,8 +31,8 @@
             
             // Configuration for custom plane images - targeting only the plane, not the background
             config: {
-                // Custom plane image - using your working imgur JPEG link
-                customPlaneUrl: 'https://i.imgur.com/dRixRIO.jpeg', // Your working imgur link
+                // Custom plane image - using your new imgur PNG link
+                customPlaneUrl: 'https://i.imgur.com/HF3F3Gw.png', // Your new imgur link
                 customPlaneUrlJpeg: 'https://i.imgur.com/dRixRIO.jpeg', // Keep original for reference
                 // Fallback small plane SVG (plane only, no background)
                 fallbackPlaneUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMTIwIDQwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0xMCAyMEwxMCAxNUwyNSAxMEw0NSA4TDY1IDhMODUgOEwxMDAgMTBMMTEwIDE1TDExNSAyMEwxMTAgMjVMMTAwIDMwTDg1IDMyTDY1IDMyTDQ1IDMyTDI1IDMwTDEwIDI1TDEwIDIwWiIgZmlsbD0iIzY2NjY2NiIgc3Ryb2tlPSIjMzMzMzMzIiBzdHJva2Utd2lkdGg9IjEiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSIyMCIgcj0iOCIgZmlsbD0iIzk5OTk5OSIgY2xhc3M9InByb3BlbGxlciIvPjwvc3ZnPg==',
@@ -46,10 +46,10 @@
                     top: '45%',  // Slightly above center vertically
                     transform: 'translate(-50%, -50%)'
                 },
-                // Estimated plane size (much larger to properly cover original plane)
+                // Estimated plane size (match the 778x300 background dimensions)
                 planeSize: {
-                    width: '200px',  // Increased to cover the original plane better
-                    height: '80px'   // Increased proportionally
+                    width: '778px',  // Full width to match background
+                    height: '300px'  // Full height to match background
                 }
             },
 

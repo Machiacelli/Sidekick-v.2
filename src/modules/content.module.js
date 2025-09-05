@@ -140,8 +140,7 @@
                         } else {
                             alert('Link Group module not loaded!');
                         }
-                    }},
-                    { icon: '📋', text: 'Forum Tracker', color: '#2196F3', action: () => this.addForumTracker() }
+                    }}
                 ];
                 
                 menuItems.forEach(item => {
@@ -381,38 +380,6 @@
                     // Show user-friendly message with debugging info
                     NotificationSystem.show(
                         'Travel Tracker', 
-                        `Module not loaded. Check console for details. Available: ${window.SidekickModules ? Object.keys(window.SidekickModules).join(', ') : 'None'}`, 
-                        'error'
-                    );
-                }
-            },
-
-            addForumTracker() {
-                console.log('📋 Forum Tracker button clicked - checking module availability...');
-                console.log('📋 Available modules:', window.SidekickModules ? Object.keys(window.SidekickModules) : 'No modules found');
-                
-                // Check if ForumTracker module is available
-                if (window.SidekickModules?.ForumTracker?.activate) {
-                    console.log('✅ ForumTracker module found - activating...');
-                    try {
-                        window.SidekickModules.ForumTracker.activate();
-                        this.closeAddMenu();
-                        console.log('✅ Forum Tracker activated successfully');
-                    } catch (error) {
-                        console.error('❌ Error activating Forum Tracker:', error);
-                        NotificationSystem.show('Forum Tracker', 'Error activating forum tracker: ' + error.message, 'error');
-                    }
-                } else {
-                    console.error('❌ ForumTracker module not available');
-                    console.log('🔍 Checking what we have:', {
-                        'SidekickModules exists': !!window.SidekickModules,
-                        'ForumTracker exists': !!window.SidekickModules?.ForumTracker,
-                        'ForumTracker.activate exists': !!window.SidekickModules?.ForumTracker?.activate,
-                        'Available modules': window.SidekickModules ? Object.keys(window.SidekickModules) : 'none'
-                    });
-                    
-                    NotificationSystem.show(
-                        'Forum Tracker', 
                         `Module not loaded. Check console for details. Available: ${window.SidekickModules ? Object.keys(window.SidekickModules).join(', ') : 'None'}`, 
                         'error'
                     );
