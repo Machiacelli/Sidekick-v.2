@@ -142,6 +142,16 @@
                                     <span class="random-target-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
                                 </label>
                             </div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin: 12px 0;">
+                                <div style="display: flex; flex-direction: column;">
+                                    <span style="color: #fff; font-weight: bold; font-size: 14px;">🏋️ Auto Gym Optimizer</span>
+                                    <span style="color: #aaa; font-size: 12px;">Automatically switches to best gym for each stat</span>
+                                </div>
+                                <label class="auto-gym-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
+                                    <input type="checkbox" id="auto-gym-toggle" style="opacity: 0; width: 0; height: 0;">
+                                    <span class="auto-gym-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
+                                </label>
+                            </div>
                             
                             <div style="border-top: 1px solid #444; margin: 20px 0; padding-top: 20px;">
                                 <h4 style="color: #aaa; margin: 0 0 12px 0; font-size: 14px; font-weight: bold;">Data Management</h4>
@@ -356,6 +366,84 @@
                         }, 500); // Check every 500ms for better responsiveness
                     } else {
                         console.error('❌ Random Target toggle element not found in DOM');
+                    }
+
+                    // Auto Gym toggle
+                    const autoGymToggle = document.getElementById('auto-gym-toggle');
+                    console.log('🔍 Looking for Auto Gym toggle:', autoGymToggle);
+                    console.log('🔍 AutoGym module available:', !!window.SidekickModules?.AutoGym);
+                    
+                    if (autoGymToggle) {
+                        // Set initial state
+                        if (window.SidekickModules?.AutoGym) {
+                            const savedState = window.SidekickModules.Core.loadState('autoGymEnabled', false);
+                            const moduleState = window.SidekickModules.AutoGym.enabled;
+                            
+                            const shouldBeChecked = moduleState !== undefined ? moduleState : savedState;
+                            autoGymToggle.checked = shouldBeChecked;
+                            
+                            console.log('✅ Auto Gym toggle initialized:', {
+                                savedState: savedState,
+                                moduleState: moduleState,
+                                finalState: shouldBeChecked
+                            });
+                            
+                            // Update toggle appearance
+                            if (shouldBeChecked) {
+                                const slider = autoGymToggle.nextElementSibling;
+                                if (slider && slider.classList.contains('auto-gym-slider')) {
+                                    slider.style.backgroundColor = '#4CAF50';
+                                    slider.style.boxShadow = '0 0 10px rgba(76, 175, 80, 0.5)';
+                                }
+                            }
+                        } else {
+                            console.warn('⚠️ AutoGym module not available for toggle initialization');
+                        }
+                        
+                        autoGymToggle.addEventListener('change', () => {
+                            console.log('🏋️ Auto Gym toggle changed to:', autoGymToggle.checked);
+                            if (window.SidekickModules?.AutoGym) {
+                                const result = window.SidekickModules.AutoGym.toggle();
+                                console.log('🏋️ Auto Gym toggled:', result);
+                                
+                                // Show notification
+                                if (window.SidekickModules?.Core?.NotificationSystem) {
+                                    window.SidekickModules.Core.NotificationSystem.show(
+                                        'Auto Gym',
+                                        result ? 'Auto gym optimization enabled' : 'Auto gym optimization disabled',
+                                        result ? 'success' : 'info'
+                                    );
+                                }
+                            } else {
+                                console.error('❌ AutoGym module not available for activation');
+                            }
+                        });
+
+                        // Sync toggle with module state
+                        setInterval(() => {
+                            if (window.SidekickModules?.AutoGym && autoGymToggle) {
+                                const currentState = window.SidekickModules.AutoGym.enabled;
+                                
+                                if (autoGymToggle.checked !== currentState) {
+                                    autoGymToggle.checked = currentState;
+                                    console.log('🔄 Auto Gym toggle synced to:', currentState);
+                                }
+                                
+                                // Update toggle appearance
+                                const slider = autoGymToggle.nextElementSibling;
+                                if (slider && slider.classList.contains('auto-gym-slider')) {
+                                    if (currentState) {
+                                        slider.style.backgroundColor = '#4CAF50';
+                                        slider.style.boxShadow = '0 0 10px rgba(76, 175, 80, 0.5)';
+                                    } else {
+                                        slider.style.backgroundColor = '#ccc';
+                                        slider.style.boxShadow = 'none';
+                                    }
+                                }
+                            }
+                        }, 500);
+                    } else {
+                        console.error('❌ Auto Gym toggle element not found in DOM');
                     }
 
                     // Add Block Training button after other buttons
@@ -906,6 +994,7 @@
                     #travel-blocker-toggle:checked + .travel-blocker-slider,
                     #block-training-toggle:checked + .block-training-slider,
                     #random-target-toggle:checked + .random-target-slider,
+                    #auto-gym-toggle:checked + .auto-gym-slider,
                     #shoplifting-monitor-toggle:checked + .shoplifting-monitor-slider,
                     #notification-sound-toggle:checked + .notification-sound-slider,
                     #auto-redirect-toggle:checked + .auto-redirect-slider {
@@ -916,6 +1005,7 @@
                     #travel-blocker-toggle:checked + .travel-blocker-slider:before,
                     #block-training-toggle:checked + .block-training-slider:before,
                     #random-target-toggle:checked + .random-target-slider:before,
+                    #auto-gym-toggle:checked + .auto-gym-slider:before,
                     #shoplifting-monitor-toggle:checked + .shoplifting-monitor-slider:before {
                         transform: translateX(26px) !important;
                     }
@@ -928,7 +1018,7 @@
 
                     /* Hover effects */
                     .travel-blocker-slider:hover, .block-training-slider:hover, .random-target-slider:hover,
-                    .shoplifting-monitor-slider:hover, .notification-sound-slider:hover, .auto-redirect-slider:hover {
+                    .auto-gym-slider:hover, .shoplifting-monitor-slider:hover, .notification-sound-slider:hover, .auto-redirect-slider:hover {
                         box-shadow: 0 0 1px rgba(255,255,255,0.5) !important;
                     }
                 `;
