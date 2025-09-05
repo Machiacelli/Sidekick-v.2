@@ -419,34 +419,12 @@
                             }
                         });
 
-                        // Sync toggle with module state
-                        setInterval(() => {
-                            if (window.SidekickModules?.AutoGym && autoGymToggle) {
-                                const module = window.SidekickModules.AutoGym;
-                                
-                                // Only sync if module is initialized
-                                if (module.initialized) {
-                                    const currentState = module.enabled;
-                                    
-                                    if (autoGymToggle.checked !== currentState) {
-                                        autoGymToggle.checked = currentState;
-                                        console.log('🔄 Auto Gym toggle synced to:', currentState);
-                                    }
-                                    
-                                    // Update toggle appearance
-                                    const slider = autoGymToggle.nextElementSibling;
-                                    if (slider && slider.classList.contains('auto-gym-slider')) {
-                                        if (currentState) {
-                                            slider.style.backgroundColor = '#4CAF50';
-                                            slider.style.boxShadow = '0 0 10px rgba(76, 175, 80, 0.5)';
-                                        } else {
-                                            slider.style.backgroundColor = '#ccc';
-                                            slider.style.boxShadow = 'none';
-                                        }
-                                    }
-                                }
-                            }
-                        }, 500);
+                        // Initial state sync only - no interval
+                        if (window.SidekickModules?.AutoGym && autoGymToggle) {
+                            const module = window.SidekickModules.AutoGym;
+                            autoGymToggle.checked = module.enabled;
+                            console.log('🔄 Auto Gym initial sync:', module.enabled);
+                        }
                     } else {
                         console.error('❌ Auto Gym toggle element not found in DOM');
                     }
