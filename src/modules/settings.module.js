@@ -954,7 +954,7 @@
                     }
                     
                     /* All slider backgrounds */
-                    .travel-blocker-slider, .block-training-slider, .random-target-slider,
+                    .travel-blocker-slider, .block-training-slider, .random-target-slider, .auto-gym-slider,
                     .shoplifting-monitor-slider, .notification-sound-slider, .auto-redirect-slider {
                         position: absolute !important;
                         cursor: pointer !important;
@@ -968,7 +968,7 @@
                     }
 
                     /* White dots on all sliders */
-                    .travel-blocker-slider:before, .block-training-slider:before, .random-target-slider:before,
+                    .travel-blocker-slider:before, .block-training-slider:before, .random-target-slider:before, .auto-gym-slider:before,
                     .shoplifting-monitor-slider:before, .notification-sound-slider:before, .auto-redirect-slider:before {
                         position: absolute !important;
                         content: "" !important;
@@ -1017,8 +1017,8 @@
                     }
 
                     /* Hover effects */
-                    .travel-blocker-slider:hover, .block-training-slider:hover, .random-target-slider:hover,
-                    .auto-gym-slider:hover, .shoplifting-monitor-slider:hover, .notification-sound-slider:hover, .auto-redirect-slider:hover {
+                    .travel-blocker-slider:hover, .block-training-slider:hover, .random-target-slider:hover, .auto-gym-slider:hover,
+                    .shoplifting-monitor-slider:hover, .notification-sound-slider:hover, .auto-redirect-slider:hover {
                         box-shadow: 0 0 1px rgba(255,255,255,0.5) !important;
                     }
                 `;
