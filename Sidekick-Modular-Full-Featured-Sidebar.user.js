@@ -25,8 +25,11 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@88b5327/src/modules/plane-replacer.module.js?v=2
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@622e785/src/modules/autogym.module.js?v=4
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@88b5327/src/modules/todolist.module.js?v=2
-// @run-at       document-end
+// @run-at       document-start
 // ==/UserScript==
+
+// FORCE IMMEDIATE EXECUTION CHECK
+console.log("🔥 USERSCRIPT EXECUTING - v5.13.4", new Date().toISOString());
 
 (function() {
     'use strict';
@@ -146,11 +149,15 @@
         }, 2000); // Reduced from 1000ms to 2000ms
     }
 
-    // Start initialization when DOM is ready
+    // Start initialization immediately - don't wait for DOM
+    console.log("🎯 Starting immediate initialization...");
+    initializeSidekick();
+    
+    // Also set up DOM ready fallback
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initializeSidekick);
     } else {
-        initializeSidekick();
+        setTimeout(initializeSidekick, 100);
     }
 
     // Fallback timeout - if no sidebar appears after 10 seconds, show error
