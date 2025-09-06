@@ -1,61 +1,40 @@
 // ==UserScript==
 // @name         Sidekick Modular - Full Featured Sidebar
 // @namespace    http://tampermonkey.net/
-// @version      5.13.4
+// @version      5.13.5
 // @description  Modular version of Sidekick - Enhanced Torn.com sidebar with tools
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
 // @grant        GM_addStyle
 // @grant        GM_setValue
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3e58b29/src/modules/core.module.js?v=2
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3e58b29/src/modules/ui.module.js?v=2
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3e58b29/src/modules/content.module.js?v=2
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@dd935ac/src/modules/core.module.js?v=2
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@dd935ac/src/modules/ui.module.js?v=2
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@dd935ac/src/modules/content.module.js?v=2
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5c876a/src/modules/settings.module.js?v=3
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3e58b29/src/modules/clock.module.js?v=2
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3e58b29/src/modules/notepad.module.js?v=2
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3e58b29/src/modules/blocktraining.module.js?v=2
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3e58b29/src/modules/global-functions.module.js?v=2
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3e58b29/src/modules/attacklist.module.js?v=2
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3e58b29/src/modules/linkgroup.module.js?v=2
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3e58b29/src/modules/travel-blocker.module.js?v=2
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3e58b29/src/modules/traveltracker.module.js?v=2
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3e58b29/src/modules/timer.module.js?v=2
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3e58b29/src/modules/randomtarget.module.js?v=2
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3e58b29/src/modules/plane-replacer.module.js?v=2
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3e58b29/src/modules/autogym.module.js?v=4
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3e58b29/src/modules/todolist.module.js?v=2
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@dd935ac/src/modules/clock.module.js?v=2
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@dd935ac/src/modules/notepad.module.js?v=2
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@dd935ac/src/modules/blocktraining.module.js?v=2
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@dd935ac/src/modules/global-functions.module.js?v=2
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@dd935ac/src/modules/attacklist.module.js?v=2
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@dd935ac/src/modules/linkgroup.module.js?v=2
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@dd935ac/src/modules/travel-blocker.module.js?v=2
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@dd935ac/src/modules/traveltracker.module.js?v=2
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@dd935ac/src/modules/timer.module.js?v=2
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@dd935ac/src/modules/randomtarget.module.js?v=2
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@dd935ac/src/modules/plane-replacer.module.js?v=2
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@dd935ac/src/modules/autogym.module.js?v=4
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@dd935ac/src/modules/todolist.module.js?v=2
 // @run-at       document-end
 // ==/UserScript==
 
 (function() {
     'use strict';
     
-    // SAFE EXECUTION CHECK - wrapped in try-catch to prevent page breaking
-    try {
-        console.log("🔥 USERSCRIPT EXECUTING - v5.13.4", new Date().toISOString());
-    } catch (e) {
-        // Silent fail to prevent page breaking
-    }
-
-    // SAFE EXECUTION CHECK - wrapped in try-catch to prevent page breaking
-    try {
-        console.log("🔥 USERSCRIPT EXECUTING - v5.13.4", new Date().toISOString());
-    } catch (e) {
-        // Silent fail to prevent page breaking
-    }
-
-    // Wait for page to be fully loaded before initializing
-    if (document.readyState !== 'complete') {
-        console.log("⏳ Waiting for page to finish loading...");
-        window.addEventListener('load', function() {
-            setTimeout(initializeSidekick, 1000); // Give page time to settle
-        });
-        return;
-    }
-
+    // FORCE EXECUTION LOG - This should appear if Tampermonkey runs our script
+    console.log("🔥 USERSCRIPT EXECUTING - v5.13.5", new Date().toISOString());
     console.log("🚀 MAIN SCRIPT BODY EXECUTING NOW!");
-    console.log("🚀 SIDEKICK MODULAR STARTING v5.13.4 - " + new Date().toLocaleTimeString());
+    console.log("🚀 SIDEKICK MODULAR STARTING v5.13.5 - " + new Date().toLocaleTimeString());
     console.log("✈️ IMPROVED: Travel Blocker now shows status indicator instead of bulky switch!");
     console.log("⏰ IMPROVED: Timer panel loads immediately and appears by default!");
     console.log("🎛️ INTEGRATION: Full modular architecture, settings toggle, persistent storage, travel page detection");
@@ -177,24 +156,9 @@
 
     // SAFE initialization sequence - wrapped to prevent page breaking
     try {
-        // Start initialization after page is fully loaded
-        console.log("🎯 Starting safe initialization...");
-        
-        // Only initialize if page is ready
-        if (document.readyState === 'complete') {
-            setTimeout(initializeSidekick, 500); // Brief delay for stability
-        } else {
-            window.addEventListener('load', () => {
-                setTimeout(initializeSidekick, 1000); // Longer delay after page load
-            });
-        }
-        
-        // Also set up DOM ready fallback for earlier execution if safe
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                setTimeout(initializeSidekick, 2000); // Delay to ensure page stability
-            });
-        }
+        // Start initialization immediately
+        console.log("🎯 Starting initialization...");
+        initializeSidekick();
     } catch (error) {
         console.error("❌ Initialization setup failed:", error);
         // Don't break the page if initialization fails
