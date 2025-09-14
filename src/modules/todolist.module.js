@@ -38,21 +38,33 @@
             lastApiCheck: 0,
             dailyStatsBaseline: null, // Store baseline stats for daily tracking
 
-            // Todo item types
+            // Modern todo item types - enhanced system with all daily activities
             todoItemTypes: {
-                xanax: {
-                    name: 'Xanax',
-                    icon: '💊',
+                // Daily activities
+                medical: {
+                    name: 'Medical Cooldown',
+                    icon: '🏥',
                     color: '#FF6B6B',
-                    description: 'Daily Xanax (3x per day)',
-                    maxCompletions: 3,
-                    isMultiCompletion: true
+                    description: 'Use medical item (daily reset)',
+                    category: 'daily',
+                    maxCompletions: 1,
+                    isMultiCompletion: false
+                },
+                drug: {
+                    name: 'Drug Cooldown',
+                    icon: '💊',
+                    color: '#E74C3C',
+                    description: 'Use drug item (daily reset)',
+                    category: 'daily',
+                    maxCompletions: 1,
+                    isMultiCompletion: false
                 },
                 energyRefill: {
                     name: 'Energy Refill',
                     icon: '⚡',
                     color: '#4ECDC4',
                     description: 'Daily energy refill',
+                    category: 'daily',
                     maxCompletions: 1,
                     isMultiCompletion: false
                 },
@@ -61,14 +73,74 @@
                     icon: '🧠',
                     color: '#45B7D1',
                     description: 'Daily nerve refill',
+                    category: 'daily',
                     maxCompletions: 1,
                     isMultiCompletion: false
                 },
+                // Activities
+                gym: {
+                    name: 'Gym Training',
+                    icon: '💪',
+                    color: '#F39C12',
+                    description: 'Complete gym training',
+                    category: 'daily',
+                    maxCompletions: 1,
+                    isMultiCompletion: false
+                },
+                crime: {
+                    name: 'Commit Crime',
+                    icon: '🔫',
+                    color: '#8E44AD',
+                    description: 'Commit a crime',
+                    category: 'daily',
+                    maxCompletions: 1,
+                    isMultiCompletion: false
+                },
+                attack: {
+                    name: 'Attack Player',
+                    icon: '⚔️',
+                    color: '#E67E22',
+                    description: 'Attack another player',
+                    category: 'daily',
+                    maxCompletions: 1,
+                    isMultiCompletion: false
+                },
+                // Economic
+                stocks: {
+                    name: 'Check Stocks',
+                    icon: '📈',
+                    color: '#27AE60',
+                    description: 'Check stock investments',
+                    category: 'daily',
+                    maxCompletions: 1,
+                    isMultiCompletion: false
+                },
+                travel: {
+                    name: 'Travel Abroad',
+                    icon: '✈️',
+                    color: '#3498DB',
+                    description: 'Travel for items/money',
+                    category: 'weekly',
+                    maxCompletions: 1,
+                    isMultiCompletion: false
+                },
+                // Legacy support
+                xanax: {
+                    name: 'Drug Use',
+                    icon: '�',
+                    color: '#E74C3C',
+                    description: 'Daily drug use (legacy)',
+                    category: 'daily',
+                    maxCompletions: 3,
+                    isMultiCompletion: true
+                },
+                // Custom tasks (persistent)
                 custom: {
                     name: 'Custom Task',
-                    icon: '📝',
+                    icon: '�📝',
                     color: '#9C27B0',
                     description: 'Custom task (persistent)',
+                    category: 'custom',
                     maxCompletions: 1,
                     isMultiCompletion: false
                 }
@@ -114,282 +186,91 @@
             showTodoPanel() {
                 if (this.isActive) return;
                 
-                console.log('📋 Showing To-Do List panel...');
+                console.log('📋 Showing modern To-Do List panel...');
                 
-                // Create panel container
                 const panel = document.createElement('div');
                 panel.id = 'sidekick-todo-panel';
                 panel.className = 'sidekick-todo-panel';
                 
-                // Calculate default position and size
-                const defaultWidth = 300;
-                const defaultHeight = 200;
-                const minWidth = 250;
-                const minHeight = 150;
-                const maxWidth = 500;
-                const maxHeight = 600;
+                const defaultWidth = 320;
+                const defaultHeight = 400;
 
-                // Position new panel with slight offset to avoid overlapping
-                const existingPanels = document.querySelectorAll('.sidekick-todo-panel');
-                const offset = existingPanels.length * 20;
-                const defaultX = 20 + offset;
-                const defaultY = 20 + offset;
-
-                // Use saved position or defaults
-                const savedPosition = this.core.loadState('todo_panel_position', { x: defaultX, y: defaultY });
+                const savedPosition = this.core.loadState('todo_panel_position', { x: 20, y: 20 });
                 const savedSize = this.core.loadState('todo_panel_size', { width: defaultWidth, height: defaultHeight });
                 
-                const desiredX = savedPosition.x || defaultX;
-                const desiredY = savedPosition.y || defaultY;
-                
-                // Validate and constrain saved size
-                let desiredWidth = savedSize.width || defaultWidth;
-                let desiredHeight = savedSize.height || defaultHeight;
-                
-                // Ensure size stays within reasonable bounds
-                desiredWidth = Math.max(minWidth, Math.min(maxWidth, desiredWidth));
-                desiredHeight = Math.max(minHeight, Math.min(maxHeight, desiredHeight));
-
-                // Get sidebar bounds for constraining position
                 const sidebar = document.getElementById('sidekick-sidebar');
                 const sidebarRect = sidebar ? sidebar.getBoundingClientRect() : { width: 400, height: 600 };
-                const maxX = Math.max(0, sidebarRect.width - desiredWidth);
-                const maxY = Math.max(0, sidebarRect.height - desiredHeight);
-
-                // Clamp position to sidebar bounds
-                const finalX = Math.min(Math.max(0, desiredX), maxX);
-                const finalY = Math.min(Math.max(0, desiredY), maxY);
+                
+                const finalX = Math.min(Math.max(0, savedPosition.x), Math.max(0, sidebarRect.width - savedSize.width));
+                const finalY = Math.min(Math.max(0, savedPosition.y), Math.max(0, sidebarRect.height - savedSize.height));
 
                 panel.style.cssText = `
                     position: absolute;
                     left: ${finalX}px;
                     top: ${finalY}px;
-                    width: ${desiredWidth}px;
-                    height: ${desiredHeight}px;
+                    width: ${savedSize.width}px;
+                    height: ${savedSize.height}px;
                     background: #222;
                     border: 1px solid #444;
                     border-radius: 8px;
                     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
                     display: flex;
                     flex-direction: column;
-                    min-width: ${minWidth}px;
-                    min-height: ${minHeight}px;
-                    max-width: ${maxWidth}px;
-                    max-height: ${maxHeight}px;
-                    z-index: ${1000 + existingPanels.length};
+                    min-width: 280px;
+                    min-height: 200px;
+                    max-width: 500px;
+                    max-height: 600px;
+                    z-index: 1000;
                     resize: ${this.isPinned ? 'none' : 'both'};
                     overflow: hidden;
                 `;
 
-                // Create header
                 const header = document.createElement('div');
                 header.className = 'todo-header';
                 header.style.cssText = `
-                    background: linear-gradient(135deg, #333, #555);
+                    background: linear-gradient(135deg, #2C3E50, #4A6741);
                     border-bottom: 1px solid #444;
-                    padding: 4px 8px;
+                    padding: 8px 12px;
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
                     cursor: ${this.isPinned ? 'default' : 'move'};
-                    height: 24px;
+                    height: 32px;
                     flex-shrink: 0;
                     border-radius: 7px 7px 0 0;
                 `;
                 
-                const title = document.createElement('div');
-                title.style.cssText = `
-                    color: #fff;
-                    font-size: 12px;
-                    font-weight: 600;
-                    display: flex;
-                    align-items: center;
-                    gap: 4px;
+                header.innerHTML = `
+                    <div style="color: #fff; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                        📋 Modern To-Do List
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button class="add-task-btn" style="
+                            background: #27AE60; border: none; color: white; padding: 4px 8px; 
+                            border-radius: 4px; cursor: pointer; font-size: 12px; transition: background 0.2s;
+                        ">+ Add</button>
+                        <button class="close-btn" style="
+                            background: none; border: none; color: #f44336; cursor: pointer; 
+                            font-size: 16px; padding: 2px; border-radius: 4px; transition: background 0.2s;
+                            display: flex; align-items: center; justify-content: center; width: 20px; height: 20px;
+                        ">×</button>
+                    </div>
                 `;
-                title.innerHTML = '📋 To-Do List';
-                
-                const headerControls = document.createElement('div');
-                headerControls.style.cssText = `
-                    display: flex;
-                    align-items: center;
-                    gap: 4px;
-                    position: relative;
-                `;
-                
-                // Dropdown menu button
-                const dropdownBtn = document.createElement('button');
-                dropdownBtn.className = 'dropdown-btn';
-                dropdownBtn.style.cssText = `
-                    background: none;
-                    border: none;
-                    color: #bbb;
-                    cursor: pointer;
-                    font-size: 12px;
-                    padding: 2px;
-                    display: flex;
-                    align-items: center;
-                `;
-                dropdownBtn.innerHTML = '▼';
-                dropdownBtn.title = 'Add Todo Items';
-                
-                // Dropdown content
-                const dropdownContent = document.createElement('div');
-                dropdownContent.className = 'dropdown-content';
-                dropdownContent.style.cssText = `
-                    display: none;
-                    position: absolute;
-                    background: #333;
-                    min-width: 140px;
-                    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-                    z-index: 9999;
-                    border-radius: 4px;
-                    border: 1px solid #555;
-                    top: 100%;
-                    left: 0;
-                `;
-                
-                // Add todo item options
-                Object.entries(this.todoItemTypes).forEach(([key, itemType]) => {
-                    const addBtn = document.createElement('button');
-                    addBtn.style.cssText = `
-                        background: none;
-                        border: none;
-                        color: #fff;
-                        padding: 8px 12px;
-                        width: 100%;
-                        text-align: left;
-                        cursor: pointer;
-                        font-size: 12px;
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                        transition: background 0.2s;
-                    `;
-                    addBtn.innerHTML = `${itemType.icon} ${itemType.name}`;
-                    
-                    // Add hover effect
-                    addBtn.addEventListener('mouseenter', () => {
-                        addBtn.style.background = '#555';
-                    });
-                    
-                    addBtn.addEventListener('mouseleave', () => {
-                        addBtn.style.background = 'none';
-                    });
-                    
-                    addBtn.addEventListener('click', () => {
-                        console.log('📋 Adding todo item:', key, itemType.name);
-                        this.addTodoItem(key, itemType);
-                        dropdownContent.style.display = 'none';
-                    });
-                    
-                    dropdownContent.appendChild(addBtn);
-                });
-                
-                // Add separator
-                const separator = document.createElement('div');
-                separator.style.cssText = `
-                    height: 1px;
-                    background: #555;
-                    margin: 4px 0;
-                `;
-                dropdownContent.appendChild(separator);
-                
-                // Add pin button
-                const pinBtn = document.createElement('button');
-                pinBtn.id = 'pin-panel-btn';
-                pinBtn.style.cssText = `
-                    background: none;
-                    border: none;
-                    color: #fff;
-                    padding: 8px 12px;
-                    width: 100%;
-                    text-align: left;
-                    cursor: pointer;
-                    font-size: 12px;
-                    display: flex;
-                        align-items: center;
-                    gap: 8px;
-                    transition: background 0.2s ease;
-                `;
-                pinBtn.innerHTML = '📌 Pin Panel';
-                pinBtn.title = 'Pin panel to stay on top';
-                
-                // Add hover effects
-                pinBtn.addEventListener('mouseenter', () => {
-                    pinBtn.style.background = '#555';
-                });
-                pinBtn.addEventListener('mouseleave', () => {
-                    pinBtn.style.background = 'none';
-                });
-                
-                pinBtn.addEventListener('click', () => {
-                    this.togglePinPanel();
-                    dropdownContent.style.display = 'none';
-                });
-                
-                dropdownContent.appendChild(pinBtn);
-                
-                // Close button (X button)
-                const closeBtn = document.createElement('button');
-                closeBtn.style.cssText = `
-                    background: none;
-                    border: none;
-                    color: #f44336;
-                    cursor: pointer;
-                    font-size: 14px;
-                    padding: 2px;
-                    border-radius: 4px;
-                    transition: background 0.2s;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    width: 16px;
-                    height: 16px;
-                `;
-                closeBtn.innerHTML = '×';
-                closeBtn.title = 'Close panel';
-                
-                closeBtn.addEventListener('click', () => {
-                    this.hideTodoPanel();
-                });
-                
-                headerControls.appendChild(dropdownBtn);
-                headerControls.appendChild(closeBtn);
-                
-                // Create left container for dropdown and title
-                const leftContainer = document.createElement('div');
-                leftContainer.style.cssText = `
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    position: relative;
-                `;
-                leftContainer.appendChild(dropdownBtn);
-                leftContainer.appendChild(title);
-                
-                // Add dropdown content to leftContainer for proper positioning
-                leftContainer.appendChild(dropdownContent);
-                
-                header.appendChild(leftContainer);
-                header.appendChild(closeBtn);
 
-                // Create content area
                 const content = document.createElement('div');
                 content.id = 'todo-content';
                 content.style.cssText = `
                     flex: 1;
-                    padding: 16px;
+                    padding: 12px;
                     overflow-y: auto;
                     display: flex;
                     flex-direction: column;
-                    gap: 8px;
+                    gap: 12px;
                 `;
 
-                // Assemble panel first
                 panel.appendChild(header);
                 panel.appendChild(content);
                 
-                // Add to sidebar content area BEFORE trying to populate content
                 const contentArea = document.getElementById('sidekick-content');
                 if (contentArea) {
                     contentArea.appendChild(panel);
@@ -397,46 +278,411 @@
                     console.error('❌ Content area not found');
                     return;
                 }
+
+                this.addPanelEventListeners(panel);
+                this.addImprovedDragging(panel, header);
+                this.addImprovedResizeFunctionality(panel);
                 
-                // Debug: Check storage state before deciding what to show
-                this.debugStorageState();
-                
-                // Force reload state to ensure we have the latest data
-                console.log('🔄 Force reloading state before display...');
-                this.loadState();
-                
-                // Now check if we have existing todo items and show them, otherwise show empty state
-                console.log(`📋 Checking todo items in showTodoPanel: ${this.todoItems.length} items found`);
-                if (this.todoItems && this.todoItems.length > 0) {
-                    console.log(`📋 Found ${this.todoItems.length} existing todo items, restoring content...`);
-                    this.refreshDisplay();
-                } else {
-                    console.log('📋 No existing todo items, showing empty state');
-                    this.showEmptyState(content);
-                }
-                
-                // Update pin button text based on saved state
-                if (this.isPinned) {
-                    pinBtn.innerHTML = '📌 Unpin Panel';
-                    pinBtn.title = 'Unpin panel';
-                }
-                
-                // Add event listeners
-                this.addPanelEventListeners(panel, dropdownBtn, dropdownContent);
-                
-                // Add dragging functionality
-                this.addDragging(panel, header);
-                
-                // Add resize functionality
-                this.addResizeFunctionality(panel);
-                
-                // Mark as active
                 this.isActive = true;
-                
-                // Save panel state
+                this.refreshModernDisplay();
                 this.core.saveState('todo_panel_open', true);
                 
-                console.log('✅ To-Do List panel displayed');
+                console.log('✅ Modern To-Do List panel displayed');
+            },
+
+            refreshModernDisplay() {
+                const content = document.getElementById('todo-content');
+                if (!content) return;
+
+                content.innerHTML = '';
+
+                if (this.todoItems.length === 0) {
+                    content.innerHTML = `
+                        <div style="color: #888; font-style: italic; text-align: center; padding: 40px 20px; font-size: 14px;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
+                            <div style="margin-bottom: 8px;">No tasks yet!</div>
+                            <div style="font-size: 12px;">Click "Add" to create your first task.</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Group items by category
+                const categories = { daily: [], weekly: [], custom: [] };
+                this.todoItems.forEach(item => {
+                    const itemType = this.todoItemTypes[item.type];
+                    const category = itemType ? itemType.category : 'custom';
+                    categories[category].push(item);
+                });
+
+                // Render each category
+                Object.entries(categories).forEach(([categoryName, items]) => {
+                    if (items.length > 0) {
+                        this.renderCategory(content, categoryName, items);
+                    }
+                });
+            },
+
+            renderCategory(container, categoryName, items) {
+                const categoryHeader = document.createElement('div');
+                categoryHeader.style.cssText = `
+                    font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase;
+                    margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #333;
+                `;
+                
+                const categoryIcons = {
+                    daily: '🌅 Daily Tasks',
+                    weekly: '📅 Weekly Tasks', 
+                    custom: '📝 Custom Tasks'
+                };
+                
+                categoryHeader.textContent = categoryIcons[categoryName] || categoryName;
+                container.appendChild(categoryHeader);
+
+                items.forEach((item) => {
+                    const itemElement = this.createModernTodoItemElement(item);
+                    container.appendChild(itemElement);
+                });
+            },
+
+            createModernTodoItemElement(item) {
+                const element = document.createElement('div');
+                element.className = 'modern-todo-item';
+                element.dataset.itemId = item.id;
+                element.style.cssText = `
+                    background: ${item.completed ? '#1a4a1a' : '#333'};
+                    border: 1px solid ${item.completed ? '#4CAF50' : '#555'};
+                    border-radius: 6px; padding: 10px; display: flex; align-items: center;
+                    gap: 10px; margin-bottom: 6px; transition: all 0.2s ease;
+                `;
+
+                element.innerHTML = `
+                    <input type="checkbox" ${item.completed ? 'checked' : ''} style="
+                        width: 16px; height: 16px; accent-color: ${item.color || '#4CAF50'}; cursor: pointer;
+                    ">
+                    <div style="flex: 1; display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 16px; opacity: ${item.completed ? '0.6' : '1'};">${item.icon}</span>
+                        <div style="flex: 1;">
+                            <div style="
+                                color: ${item.completed ? '#888' : '#fff'}; font-weight: 500; font-size: 13px;
+                                text-decoration: ${item.completed ? 'line-through' : 'none'};
+                            ">${item.isCustom ? `<input type="text" value="${item.customText || item.name}" style="
+                                background: transparent; border: none; color: ${item.completed ? '#888' : '#fff'};
+                                font-weight: 500; font-size: 13px; outline: none; padding: 0; width: 100%;
+                            ">` : item.name}</div>
+                            <div style="color: #aaa; font-size: 11px; opacity: ${item.completed ? '0.6' : '1'};">
+                                ${item.description}
+                            </div>
+                        </div>
+                    </div>
+                    <button class="delete-btn" style="
+                        background: none; border: none; color: #f44336; cursor: pointer;
+                        font-size: 14px; padding: 4px; border-radius: 4px; opacity: 0.7; transition: all 0.2s;
+                    ">×</button>
+                `;
+
+                // Add event listeners
+                const checkbox = element.querySelector('input[type="checkbox"]');
+                checkbox.addEventListener('change', (e) => {
+                    item.completed = e.target.checked;
+                    this.saveState();
+                    this.refreshModernDisplay();
+                });
+
+                if (item.isCustom) {
+                    const nameInput = element.querySelector('input[type="text"]');
+                    nameInput.addEventListener('change', (e) => {
+                        item.customText = e.target.value;
+                        item.name = e.target.value;
+                        this.saveState();
+                    });
+                }
+
+                const deleteBtn = element.querySelector('.delete-btn');
+                deleteBtn.addEventListener('click', () => {
+                    this.deleteTodoItem(item.id);
+                });
+
+                deleteBtn.addEventListener('mouseenter', () => {
+                    deleteBtn.style.opacity = '1';
+                    deleteBtn.style.background = 'rgba(244, 67, 54, 0.1)';
+                });
+
+                deleteBtn.addEventListener('mouseleave', () => {
+                    deleteBtn.style.opacity = '0.7';
+                    deleteBtn.style.background = 'none';
+                });
+
+                return element;
+            },
+
+            showTaskPicker() {
+                const existingPicker = document.querySelector('.task-picker');
+                if (existingPicker) existingPicker.remove();
+
+                const picker = document.createElement('div');
+                picker.className = 'task-picker';
+                picker.style.cssText = `
+                    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                    background: #2a2a2a; border: 1px solid #555; border-radius: 8px; padding: 20px;
+                    z-index: 999999; min-width: 300px; max-height: 400px; overflow-y: auto;
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+                `;
+
+                picker.innerHTML = '<h3 style="margin: 0 0 16px 0; color: #fff; font-size: 16px;">Add New Task</h3>';
+
+                // Add task buttons grouped by category
+                const categories = { daily: [], weekly: [], custom: [] };
+                Object.entries(this.todoItemTypes).forEach(([key, itemType]) => {
+                    categories[itemType.category].push({ key, itemType });
+                });
+
+                Object.entries(categories).forEach(([categoryName, items]) => {
+                    if (items.length === 0) return;
+
+                    const categoryHeader = document.createElement('div');
+                    categoryHeader.style.cssText = `
+                        font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase;
+                        margin: 12px 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid #333;
+                    `;
+                    const categoryLabels = {
+                        daily: '🌅 Daily Tasks',
+                        weekly: '📅 Weekly Tasks',
+                        custom: '📝 Custom Tasks'
+                    };
+                    categoryHeader.textContent = categoryLabels[categoryName];
+                    picker.appendChild(categoryHeader);
+
+                    items.forEach(({ key, itemType }) => {
+                        const taskBtn = document.createElement('button');
+                        taskBtn.style.cssText = `
+                            background: none; border: 1px solid #555; color: #fff; padding: 10px;
+                            width: 100%; text-align: left; cursor: pointer; font-size: 13px;
+                            display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
+                            border-radius: 4px; transition: all 0.2s;
+                        `;
+                        
+                        taskBtn.innerHTML = `
+                            <span style="font-size: 16px;">${itemType.icon}</span>
+                            <div>
+                                <div style="font-weight: 500;">${itemType.name}</div>
+                                <div style="font-size: 11px; color: #aaa;">${itemType.description}</div>
+                            </div>
+                        `;
+
+                        taskBtn.addEventListener('mouseenter', () => {
+                            taskBtn.style.background = '#444';
+                            taskBtn.style.borderColor = itemType.color;
+                        });
+
+                        taskBtn.addEventListener('mouseleave', () => {
+                            taskBtn.style.background = 'none';
+                            taskBtn.style.borderColor = '#555';
+                        });
+
+                        taskBtn.addEventListener('click', () => {
+                            if (key === 'custom') {
+                                this.showCustomTaskDialog();
+                            } else {
+                                this.addTodoItem(key, itemType);
+                            }
+                            picker.remove();
+                        });
+
+                        picker.appendChild(taskBtn);
+                    });
+                });
+
+                document.body.appendChild(picker);
+
+                setTimeout(() => {
+                    document.addEventListener('click', function closePicker(e) {
+                        if (!picker.contains(e.target)) {
+                            picker.remove();
+                            document.removeEventListener('click', closePicker);
+                        }
+                    });
+                }, 100);
+            },
+
+            showCustomTaskDialog() {
+                const dialog = document.createElement('div');
+                dialog.style.cssText = `
+                    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                    background: #2a2a2a; border: 1px solid #555; border-radius: 8px; padding: 20px;
+                    z-index: 999999; min-width: 300px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+                `;
+
+                dialog.innerHTML = `
+                    <h3 style="margin: 0 0 16px 0; color: #fff;">📝 Custom Task</h3>
+                    <div style="margin-bottom: 12px;">
+                        <label style="display: block; margin-bottom: 4px; color: #ccc; font-size: 12px;">Task Name:</label>
+                        <input type="text" id="custom-task-name" placeholder="Enter task name..." 
+                               style="width: 100%; padding: 8px; border: 1px solid #555; border-radius: 4px; background: #333; color: white;">
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="create-custom-task" style="flex: 1; padding: 10px; background: #27AE60; border: none; border-radius: 4px; color: white; cursor: pointer;">
+                            Create Task
+                        </button>
+                        <button id="cancel-custom-task" style="flex: 1; padding: 10px; background: #666; border: none; border-radius: 4px; color: white; cursor: pointer;">
+                            Cancel
+                        </button>
+                    </div>
+                `;
+
+                document.body.appendChild(dialog);
+
+                const nameInput = dialog.querySelector('#custom-task-name');
+                const createBtn = dialog.querySelector('#create-custom-task');
+                const cancelBtn = dialog.querySelector('#cancel-custom-task');
+
+                nameInput.focus();
+
+                createBtn.addEventListener('click', () => {
+                    const taskName = nameInput.value.trim();
+                    if (taskName) {
+                        this.addCustomTodoItem(taskName);
+                        dialog.remove();
+                    }
+                });
+
+                cancelBtn.addEventListener('click', () => {
+                    dialog.remove();
+                });
+
+                nameInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        createBtn.click();
+                    }
+                });
+            },
+
+            addCustomTodoItem(taskName) {
+                const todoItem = {
+                    id: Date.now() + Math.random(),
+                    type: 'custom',
+                    name: taskName,
+                    icon: '📝',
+                    color: '#9C27B0',
+                    description: 'Custom task',
+                    completed: false,
+                    isCustom: true,
+                    customText: taskName,
+                    createdAt: Date.now()
+                };
+
+                this.todoItems.push(todoItem);
+                this.saveState();
+                this.refreshModernDisplay();
+                
+                if (this.core && this.core.NotificationSystem) {
+                    this.core.NotificationSystem.show('To-Do List', `Added custom task: ${taskName}`, 'success', 2000);
+                }
+            },
+
+            deleteTodoItem(itemId) {
+                if (confirm('Delete this task?')) {
+                    this.todoItems = this.todoItems.filter(t => t.id !== itemId);
+                    this.saveState();
+                    this.refreshModernDisplay();
+                    
+                    if (this.core && this.core.NotificationSystem) {
+                        this.core.NotificationSystem.show('To-Do List', 'Task deleted', 'info');
+                    }
+                }
+            },
+
+            addImprovedDragging(panel, header) {
+                let isDragging = false;
+                let dragOffset = { x: 0, y: 0 };
+                let startPosition = { x: 0, y: 0 };
+
+                header.addEventListener('mousedown', (e) => {
+                    if (this.isPinned) return;
+                    
+                    isDragging = true;
+                    const rect = panel.getBoundingClientRect();
+                    const sidebar = document.getElementById('sidekick-sidebar');
+                    const sidebarRect = sidebar ? sidebar.getBoundingClientRect() : { left: 0, top: 0 };
+                    
+                    dragOffset.x = e.clientX - rect.left;
+                    dragOffset.y = e.clientY - rect.top;
+                    
+                    startPosition.x = rect.left - sidebarRect.left;
+                    startPosition.y = rect.top - sidebarRect.top;
+                    
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging || this.isPinned) return;
+                    
+                    const sidebar = document.getElementById('sidekick-sidebar');
+                    if (!sidebar) return;
+                    
+                    const sidebarRect = sidebar.getBoundingClientRect();
+                    
+                    let newX = e.clientX - sidebarRect.left - dragOffset.x;
+                    let newY = e.clientY - sidebarRect.top - dragOffset.y;
+                    
+                    const maxX = Math.max(0, sidebar.offsetWidth - panel.offsetWidth);
+                    const maxY = Math.max(0, sidebar.offsetHeight - panel.offsetHeight);
+                    
+                    newX = Math.max(0, Math.min(newX, maxX));
+                    newY = Math.max(0, Math.min(newY, maxY));
+                    
+                    panel.style.left = newX + 'px';
+                    panel.style.top = newY + 'px';
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        const currentX = parseInt(panel.style.left) || 0;
+                        const currentY = parseInt(panel.style.top) || 0;
+                        
+                        if (Math.abs(currentX - startPosition.x) > 1 || Math.abs(currentY - startPosition.y) > 1) {
+                            this.savePanelPosition(panel);
+                        }
+                    }
+                });
+            },
+
+            addImprovedResizeFunctionality(panel) {
+                if (this.isPinned) return;
+                
+                let isResizing = false;
+                let startSize = { width: 0, height: 0 };
+                let resizeTimeout = null;
+
+                panel.addEventListener('mousedown', (e) => {
+                    const rect = panel.getBoundingClientRect();
+                    if (e.clientX > rect.right - 15 && e.clientY > rect.bottom - 15) {
+                        isResizing = true;
+                        startSize.width = panel.offsetWidth;
+                        startSize.height = panel.offsetHeight;
+                        e.preventDefault();
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isResizing) {
+                        isResizing = false;
+                        
+                        const currentWidth = panel.offsetWidth;
+                        const currentHeight = panel.offsetHeight;
+                        
+                        if (Math.abs(currentWidth - startSize.width) > 10 || 
+                            Math.abs(currentHeight - startSize.height) > 10) {
+                            
+                            if (resizeTimeout) clearTimeout(resizeTimeout);
+                            resizeTimeout = setTimeout(() => {
+                                this.savePanelSize(panel);
+                            }, 200);
+                        }
+                    }
+                });
             },
 
             showEmptyState(content) {
@@ -455,8 +701,16 @@
             },
 
             addTodoItem(type, itemType) {
-                console.log('📋 Adding todo item:', type, itemType.name);
+                console.log('📋 Adding modern todo item:', type, itemType.name);
                 
+                // Check for duplicates (except custom tasks)
+                if (type !== 'custom' && this.todoItems.some(t => t.type === type)) {
+                    if (this.core && this.core.NotificationSystem) {
+                        this.core.NotificationSystem.show('To-Do List', `${itemType.name} already exists`, 'info');
+                    }
+                    return;
+                }
+
                 const todoItem = {
                     id: Date.now() + Math.random(),
                     type: type,
@@ -474,49 +728,23 @@
                 };
 
                 this.todoItems.push(todoItem);
-                console.log(`📋 Todo items array now has ${this.todoItems.length} items:`, this.todoItems);
+                console.log(`📋 Modern todo items array now has ${this.todoItems.length} items:`, this.todoItems);
                 
                 this.saveState();
-                this.refreshDisplay();
+                this.refreshModernDisplay();
                 
                 if (this.core && this.core.NotificationSystem) {
-                    this.core.NotificationSystem.show('To-Do List', `Added ${itemType.name}`, 'info', 2000);
+                    this.core.NotificationSystem.show('To-Do List', `Added ${itemType.name}`, 'success', 2000);
                 }
             },
 
             refreshDisplay() {
-                console.log('🔄 refreshDisplay() called');
+                console.log('🔄 refreshDisplay() called with modern system');
                 console.log('📋 todoItems length:', this.todoItems.length);
                 console.log('📋 todoItems:', this.todoItems);
                 
-                // Wait a moment for DOM to be ready
-                setTimeout(() => {
-                    const content = document.getElementById('todo-content');
-                    console.log('🔍 Found content element:', content);
-                    
-                    if (!content) {
-                        console.error('❌ No #todo-content element found!');
-                        return;
-                    }
-                    
-                    if (this.todoItems.length === 0) {
-                        console.log('📋 No items to display, showing empty state');
-                        this.showEmptyState(content);
-                        return;
-                    }
-                    
-                    console.log('📋 Clearing content and adding items...');
-                    content.innerHTML = '';
-                    
-                    this.todoItems.forEach((item, index) => {
-                        console.log(`📋 Creating element for item ${index}:`, item.name);
-                        const itemElement = this.createTodoItemElement(item, index);
-                        content.appendChild(itemElement);
-                    });
-                    
-                    console.log(`✅ Refreshed display with ${this.todoItems.length} todo items`);
-                    console.log('🔍 Content element now contains:', content.children.length, 'children');
-                }, 50); // Small delay to ensure DOM is ready
+                // Use the modern display refresh
+                this.refreshModernDisplay();
             },
 
             createTodoItemElement(item, index) {
@@ -750,24 +978,33 @@
                 }
             },
 
-            addPanelEventListeners(panel, dropdownBtn, dropdownContent) {
-                // Dropdown functionality
-                dropdownBtn.addEventListener('click', (e) => {
+            addPanelEventListeners(panel) {
+                const addBtn = panel.querySelector('.add-task-btn');
+                const closeBtn = panel.querySelector('.close-btn');
+
+                addBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    console.log('📋 Dropdown button clicked, current display:', dropdownContent.style.display);
-                    
-                    const newDisplay = dropdownContent.style.display === 'block' ? 'none' : 'block';
-                    dropdownContent.style.display = newDisplay;
-                    console.log('📋 Dropdown display set to:', newDisplay);
+                    this.showTaskPicker();
                 });
 
-                // Close dropdown when clicking outside
-                document.addEventListener('click', (e) => {
-                    // Don't close if clicking on the dropdown button or content
-                    if (e.target === dropdownBtn || dropdownContent.contains(e.target)) {
-                        return;
-                    }
-                    dropdownContent.style.display = 'none';
+                addBtn.addEventListener('mouseenter', () => {
+                    addBtn.style.background = '#2ECC71';
+                });
+
+                addBtn.addEventListener('mouseleave', () => {
+                    addBtn.style.background = '#27AE60';
+                });
+
+                closeBtn.addEventListener('click', () => {
+                    this.hideTodoPanel();
+                });
+
+                closeBtn.addEventListener('mouseenter', () => {
+                    closeBtn.style.background = 'rgba(244, 67, 54, 0.2)';
+                });
+
+                closeBtn.addEventListener('mouseleave', () => {
+                    closeBtn.style.background = 'none';
                 });
             },
 
@@ -1045,20 +1282,16 @@
             },
 
             resetDailyTasks() {
-                // Only reset non-custom tasks
+                // Reset daily and weekly tasks (but not custom tasks)
                 this.todoItems.forEach(item => {
-                    if (!item.isCustom) {
-                        if (item.isMultiCompletion) {
-                            item.completedCount = 0;
-                            item.completed = false;
-                        } else {
-                            item.completed = false;
-                        }
+                    const itemType = this.todoItemTypes[item.type];
+                    if (itemType && (itemType.category === 'daily' || itemType.category === 'weekly')) {
+                        item.completed = false;
+                        item.completedCount = 0;
                     }
                 });
-                this.saveTodoItems();
-                this.updateDisplay();
-                console.log('🔄 Daily tasks reset');
+                this.saveState();
+                console.log('🔄 Daily tasks reset in modern system');
             },
 
             restorePanelState() {

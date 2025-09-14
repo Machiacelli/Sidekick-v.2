@@ -366,21 +366,19 @@
                 // Use global notepad pinned state
                 let isPinned = notepad.pinned || false;
                 
-                // Save position and size function - clamp and save to global notepad object
+                // Enhanced save layout - prevents drift and unwanted resizing
                 const saveLayout = () => {
-                    // Prevent saving during programmatic changes
-                    if (isProgrammaticChange) {
+                    if (this._isProgrammaticChange) {
                         console.log('📝 Skipping save during programmatic change');
                         return;
                     }
                     
-                    // Clamp layout before saving to ensure no values exceed the sidebar bounds
                     const sidebar = document.getElementById('sidekick-sidebar');
                     const sidebarWidth = sidebar ? Math.max(200, sidebar.clientWidth) : 500;
                     const sidebarHeight = sidebar ? Math.max(200, sidebar.clientHeight) : 600;
 
-                    const rawX = notepadElement.offsetLeft;
-                    const rawY = notepadElement.offsetTop;
+                    const rawX = parseInt(notepadElement.style.left) || 0;
+                    const rawY = parseInt(notepadElement.style.top) || 0;
                     const rawWidth = notepadElement.offsetWidth;
                     const rawHeight = notepadElement.offsetHeight;
 
@@ -396,32 +394,32 @@
                     const x = Math.min(Math.max(0, rawX), maxX);
                     const y = Math.min(Math.max(0, rawY), maxY);
 
-                    // Check if values actually changed before saving
-                    if (notepad.x === x && notepad.y === y && 
-                        notepad.width === width && notepad.height === height && 
+                    // Only save if values actually changed significantly
+                    if (Math.abs(notepad.x - x) < 2 && Math.abs(notepad.y - y) < 2 && 
+                        Math.abs(notepad.width - width) < 10 && Math.abs(notepad.height - height) < 10 && 
                         notepad.pinned === isPinned) {
-                        console.log('📝 No layout changes detected, skipping save');
+                        console.log('📝 No significant layout changes detected, skipping save');
                         return;
                     }
 
-                    // Update the global notepad object with clamped values
                     notepad.x = x;
                     notepad.y = y;
                     notepad.width = width;
                     notepad.height = height;
                     notepad.pinned = isPinned;
 
-                    // Apply clamped styles to the element as well (visual correction)
+                    this._isProgrammaticChange = true;
                     notepadElement.style.left = x + 'px';
                     notepadElement.style.top = y + 'px';
                     notepadElement.style.width = width + 'px';
                     notepadElement.style.height = height + 'px';
+                    
+                    setTimeout(() => {
+                        this._isProgrammaticChange = false;
+                    }, 100);
 
-                    // Save all notepads globally
                     this.saveNotepads();
-                    console.log('📝 Saved global layout for notepad ' + notepad.id + ':', {
-                        x: notepad.x, y: notepad.y, width: notepad.width, height: notepad.height, pinned: notepad.pinned
-                    });
+                    console.log('📝 Saved improved layout for notepad ' + notepad.id);
                 };
                 
                 // Add enhanced styling and functionality
@@ -501,71 +499,81 @@
                     });
                 }
                 
-                // Dragging functionality (only if not pinned)
+                // IMPROVED DRAGGING - prevents drift
                 if (header) {
                     let isDragging = false;
                     let dragOffset = { x: 0, y: 0 };
+                    let startPosition = { x: 0, y: 0 };
                     
                     header.addEventListener('mousedown', (e) => {
                         if (isPinned) return;
+                        
                         isDragging = true;
                         const rect = notepadElement.getBoundingClientRect();
+                        const sidebar = document.getElementById('sidekick-sidebar');
+                        const sidebarRect = sidebar ? sidebar.getBoundingClientRect() : { left: 0, top: 0 };
+                        
                         dragOffset.x = e.clientX - rect.left;
                         dragOffset.y = e.clientY - rect.top;
+                        
+                        startPosition.x = rect.left - sidebarRect.left;
+                        startPosition.y = rect.top - sidebarRect.top;
+                        
                         e.preventDefault();
+                        e.stopPropagation();
                     });
                     
                     document.addEventListener('mousemove', (e) => {
                         if (!isDragging || isPinned) return;
                         
                         const sidebar = document.getElementById('sidekick-sidebar');
+                        if (!sidebar) return;
+                        
                         const sidebarRect = sidebar.getBoundingClientRect();
                         
                         let newX = e.clientX - sidebarRect.left - dragOffset.x;
                         let newY = e.clientY - sidebarRect.top - dragOffset.y;
                         
-                        // Keep within sidebar bounds
-                        newX = Math.max(0, Math.min(newX, sidebar.offsetWidth - notepadElement.offsetWidth));
-                        newY = Math.max(0, Math.min(newY, sidebar.offsetHeight - notepadElement.offsetHeight));
+                        const maxX = Math.max(0, sidebar.offsetWidth - notepadElement.offsetWidth);
+                        const maxY = Math.max(0, sidebar.offsetHeight - notepadElement.offsetHeight);
+                        
+                        newX = Math.max(0, Math.min(newX, maxX));
+                        newY = Math.max(0, Math.min(newY, maxY));
                         
                         notepadElement.style.left = newX + 'px';
                         notepadElement.style.top = newY + 'px';
                     });
                     
-                                    document.addEventListener('mouseup', () => {
-                    if (isDragging) {
-                        isDragging = false;
-                        // Only save if position actually changed
-                        const currentX = notepadElement.offsetLeft;
-                        const currentY = notepadElement.offsetTop;
-                        
-                        if (Math.abs(currentX - notepad.x) > 2 || Math.abs(currentY - notepad.y) > 2) {
-                            console.log('📝 Position changed during drag, saving layout...');
-                            saveLayout.call(this);
-                        } else {
-                            console.log('📝 Position change too small, not saving');
+                    document.addEventListener('mouseup', () => {
+                        if (isDragging) {
+                            isDragging = false;
+                            
+                            const currentX = parseInt(notepadElement.style.left) || 0;
+                            const currentY = parseInt(notepadElement.style.top) || 0;
+                            
+                            if (Math.abs(currentX - startPosition.x) > 3 || Math.abs(currentY - startPosition.y) > 3) {
+                                console.log('📝 Position changed during drag, saving layout...');
+                                saveLayout.call(this);
+                            } else {
+                                console.log('📝 Position change too small (likely drift), not saving');
+                            }
                         }
-                    }
-                });
+                    });
                 }
                 
-                // Only save notepad size on user-driven resize (mouseup after resizing)
+                // IMPROVED RESIZING - only save when user actually resizes significantly
                 let isUserResizing = false;
-                let initialSize = { width: 0, height: 0 };
+                let startSize = { width: 0, height: 0 };
                 let resizeTimeout = null;
                 let lastSavedSize = { width: notepad.width || 280, height: notepad.height || 150 };
                 
                 notepadElement.addEventListener('mousedown', (e) => {
-                    // Check if the mouse is near the bottom-right corner (resize handle)
                     const rect = notepadElement.getBoundingClientRect();
-                    if (
-                        e.clientX > rect.right - 20 &&
-                        e.clientY > rect.bottom - 20
-                    ) {
+                    if (e.clientX > rect.right - 20 && e.clientY > rect.bottom - 20) {
                         isUserResizing = true;
-                        initialSize.width = notepadElement.offsetWidth;
-                        initialSize.height = notepadElement.offsetHeight;
-                        console.log('📝 User started resizing notepad:', initialSize);
+                        startSize.width = notepadElement.offsetWidth;
+                        startSize.height = notepadElement.offsetHeight;
+                        console.log('📝 User started resizing notepad:', startSize);
                     }
                 });
                 
@@ -573,52 +581,25 @@
                     if (isUserResizing) {
                         isUserResizing = false;
                         
-                        // Clear any existing timeout
                         if (resizeTimeout) {
                             clearTimeout(resizeTimeout);
                         }
                         
-                        // Only save if size actually changed significantly from last saved size
                         const currentWidth = notepadElement.offsetWidth;
                         const currentHeight = notepadElement.offsetHeight;
                         
                         const widthDiff = Math.abs(currentWidth - lastSavedSize.width);
                         const heightDiff = Math.abs(currentHeight - lastSavedSize.height);
                         
-                        if (widthDiff > 10 || heightDiff > 10) {
-                            console.log('📝 Size changed significantly from last saved, saving layout...', {
-                                widthDiff: widthDiff,
-                                heightDiff: heightDiff,
-                                current: { width: currentWidth, height: currentHeight },
-                                lastSaved: lastSavedSize
-                            });
+                        if (widthDiff > 15 || heightDiff > 15) {
+                            console.log('📝 Size changed significantly, saving layout...');
+                            lastSavedSize = { width: currentWidth, height: currentHeight };
                             
-                            // Clamp size before saving
-                            const sidebar = document.getElementById('sidekick-sidebar');
-                            const sidebarWidth = sidebar ? Math.max(200, sidebar.clientWidth) : 500;
-                            const sidebarHeight = sidebar ? Math.max(200, sidebar.clientHeight) : 600;
-                            const minWidth = 150, minHeight = 100;
-                            const maxWidth = Math.max(minWidth, sidebarWidth - 16);
-                            const maxHeight = Math.max(minHeight, sidebarHeight - 80);
-                            
-                            const clampedWidth = Math.max(minWidth, Math.min(currentWidth, maxWidth));
-                            const clampedHeight = Math.max(minHeight, Math.min(currentHeight, maxHeight));
-                            
-                            notepadElement.style.width = clampedWidth + 'px';
-                            notepadElement.style.height = clampedHeight + 'px';
-                            
-                            // Update last saved size
-                            lastSavedSize = { width: clampedWidth, height: clampedHeight };
-                            
-                            // Use a small delay to ensure the resize is complete
                             resizeTimeout = setTimeout(() => {
                                 saveLayout.call(this);
-                            }, 150);
+                            }, 200);
                         } else {
-                            console.log('📝 Size change too small, not saving', {
-                                widthDiff: widthDiff,
-                                heightDiff: heightDiff
-                            });
+                            console.log('📝 Size change too small, not saving');
                         }
                     }
                 });

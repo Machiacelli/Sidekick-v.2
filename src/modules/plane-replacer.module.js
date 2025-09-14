@@ -29,16 +29,22 @@
             isActive: false,
             customPlaneImage: null,
             
-            // Configuration for custom plane images - targeting only the plane, not the background
+            // Enhanced configuration with directional support and seamless integration
             config: {
-                // Custom plane image - using your new imgur PNG link
-                customPlaneUrl: 'https://i.imgur.com/HF3F3Gw.png', // Your new imgur link
-                customPlaneUrlJpeg: 'https://i.imgur.com/dRixRIO.jpeg', // Keep original for reference
+                // Directional plane images from GitHub with proper transparency
+                customPlaneUrls: {
+                    fromTorn: 'https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/master/src/assets/PlaneReplacerFromTorn.png',
+                    toTorn: 'https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/master/src/assets/PlaneReplacerToTorn.png'
+                },
+                // Legacy support
+                customPlaneUrl: 'https://i.imgur.com/HF3F3Gw.png',
+                customPlaneUrlJpeg: 'https://i.imgur.com/dRixRIO.jpeg',
                 // Fallback small plane SVG (plane only, no background)
                 fallbackPlaneUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMTIwIDQwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0xMCAyMEwxMCAxNUwyNSAxMEw0NSA4TDY1IDhMODUgOEwxMDAgMTBMMTEwIDE1TDExNSAyMEwxMTAgMjVMMTAwIDMwTDg1IDMyTDY1IDMyTDQ1IDMyTDI1IDMwTDEwIDI1TDEwIDIwWiIgZmlsbD0iIzY2NjY2NiIgc3Ryb2tlPSIjMzMzMzMzIiBzdHJva2Utd2lkdGg9IjEiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSIyMCIgcj0iOCIgZmlsbD0iIzk5OTk5OSIgY2xhc3M9InByb3BlbGxlciIvPjwvc3ZnPg==',
-                // Enable spinning propeller animation
+                // Enable advanced features
+                enableDirectionalDetection: true,
+                enableSeamlessIntegration: true,
                 enableSpinningPropeller: true,
-                // Enable white background removal for JPEG images
                 removeWhiteBackground: true,
                 // Plane positioning within the 778x300 frame (approximate center)
                 planePosition: {
@@ -139,15 +145,223 @@
                     return;
                 }
 
-                console.log(`🎯 Found ${planeImages.length} plane background image(s) to overlay`);
+                console.log(`🎯 Found ${planeImages.length} plane background image(s) to enhance with directional detection`);
 
                 planeImages.forEach((img, index) => {
                     // Skip if already processed
                     if (img.dataset.sidekickProcessed === 'true') {
                         return;
                     }
-                    this.addPlaneOverlay(img, index);
+                    
+                    // Enhanced version with directional detection and seamless integration
+                    if (this.config.enableDirectionalDetection) {
+                        this.addDirectionalPlaneOverlay(img, index);
+                    } else {
+                        this.addPlaneOverlay(img, index);
+                    }
                 });
+            },
+
+            // Enhanced method with directional detection and seamless integration
+            addDirectionalPlaneOverlay(backgroundImg, index) {
+                try {
+                    // Store original image info for debugging
+                    const originalSrc = backgroundImg.src;
+                    const originalAlt = backgroundImg.alt || '';
+                    
+                    console.log(`✈️ Adding directional plane overlay ${index + 1}:`, {
+                        src: originalSrc,
+                        alt: originalAlt,
+                        classes: backgroundImg.className
+                    });
+
+                    // Detect travel direction based on current page and context
+                    const isFromTorn = this.detectTravelDirection(originalSrc, originalAlt);
+                    
+                    // Mark the background image as processed
+                    backgroundImg.dataset.sidekickProcessed = 'true';
+
+                    // Create enhanced container with seamless integration
+                    const container = document.createElement('div');
+                    container.style.cssText = `
+                        position: relative;
+                        display: inline-block;
+                        width: ${backgroundImg.offsetWidth}px;
+                        height: ${backgroundImg.offsetHeight}px;
+                        ${this.config.enableSeamlessIntegration ? `
+                            background: transparent !important;
+                            border: none !important;
+                            border-radius: 0 !important;
+                            box-shadow: none !important;
+                            outline: none !important;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                            vertical-align: baseline !important;
+                        ` : ''}
+                    `;
+
+                    // Wrap the original background image
+                    backgroundImg.parentNode.insertBefore(container, backgroundImg);
+                    container.appendChild(backgroundImg);
+
+                    // Create our custom directional plane element
+                    const customPlane = document.createElement('img');
+                    customPlane.className = 'sidekick-directional-plane';
+                    customPlane.alt = isFromTorn ? 'Custom Sidekick Plane (From Torn)' : 'Custom Sidekick Plane (To Torn)';
+                    
+                    // Enhanced seamless styling to remove all borders and artifacts
+                    customPlane.style.cssText = `
+                        position: absolute;
+                        left: ${this.config.planePosition.left};
+                        top: ${this.config.planePosition.top};
+                        transform: ${this.config.planePosition.transform};
+                        width: ${this.config.planeSize.width};
+                        height: ${this.config.planeSize.height};
+                        z-index: 10;
+                        pointer-events: none;
+                        object-fit: contain;
+                        ${this.config.enableSeamlessIntegration ? `
+                            all: unset !important;
+                            position: absolute !important;
+                            display: block !important;
+                            background: transparent !important;
+                            border: none !important;
+                            border-radius: 0 !important;
+                            box-shadow: none !important;
+                            outline: none !important;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                            vertical-align: baseline !important;
+                            object-fit: contain !important;
+                            max-width: 100% !important;
+                            height: auto !important;
+                        ` : ''}
+                    `;
+                    
+                    // Remove any CSS classes that might add unwanted styling for seamless integration
+                    if (this.config.enableSeamlessIntegration) {
+                        customPlane.className = '';
+                        
+                        // Fix parent container to prevent line artifacts
+                        const originalParent = backgroundImg.parentNode;
+                        if (originalParent && originalParent.style) {
+                            originalParent.style.overflow = 'hidden';
+                            originalParent.style.lineHeight = '0';
+                            originalParent.style.fontSize = '0';
+                        }
+                    }
+
+                    // Use appropriate image based on travel direction
+                    if (isFromTorn) {
+                        // Traveling FROM Torn to another country
+                        customPlane.src = this.config.customPlaneUrls.fromTorn;
+                        console.log('✈️ Using PlaneReplacerFromTorn.png (leaving Torn)');
+                    } else {
+                        // Traveling TO Torn (returning home)
+                        customPlane.src = this.config.customPlaneUrls.toTorn;
+                        console.log('🏠 Using PlaneReplacerToTorn.png (returning to Torn)');
+                    }
+                    
+                    // Add error handling with fallback
+                    customPlane.onerror = () => {
+                        console.warn(`⚠️ Directional plane image failed to load, falling back to original system...`);
+                        customPlane.src = this.config.customPlaneUrl; // Fallback to legacy system
+                    };
+                    
+                    customPlane.onload = () => {
+                        console.log(`✅ Successfully loaded directional plane overlay ${index + 1}`);
+                        
+                        // Apply white background removal for enhanced seamless integration
+                        if (this.config.removeWhiteBackground || this.config.enableSeamlessIntegration) {
+                            // Enhanced filters for complete transparency
+                            const filters = [
+                                'contrast(2.5)',           // Very high contrast
+                                'saturate(2.0)',          // Boost colors significantly
+                                'brightness(0.7)',        // Darken to remove white
+                                'hue-rotate(10deg)',      // Slight hue adjustment
+                                'drop-shadow(0 3px 8px rgba(0,0,0,0.6))'  // Strong shadow
+                            ];
+                            
+                            customPlane.style.filter = filters.join(' ');
+                            customPlane.style.mixBlendMode = 'multiply';  // Strong white removal
+                            customPlane.style.backgroundColor = 'transparent';
+                            customPlane.style.isolation = 'isolate';
+                            
+                            console.log('🎨 Applied enhanced seamless integration filters');
+                        }
+                        
+                        // Add spinning propeller animation if enabled
+                        if (this.config.enableSpinningPropeller) {
+                            this.addSpinningPropeller(customPlane);
+                        }
+                    };
+
+                    // Add enhanced data attributes for tracking
+                    customPlane.dataset.sidekickReplaced = 'true';
+                    customPlane.dataset.originalSrc = originalSrc;
+                    customPlane.dataset.overlayIndex = index;
+                    customPlane.dataset.travelDirection = isFromTorn ? 'fromTorn' : 'toTorn';
+
+                    // Add the custom plane to the container
+                    container.appendChild(customPlane);
+                    
+                    console.log(`✅ Successfully added directional plane overlay ${index + 1} (${isFromTorn ? 'FROM' : 'TO'} Torn)`);
+                    
+                    // Store reference to custom image
+                    this.customPlaneImage = customPlane;
+                    
+                } catch (error) {
+                    console.error(`❌ Failed to add directional plane overlay ${index + 1}:`, error);
+                    // Fallback to original overlay system
+                    this.addPlaneOverlay(backgroundImg, index);
+                }
+            },
+
+            // Smart detection of travel direction
+            detectTravelDirection(originalSrc, originalAlt) {
+                const currentUrl = window.location.href;
+                const pageContent = document.body.innerText || '';
+                let isFromTorn = true; // Default to leaving Torn
+                
+                console.log('🔍 Detecting travel direction...');
+                
+                // Smart detection of travel direction based on multiple indicators
+                if (currentUrl.includes('travel.php') || currentUrl.includes('city.php')) {
+                    // Check for specific text indicators of returning to Torn
+                    const returnIndicators = [
+                        'Return to Torn',
+                        'Back to Torn', 
+                        'Torn City',
+                        'return',
+                        'back',
+                        'home'
+                    ];
+                    
+                    const hasReturnIndicator = returnIndicators.some(indicator => 
+                        pageContent.toLowerCase().includes(indicator.toLowerCase()) ||
+                        originalAlt.toLowerCase().includes(indicator.toLowerCase()) ||
+                        originalSrc.toLowerCase().includes(indicator.toLowerCase())
+                    );
+                    
+                    if (hasReturnIndicator) {
+                        isFromTorn = false; // Returning to Torn
+                        console.log('🏠 Detected: Returning TO Torn');
+                    } else {
+                        console.log('✈️ Detected: Traveling FROM Torn');
+                    }
+                }
+                
+                // Additional detection based on page elements
+                const returnLinks = document.querySelectorAll('a[href*="travel"], a[href*="city"]');
+                returnLinks.forEach(link => {
+                    const linkText = link.textContent.toLowerCase();
+                    if (linkText.includes('torn') || linkText.includes('home')) {
+                        isFromTorn = false;
+                    }
+                });
+
+                console.log(`🧭 Travel direction determined: ${isFromTorn ? 'FROM Torn' : 'TO Torn'}`);
+                return isFromTorn;
             },
 
             addPlaneOverlay(backgroundImg, index) {
@@ -481,6 +695,23 @@
             makePlaneSmaller() {
                 console.log('📏 Making plane smaller...');
                 this.adjustPlaneSize('150px', '60px');
+            },
+
+            // Enhanced compatibility method for inline enhancements
+            replaceSinglePlaneImage(img, index) {
+                console.log(`✈️ Enhanced replaceSinglePlaneImage called for image ${index + 1}`);
+                
+                // Skip if already processed
+                if (img.dataset.sidekickProcessed === 'true') {
+                    return;
+                }
+                
+                // Use the enhanced directional detection system
+                if (this.config.enableDirectionalDetection) {
+                    this.addDirectionalPlaneOverlay(img, index);
+                } else {
+                    this.addPlaneOverlay(img, index);
+                }
             },
 
             // Method to get original plane image dimensions for reference
