@@ -379,9 +379,31 @@
 
                 if (this.config.enableApiChecks && this.config.apiKey) {
                     try {
-                        const url = `https://api.torn.com/user/${randID}?selections=basic,personalstats&key=${this.config.apiKey}`;
-                        const response = await fetch(url);
-                        const user = await response.json();
+                        let user;
+                        
+                        // Use enhanced API system if available
+                        if (window.SidekickModules?.Api?.makeRequest) {
+                            console.log(`🔄 RandomTarget: Using enhanced API system for user ${randID}`);
+                            user = await window.SidekickModules.Api.makeRequest(`user/${randID}`, 'basic,personalstats');
+                        } else {
+                            // Fallback to direct fetch with V2 error handling
+                            console.log(`🔄 RandomTarget: Using direct fetch fallback for user ${randID}`);
+                            const url = `https://api.torn.com/user/${randID}?selections=basic,personalstats&key=${this.config.apiKey}`;
+                            const response = await fetch(url);
+                            user = await response.json();
+                            
+                            // Handle API V2 migration errors
+                            if (user.error) {
+                                const errorCode = user.error.code;
+                                if (errorCode === 22) {
+                                    console.warn(`🔄 RandomTarget: Selection only available in API v1 for user ${randID}`);
+                                } else if (errorCode === 23) {
+                                    console.warn(`🔄 RandomTarget: Selection only available in API v2 for user ${randID}`);
+                                } else if (errorCode === 19) {
+                                    console.warn(`🔄 RandomTarget: Must be migrated to 2.0 for user ${randID}`);
+                                }
+                            }
+                        }
 
                         if (user.status && user.status.state !== 'Okay') {
                             console.log(`User ${randID} discarded because not Okay`);

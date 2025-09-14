@@ -967,6 +967,39 @@
                 return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             },
 
+            // Process cooldown data from API response
+            processCooldownData(cooldowns) {
+                if (!cooldowns || Object.keys(cooldowns).length === 0) {
+                    console.log('📊 No active cooldowns found');
+                    this.cooldownData = {
+                        [this.timerTypes.MEDICAL]: null,
+                        [this.timerTypes.DRUG]: null,
+                        [this.timerTypes.BOOSTER]: null
+                    };
+                } else {
+                    // Convert cooldown seconds to end timestamps
+                    // Note: API returns seconds remaining, so we add to current time
+                    this.cooldownData = {
+                        [this.timerTypes.MEDICAL]: cooldowns.medical && cooldowns.medical > 0 ? Date.now() + (cooldowns.medical * 1000) : null,
+                        [this.timerTypes.DRUG]: cooldowns.drug && cooldowns.drug > 0 ? Date.now() + (cooldowns.drug * 1000) : null,
+                        [this.timerTypes.BOOSTER]: cooldowns.booster && cooldowns.booster > 0 ? Date.now() + (cooldowns.booster * 1000) : null
+                    };
+                    
+                    // Log each cooldown type for debugging
+                    console.log('🏥 Medical cooldown:', cooldowns.medical, 'seconds remaining');
+                    console.log('💊 Drug cooldown:', cooldowns.drug, 'seconds remaining');
+                    console.log('💉 Booster cooldown:', cooldowns.booster, 'seconds remaining');
+                }
+                
+                console.log('📊 Processed cooldown data:', this.cooldownData);
+                
+                // Update timers display
+                if (this.isActive) {
+                    this.renderTimers();
+                }
+            },
+
+            // Enhanced fetchCooldownData with API V2 compatibility
             async fetchCooldownData() {
                 // Don't block initialization - return immediately if no API key
                 const apiKey = window.SidekickModules.Core.loadState('sidekick_api_key', '');
@@ -984,30 +1017,112 @@
                 this.isFetchingCooldowns = true;
                 
                 try {
-                    // Fetch cooldown data from Torn API
+                    // Fetch cooldown data from Torn API using enhanced API system
                     console.log('🔄 Fetching cooldown data from Torn API...');
                     
-                    // First test if API key is working by checking user profile
-                    try {
-                        const testResponse = await fetch(`https://api.torn.com/user/?selections=basic&key=${apiKey}`);
-                        const testData = await testResponse.json();
-                        if (testData.error) {
-                            console.warn('API key test failed:', testData.error);
+                    // Use enhanced API system if available
+                    if (window.SidekickModules?.Api?.makeRequest) {
+                        console.log('🔄 Using enhanced API system for cooldowns');
+                        
+                        // Test API key first
+                        try {
+                            const testData = await window.SidekickModules.Api.makeRequest('user', 'basic');
+                            console.log('✅ API key is working, user:', testData.name || 'Unknown');
+                        } catch (testError) {
+                            console.warn('API key test failed:', testError);
                             window.SidekickModules.Core.NotificationSystem.show(
                                 'Timer',
-                                `API Key Error: ${testData.error}. Please check your API key in settings.`,
+                                `API Key Error: ${testError.message}. Please check your API key in settings.`,
                                 'error'
                             );
                             return;
                         }
-                        console.log('✅ API key is working, user:', testData.name || 'Unknown');
-                    } catch (testError) {
-                        console.warn('Failed to test API key:', testError);
+                        
+                        // Fetch cooldowns using enhanced API system
+                        const data = await window.SidekickModules.Api.makeRequest('user', 'cooldowns');
+                        
+                        if (data && data.cooldowns) {
+                            console.log('✅ Cooldown data received via enhanced API:', Object.keys(data.cooldowns).length, 'cooldowns');
+                            this.processCooldownData(data.cooldowns);
+                        } else {
+                            console.warn('❌ No cooldown data received');
+                        }
+                        
+                    } else {
+                        // Fallback to direct fetch with V2 error handling
+                        console.log('🔄 Using direct fetch fallback for cooldowns');
+                        
+                        // First test if API key is working
+                        try {
+                            const testResponse = await fetch(`https://api.torn.com/user/?selections=basic&key=${apiKey}`);
+                            const testData = await testResponse.json();
+                            if (testData.error) {
+                                const errorCode = testData.error.code;
+                                let errorMessage = testData.error.error;
+                                
+                                // Handle API V2 migration errors
+                                if (errorCode === 22) {
+                                    errorMessage += ' (API v1 only)';
+                                } else if (errorCode === 23) {
+                                    errorMessage += ' (API v2 only)';
+                                } else if (errorCode === 19) {
+                                    errorMessage += ' (requires migration to 2.0)';
+                                }
+                                
+                                console.warn('API key test failed:', testData.error);
+                                window.SidekickModules.Core.NotificationSystem.show(
+                                    'Timer',
+                                    `API Key Error: ${errorMessage}. Please check your API key in settings.`,
+                                    'error'
+                                );
+                                return;
+                            }
+                            console.log('✅ API key is working, user:', testData.name || 'Unknown');
+                        } catch (testError) {
+                            console.warn('Failed to test API key:', testError);
+                        }
+                        
+                        // Try the cooldowns endpoint
+                        let response = await fetch(`https://api.torn.com/user/?selections=cooldowns&key=${apiKey}`);
+                        let data = await response.json();
+                        
+                        // Handle API V2 migration errors for cooldowns
+                        if (data.error) {
+                            const errorCode = data.error.code;
+                            if (errorCode === 22) {
+                                console.warn('🔄 Cooldowns selection only available in API v1, retrying...');
+                            } else if (errorCode === 23) {
+                                console.warn('🔄 Cooldowns selection only available in API v2, retrying...');
+                            } else if (errorCode === 19) {
+                                console.warn('🔄 Cooldowns must be migrated to 2.0');
+                            }
+                        }
+                        
+                        if (data.error) {
+                            console.warn('Failed to fetch cooldown data from primary endpoint:', data.error);
+                            
+                            // Try alternative endpoint as fallback
+                            console.log('🔄 Trying alternative API endpoint...');
+                            response = await fetch(`https://api.torn.com/user/?selections=cooldowns&key=${apiKey}`);
+                            data = await response.json();
+                            
+                            if (data.error) {
+                                console.warn('Failed to fetch cooldown data from fallback endpoint:', data.error);
+                                window.SidekickModules.Core.NotificationSystem.show(
+                                    'Timer',
+                                    `API Error: ${data.error}`,
+                                    'error'
+                                );
+                                return;
+                            }
+                        }
+                        
+                        console.log('📊 Raw cooldown data:', data.cooldowns);
+                        console.log('📊 Full API response:', data);
+                        
+                        // Process cooldown data from fallback fetch
+                        this.processCooldownData(data.cooldowns);
                     }
-                    
-                    // Try the correct Torn API endpoint for cooldowns
-                    let response = await fetch(`https://api.torn.com/user/?selections=cooldowns&key=${apiKey}`);
-                    let data = await response.json();
                     
                     if (data.error) {
                         console.warn('Failed to fetch cooldown data from primary endpoint:', data.error);
@@ -1032,37 +1147,7 @@
                     console.log('📊 Full API response:', data);
                     
                     // Check if we have any cooldown data
-                    if (!data.cooldowns || Object.keys(data.cooldowns).length === 0) {
-                        console.log('📊 No active cooldowns found');
-                        this.cooldownData = {
-                            [this.timerTypes.MEDICAL]: null,
-                            [this.timerTypes.DRUG]: null,
-                            [this.timerTypes.BOOSTER]: null
-                        };
-                    } else {
-                        // Convert cooldown seconds to end timestamps
-                        // Note: API returns seconds remaining, so we add to current time
-                        this.cooldownData = {
-                            [this.timerTypes.MEDICAL]: data.cooldowns.medical && data.cooldowns.medical > 0 ? Date.now() + (data.cooldowns.medical * 1000) : null,
-                            [this.timerTypes.DRUG]: data.cooldowns.drug && data.cooldowns.drug > 0 ? Date.now() + (data.cooldowns.drug * 1000) : null,
-                            [this.timerTypes.BOOSTER]: data.cooldowns.booster && data.cooldowns.booster > 0 ? Date.now() + (data.cooldowns.booster * 1000) : null
-                        };
-                        
-                        // Log each cooldown type for debugging
-                        console.log('🏥 Medical cooldown:', data.cooldowns.medical, 'seconds remaining');
-                        console.log('💊 Drug cooldown:', data.cooldowns.drug, 'seconds remaining');
-                        console.log('💉 Booster cooldown:', data.cooldowns.booster, 'seconds remaining');
-                    }
-                    
-                    console.log('📊 Processed cooldown data:', this.cooldownData);
-                    
-                    // Don't show notifications for automatic checks (only for manual refresh)
-                    // Notifications are handled by checkForCooldownChanges and checkForCooldownsAndUpdate
-                    
-                    // Update timers display
-                    if (this.isActive) {
-                        this.renderTimers();
-                    }
+                    this.processCooldownData(data.cooldowns);
                 } catch (error) {
                     console.error('❌ Error fetching cooldown data:', error);
                     window.SidekickModules.Core.NotificationSystem.show(

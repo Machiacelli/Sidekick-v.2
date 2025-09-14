@@ -266,18 +266,40 @@
                 }
 
                 try {
-                    const response = await fetch(`https://api.torn.com/market/?selections=pointsmarket&key=${this.apiKey}`);
+                    let data;
                     
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
+                    // Use enhanced API system if available
+                    if (window.SidekickModules?.Api?.makeRequest) {
+                        console.log('🔄 Clock: Using enhanced API system for points market data');
+                        data = await window.SidekickModules.Api.makeRequest('market', 'pointsmarket');
+                    } else {
+                        // Fallback to direct fetch with V2 error handling
+                        console.log('🔄 Clock: Using direct fetch fallback for points market data');
+                        const response = await fetch(`https://api.torn.com/market/?selections=pointsmarket&key=${this.apiKey}`);
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}`);
+                        }
 
-                    const data = await response.json();
-                    
-                    if (data.error) {
-                        console.error('API Error:', data.error);
-                        NotificationSystem.show('API Error', data.error.error, 'error', 3000);
-                        return;
+                        data = await response.json();
+                        
+                        if (data.error) {
+                            const errorCode = data.error.code;
+                            let errorMessage = data.error.error;
+                            
+                            // Handle API V2 migration errors
+                            if (errorCode === 22) {
+                                errorMessage += ' (API v1 only)';
+                            } else if (errorCode === 23) {
+                                errorMessage += ' (API v2 only)';
+                            } else if (errorCode === 19) {
+                                errorMessage += ' (requires migration to 2.0)';
+                            }
+                            
+                            console.error('API Error:', data.error);
+                            NotificationSystem.show('API Error', errorMessage, 'error', 3000);
+                            return;
+                        }
                     }
 
                     if (data.pointsmarket && Object.keys(data.pointsmarket).length > 0) {

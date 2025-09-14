@@ -28,11 +28,16 @@
         // === API SYSTEM ===
         const ApiSystem = {
             lastRequest: 0,
-            async makeRequest(endpoint, selections = '', retries = 3) {
+            apiVersion: 'v1', // Default to v1, can be upgraded
+            baseUrl: 'https://api.torn.com',
+            
+            // Enhanced makeRequest with API V2 compatibility
+            async makeRequest(endpoint, selections = '', retries = 3, forceVersion = null) {
                 const apiKey = loadState(STORAGE_KEYS.API_KEY, '');
                 if (!apiKey) {
                     throw new Error('API key not configured');
                 }
+
                 // Rate limiting - wait at least 1 second between requests
                 const now = Date.now();
                 const timeSinceLastRequest = now - this.lastRequest;
@@ -40,23 +45,60 @@
                     await new Promise(resolve => setTimeout(resolve, 1000 - timeSinceLastRequest));
                 }
                 this.lastRequest = Date.now();
-                let url = `https://api.torn.com/${endpoint}?key=${apiKey}`;
+
+                // Build URL based on API version
+                const version = forceVersion || this.apiVersion;
+                let url;
+                
+                if (version === 'v2') {
+                    url = `${this.baseUrl}/v2/${endpoint}?key=${apiKey}`;
+                } else {
+                    url = `${this.baseUrl}/${endpoint}?key=${apiKey}`;
+                }
+                
                 if (selections) {
                     url += `&selections=${selections}`;
                 }
+
                 for (let attempt = 1; attempt <= retries; attempt++) {
                     try {
                         const response = await fetch(url);
                         if (!response.ok) {
                             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                         }
+
                         const data = await response.json();
+                        
                         if (data.error) {
-                            throw new Error(data.error.error || 'API error');
+                            const errorCode = data.error.code;
+                            const errorMsg = data.error.error || 'API error';
+                            
+                            // Handle API V2 migration errors
+                            if (errorCode === 22) {
+                                console.warn('🔄 Selection only available in API v1, retrying with v1...', endpoint, selections);
+                                if (version !== 'v1') {
+                                    return await this.makeRequest(endpoint, selections, retries, 'v1');
+                                }
+                            } else if (errorCode === 23) {
+                                console.warn('🔄 Selection only available in API v2, upgrading to v2...', endpoint, selections);
+                                if (version !== 'v2') {
+                                    return await this.makeRequest(endpoint, selections, retries, 'v2');
+                                }
+                            } else if (errorCode === 19) {
+                                console.warn('🔄 Must be migrated to crimes 2.0, attempting alternative...', endpoint, selections);
+                                // Handle crimes 2.0 migration
+                                NotificationSystem.show('API Migration', 'Crimes data requires migration to 2.0. Some features may be limited.', 'warning');
+                            }
+                            
+                            throw new Error(`API Error (${errorCode}): ${errorMsg}`);
                         }
+
+                        // Log successful API version usage for analytics
+                        console.log(`✅ API ${version.toUpperCase()} call successful:`, endpoint, selections);
                         return data;
+
                     } catch (error) {
-                        console.warn(`API request attempt ${attempt} failed:`, error);
+                        console.warn(`API request attempt ${attempt} failed (${version}):`, error);
                         if (attempt === retries) {
                             throw error;
                         }
@@ -64,6 +106,42 @@
                         await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
                     }
                 }
+            },
+
+            // Detect the optimal API version for the user's key
+            async detectApiVersion() {
+                try {
+                    console.log('🔍 Detecting optimal API version...');
+                    
+                    // Try a simple call that should work in both versions
+                    const testData = await this.makeRequest('user', 'basic', 1, 'v1');
+                    
+                    // If v1 works, test v2 capabilities
+                    try {
+                        await this.makeRequest('user', 'basic', 1, 'v2');
+                        console.log('✅ API V2 available, upgrading default version');
+                        this.apiVersion = 'v2';
+                        NotificationSystem.show('API Upgrade', 'API V2 detected and enabled for better performance', 'success');
+                    } catch (v2Error) {
+                        console.log('ℹ️ API V2 not available, staying with V1');
+                        this.apiVersion = 'v1';
+                    }
+                    
+                    return this.apiVersion;
+                } catch (error) {
+                    console.error('❌ API version detection failed:', error);
+                    this.apiVersion = 'v1'; // Safe fallback
+                    return 'v1';
+                }
+            },
+
+            // Get current API version info for debugging
+            getVersionInfo() {
+                return {
+                    version: this.apiVersion,
+                    baseUrl: this.baseUrl,
+                    lastRequest: this.lastRequest
+                };
             }
         };
 
@@ -1082,8 +1160,7 @@
             }
         };
 
-
-
+        // Enhanced saveApiKey with API version detection
         window.saveApiKey = function() {
             console.log('💾 saveApiKey called!');
             const input = document.getElementById('api-key-input');
@@ -1091,12 +1168,22 @@
                 const newApiKey = input.value.trim();
                 saveState(STORAGE_KEYS.API_KEY, newApiKey);
                 
+                // Detect API version after saving key
+                setTimeout(async () => {
+                    try {
+                        const detectedVersion = await ApiSystem.detectApiVersion();
+                        console.log(`🔍 API Version detected: ${detectedVersion.toUpperCase()}`);
+                    } catch (error) {
+                        console.warn('⚠️ API version detection failed:', error);
+                    }
+                }, 1000);
+                
                 // Notify clock module of API key change
                 if (window.SidekickModules?.Clock?.updateApiKey) {
                     window.SidekickModules.Clock.updateApiKey(newApiKey);
                 }
                 
-                NotificationSystem.show('Saved', 'API key saved successfully!', 'info');
+                NotificationSystem.show('Saved', 'API key saved successfully! Detecting optimal API version...', 'info');
                 console.log('✅ API key saved');
                 
                 // Close modal
@@ -1106,6 +1193,19 @@
                 NotificationSystem.show('Error', 'Please enter a valid API key', 'error');
             }
         };
+
+        // Initialize API version detection if API key is already configured
+        setTimeout(async () => {
+            const existingApiKey = loadState(STORAGE_KEYS.API_KEY, '');
+            if (existingApiKey) {
+                try {
+                    const detectedVersion = await ApiSystem.detectApiVersion();
+                    console.log(`🔍 API Version auto-detected on startup: ${detectedVersion.toUpperCase()}`);
+                } catch (error) {
+                    console.warn('⚠️ Startup API version detection failed:', error);
+                }
+            }
+        }, 2000); // Delay to ensure modules are loaded
 
         // Export to global scope
         window.SidekickModules.Settings = SettingsManager;

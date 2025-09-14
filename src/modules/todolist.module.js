@@ -1414,21 +1414,41 @@
                 }
             },
             
-            // Fetch data from Torn API
+            // Fetch data from Torn API using enhanced API system
             async fetchApiData(section, selection) {
                 if (!this.apiKey) return null;
                 
                 try {
-                    const url = `https://api.torn.com/${section}?selections=${selection}&key=${this.apiKey}`;
-                    const response = await fetch(url);
-                    const data = await response.json();
-                    
-                    if (data.error) {
-                        console.error(`❌ API Error for ${section}/${selection}:`, data.error);
-                        return null;
+                    // Use the enhanced API system from settings module if available
+                    if (window.SidekickModules?.Api?.makeRequest) {
+                        console.log(`🔄 Using enhanced API system for ${section}/${selection}`);
+                        const data = await window.SidekickModules.Api.makeRequest(section, selection);
+                        return data;
+                    } else {
+                        // Fallback to direct fetch with V2 compatibility
+                        console.log(`🔄 Using direct fetch fallback for ${section}/${selection}`);
+                        const url = `https://api.torn.com/${section}?selections=${selection}&key=${this.apiKey}`;
+                        const response = await fetch(url);
+                        const data = await response.json();
+                        
+                        if (data.error) {
+                            const errorCode = data.error.code;
+                            
+                            // Handle API V2 migration errors in fallback mode
+                            if (errorCode === 22) {
+                                console.warn('🔄 TodoList: Selection only available in API v1');
+                            } else if (errorCode === 23) {
+                                console.warn('🔄 TodoList: Selection only available in API v2');  
+                            } else if (errorCode === 19) {
+                                console.warn('🔄 TodoList: Must be migrated to crimes 2.0');
+                            }
+                            
+                            console.error(`❌ API Error for ${section}/${selection}:`, data.error);
+                            return null;
+                        }
+                        
+                        return data;
                     }
-                    
-                    return data;
                 } catch (error) {
                     console.error(`❌ Fetch failed for ${section}/${selection}:`, error);
                     return null;
