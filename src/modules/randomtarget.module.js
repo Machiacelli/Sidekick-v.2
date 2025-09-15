@@ -78,7 +78,12 @@
             },
 
             showTargetButton() {
-                if (this.targetButton) return;
+                console.log('🎯 showTargetButton() called - current targetButton:', !!this.targetButton, 'isActive:', this.isActive);
+                
+                if (this.targetButton) {
+                    console.log('🎯 Button already exists, not creating duplicate');
+                    return;
+                }
                 
                 this.isActive = true;
                 this.core.saveState('random_target_active', true);
@@ -136,6 +141,20 @@
 
                 // Add to page
                 document.body.appendChild(this.targetButton);
+                console.log('🎯 Random Target button created and added to page');
+                
+                // Verify button is actually visible
+                setTimeout(() => {
+                    if (this.targetButton) {
+                        const rect = this.targetButton.getBoundingClientRect();
+                        console.log('🎯 Button position on screen:', { 
+                            left: rect.left, 
+                            top: rect.top, 
+                            visible: rect.width > 0 && rect.height > 0,
+                            inViewport: rect.left >= 0 && rect.top >= 0 && rect.right <= window.innerWidth && rect.bottom <= window.innerHeight
+                        });
+                    }
+                }, 100);
                 
                 // Add viewport resize handler to keep button visible
                 this.addViewportResizeHandler(this.targetButton);
@@ -332,15 +351,19 @@
             restoreButtonState() {
                 try {
                     const wasActive = window.SidekickModules.Core.loadState('random_target_active', false);
+                    console.log('🔄 Restoring Random Target button state - wasActive:', wasActive);
+                    
                     if (wasActive) {
-                        console.log('🔄 Restoring random target button state...');
-                        this.isActive = true;
+                        console.log('🔄 Random Target was previously active, restoring button...');
+                        this.isActive = false; // Set to false so showTargetButton will work correctly
+                        
                         // Small delay to ensure DOM is ready
                         setTimeout(() => {
                             this.showTargetButton();
                             this.updateSettingsToggle(true);
                         }, 500);
                     } else {
+                        console.log('🔄 Random Target was not previously active');
                         this.isActive = false;
                     }
                 } catch (error) {
