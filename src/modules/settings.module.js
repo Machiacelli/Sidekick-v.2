@@ -87,7 +87,7 @@
                             } else if (errorCode === 19) {
                                 console.warn('🔄 Must be migrated to crimes 2.0, attempting alternative...', endpoint, selections);
                                 // Handle crimes 2.0 migration
-                                NotificationSystem.show('API Migration', 'Crimes data requires migration to 2.0. Some features may be limited.', 'warning');
+                                // Note: Removed annoying notification that appeared on every page refresh
                             }
                             
                             throw new Error(`API Error (${errorCode}): ${errorMsg}`);
@@ -121,7 +121,7 @@
                         await this.makeRequest('user', 'basic', 1, 'v2');
                         console.log('✅ API V2 available, upgrading default version');
                         this.apiVersion = 'v2';
-                        NotificationSystem.show('API Upgrade', 'API V2 detected and enabled for better performance', 'success');
+                        // Note: Removed annoying notification that appeared on every page refresh
                     } catch (v2Error) {
                         console.log('ℹ️ API V2 not available, staying with V1');
                         this.apiVersion = 'v1';
