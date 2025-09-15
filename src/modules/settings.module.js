@@ -74,7 +74,7 @@
                             const errorMsg = data.error.error || 'API error';
                             
                             // Handle API V2 migration errors
-                            if (errorCode === 22) {
+                            if (errorCode === 22 || errorCode === 21) {
                                 console.warn('🔄 Selection only available in API v1, retrying with v1...', endpoint, selections);
                                 if (version !== 'v1') {
                                     return await this.makeRequest(endpoint, selections, retries, 'v1');
