@@ -294,9 +294,6 @@
                 // Initialize update loop and fetch data when panel is shown
                 this.lazyInit();
                 
-                // Load existing timers
-                this.renderTimers();
-                
                 // Update pin button text based on saved state
                 if (this.isPinned) {
                     const pinBtn = panel.querySelector('#pin-panel-btn');
@@ -306,8 +303,15 @@
                     }
                 }
                 
-                // Fetch current cooldown data immediately
-                this.fetchCooldownData();
+                // Fetch current cooldown data first, then render timers
+                this.fetchCooldownData().then(() => {
+                    // Render timers after cooldown data is loaded
+                    this.renderTimers();
+                }).catch(error => {
+                    // Even if cooldown fetch fails, still render timers (custom timers will work)
+                    console.warn('Failed to fetch cooldowns, rendering timers anyway:', error);
+                    this.renderTimers();
+                });
                 
                 // Defer heavy UI operations to improve performance
                 requestAnimationFrame(() => {
