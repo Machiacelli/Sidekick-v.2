@@ -210,7 +210,7 @@
                     top: ${finalY}px;
                     width: ${savedSize.width}px;
                     height: ${savedSize.height}px;
-                    background: #222;
+                    background: #2a2a2a;
                     border: 1px solid #444;
                     border-radius: 8px;
                     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
@@ -228,8 +228,8 @@
                 const header = document.createElement('div');
                 header.className = 'todo-header';
                 header.style.cssText = `
-                    background: linear-gradient(135deg, #2C3E50, #4A6741);
-                    border-bottom: 1px solid #444;
+                    background: #333;
+                    border-bottom: 1px solid #555;
                     padding: 8px 12px;
                     display: flex;
                     justify-content: space-between;
