@@ -49,6 +49,7 @@
                     return false;
                 }
 
+                console.log('🔍 Timer Init: Core module available, loading saved state...');
                 // Load saved timers (lightweight operation)
                 this.loadState();
                 
@@ -58,7 +59,7 @@
                 // Show panel immediately if it was previously open (like other modules)
                 this.restorePanelState();
                 
-                console.log('✅ Timer module initialized successfully');
+                console.log('✅ Timer module initialized successfully with', this.timers.length, 'saved timers');
                 return true;
             },
 
@@ -1385,8 +1386,17 @@
                     };
                     
                     console.log('💾 Saving timer state:', state);
+                    console.log('💾 Number of timers to save:', this.timers.length);
+                    console.log('💾 Core.saveState method available:', !!window.SidekickModules.Core.saveState);
+                    
                     window.SidekickModules.Core.saveState('timer_state', state);
+                    
                     console.log('💾 Timer state saved successfully');
+                    
+                    // Verify save by loading immediately
+                    const verify = window.SidekickModules.Core.loadState('timer_state', { timers: [] });
+                    console.log('💾 Verification load shows:', verify.timers.length, 'timers saved');
+                    
                 } catch (error) {
                     console.error('❌ Failed to save timer state:', error);
                 }
@@ -1394,13 +1404,26 @@
 
             loadState() {
                 try {
+                    console.log('📂 Timer loadState: Starting to load timer state...');
+                    console.log('📂 Timer loadState: Core.loadState method available:', !!window.SidekickModules.Core.loadState);
+                    
                     const state = window.SidekickModules.Core.loadState('timer_state', { timers: [] });
                     console.log('📂 Loaded timer state from storage:', state);
+                    
                     this.timers = state.timers || [];
                     this.isPinned = state.isPinned || false;
+                    
                     console.log('📂 Restored timer state:', this.timers.length, 'timers, pinned:', this.isPinned);
+                    
+                    // Log each timer for debugging
+                    this.timers.forEach((timer, index) => {
+                        console.log(`📂 Timer ${index + 1}:`, timer.name, 'type:', timer.type, 'isCooldown:', timer.isCooldown);
+                    });
+                    
                 } catch (error) {
                     console.error('❌ Failed to load timer state:', error);
+                    this.timers = [];
+                    this.isPinned = false;
                 }
             },
 
