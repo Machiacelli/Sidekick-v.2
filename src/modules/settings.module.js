@@ -30,8 +30,9 @@
             lastRequest: 0,
             apiVersion: 'v1', // Default to v1, can be upgraded
             baseUrl: 'https://api.torn.com',
+            endpointVersions: {}, // Cache which version works for each endpoint
             
-            // Enhanced makeRequest with API V2 compatibility
+            // Enhanced makeRequest with intelligent version selection
             async makeRequest(endpoint, selections = '', retries = 3, forceVersion = null) {
                 const apiKey = loadState(STORAGE_KEYS.API_KEY, '');
                 if (!apiKey) {
@@ -46,10 +47,17 @@
                 }
                 this.lastRequest = Date.now();
 
-                // Build URL based on API version
-                const version = forceVersion || this.apiVersion;
-                let url;
+                // Determine version to use
+                const endpointKey = `${endpoint}:${selections}`;
+                let version = forceVersion;
                 
+                if (!version) {
+                    // Use cached version if available, otherwise default
+                    version = this.endpointVersions[endpointKey] || this.apiVersion;
+                }
+
+                // Build URL based on API version
+                let url;
                 if (version === 'v2') {
                     url = `${this.baseUrl}/v2/${endpoint}?key=${apiKey}`;
                 } else {
@@ -73,27 +81,33 @@
                             const errorCode = data.error.code;
                             const errorMsg = data.error.error || 'API error';
                             
-                            // Handle API V2 migration errors
+                            // Handle API V2 migration errors - cache the correct version
                             if (errorCode === 22 || errorCode === 21) {
-                                console.warn('🔄 Selection only available in API v1, retrying with v1...', endpoint, selections);
+                                // Selection only available in API v1
                                 if (version !== 'v1') {
+                                    console.warn(`🔄 ${endpoint}/${selections} only works with API v1, caching preference...`);
+                                    this.endpointVersions[endpointKey] = 'v1';
                                     return await this.makeRequest(endpoint, selections, retries, 'v1');
                                 }
                             } else if (errorCode === 23) {
-                                console.warn('🔄 Selection only available in API v2, upgrading to v2...', endpoint, selections);
+                                // Selection only available in API v2
                                 if (version !== 'v2') {
+                                    console.warn(`🔄 ${endpoint}/${selections} only works with API v2, caching preference...`);
+                                    this.endpointVersions[endpointKey] = 'v2';
                                     return await this.makeRequest(endpoint, selections, retries, 'v2');
                                 }
                             } else if (errorCode === 19) {
                                 console.warn('🔄 Must be migrated to crimes 2.0, attempting alternative...', endpoint, selections);
-                                // Handle crimes 2.0 migration
-                                // Note: Removed annoying notification that appeared on every page refresh
+                                // Handle crimes 2.0 migration - no fallback needed
                             }
                             
                             throw new Error(`API Error (${errorCode}): ${errorMsg}`);
                         }
 
-                        // Log successful API version usage for analytics
+                        // Success! Cache the working version for this endpoint
+                        if (!forceVersion) { // Only cache if we're not forcing a version
+                            this.endpointVersions[endpointKey] = version;
+                        }
                         console.log(`✅ API ${version.toUpperCase()} call successful:`, endpoint, selections);
                         return data;
 
@@ -140,7 +154,28 @@
                 return {
                     version: this.apiVersion,
                     baseUrl: this.baseUrl,
-                    lastRequest: this.lastRequest
+                    lastRequest: this.lastRequest,
+                    endpointCache: this.endpointVersions,
+                    cachedEndpoints: Object.keys(this.endpointVersions).length
+                };
+            },
+
+            // Clear endpoint version cache (useful for testing)
+            clearEndpointCache() {
+                console.log('🗑️ Clearing API endpoint version cache...');
+                this.endpointVersions = {};
+            },
+
+            // Get stats on API usage
+            getApiStats() {
+                const v1Count = Object.values(this.endpointVersions).filter(v => v === 'v1').length;
+                const v2Count = Object.values(this.endpointVersions).filter(v => v === 'v2').length;
+                
+                return {
+                    totalCachedEndpoints: Object.keys(this.endpointVersions).length,
+                    v1Endpoints: v1Count,
+                    v2Endpoints: v2Count,
+                    defaultVersion: this.apiVersion
                 };
             }
         };
