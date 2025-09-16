@@ -66,6 +66,9 @@
                 
                 console.log('⏰ Performing lazy initialization...');
                 
+                // Render timers immediately with current data (no delay!)
+                this.renderTimers();
+                
                 // Start update loop immediately
                 this.startUpdateLoop();
                 
@@ -931,6 +934,10 @@
                     if (this.cooldownData && this.cooldownData[timer.type]) {
                         const cooldownEnd = this.cooldownData[timer.type];
                         return Math.max(0, cooldownEnd - Date.now());
+                    }
+                    // Fallback: use saved endTime if cooldown data not loaded yet
+                    if (timer.endTime) {
+                        return Math.max(0, timer.endTime - Date.now());
                     }
                     return 0;
                 } else {
