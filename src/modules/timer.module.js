@@ -66,11 +66,14 @@
                 
                 console.log('⏰ Performing lazy initialization...');
                 
-                // Start update loop only when needed
+                // Start update loop immediately
                 this.startUpdateLoop();
                 
-                // Fetch cooldown data only when needed
-                this.fetchCooldownData();
+                // Fetch cooldown data in background - don't wait for it
+                this.fetchCooldownData().then(() => {
+                    console.log('✅ Cooldown data fetched, refreshing display');
+                    this.renderTimers();
+                });
                 
                 this.isLazyInitialized = true;
             },
@@ -1435,18 +1438,9 @@
                     if (wasOpen) {
                         console.log('🔄 Restoring timer panel state immediately...');
                         
-                        // Show panel immediately like other modules 
+                        // Do EXACTLY what activate() does - no delays, no background loading
+                        this.lazyInit();
                         this.showTimerPanel();
-                        
-                        // Start background processes after panel is shown
-                        setTimeout(() => {
-                            this.startUpdateLoop();
-                            this.fetchCooldownData().then(() => {
-                                console.log('✅ Timer data loaded in background');
-                                this.renderTimers(); // Update display with correct data
-                            });
-                            this.isLazyInitialized = true;
-                        }, 100);
                     }
                 } catch (error) {
                     console.error('❌ Failed to restore panel state:', error);
