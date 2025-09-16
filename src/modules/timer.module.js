@@ -1437,6 +1437,8 @@
                     const wasOpen = window.SidekickModules.Core.loadState('timer_panel_open', false);
                     if (wasOpen) {
                         console.log('🔄 Restoring timer panel state immediately...');
+                        // Perform lazy initialization to ensure update loop and data are ready
+                        this.lazyInit();
                         // Show panel immediately like other modules (no delay)
                         this.showTimerPanel();
                     }
