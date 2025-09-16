@@ -82,6 +82,11 @@
             activate() {
                 console.log('⏰ Timer module activated!');
                 
+                // Initialize the module first (loads saved timers)
+                if (!this.core) {
+                    this.init();
+                }
+                
                 // Perform lazy initialization when user first activates
                 this.lazyInit();
                 
@@ -707,9 +712,9 @@
                 };
 
                 console.log(`⏰ Created timer:`, timer);
-                console.log(`⏰ Timers array after push:`, this.timers.length);
 
                 this.timers.push(timer);
+                console.log(`⏰ Timers array after push:`, this.timers.length);
                 this.saveState();
                 this.renderTimers();
                 
