@@ -40,7 +40,7 @@
                 CUSTOM: 'custom'
             },
 
-            init() {
+            async init() {
                 console.log('⏰ Initializing Timer Module v1.0.0...');
                 this.core = window.SidekickModules.Core;
                 
@@ -57,7 +57,7 @@
                 // this.startUpdateLoop(); // REMOVED - will be called in lazyInit()
                 
                 // Show panel immediately if it was previously open (like other modules)
-                this.restorePanelState();
+                await this.restorePanelState();
                 
                 console.log('✅ Timer module initialized successfully with', this.timers.length, 'saved timers');
                 return true;
@@ -1432,14 +1432,24 @@
                 }
             },
 
-            restorePanelState() {
+            async restorePanelState() {
                 try {
                     const wasOpen = window.SidekickModules.Core.loadState('timer_panel_open', false);
                     if (wasOpen) {
-                        console.log('🔄 Restoring timer panel state immediately...');
-                        // Perform lazy initialization to ensure update loop and data are ready
-                        this.lazyInit();
-                        // Show panel immediately like other modules (no delay)
+                        console.log('🔄 Restoring timer panel state - loading data first...');
+                        
+                        // Start update loop immediately
+                        this.startUpdateLoop();
+                        
+                        // Fetch cooldown data and wait for it to complete
+                        console.log('⏰ Fetching cooldown data before showing panel...');
+                        await this.fetchCooldownData();
+                        console.log('✅ Cooldown data loaded, now showing panel with correct times');
+                        
+                        // Mark lazy init as done
+                        this.isLazyInitialized = true;
+                        
+                        // Now show panel with correct data
                         this.showTimerPanel();
                     }
                 } catch (error) {
