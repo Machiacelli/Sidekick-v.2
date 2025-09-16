@@ -40,7 +40,7 @@
                 CUSTOM: 'custom'
             },
 
-            async init() {
+            init() {
                 console.log('⏰ Initializing Timer Module v1.0.0...');
                 this.core = window.SidekickModules.Core;
                 
@@ -53,11 +53,8 @@
                 // Load saved timers (lightweight operation)
                 this.loadState();
                 
-                // Don't start update loop until actually needed
-                // this.startUpdateLoop(); // REMOVED - will be called in lazyInit()
-                
                 // Show panel immediately if it was previously open (like other modules)
-                await this.restorePanelState();
+                this.restorePanelState();
                 
                 console.log('✅ Timer module initialized successfully with', this.timers.length, 'saved timers');
                 return true;
@@ -1432,25 +1429,24 @@
                 }
             },
 
-            async restorePanelState() {
+            restorePanelState() {
                 try {
                     const wasOpen = window.SidekickModules.Core.loadState('timer_panel_open', false);
                     if (wasOpen) {
-                        console.log('🔄 Restoring timer panel state - loading data first...');
+                        console.log('🔄 Restoring timer panel state immediately...');
                         
-                        // Start update loop immediately
-                        this.startUpdateLoop();
-                        
-                        // Fetch cooldown data and wait for it to complete
-                        console.log('⏰ Fetching cooldown data before showing panel...');
-                        await this.fetchCooldownData();
-                        console.log('✅ Cooldown data loaded, now showing panel with correct times');
-                        
-                        // Mark lazy init as done
-                        this.isLazyInitialized = true;
-                        
-                        // Now show panel with correct data
+                        // Show panel immediately like other modules 
                         this.showTimerPanel();
+                        
+                        // Start background processes after panel is shown
+                        setTimeout(() => {
+                            this.startUpdateLoop();
+                            this.fetchCooldownData().then(() => {
+                                console.log('✅ Timer data loaded in background');
+                                this.renderTimers(); // Update display with correct data
+                            });
+                            this.isLazyInitialized = true;
+                        }, 100);
                     }
                 } catch (error) {
                     console.error('❌ Failed to restore panel state:', error);
