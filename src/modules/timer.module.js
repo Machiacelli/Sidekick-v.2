@@ -813,27 +813,6 @@
                                 ">Remove</button>
                             </div>
                             
-                            <div style="margin-bottom: 8px;">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-                                    <span style="font-size: 11px; color: #888;">Progress</span>
-                                    <span style="font-size: 11px; color: #888;">${Math.round(progress * 100)}%</span>
-                                </div>
-                                <div style="
-                                    width: 100%;
-                                    height: 4px;
-                                    background: #555;
-                                    border-radius: 2px;
-                                    overflow: hidden;
-                                ">
-                                    <div style="
-                                        width: ${progress * 100}%;
-                                        height: 100%;
-                                        background: ${isExpired ? '#4CAF50' : '#2196F3'};
-                                        transition: width 0.3s ease;
-                                    "></div>
-                                </div>
-                            </div>
-                            
                             <div style="text-align: center;">
                                 <div style="
                                     font-size: 16px;
@@ -868,20 +847,6 @@
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 6px;">
-                            <div style="
-                                width: 40px;
-                                height: 4px;
-                                background: #555;
-                                border-radius: 2px;
-                                overflow: hidden;
-                            ">
-                                <div style="
-                                    width: ${progress * 100}%;
-                                    height: 100%;
-                                    background: ${isExpired ? '#4CAF50' : '#2196F3'};
-                                    transition: width 0.3s ease;
-                                "></div>
-                            </div>
                             <button class="remove-timer-btn" data-timer-id="${timer.id}" style="
                                 background: #f44336;
                                 border: none;

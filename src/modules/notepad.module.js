@@ -35,12 +35,8 @@
                     return;
                 }
                 this.loadNotepads();
-                
-                // Defer rendering to prevent blocking other panels
-                setTimeout(() => {
-                    this.refreshDisplay(); // Render any existing notepads
-                    console.log('📝 Notepad module initialized, loaded', this.notepads.length, 'notepads');
-                }, 25);
+                this.refreshDisplay(); // Render any existing notepads immediately
+                console.log('📝 Notepad module initialized, loaded', this.notepads.length, 'notepads');
             },
 
             loadNotepads() {

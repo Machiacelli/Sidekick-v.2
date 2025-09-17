@@ -241,20 +241,83 @@
                 `;
                 
                 header.innerHTML = `
-                    <div style="color: #fff; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
-                        📋 Modern To-Do List
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <div class="todo-dropdown" style="position: relative; display: inline-block;">
+                            <button class="dropdown-btn" style="
+                                background: none;
+                                border: none;
+                                color: #bbb;
+                                cursor: pointer;
+                                font-size: 12px;
+                                padding: 2px;
+                                display: flex;
+                                align-items: center;
+                            " title="Options">
+                                ▼
+                            </button>
+                            <div class="dropdown-content" style="
+                                display: none;
+                                position: fixed;
+                                background: #333;
+                                min-width: 160px;
+                                max-height: 200px;
+                                z-index: 100000;
+                                border-radius: 4px;
+                                border: 1px solid #555;
+                                padding: 4px 0;
+                                overflow-y: auto;
+                                scrollbar-width: thin;
+                                scrollbar-color: #555 #333;
+                                top: 0;
+                                left: 0;
+                            ">
+                                <button class="add-task-btn" style="
+                                    background: none;
+                                    border: none;
+                                    color: #fff;
+                                    padding: 8px 12px;
+                                    width: 100%;
+                                    text-align: left;
+                                    cursor: pointer;
+                                    font-size: 12px;
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 8px;
+                                    transition: background 0.2s ease;
+                                " title="Add new task">+ Add Task</button>
+                                <button class="clear-completed-btn" style="
+                                    background: none;
+                                    border: none;
+                                    color: #fff;
+                                    padding: 8px 12px;
+                                    width: 100%;
+                                    text-align: left;
+                                    cursor: pointer;
+                                    font-size: 12px;
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 8px;
+                                    transition: background 0.2s ease;
+                                " title="Clear completed tasks">🗑️ Clear Completed</button>
+                            </div>
+                        </div>
+                        <span style="font-size: 14px;">📋</span>
+                        <span style="font-weight: bold; color: #4CAF50; font-size: 12px;">To-Do List</span>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <button class="add-task-btn" style="
-                            background: #27AE60; border: none; color: white; padding: 4px 8px; 
-                            border-radius: 4px; cursor: pointer; font-size: 12px; transition: background 0.2s;
-                        ">+ Add</button>
-                        <button class="close-btn" style="
-                            background: none; border: none; color: #f44336; cursor: pointer; 
-                            font-size: 16px; padding: 2px; border-radius: 4px; transition: background 0.2s;
-                            display: flex; align-items: center; justify-content: center; width: 20px; height: 20px;
-                        ">×</button>
-                    </div>
+                    <button class="close-btn" style="
+                        background: none;
+                        border: none;
+                        color: #f44336;
+                        cursor: pointer;
+                        font-size: 14px;
+                        padding: 0;
+                        width: 16px;
+                        height: 16px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        opacity: 0.7;
+                    " title="Close todo panel">×</button>
                 `;
 
                 const content = document.createElement('div');
@@ -981,20 +1044,57 @@
             addPanelEventListeners(panel) {
                 const addBtn = panel.querySelector('.add-task-btn');
                 const closeBtn = panel.querySelector('.close-btn');
+                const clearCompletedBtn = panel.querySelector('.clear-completed-btn');
+                const dropdownBtn = panel.querySelector('.dropdown-btn');
+                const dropdownContent = panel.querySelector('.dropdown-content');
 
+                // Dropdown functionality
+                dropdownBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isVisible = dropdownContent.style.display === 'block';
+                    
+                    if (isVisible) {
+                        dropdownContent.style.display = 'none';
+                    } else {
+                        const rect = dropdownBtn.getBoundingClientRect();
+                        dropdownContent.style.display = 'block';
+                        dropdownContent.style.top = (rect.bottom + 2) + 'px';
+                        dropdownContent.style.left = rect.left + 'px';
+                    }
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!panel.contains(e.target)) {
+                        dropdownContent.style.display = 'none';
+                    }
+                });
+
+                // Add task functionality
                 addBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
+                    dropdownContent.style.display = 'none';
                     this.showTaskPicker();
                 });
 
-                addBtn.addEventListener('mouseenter', () => {
-                    addBtn.style.background = '#2ECC71';
+                // Clear completed functionality
+                clearCompletedBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdownContent.style.display = 'none';
+                    this.clearCompletedTasks();
                 });
 
-                addBtn.addEventListener('mouseleave', () => {
-                    addBtn.style.background = '#27AE60';
+                // Dropdown hover effects
+                [addBtn, clearCompletedBtn].forEach(btn => {
+                    btn.addEventListener('mouseenter', () => {
+                        btn.style.background = 'rgba(255, 255, 255, 0.1)';
+                    });
+                    btn.addEventListener('mouseleave', () => {
+                        btn.style.background = 'none';
+                    });
                 });
 
+                // Close button functionality
                 closeBtn.addEventListener('click', () => {
                     this.hideTodoPanel();
                 });
@@ -1006,6 +1106,20 @@
                 closeBtn.addEventListener('mouseleave', () => {
                     closeBtn.style.background = 'none';
                 });
+            },
+
+            clearCompletedTasks() {
+                const initialCount = this.todoItems.length;
+                this.todoItems = this.todoItems.filter(item => !item.completed);
+                const clearedCount = initialCount - this.todoItems.length;
+                
+                if (clearedCount > 0) {
+                    console.log(`📋 Cleared ${clearedCount} completed tasks`);
+                    this.saveModernTodoList();
+                    this.refreshModernDisplay();
+                } else {
+                    console.log('📋 No completed tasks to clear');
+                }
             },
 
             addDragging(panel, header) {
