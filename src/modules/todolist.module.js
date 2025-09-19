@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick To-Do List Module
 // @namespace    http://tampermonkey.net/
-// @version      1.2.0
-// @description  Daily To-Do List with dropdown UI, proper deletion, 3-task Xanax tracking, and no weekly tasks
+// @version      1.3.0
+// @description  Fixed TodoList: Proper dropdown overlay, pin toggle, single Xanax task, removed cooldowns
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -41,24 +41,6 @@
             // Modern todo item types - enhanced system with all daily activities
             todoItemTypes: {
                 // Daily activities
-                medical: {
-                    name: 'Medical Cooldown',
-                    icon: '🏥',
-                    color: '#FF6B6B',
-                    description: 'Use medical item (daily reset)',
-                    category: 'daily',
-                    maxCompletions: 1,
-                    isMultiCompletion: false
-                },
-                drug: {
-                    name: 'Drug Cooldown',
-                    icon: '💊',
-                    color: '#E74C3C',
-                    description: 'Use drug item (daily reset)',
-                    category: 'daily',
-                    maxCompletions: 1,
-                    isMultiCompletion: false
-                },
                 energyRefill: {
                     name: 'Energy Refill',
                     icon: '⚡',
@@ -87,32 +69,14 @@
                     isMultiCompletion: false
                 },
                 // Medical/Drug tasks
-                xanax1: {
-                    name: 'Take Xanax #1',
+                xanax: {
+                    name: 'Take Xanax',
                     icon: '💊',
                     color: '#E74C3C',
-                    description: 'First daily Xanax dose',
+                    description: 'Daily Xanax doses (up to 3)',
                     category: 'daily',
-                    maxCompletions: 1,
-                    isMultiCompletion: false
-                },
-                xanax2: {
-                    name: 'Take Xanax #2',
-                    icon: '💊',
-                    color: '#E74C3C',
-                    description: 'Second daily Xanax dose',
-                    category: 'daily',
-                    maxCompletions: 1,
-                    isMultiCompletion: false
-                },
-                xanax3: {
-                    name: 'Take Xanax #3',
-                    icon: '💊',
-                    color: '#E74C3C',
-                    description: 'Third daily Xanax dose',
-                    category: 'daily',
-                    maxCompletions: 1,
-                    isMultiCompletion: false
+                    maxCompletions: 3,
+                    isMultiCompletion: true
                 },
                 // Custom tasks (persistent)
                 custom: {
@@ -237,7 +201,7 @@
                             </button>
                             <div class="dropdown-content" style="
                                 display: none;
-                                position: absolute;
+                                position: fixed;
                                 background: #333;
                                 min-width: 200px;
                                 max-height: 300px;
@@ -248,9 +212,27 @@
                                 overflow-y: auto;
                                 scrollbar-width: thin;
                                 scrollbar-color: #555 #333;
-                                top: 100%;
-                                left: 0;
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.4);
                             ">
+                                <!-- Panel Options -->
+                                <button class="pin-toggle-btn" style="
+                                    background: none;
+                                    border: none;
+                                    color: #fff;
+                                    padding: 8px 12px;
+                                    width: 100%;
+                                    text-align: left;
+                                    cursor: pointer;
+                                    font-size: 12px;
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 8px;
+                                    transition: background 0.2s ease;
+                                " title="Toggle pin state">📌 Pin Panel</button>
+                                
+                                <!-- Divider -->
+                                <div style="height: 1px; background: #444; margin: 8px 0;"></div>
+                                
                                 <!-- Task Categories -->
                                 <div class="task-category-header" style="
                                     color: #888;
@@ -1048,8 +1030,29 @@
                     if (isVisible) {
                         dropdownContent.style.display = 'none';
                     } else {
+                        // Position dropdown relative to button but use fixed positioning
+                        const btnRect = dropdownBtn.getBoundingClientRect();
+                        dropdownContent.style.top = `${btnRect.bottom + 2}px`;
+                        dropdownContent.style.left = `${btnRect.left}px`;
                         dropdownContent.style.display = 'block';
                     }
+                });
+
+                // Pin toggle functionality
+                const pinToggleBtn = panel.querySelector('.pin-toggle-btn');
+                pinToggleBtn.innerHTML = this.isPinned ? '📌 Unpin Panel' : '📌 Pin Panel';
+                pinToggleBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdownContent.style.display = 'none';
+                    this.togglePinPanel();
+                });
+
+                // Pin toggle hover effects
+                pinToggleBtn.addEventListener('mouseenter', () => {
+                    pinToggleBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+                });
+                pinToggleBtn.addEventListener('mouseleave', () => {
+                    pinToggleBtn.style.background = 'none';
                 });
 
                 // Close dropdown when clicking outside
@@ -1643,27 +1646,21 @@
                 // Get current daily Xanax count from API
                 const currentXanaxCount = this.getDailyXanaxCount(personalstats);
                 
-                // Find Xanax tasks (xanax1, xanax2, xanax3)
-                const xanaxTasks = ['xanax1', 'xanax2', 'xanax3']
-                    .map(type => this.todoItems.find(item => item.type === type))
-                    .filter(item => item); // Remove null/undefined items
+                // Find the single Xanax task
+                const xanaxTask = this.todoItems.find(item => item.type === 'xanax');
                 
-                if (xanaxTasks.length === 0) return 0;
+                if (!xanaxTask) return 0;
                 
-                // Count how many are currently completed
-                const currentlyCompleted = xanaxTasks.filter(task => task.completed).length;
+                // Count how many completions the task currently has
+                const currentlyCompleted = xanaxTask.completionCount || 0;
                 
-                // Auto-complete tasks based on API count
+                // Auto-complete based on API count but don't exceed current completions
                 if (currentXanaxCount > currentlyCompleted) {
-                    const tasksToComplete = Math.min(currentXanaxCount - currentlyCompleted, xanaxTasks.length - currentlyCompleted);
-                    
-                    // Complete tasks in order (xanax1, then xanax2, then xanax3)
-                    for (let i = 0; i < xanaxTasks.length && completions < tasksToComplete; i++) {
-                        if (!xanaxTasks[i].completed) {
-                            xanaxTasks[i].completed = true;
-                            completions++;
-                            console.log(`✅ Auto-completed: ${xanaxTasks[i].name}`);
-                        }
+                    const newCompletions = Math.min(currentXanaxCount, xanaxTask.maxCompletions || 3);
+                    if (newCompletions > currentlyCompleted) {
+                        xanaxTask.completionCount = newCompletions;
+                        completions = newCompletions - currentlyCompleted;
+                        console.log(`✅ Auto-updated Xanax task: ${currentlyCompleted} → ${newCompletions} completions`);
                     }
                 }
                 
