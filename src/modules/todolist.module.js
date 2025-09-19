@@ -63,10 +63,12 @@
                     name: 'Attack Player',
                     icon: '⚔️',
                     color: '#E67E22',
-                    description: 'Attack another player',
+                    description: 'Attack specific player (set target ID)',
                     category: 'daily',
                     maxCompletions: 1,
-                    isMultiCompletion: false
+                    isMultiCompletion: false,
+                    requiresInput: true,
+                    inputType: 'profileId'
                 },
                 // Medical/Drug tasks
                 xanax: {
@@ -166,7 +168,7 @@
                     max-height: 600px;
                     z-index: 1000;
                     resize: ${this.isPinned ? 'none' : 'both'};
-                    overflow: hidden;
+                    overflow: ${this.isPinned ? 'hidden' : 'visible'};
                 `;
 
                 const header = document.createElement('div');
@@ -210,9 +212,10 @@
                                 border: 1px solid #555;
                                 padding: 4px 0;
                                 overflow-y: auto;
-                                scrollbar-width: thin;
-                                scrollbar-color: #555 #333;
                                 box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+                                /* Hide scrollbars but keep scroll functionality */
+                                scrollbar-width: none; /* Firefox */
+                                -ms-overflow-style: none; /* Internet Explorer 10+ */
                             ">
                                 <!-- Panel Options -->
                                 <button class="pin-toggle-btn" style="
@@ -303,7 +306,37 @@
                     display: flex;
                     flex-direction: column;
                     gap: 12px;
+                    /* Hide scrollbars but keep scroll functionality */
+                    scrollbar-width: none; /* Firefox */
+                    -ms-overflow-style: none; /* Internet Explorer 10+ */
                 `;
+                
+                // Hide scrollbars for webkit browsers (Chrome, Safari, Edge)
+                content.style.setProperty('--scrollbar-display', 'none');
+                
+                // Add style to hide webkit scrollbars
+                if (!document.getElementById('sidekick-scrollbar-styles')) {
+                    const style = document.createElement('style');
+                    style.id = 'sidekick-scrollbar-styles';
+                    style.textContent = `
+                        #todo-content::-webkit-scrollbar,
+                        .sidekick-panel *::-webkit-scrollbar,
+                        .sidekick-content *::-webkit-scrollbar,
+                        .dropdown-content::-webkit-scrollbar {
+                            display: none;
+                            width: 0;
+                            height: 0;
+                        }
+                        
+                        #todo-content::-webkit-scrollbar-track,
+                        .sidekick-panel *::-webkit-scrollbar-track,
+                        .sidekick-content *::-webkit-scrollbar-track,
+                        .dropdown-content::-webkit-scrollbar-track {
+                            background: transparent;
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
 
                 panel.appendChild(header);
                 panel.appendChild(content);
@@ -849,7 +882,95 @@
                     
                     name.appendChild(nameInput);
                 } else {
-                    name.textContent = item.name;
+                    // For attack tasks, show target name if available
+                    if (item.type === 'attack' && item.targetName) {
+                        name.textContent = `${item.name} (${item.targetName})`;
+                    } else {
+                        name.textContent = item.name;
+                    }
+                }
+
+                // Special input for attack task
+                if (item.type === 'attack') {
+                    const targetContainer = document.createElement('div');
+                    targetContainer.style.cssText = `
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        margin-top: 4px;
+                    `;
+                    
+                    const targetInput = document.createElement('input');
+                    targetInput.type = 'number';
+                    targetInput.placeholder = 'Profile ID';
+                    targetInput.value = item.targetId || '';
+                    targetInput.style.cssText = `
+                        background: rgba(255,255,255,0.1);
+                        border: 1px solid #555;
+                        border-radius: 4px;
+                        color: #fff;
+                        font-size: 11px;
+                        padding: 4px 6px;
+                        width: 80px;
+                        outline: none;
+                    `;
+                    
+                    const fetchBtn = document.createElement('button');
+                    fetchBtn.textContent = '👤';
+                    fetchBtn.title = 'Fetch username';
+                    fetchBtn.style.cssText = `
+                        background: #4CAF50;
+                        border: none;
+                        border-radius: 4px;
+                        color: white;
+                        cursor: pointer;
+                        font-size: 10px;
+                        padding: 4px 6px;
+                        transition: background 0.2s ease;
+                    `;
+                    
+                    targetInput.addEventListener('change', async (e) => {
+                        const profileId = e.target.value.trim();
+                        if (profileId && /^\d+$/.test(profileId)) {
+                            item.targetId = profileId;
+                            // Try to fetch username
+                            try {
+                                const username = await this.fetchUsername(profileId);
+                                if (username) {
+                                    item.targetName = username;
+                                    name.textContent = `${item.name} (${username})`;
+                                }
+                            } catch (error) {
+                                console.log('Could not fetch username:', error);
+                            }
+                            this.saveState();
+                        }
+                    });
+                    
+                    fetchBtn.addEventListener('click', async () => {
+                        const profileId = targetInput.value.trim();
+                        if (profileId && /^\d+$/.test(profileId)) {
+                            try {
+                                fetchBtn.style.background = '#FF9800';
+                                const username = await this.fetchUsername(profileId);
+                                if (username) {
+                                    item.targetName = username;
+                                    name.textContent = `${item.name} (${username})`;
+                                    fetchBtn.style.background = '#4CAF50';
+                                    this.saveState();
+                                }
+                            } catch (error) {
+                                fetchBtn.style.background = '#f44336';
+                                setTimeout(() => {
+                                    fetchBtn.style.background = '#4CAF50';
+                                }, 2000);
+                            }
+                        }
+                    });
+                    
+                    targetContainer.appendChild(targetInput);
+                    targetContainer.appendChild(fetchBtn);
+                    info.appendChild(targetContainer);
                 }
 
                 // Description with progress for multi-completion items
@@ -877,15 +998,96 @@
 
                 // For multi-completion items, show progress circles instead of checkbox
                 if (item.isMultiCompletion) {
-                    const progressContainer = document.createElement('div');
-                    progressContainer.style.cssText = `
-                        display: flex;
-                        gap: 3px;
-                        align-items: center;
-                    `;
-                    
-                    // For tasks with many completions (>5), show only numerical count
-                    if (item.maxCompletions > 5) {
+                    // Special handling for Xanax task - show 3 checkboxes in a row
+                    if (item.type === 'xanax') {
+                        const xanaxContainer = document.createElement('div');
+                        xanaxContainer.style.cssText = `
+                            display: flex;
+                            gap: 8px;
+                            align-items: center;
+                            background: rgba(231, 76, 60, 0.1);
+                            padding: 6px 10px;
+                            border-radius: 12px;
+                            border: 1px solid rgba(231, 76, 60, 0.3);
+                        `;
+                        
+                        for (let i = 0; i < 3; i++) {
+                            const xanaxBox = document.createElement('div');
+                            xanaxBox.style.cssText = `
+                                display: flex;
+                                align-items: center;
+                                gap: 4px;
+                                cursor: pointer;
+                                padding: 2px;
+                                border-radius: 4px;
+                                transition: background 0.2s ease;
+                            `;
+                            
+                            const checkbox = document.createElement('input');
+                            checkbox.type = 'checkbox';
+                            checkbox.checked = i < (item.completionCount || 0);
+                            checkbox.style.cssText = `
+                                width: 14px;
+                                height: 14px;
+                                accent-color: #E74C3C;
+                                cursor: pointer;
+                                margin: 0;
+                            `;
+                            
+                            const label = document.createElement('span');
+                            label.style.cssText = `
+                                font-size: 11px;
+                                color: #fff;
+                                user-select: none;
+                                cursor: pointer;
+                            `;
+                            label.textContent = `${i + 1}`;
+                            
+                            checkbox.addEventListener('change', (e) => {
+                                if (e.target.checked) {
+                                    // Check this box and all previous ones
+                                    item.completionCount = Math.max(item.completionCount || 0, i + 1);
+                                } else {
+                                    // Uncheck this box and all subsequent ones
+                                    item.completionCount = i;
+                                }
+                                
+                                item.completed = item.completionCount >= 3;
+                                this.saveState();
+                                this.refreshDisplay();
+                            });
+                            
+                            xanaxBox.addEventListener('click', (e) => {
+                                if (e.target !== checkbox) {
+                                    checkbox.click();
+                                }
+                            });
+                            
+                            xanaxBox.addEventListener('mouseenter', () => {
+                                xanaxBox.style.background = 'rgba(255, 255, 255, 0.1)';
+                            });
+                            
+                            xanaxBox.addEventListener('mouseleave', () => {
+                                xanaxBox.style.background = 'transparent';
+                            });
+                            
+                            xanaxBox.appendChild(checkbox);
+                            xanaxBox.appendChild(label);
+                            xanaxContainer.appendChild(xanaxBox);
+                        }
+                        
+                        controls.appendChild(xanaxContainer);
+                    } else {
+                        // Regular multi-completion display for other tasks
+                        const progressContainer = document.createElement('div');
+                        progressContainer.style.cssText = `
+                            display: flex;
+                            gap: 3px;
+                            align-items: center;
+                        `;
+                        
+                        // For tasks with many completions (>5), show only numerical count
+                        if (item.maxCompletions > 5) {
                         const numberDisplay = document.createElement('span');
                         numberDisplay.style.cssText = `
                             color: ${item.completedCount >= item.maxCompletions ? '#4CAF50' : item.color};
@@ -934,6 +1136,7 @@
                     }
                     
                     controls.appendChild(progressContainer);
+                    }
                 } else {
                     // Regular checkbox for single-completion items
                     const checkbox = document.createElement('input');
@@ -1423,14 +1626,14 @@
             },
 
             checkDailyReset() {
+                // Use UTC time (Torn City Time - TCT)
                 const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+                const todayTCT = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
                 
-                if (!this.lastResetDate || this.lastResetDate < todayUTC.getTime()) {
-                    console.log('🔄 Daily reset detected, clearing daily tasks...');
+                if (!this.lastResetDate || this.lastResetDate < todayTCT.getTime()) {
+                    console.log('🔄 Daily reset detected (TCT 00:00), clearing daily tasks...');
                     this.resetDailyTasks();
-                    this.lastResetDate = todayUTC.getTime();
+                    this.lastResetDate = todayTCT.getTime();
                     this.saveState();
                 }
             },
@@ -1479,6 +1682,7 @@
                 if (panel) {
                     // Update resize and cursor based on pinned state
                     panel.style.resize = this.isPinned ? 'none' : 'both';
+                    panel.style.overflow = this.isPinned ? 'hidden' : 'visible';
                     const header = panel.querySelector('.todo-header');
                     if (header) {
                         header.style.cursor = this.isPinned ? 'default' : 'move';
@@ -1569,19 +1773,28 @@
             },
             
             // Fetch data from Torn API using enhanced API system
-            async fetchApiData(section, selection) {
+            async fetchApiData(section, selection, userId = null) {
                 if (!this.apiKey) return null;
                 
                 try {
                     // Use the enhanced API system from settings module if available
                     if (window.SidekickModules?.Api?.makeRequest) {
-                        console.log(`🔄 Using enhanced API system for ${section}/${selection}`);
-                        const data = await window.SidekickModules.Api.makeRequest(section, selection);
-                        return data;
+                        console.log(`🔄 Using enhanced API system for ${section}/${selection}${userId ? ` (user: ${userId})` : ''}`);
+                        if (userId) {
+                            // For other users, construct the URL manually
+                            const url = `https://api.torn.com/user/${userId}?selections=${selection}&key=${this.apiKey}`;
+                            const response = await fetch(url);
+                            const data = await response.json();
+                            return data;
+                        } else {
+                            const data = await window.SidekickModules.Api.makeRequest(section, selection);
+                            return data;
+                        }
                     } else {
                         // Fallback to direct fetch with V2 compatibility
-                        console.log(`🔄 Using direct fetch fallback for ${section}/${selection}`);
-                        const url = `https://api.torn.com/${section}?selections=${selection}&key=${this.apiKey}`;
+                        console.log(`🔄 Using direct fetch fallback for ${section}/${selection}${userId ? ` (user: ${userId})` : ''}`);
+                        const baseUrl = userId ? `https://api.torn.com/user/${userId}` : `https://api.torn.com/${section}`;
+                        const url = `${baseUrl}?selections=${selection}&key=${this.apiKey}`;
                         const response = await fetch(url);
                         const data = await response.json();
                         
@@ -1699,6 +1912,24 @@
                 const baselineXanax = this.dailyStatsBaseline.xantaken || 0;
                 
                 return Math.max(0, currentXanax - baselineXanax);
+            },
+            
+            // Fetch username from profile ID
+            async fetchUsername(profileId) {
+                try {
+                    if (!this.apiEnabled) {
+                        throw new Error('API not enabled');
+                    }
+                    
+                    const data = await this.fetchApiData('user', 'basic', profileId);
+                    if (data && data.name) {
+                        return data.name;
+                    }
+                    throw new Error('No username found');
+                } catch (error) {
+                    console.error('Failed to fetch username:', error);
+                    throw error;
+                }
             },
             
             // Load or create daily stats baseline
