@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidewinder Content Module
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
-// @description  Content management (notepads, todos, attack lists) for Sidewinder sidebar
+// @version      2.0.0
+// @description  Enhanced Content management: Fixed Pages system with proper isolation, immediate UI updates, state management per page
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
