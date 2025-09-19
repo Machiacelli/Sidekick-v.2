@@ -1,10 +1,12 @@
 ---
-applyTo: '**'
+applyTo: '*SidekickV2.js*'
 ---
 Provide project context and coding guidelines that AI should follow when generating code, answering questions, or reviewing changes.
 
 1. **Project Context**:
    - The project is a Tampermonkey user script designed to enhance the Torn.com website with additional features and a sidebar.
+   - It is superimportant to keep to the modular design of the project, ensuring that new features are added as separate modules where possible.
+   - Never use git add . because it never works as intended
    - Use these links for reference:
    - https://tornapi.tornplayground.eu/
    - https://www.torn.com/api.html
@@ -24,3 +26,9 @@ Provide project context and coding guidelines that AI should follow when generat
    - Always push updates to the github repository and update the latest commit hash after making changes.
    - In the github fixes notes, dont claim the version is working.
    - in the github fixes notes, provide a structured description of the changes made and what issues they address.
+   - Dont make a bunch of new test scripts and remakes of the same script. Always work in the modular version.
+
+   Torn Rules:
+   -The use of scripts, extensions, applications or any other kind of software is allowed only if it uses data from our API or a page you (or your users) have loaded manually and are currently viewing. They cannot make additional non-API requests to Torn, scrape pages that you're not currently viewing, or attempt to bypass the captcha. If the software you're using makes non-API requests that are not manually triggered by you, it is not allowed and can be tracked.
+   - Furthermore, releasing software which has malicious or undisclosed abilities is forbidden and developers creating API based software must adhere to the acceptable usage terms laid out here: 
+   https://www.torn.com/api.html

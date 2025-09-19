@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick To-Do List Module
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
-// @description  Daily To-Do List with automatic reset for Torn.com activities
+// @version      1.1.0
+// @description  Daily To-Do List with dropdown task picker, API integration, and multi-completion tracking
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -77,40 +77,11 @@
                     maxCompletions: 1,
                     isMultiCompletion: false
                 },
-                // Activities
-                gym: {
-                    name: 'Gym Training',
-                    icon: '💪',
-                    color: '#F39C12',
-                    description: 'Complete gym training',
-                    category: 'daily',
-                    maxCompletions: 1,
-                    isMultiCompletion: false
-                },
-                crime: {
-                    name: 'Commit Crime',
-                    icon: '🔫',
-                    color: '#8E44AD',
-                    description: 'Commit a crime',
-                    category: 'daily',
-                    maxCompletions: 1,
-                    isMultiCompletion: false
-                },
                 attack: {
                     name: 'Attack Player',
                     icon: '⚔️',
                     color: '#E67E22',
                     description: 'Attack another player',
-                    category: 'daily',
-                    maxCompletions: 1,
-                    isMultiCompletion: false
-                },
-                // Economic
-                stocks: {
-                    name: 'Check Stocks',
-                    icon: '📈',
-                    color: '#27AE60',
-                    description: 'Check stock investments',
                     category: 'daily',
                     maxCompletions: 1,
                     isMultiCompletion: false
@@ -124,12 +95,12 @@
                     maxCompletions: 1,
                     isMultiCompletion: false
                 },
-                // Legacy support
+                // Medical/Drug tasks
                 xanax: {
-                    name: 'Drug Use',
-                    icon: '�',
+                    name: 'Take Xanax',
+                    icon: '💊',
                     color: '#E74C3C',
-                    description: 'Daily drug use (legacy)',
+                    description: 'Take Xanax (up to 3 per day with API tracking)',
                     category: 'daily',
                     maxCompletions: 3,
                     isMultiCompletion: true
@@ -259,8 +230,8 @@
                                 display: none;
                                 position: fixed;
                                 background: #333;
-                                min-width: 160px;
-                                max-height: 200px;
+                                min-width: 200px;
+                                max-height: 300px;
                                 z-index: 100000;
                                 border-radius: 4px;
                                 border: 1px solid #555;
@@ -271,20 +242,43 @@
                                 top: 0;
                                 left: 0;
                             ">
-                                <button class="add-task-btn" style="
-                                    background: none;
-                                    border: none;
-                                    color: #fff;
-                                    padding: 8px 12px;
-                                    width: 100%;
-                                    text-align: left;
-                                    cursor: pointer;
-                                    font-size: 12px;
-                                    display: flex;
-                                    align-items: center;
-                                    gap: 8px;
-                                    transition: background 0.2s ease;
-                                " title="Add new task">+ Add Task</button>
+                                <!-- Task Categories -->
+                                <div class="task-category-header" style="
+                                    color: #888;
+                                    font-size: 10px;
+                                    font-weight: 600;
+                                    text-transform: uppercase;
+                                    padding: 8px 12px 4px 12px;
+                                    border-bottom: 1px solid #444;
+                                    margin-bottom: 4px;
+                                ">Daily Tasks</div>
+                                <div class="daily-tasks"></div>
+                                
+                                <div class="task-category-header" style="
+                                    color: #888;
+                                    font-size: 10px;
+                                    font-weight: 600;
+                                    text-transform: uppercase;
+                                    padding: 8px 12px 4px 12px;
+                                    border-bottom: 1px solid #444;
+                                    margin: 8px 0 4px 0;
+                                ">Weekly Tasks</div>
+                                <div class="weekly-tasks"></div>
+                                
+                                <div class="task-category-header" style="
+                                    color: #888;
+                                    font-size: 10px;
+                                    font-weight: 600;
+                                    text-transform: uppercase;
+                                    padding: 8px 12px 4px 12px;
+                                    border-bottom: 1px solid #444;
+                                    margin: 8px 0 4px 0;
+                                ">Custom Tasks</div>
+                                <div class="custom-tasks"></div>
+                                
+                                <!-- Divider -->
+                                <div style="height: 1px; background: #444; margin: 8px 0;"></div>
+                                
                                 <button class="clear-completed-btn" style="
                                     background: none;
                                     border: none;
@@ -432,7 +426,7 @@
                             ">${item.isCustom ? `<input type="text" value="${item.customText || item.name}" style="
                                 background: transparent; border: none; color: ${item.completed ? '#888' : '#fff'};
                                 font-weight: 500; font-size: 13px; outline: none; padding: 0; width: 100%;
-                            ">` : item.name}</div>
+                            ">` : item.name}${item.maxCompletions > 1 ? ` (${item.completedCount || 0}/${item.maxCompletions})` : ''}</div>
                             <div style="color: #aaa; font-size: 11px; opacity: ${item.completed ? '0.6' : '1'};">
                                 ${item.description}
                             </div>
@@ -447,7 +441,20 @@
                 // Add event listeners
                 const checkbox = element.querySelector('input[type="checkbox"]');
                 checkbox.addEventListener('change', (e) => {
-                    item.completed = e.target.checked;
+                    if (item.maxCompletions > 1) {
+                        // For multi-completion tasks, increment/decrement the count
+                        if (e.target.checked) {
+                            item.completedCount = Math.min((item.completedCount || 0) + 1, item.maxCompletions);
+                            item.completed = item.completedCount >= item.maxCompletions;
+                        } else {
+                            item.completedCount = Math.max((item.completedCount || 0) - 1, 0);
+                            item.completed = false;
+                        }
+                    } else {
+                        // For single completion tasks, use simple toggle
+                        item.completed = e.target.checked;
+                        item.completedCount = e.target.checked ? 1 : 0;
+                    }
                     this.saveState();
                     this.refreshModernDisplay();
                 });
@@ -1042,11 +1049,13 @@
             },
 
             addPanelEventListeners(panel) {
-                const addBtn = panel.querySelector('.add-task-btn');
                 const closeBtn = panel.querySelector('.close-btn');
                 const clearCompletedBtn = panel.querySelector('.clear-completed-btn');
                 const dropdownBtn = panel.querySelector('.dropdown-btn');
                 const dropdownContent = panel.querySelector('.dropdown-content');
+
+                // Populate task categories in dropdown
+                this.populateTaskDropdown(panel);
 
                 // Dropdown functionality
                 dropdownBtn.addEventListener('click', (e) => {
@@ -1070,13 +1079,6 @@
                     }
                 });
 
-                // Add task functionality
-                addBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    dropdownContent.style.display = 'none';
-                    this.showTaskPicker();
-                });
-
                 // Clear completed functionality
                 clearCompletedBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -1084,14 +1086,12 @@
                     this.clearCompletedTasks();
                 });
 
-                // Dropdown hover effects
-                [addBtn, clearCompletedBtn].forEach(btn => {
-                    btn.addEventListener('mouseenter', () => {
-                        btn.style.background = 'rgba(255, 255, 255, 0.1)';
-                    });
-                    btn.addEventListener('mouseleave', () => {
-                        btn.style.background = 'none';
-                    });
+                // Dropdown hover effects for clear completed button
+                clearCompletedBtn.addEventListener('mouseenter', () => {
+                    clearCompletedBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+                });
+                clearCompletedBtn.addEventListener('mouseleave', () => {
+                    clearCompletedBtn.style.background = 'none';
                 });
 
                 // Close button functionality
@@ -1115,11 +1115,67 @@
                 
                 if (clearedCount > 0) {
                     console.log(`📋 Cleared ${clearedCount} completed tasks`);
-                    this.saveModernTodoList();
+                    this.saveState();
                     this.refreshModernDisplay();
                 } else {
                     console.log('📋 No completed tasks to clear');
                 }
+            },
+
+            populateTaskDropdown(panel) {
+                const dailyContainer = panel.querySelector('.daily-tasks');
+                const weeklyContainer = panel.querySelector('.weekly-tasks');
+                const customContainer = panel.querySelector('.custom-tasks');
+                
+                // Group tasks by category
+                const categories = { daily: [], weekly: [], custom: [] };
+                Object.entries(this.todoItemTypes).forEach(([key, itemType]) => {
+                    categories[itemType.category].push({ key, itemType });
+                });
+
+                // Create task buttons for each category
+                Object.entries(categories).forEach(([categoryName, items]) => {
+                    const container = categoryName === 'daily' ? dailyContainer : 
+                                    categoryName === 'weekly' ? weeklyContainer : customContainer;
+                    
+                    items.forEach(({ key, itemType }) => {
+                        const taskButton = document.createElement('button');
+                        taskButton.className = 'task-option-btn';
+                        taskButton.style.cssText = `
+                            background: none;
+                            border: none;
+                            color: #fff;
+                            padding: 6px 12px;
+                            width: 100%;
+                            text-align: left;
+                            cursor: pointer;
+                            font-size: 11px;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                            transition: background 0.2s ease;
+                        `;
+                        taskButton.innerHTML = `${itemType.icon} ${itemType.name}`;
+                        taskButton.title = itemType.description;
+                        
+                        // Add click handler to add this task
+                        taskButton.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            this.addTodoItem(key);
+                            panel.querySelector('.dropdown-content').style.display = 'none';
+                        });
+                        
+                        // Add hover effects
+                        taskButton.addEventListener('mouseenter', () => {
+                            taskButton.style.background = 'rgba(255, 255, 255, 0.1)';
+                        });
+                        taskButton.addEventListener('mouseleave', () => {
+                            taskButton.style.background = 'none';
+                        });
+                        
+                        container.appendChild(taskButton);
+                    });
+                });
             },
 
             addDragging(panel, header) {
