@@ -171,6 +171,11 @@
                     overflow: ${this.isPinned ? 'hidden' : 'visible'};
                 `;
 
+                // Prevent body scroll when scrolling inside panel
+                panel.addEventListener('wheel', (e) => {
+                    e.stopPropagation();
+                }, { passive: true });
+
                 const header = document.createElement('div');
                 header.className = 'todo-header';
                 header.style.cssText = `
