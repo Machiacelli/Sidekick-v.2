@@ -691,58 +691,82 @@
                 const pageNavigation = document.querySelector('.sidekick-page-navigation');
                 if (!pageNavigation) return;
 
-                // Clear existing dots (but keep add page button)
-                const addPageBtn = pageNavigation.querySelector('.sidekick-add-page-btn');
-                pageNavigation.innerHTML = '';
-
                 const pages = loadState(STORAGE_KEYS.SIDEBAR_PAGES, [{ notepads: [], todoLists: [], attackLists: [] }]);
                 const currentPage = loadState(STORAGE_KEYS.CURRENT_PAGE, 0);
+                const centeredContainer = pageNavigation.querySelector('.centered-container');
+                
+                if (!centeredContainer) return;
 
-                // Recreate page dots
-                pages.forEach((page, index) => {
-                    const dot = document.createElement('div');
-                    dot.className = 'sidekick-page-dot';
-                    if (index === currentPage) {
-                        dot.classList.add('active');
-                    }
-                    dot.dataset.page = index;
-                    dot.title = `Page ${index + 1}`;
-                    
-                    // Press and hold to delete page
-                    let pressTimer = null;
-                    dot.addEventListener('mousedown', (e) => {
-                        if (pages.length > 1) {
-                            pressTimer = setTimeout(() => {
-                                if (confirm(`Delete page ${index + 1}?`)) {
-                                    this.removePage(index);
-                                }
-                            }, 1000);
+                const existingDots = centeredContainer.querySelectorAll('.sidekick-page-dot');
+                const addPageBtn = centeredContainer.querySelector('.sidekick-add-page-btn');
+                
+                // Remove excess dots if pages were deleted
+                if (existingDots.length > pages.length) {
+                    for (let i = pages.length; i < existingDots.length; i++) {
+                        if (existingDots[i]) {
+                            existingDots[i].remove();
                         }
-                    });
+                    }
+                }
+                
+                // Update existing dots and add new ones
+                pages.forEach((page, index) => {
+                    let dot = existingDots[index];
                     
-                    ['mouseup', 'mouseleave'].forEach(event => {
-                        dot.addEventListener(event, () => {
-                            if (pressTimer) {
-                                clearTimeout(pressTimer);
-                                pressTimer = null;
+                    if (!dot) {
+                        // Create new dot if it doesn't exist
+                        dot = document.createElement('div');
+                        dot.className = 'sidekick-page-dot';
+                        dot.dataset.page = index;
+                        
+                        // Press and hold to delete page
+                        let pressTimer = null;
+                        dot.addEventListener('mousedown', (e) => {
+                            if (pages.length > 1) {
+                                pressTimer = setTimeout(() => {
+                                    if (confirm(`Delete page ${index + 1}?`)) {
+                                        this.removePage(index);
+                                    }
+                                }, 1000);
                             }
                         });
-                    });
-                    
-                    // Left-click to switch page
-                    dot.addEventListener('click', () => {
-                        if (window.SidekickModules?.Content?.switchToPage) {
-                            window.SidekickModules.Content.switchToPage(index);
+                        
+                        ['mouseup', 'mouseleave'].forEach(event => {
+                            dot.addEventListener(event, () => {
+                                if (pressTimer) {
+                                    clearTimeout(pressTimer);
+                                    pressTimer = null;
+                                }
+                            });
+                        });
+                        
+                        // Left-click to switch page
+                        dot.addEventListener('click', () => {
+                            if (window.SidekickModules?.Content?.switchToPage) {
+                                window.SidekickModules.Content.switchToPage(index);
+                            }
+                        });
+                        
+                        // Insert before the add button
+                        if (addPageBtn) {
+                            centeredContainer.insertBefore(dot, addPageBtn);
+                        } else {
+                            centeredContainer.appendChild(dot);
                         }
-                    });
+                    }
                     
-                    pageNavigation.appendChild(dot);
+                    // Update dot state
+                    dot.classList.toggle('active', index === currentPage);
+                    dot.title = `Page ${index + 1}`;
+                    dot.dataset.page = index;
                 });
                 
-                // Re-add the add page button
-                if (addPageBtn) {
-                    pageNavigation.appendChild(addPageBtn);
-                }
+                // Force visual update
+                pageNavigation.style.display = 'none';
+                pageNavigation.offsetHeight; // Force reflow
+                pageNavigation.style.display = 'flex';
+                
+                console.log('📄 Page dots updated - pages:', pages.length, 'current:', currentPage);
             },
 
             removePage(pageIndex) {
@@ -755,8 +779,23 @@
                     return;
                 }
                 
-                // Remove the page
+                // Remove the page and its state
                 pages.splice(pageIndex, 1);
+                
+                // Also remove page state
+                const pageStates = loadState(STORAGE_KEYS.PAGE_STATES, {});
+                delete pageStates[pageIndex];
+                
+                // Reindex remaining page states
+                const newPageStates = {};
+                Object.keys(pageStates).forEach(key => {
+                    const index = parseInt(key);
+                    if (index > pageIndex) {
+                        newPageStates[index - 1] = pageStates[key];
+                    } else if (index < pageIndex) {
+                        newPageStates[index] = pageStates[key];
+                    }
+                });
                 
                 // Adjust current page if necessary
                 let newCurrentPage = currentPage;
@@ -767,17 +806,21 @@
                     newCurrentPage = pages.length - 1;
                 }
                 
-                // Save changes
+                // Save all changes
                 saveState(STORAGE_KEYS.SIDEBAR_PAGES, pages);
+                saveState(STORAGE_KEYS.PAGE_STATES, newPageStates);
                 saveState(STORAGE_KEYS.CURRENT_PAGE, newCurrentPage);
                 
-                // Update UI
+                // Force immediate UI update
                 this.updatePageDots();
+                
+                // Switch to the adjusted current page
                 if (window.SidekickModules?.Content?.switchToPage) {
                     window.SidekickModules.Content.switchToPage(newCurrentPage);
                 }
                 
-                NotificationSystem.show('Success', `Page ${pageIndex + 1} removed`, 'info');
+                NotificationSystem.show('Success', `Page ${pageIndex + 1} removed`, 'info', 2000);
+                console.log('📄 Page removed:', pageIndex, 'new current page:', newCurrentPage);
             },
 
             createPanelButton() {

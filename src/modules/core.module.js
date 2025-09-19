@@ -25,6 +25,7 @@
         SIDEBAR_WIDTH: 'sidekick_sidebar_width',
         SIDEBAR_PAGES: 'sidekick_sidebar_pages',
         CURRENT_PAGE: 'sidekick_current_page',
+        PAGE_STATES: 'sidekick_page_states',
         TIMERS: 'sidekick_timers',
         TRAVEL_TRACKERS: 'sidekick_travel_trackers'
     };

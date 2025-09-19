@@ -1070,27 +1070,177 @@
             // === PAGE MANAGEMENT ===
             switchToPage(pageIndex) {
                 console.log('📄 Switching to page:', pageIndex);
+                const oldPage = loadState(STORAGE_KEYS.CURRENT_PAGE, 0);
+                
+                // Save current page state (panel positions, states, etc.)
+                this.saveCurrentPageState(oldPage);
+                
+                // Set new current page
                 saveState(STORAGE_KEYS.CURRENT_PAGE, pageIndex);
                 
-                // Notepads are now global, no need to reload on page switch
-                // Just ensure they're displayed if switching pages
-                if (window.SidekickModules?.Notepad) {
-                    window.SidekickModules.Notepad.refreshDisplay();
-                }
+                // Clear current panels and content
+                this.clearAllPanels();
                 
-                // Update dot appearance immediately
+                // Restore new page state (panel positions, states, etc.)  
+                this.restorePageState(pageIndex);
+                
+                // Update dot appearance immediately without delay
                 document.querySelectorAll('.sidekick-page-dot').forEach((dot, index) => {
                     dot.classList.toggle('active', index === pageIndex);
                 });
                 
-                // Force page dots update for any new dots
+                // Force immediate UI update
                 if (window.SidekickModules?.UI?.updatePageDots) {
                     window.SidekickModules.UI.updatePageDots();
                 }
                 
-                // Refresh content for new page (excluding notepads since we handled them above)
+                // Refresh sidebar content for new page
                 this.refreshSidebarContent();
-                console.log('📄 Page switch complete');
+                
+                NotificationSystem.show('Info', `Switched to page ${pageIndex + 1}`, 'info', 1000);
+                console.log('📄 Page switch complete - from page', oldPage, 'to page', pageIndex);
+            },
+
+            // === PAGE STATE MANAGEMENT ===
+            saveCurrentPageState(pageIndex) {
+                console.log('💾 Saving state for page:', pageIndex);
+                const pageStates = loadState(STORAGE_KEYS.PAGE_STATES, {});
+                
+                // Save panel states for current page
+                pageStates[pageIndex] = {
+                    panels: {
+                        todoList: {
+                            isOpen: !!document.getElementById('sidekick-todo-panel'),
+                            position: loadState('todo_panel_position', { x: 20, y: 20 }),
+                            size: loadState('todo_panel_size', { width: 320, height: 400 }),
+                            isPinned: loadState('todo_panel_pinned', false)
+                        },
+                        notepad: {
+                            openPads: []
+                        },
+                        attackList: {
+                            openLists: []
+                        },
+                        timer: {
+                            isOpen: !!document.getElementById('sidekick-timer-panel'),
+                            position: loadState('timer_panel_position', { x: 60, y: 60 }),
+                            size: loadState('timer_panel_size', { width: 300, height: 200 })
+                        }
+                    }
+                };
+                
+                // Save open notepad IDs
+                document.querySelectorAll('.sidekick-notepad-panel').forEach(panel => {
+                    const notepadId = panel.dataset.notepadId;
+                    if (notepadId) {
+                        pageStates[pageIndex].panels.notepad.openPads.push({
+                            id: notepadId,
+                            position: {
+                                x: parseInt(panel.style.left) || 20,
+                                y: parseInt(panel.style.top) || 20
+                            },
+                            size: {
+                                width: panel.offsetWidth || 300,
+                                height: panel.offsetHeight || 200
+                            }
+                        });
+                    }
+                });
+                
+                // Save open attack list IDs  
+                document.querySelectorAll('.sidekick-attacklist-panel').forEach(panel => {
+                    const listId = panel.dataset.listId;
+                    if (listId) {
+                        pageStates[pageIndex].panels.attackList.openLists.push({
+                            id: listId,
+                            position: {
+                                x: parseInt(panel.style.left) || 20,
+                                y: parseInt(panel.style.top) || 20
+                            }
+                        });
+                    }
+                });
+                
+                saveState(STORAGE_KEYS.PAGE_STATES, pageStates);
+                console.log('💾 Page state saved for page', pageIndex, ':', pageStates[pageIndex]);
+            },
+
+            clearAllPanels() {
+                console.log('🧹 Clearing all panels...');
+                
+                // Close TodoList panels
+                if (window.SidekickModules?.TodoList?.hideTodoPanel) {
+                    window.SidekickModules.TodoList.hideTodoPanel();
+                }
+                
+                // Close Timer panels
+                if (window.SidekickModules?.Timer?.hideTimerPanel) {
+                    window.SidekickModules.Timer.hideTimerPanel();
+                }
+                
+                // Close all notepad panels
+                document.querySelectorAll('.sidekick-notepad-panel').forEach(panel => {
+                    panel.remove();
+                });
+                
+                // Close all attack list panels
+                document.querySelectorAll('.sidekick-attacklist-panel').forEach(panel => {
+                    panel.remove();
+                });
+                
+                console.log('🧹 All panels cleared');
+            },
+
+            restorePageState(pageIndex) {
+                console.log('🔄 Restoring state for page:', pageIndex);
+                const pageStates = loadState(STORAGE_KEYS.PAGE_STATES, {});
+                const pageState = pageStates[pageIndex];
+                
+                if (!pageState || !pageState.panels) {
+                    console.log('📄 No saved state for page', pageIndex, '- using defaults');
+                    return;
+                }
+                
+                // Small delay to ensure DOM is ready
+                setTimeout(() => {
+                    const panels = pageState.panels;
+                    
+                    // Restore TodoList panel
+                    if (panels.todoList?.isOpen && window.SidekickModules?.TodoList) {
+                        console.log('📋 Restoring TodoList panel...');
+                        window.SidekickModules.TodoList.showTodoPanel();
+                    }
+                    
+                    // Restore Timer panel
+                    if (panels.timer?.isOpen && window.SidekickModules?.Timer) {
+                        console.log('⏰ Restoring Timer panel...');
+                        window.SidekickModules.Timer.showTimerPanel();
+                    }
+                    
+                    // Restore Notepad panels
+                    if (panels.notepad?.openPads && window.SidekickModules?.Notepad) {
+                        panels.notepad.openPads.forEach(padData => {
+                            console.log('📄 Restoring Notepad:', padData.id);
+                            // Note: Actual restoration depends on notepad module implementation
+                            if (window.SidekickModules.Notepad.showNotepadById) {
+                                window.SidekickModules.Notepad.showNotepadById(padData.id, padData.position);
+                            }
+                        });
+                    }
+                    
+                    // Restore Attack List panels
+                    if (panels.attackList?.openLists && window.SidekickModules?.AttackList) {
+                        panels.attackList.openLists.forEach(listData => {
+                            console.log('⚔️ Restoring Attack List:', listData.id);
+                            // Note: Actual restoration depends on attack list module implementation
+                            if (window.SidekickModules.AttackList.showListById) {
+                                window.SidekickModules.AttackList.showListById(listData.id, listData.position);
+                            }
+                        });
+                    }
+                    
+                    console.log('✅ Page state restoration complete for page', pageIndex);
+                }, 100);
             },
 
             addNewPage() {
