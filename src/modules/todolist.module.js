@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick To-Do List Module
 // @namespace    http://tampermonkey.net/
-// @version      1.1.0
-// @description  Daily To-Do List with dropdown task picker, API integration, and multi-completion tracking
+// @version      1.2.0
+// @description  Daily To-Do List with dropdown UI, proper deletion, 3-task Xanax tracking, and no weekly tasks
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -86,24 +86,33 @@
                     maxCompletions: 1,
                     isMultiCompletion: false
                 },
-                travel: {
-                    name: 'Travel Abroad',
-                    icon: '✈️',
-                    color: '#3498DB',
-                    description: 'Travel for items/money',
-                    category: 'weekly',
+                // Medical/Drug tasks
+                xanax1: {
+                    name: 'Take Xanax #1',
+                    icon: '💊',
+                    color: '#E74C3C',
+                    description: 'First daily Xanax dose',
+                    category: 'daily',
                     maxCompletions: 1,
                     isMultiCompletion: false
                 },
-                // Medical/Drug tasks
-                xanax: {
-                    name: 'Take Xanax',
+                xanax2: {
+                    name: 'Take Xanax #2',
                     icon: '💊',
                     color: '#E74C3C',
-                    description: 'Take Xanax (up to 3 per day with API tracking)',
+                    description: 'Second daily Xanax dose',
                     category: 'daily',
-                    maxCompletions: 3,
-                    isMultiCompletion: true
+                    maxCompletions: 1,
+                    isMultiCompletion: false
+                },
+                xanax3: {
+                    name: 'Take Xanax #3',
+                    icon: '💊',
+                    color: '#E74C3C',
+                    description: 'Third daily Xanax dose',
+                    category: 'daily',
+                    maxCompletions: 1,
+                    isMultiCompletion: false
                 },
                 // Custom tasks (persistent)
                 custom: {
@@ -228,7 +237,7 @@
                             </button>
                             <div class="dropdown-content" style="
                                 display: none;
-                                position: fixed;
+                                position: absolute;
                                 background: #333;
                                 min-width: 200px;
                                 max-height: 300px;
@@ -239,7 +248,7 @@
                                 overflow-y: auto;
                                 scrollbar-width: thin;
                                 scrollbar-color: #555 #333;
-                                top: 0;
+                                top: 100%;
                                 left: 0;
                             ">
                                 <!-- Task Categories -->
@@ -253,17 +262,6 @@
                                     margin-bottom: 4px;
                                 ">Daily Tasks</div>
                                 <div class="daily-tasks"></div>
-                                
-                                <div class="task-category-header" style="
-                                    color: #888;
-                                    font-size: 10px;
-                                    font-weight: 600;
-                                    text-transform: uppercase;
-                                    padding: 8px 12px 4px 12px;
-                                    border-bottom: 1px solid #444;
-                                    margin: 8px 0 4px 0;
-                                ">Weekly Tasks</div>
-                                <div class="weekly-tasks"></div>
                                 
                                 <div class="task-category-header" style="
                                     color: #888;
@@ -365,11 +363,14 @@
                 }
 
                 // Group items by category
-                const categories = { daily: [], weekly: [], custom: [] };
+                const categories = { daily: [], custom: [] };
                 this.todoItems.forEach(item => {
                     const itemType = this.todoItemTypes[item.type];
                     const category = itemType ? itemType.category : 'custom';
-                    categories[category].push(item);
+                    if (category !== 'weekly') { // Skip any remaining weekly tasks
+                        categories[category] = categories[category] || [];
+                        categories[category].push(item);
+                    }
                 });
 
                 // Render each category
@@ -389,7 +390,6 @@
                 
                 const categoryIcons = {
                     daily: '🌅 Daily Tasks',
-                    weekly: '📅 Weekly Tasks', 
                     custom: '📝 Custom Tasks'
                 };
                 
@@ -426,7 +426,7 @@
                             ">${item.isCustom ? `<input type="text" value="${item.customText || item.name}" style="
                                 background: transparent; border: none; color: ${item.completed ? '#888' : '#fff'};
                                 font-weight: 500; font-size: 13px; outline: none; padding: 0; width: 100%;
-                            ">` : item.name}${item.maxCompletions > 1 ? ` (${item.completedCount || 0}/${item.maxCompletions})` : ''}</div>
+                            ">` : item.name}</div>
                             <div style="color: #aaa; font-size: 11px; opacity: ${item.completed ? '0.6' : '1'};">
                                 ${item.description}
                             </div>
@@ -441,20 +441,9 @@
                 // Add event listeners
                 const checkbox = element.querySelector('input[type="checkbox"]');
                 checkbox.addEventListener('change', (e) => {
-                    if (item.maxCompletions > 1) {
-                        // For multi-completion tasks, increment/decrement the count
-                        if (e.target.checked) {
-                            item.completedCount = Math.min((item.completedCount || 0) + 1, item.maxCompletions);
-                            item.completed = item.completedCount >= item.maxCompletions;
-                        } else {
-                            item.completedCount = Math.max((item.completedCount || 0) - 1, 0);
-                            item.completed = false;
-                        }
-                    } else {
-                        // For single completion tasks, use simple toggle
-                        item.completed = e.target.checked;
-                        item.completedCount = e.target.checked ? 1 : 0;
-                    }
+                    // All tasks are now single completion
+                    item.completed = e.target.checked;
+                    item.completedCount = e.target.checked ? 1 : 0;
                     this.saveState();
                     this.refreshModernDisplay();
                 });
@@ -502,9 +491,12 @@
                 picker.innerHTML = '<h3 style="margin: 0 0 16px 0; color: #fff; font-size: 16px;">Add New Task</h3>';
 
                 // Add task buttons grouped by category
-                const categories = { daily: [], weekly: [], custom: [] };
+                const categories = { daily: [], custom: [] };
                 Object.entries(this.todoItemTypes).forEach(([key, itemType]) => {
-                    categories[itemType.category].push({ key, itemType });
+                    if (itemType.category !== 'weekly') { // Skip weekly tasks
+                        categories[itemType.category] = categories[itemType.category] || [];
+                        categories[itemType.category].push({ key, itemType });
+                    }
                 });
 
                 Object.entries(categories).forEach(([categoryName, items]) => {
@@ -517,7 +509,6 @@
                     `;
                     const categoryLabels = {
                         daily: '🌅 Daily Tasks',
-                        weekly: '📅 Weekly Tasks',
                         custom: '📝 Custom Tasks'
                     };
                     categoryHeader.textContent = categoryLabels[categoryName];
@@ -998,7 +989,7 @@
                 deleteBtn.title = 'Delete item';
                 
                 deleteBtn.addEventListener('click', () => {
-                    this.deleteTodoItem(index);
+                    this.deleteTodoItem(item.id);
                 });
                 
                 controls.appendChild(deleteBtn);
@@ -1008,14 +999,6 @@
                 element.appendChild(controls);
 
                 return element;
-            },
-
-            deleteTodoItem(index) {
-                if (confirm('Delete this todo item?')) {
-                    this.todoItems.splice(index, 1);
-                    this.saveState();
-                    this.refreshDisplay();
-                }
             },
 
             hideTodoPanel() {
@@ -1065,10 +1048,7 @@
                     if (isVisible) {
                         dropdownContent.style.display = 'none';
                     } else {
-                        const rect = dropdownBtn.getBoundingClientRect();
                         dropdownContent.style.display = 'block';
-                        dropdownContent.style.top = (rect.bottom + 2) + 'px';
-                        dropdownContent.style.left = rect.left + 'px';
                     }
                 });
 
@@ -1124,19 +1104,20 @@
 
             populateTaskDropdown(panel) {
                 const dailyContainer = panel.querySelector('.daily-tasks');
-                const weeklyContainer = panel.querySelector('.weekly-tasks');
                 const customContainer = panel.querySelector('.custom-tasks');
                 
                 // Group tasks by category
-                const categories = { daily: [], weekly: [], custom: [] };
+                const categories = { daily: [], custom: [] };
                 Object.entries(this.todoItemTypes).forEach(([key, itemType]) => {
-                    categories[itemType.category].push({ key, itemType });
+                    if (itemType.category !== 'weekly') { // Skip weekly tasks
+                        categories[itemType.category] = categories[itemType.category] || [];
+                        categories[itemType.category].push({ key, itemType });
+                    }
                 });
 
                 // Create task buttons for each category
                 Object.entries(categories).forEach(([categoryName, items]) => {
-                    const container = categoryName === 'daily' ? dailyContainer : 
-                                    categoryName === 'weekly' ? weeklyContainer : customContainer;
+                    const container = categoryName === 'daily' ? dailyContainer : customContainer;
                     
                     items.forEach(({ key, itemType }) => {
                         const taskButton = document.createElement('button');
@@ -1161,7 +1142,7 @@
                         // Add click handler to add this task
                         taskButton.addEventListener('click', (e) => {
                             e.stopPropagation();
-                            this.addTodoItem(key);
+                            this.addTodoItem(key, itemType);
                             panel.querySelector('.dropdown-content').style.display = 'none';
                         });
                         
@@ -1452,10 +1433,10 @@
             },
 
             resetDailyTasks() {
-                // Reset daily and weekly tasks (but not custom tasks)
+                // Reset daily tasks (but not custom tasks)
                 this.todoItems.forEach(item => {
                     const itemType = this.todoItemTypes[item.type];
-                    if (itemType && (itemType.category === 'daily' || itemType.category === 'weekly')) {
+                    if (itemType && itemType.category === 'daily') {
                         item.completed = false;
                         item.completedCount = 0;
                     }
@@ -1659,21 +1640,31 @@
             checkXanaxCompletion(cooldowns, personalstats) {
                 let completions = 0;
                 
-                // Find the Xanax item
-                const xanaxItem = this.todoItems.find(item => item.type === 'xanax');
-                if (!xanaxItem) return 0;
-                
-                // Get current daily Xanax count
+                // Get current daily Xanax count from API
                 const currentXanaxCount = this.getDailyXanaxCount(personalstats);
                 
-                // Update completion count if it has increased
-                if (currentXanaxCount > xanaxItem.completedCount) {
-                    const previousCount = xanaxItem.completedCount;
-                    xanaxItem.completedCount = Math.min(currentXanaxCount, xanaxItem.maxCompletions);
-                    xanaxItem.completed = xanaxItem.completedCount >= xanaxItem.maxCompletions;
+                // Find Xanax tasks (xanax1, xanax2, xanax3)
+                const xanaxTasks = ['xanax1', 'xanax2', 'xanax3']
+                    .map(type => this.todoItems.find(item => item.type === type))
+                    .filter(item => item); // Remove null/undefined items
+                
+                if (xanaxTasks.length === 0) return 0;
+                
+                // Count how many are currently completed
+                const currentlyCompleted = xanaxTasks.filter(task => task.completed).length;
+                
+                // Auto-complete tasks based on API count
+                if (currentXanaxCount > currentlyCompleted) {
+                    const tasksToComplete = Math.min(currentXanaxCount - currentlyCompleted, xanaxTasks.length - currentlyCompleted);
                     
-                    completions = xanaxItem.completedCount - previousCount;
-                    console.log(`✅ Auto-completed: ${xanaxItem.name} (${xanaxItem.completedCount}/${xanaxItem.maxCompletions})`);
+                    // Complete tasks in order (xanax1, then xanax2, then xanax3)
+                    for (let i = 0; i < xanaxTasks.length && completions < tasksToComplete; i++) {
+                        if (!xanaxTasks[i].completed) {
+                            xanaxTasks[i].completed = true;
+                            completions++;
+                            console.log(`✅ Auto-completed: ${xanaxTasks[i].name}`);
+                        }
+                    }
                 }
                 
                 return completions;
