@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick To-Do List Module
 // @namespace    http://tampermonkey.net/
-// @version      1.3.2
-// @description  Enhanced TodoList: 3-checkbox Xanax, Attack Player profile ID, resizable panels, no scrollbars, TCT daily reset
+// @version      1.3.3
+// @description  FORCE CDN: 3-checkbox Xanax, Attack Player profile ID, resizable panels, no scrollbars, TCT daily reset
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
