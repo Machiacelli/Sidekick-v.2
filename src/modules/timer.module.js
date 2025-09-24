@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Timer Module
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
-// @description  Timer module for Torn cooldowns and custom timers - modular approach
+// @version      1.1.0
+// @description  ENHANCED: Hidden scrollbars, custom timer with days/hours/minutes input, improved UX
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -280,7 +280,7 @@
                         " title="Close timer panel">×</button>
                     </div>
                     
-                    <div style="padding: 12px; flex: 1; overflow-y: auto;">
+                    <div style="padding: 12px; flex: 1; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none;">
                         <div id="timers-container">
                         </div>
                     </div>
@@ -625,9 +625,27 @@
                                style="width: 100%; padding: 8px; border: 1px solid #555; border-radius: 4px; background: #333; color: white;">
                     </div>
                     <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px;">Duration (minutes):</label>
-                        <input type="number" id="custom-timer-duration" min="1" value="60"
-                               style="width: 100%; padding: 8px; border: 1px solid #555; border-radius: 4px; background: #333; color: white;">
+                        <label style="display: block; margin-bottom: 8px; color: #ccc; font-weight: 600;">Duration:</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; align-items: end;">
+                            <div>
+                                <label style="display: block; margin-bottom: 4px; font-size: 12px; color: #aaa;">Days:</label>
+                                <input type="number" id="custom-timer-days" min="0" max="365" value="0"
+                                       style="width: 100%; padding: 6px; border: 1px solid #555; border-radius: 4px; background: #333; color: white; text-align: center;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 4px; font-size: 12px; color: #aaa;">Hours:</label>
+                                <input type="number" id="custom-timer-hours" min="0" max="23" value="1"
+                                       style="width: 100%; padding: 6px; border: 1px solid #555; border-radius: 4px; background: #333; color: white; text-align: center;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 4px; font-size: 12px; color: #aaa;">Minutes:</label>
+                                <input type="number" id="custom-timer-minutes" min="0" max="59" value="0"
+                                       style="width: 100%; padding: 6px; border: 1px solid #555; border-radius: 4px; background: #333; color: white; text-align: center;">
+                            </div>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 11px; color: #888; text-align: center;">
+                            Total duration will be calculated automatically
+                        </div>
                     </div>
                     <div style="display: flex; gap: 10px;">
                         <button id="custom-timer-start" style="flex: 1; padding: 10px; background: #4CAF50; border: none; border-radius: 4px; color: white; cursor: pointer;">
@@ -645,22 +663,29 @@
                 const startBtn = dialog.querySelector('#custom-timer-start');
                 const cancelBtn = dialog.querySelector('#custom-timer-cancel');
                 const nameInput = dialog.querySelector('#custom-timer-name');
-                const durationInput = dialog.querySelector('#custom-timer-duration');
+                const daysInput = dialog.querySelector('#custom-timer-days');
+                const hoursInput = dialog.querySelector('#custom-timer-hours');
+                const minutesInput = dialog.querySelector('#custom-timer-minutes');
 
                 startBtn.addEventListener('click', () => {
                     const name = nameInput.value.trim();
-                    const duration = parseInt(durationInput.value);
+                    const days = parseInt(daysInput.value) || 0;
+                    const hours = parseInt(hoursInput.value) || 0;
+                    const minutes = parseInt(minutesInput.value) || 0;
                     
-                    if (!name || duration < 1) {
+                    // Calculate total duration in minutes
+                    const totalMinutes = (days * 24 * 60) + (hours * 60) + minutes;
+                    
+                    if (!name || totalMinutes < 1) {
                         window.SidekickModules.Core.NotificationSystem.show(
                             'Timer',
-                            'Please enter a valid name and duration',
+                            'Please enter a valid name and duration (at least 1 minute)',
                             'warning'
                         );
                         return;
                     }
 
-                    this.createCustomTimer(name, duration);
+                    this.createCustomTimer(name, totalMinutes, { days, hours, minutes });
                     dialog.remove();
                 });
 
@@ -728,7 +753,7 @@
                 );
             },
 
-            createCustomTimer(name, durationMinutes) {
+            createCustomTimer(name, durationMinutes, timeComponents = null) {
                 const timer = {
                     id: 'timer-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
                     type: this.timerTypes.CUSTOM,
@@ -737,16 +762,29 @@
                     endTime: Date.now() + (durationMinutes * 60 * 1000),
                     duration: durationMinutes * 60 * 1000,
                     isActive: true,
-                    isCooldown: false
+                    isCooldown: false,
+                    timeComponents: timeComponents
                 };
 
                 this.timers.push(timer);
                 this.saveState();
                 this.renderTimers();
                 
+                // Create a nice duration description
+                let durationText = '';
+                if (timeComponents) {
+                    const parts = [];
+                    if (timeComponents.days > 0) parts.push(`${timeComponents.days} day${timeComponents.days > 1 ? 's' : ''}`);
+                    if (timeComponents.hours > 0) parts.push(`${timeComponents.hours} hour${timeComponents.hours > 1 ? 's' : ''}`);
+                    if (timeComponents.minutes > 0) parts.push(`${timeComponents.minutes} minute${timeComponents.minutes > 1 ? 's' : ''}`);
+                    durationText = parts.join(', ');
+                } else {
+                    durationText = `${durationMinutes} minutes`;
+                }
+                
                 window.SidekickModules.Core.NotificationSystem.show(
                     'Timer',
-                    `Custom timer "${name}" started for ${durationMinutes} minutes!`,
+                    `Custom timer "${name}" started for ${durationText}!`,
                     'success'
                 );
             },
@@ -1296,25 +1334,31 @@
                          },
 
              addCustomScrollbarStyles() {
-                 // Add custom scrollbar styles for webkit browsers
-                 const style = document.createElement('style');
-                 style.textContent = `
-                     .dropdown-content::-webkit-scrollbar {
-                         width: 6px;
-                     }
-                     .dropdown-content::-webkit-scrollbar-track {
-                         background: #333;
-                         border-radius: 3px;
-                     }
-                     .dropdown-content::-webkit-scrollbar-thumb {
-                         background: #555;
-                         border-radius: 3px;
-                     }
-                     .dropdown-content::-webkit-scrollbar-thumb:hover {
-                         background: #777;
-                     }
-                 `;
-                 document.head.appendChild(style);
+                 // Hide all scrollbars but keep scroll functionality
+                 if (!document.getElementById('timer-scrollbar-styles')) {
+                     const style = document.createElement('style');
+                     style.id = 'timer-scrollbar-styles';
+                     style.textContent = `
+                         #timer-panel *::-webkit-scrollbar,
+                         .dropdown-content::-webkit-scrollbar {
+                             display: none;
+                             width: 0;
+                             height: 0;
+                         }
+                         
+                         #timer-panel *::-webkit-scrollbar-track,
+                         .dropdown-content::-webkit-scrollbar-track {
+                             background: transparent;
+                         }
+                         
+                         #timer-panel *,
+                         .dropdown-content {
+                             scrollbar-width: none; /* Firefox */
+                             -ms-overflow-style: none; /* Internet Explorer 10+ */
+                         }
+                     `;
+                     document.head.appendChild(style);
+                 }
              },
 
              updateExistingTimers() {

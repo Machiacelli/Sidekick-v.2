@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick To-Do List Module
 // @namespace    http://tampermonkey.net/
-// @version      1.3.3
-// @description  FORCE CDN: 3-checkbox Xanax, Attack Player profile ID, resizable panels, no scrollbars, TCT daily reset
+// @version      1.4.0
+// @description  FIXED: Enhanced 3-dot Xanax system with elegant animations, fully resizable panels, hidden scrollbars, proper state management
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -164,11 +164,11 @@
                     flex-direction: column;
                     min-width: 280px;
                     min-height: 200px;
-                    max-width: 500px;
-                    max-height: 600px;
+                    max-width: 600px;
+                    max-height: 800px;
                     z-index: 1000;
                     resize: ${this.isPinned ? 'none' : 'both'};
-                    overflow: ${this.isPinned ? 'hidden' : 'visible'};
+                    overflow: hidden;
                 `;
 
                 // Prevent body scroll when scrolling inside panel
@@ -319,7 +319,7 @@
                 // Hide scrollbars for webkit browsers (Chrome, Safari, Edge)
                 content.style.setProperty('--scrollbar-display', 'none');
                 
-                // Add style to hide webkit scrollbars
+                // Add style to hide webkit scrollbars and add animations
                 if (!document.getElementById('sidekick-scrollbar-styles')) {
                     const style = document.createElement('style');
                     style.id = 'sidekick-scrollbar-styles';
@@ -327,7 +327,8 @@
                         #todo-content::-webkit-scrollbar,
                         .sidekick-panel *::-webkit-scrollbar,
                         .sidekick-content *::-webkit-scrollbar,
-                        .dropdown-content::-webkit-scrollbar {
+                        .dropdown-content::-webkit-scrollbar,
+                        #timer-panel *::-webkit-scrollbar {
                             display: none;
                             width: 0;
                             height: 0;
@@ -336,8 +337,18 @@
                         #todo-content::-webkit-scrollbar-track,
                         .sidekick-panel *::-webkit-scrollbar-track,
                         .sidekick-content *::-webkit-scrollbar-track,
-                        .dropdown-content::-webkit-scrollbar-track {
+                        .dropdown-content::-webkit-scrollbar-track,
+                        #timer-panel *::-webkit-scrollbar-track {
                             background: transparent;
+                        }
+                        
+                        @keyframes pulse-glow {
+                            0%, 100% { 
+                                box-shadow: 0 0 8px rgba(231, 76, 60, 0.4), inset 0 1px 2px rgba(255,255,255,0.3);
+                            }
+                            50% { 
+                                box-shadow: 0 0 16px rgba(231, 76, 60, 0.8), inset 0 1px 2px rgba(255,255,255,0.4);
+                            }
                         }
                     `;
                     document.head.appendChild(style);
@@ -1003,83 +1014,107 @@
 
                 // For multi-completion items, show progress circles instead of checkbox
                 if (item.isMultiCompletion) {
-                    // Special handling for Xanax task - show 3 checkboxes in a row
+                    // Special handling for Xanax task - show 3 elegant dots in a row
                     if (item.type === 'xanax') {
                         const xanaxContainer = document.createElement('div');
                         xanaxContainer.style.cssText = `
                             display: flex;
-                            gap: 8px;
+                            gap: 6px;
                             align-items: center;
-                            background: rgba(231, 76, 60, 0.1);
-                            padding: 6px 10px;
-                            border-radius: 12px;
-                            border: 1px solid rgba(231, 76, 60, 0.3);
+                            background: linear-gradient(135deg, rgba(231, 76, 60, 0.15), rgba(231, 76, 60, 0.05));
+                            padding: 8px 12px;
+                            border-radius: 16px;
+                            border: 1px solid rgba(231, 76, 60, 0.4);
+                            backdrop-filter: blur(5px);
                         `;
                         
                         for (let i = 0; i < 3; i++) {
-                            const xanaxBox = document.createElement('div');
-                            xanaxBox.style.cssText = `
-                                display: flex;
-                                align-items: center;
-                                gap: 4px;
+                            const xanaxDot = document.createElement('div');
+                            const isCompleted = i < (item.completedCount || 0);
+                            
+                            xanaxDot.style.cssText = `
+                                width: 12px;
+                                height: 12px;
+                                border-radius: 50%;
+                                background: ${isCompleted ? 
+                                    'linear-gradient(135deg, #E74C3C, #C0392B)' : 
+                                    'linear-gradient(135deg, #555, #333)'};
+                                border: 2px solid ${isCompleted ? '#E74C3C' : '#666'};
                                 cursor: pointer;
-                                padding: 2px;
-                                border-radius: 4px;
-                                transition: background 0.2s ease;
+                                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                                position: relative;
+                                box-shadow: ${isCompleted ? 
+                                    '0 0 8px rgba(231, 76, 60, 0.4), inset 0 1px 2px rgba(255,255,255,0.3)' : 
+                                    '0 2px 4px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.1)'};
+                                transform: ${isCompleted ? 'scale(1.1)' : 'scale(1)'};
                             `;
                             
-                            const checkbox = document.createElement('input');
-                            checkbox.type = 'checkbox';
-                            checkbox.checked = i < (item.completionCount || 0);
-                            checkbox.style.cssText = `
-                                width: 14px;
-                                height: 14px;
-                                accent-color: #E74C3C;
-                                cursor: pointer;
-                                margin: 0;
-                            `;
+                            // Add subtle pulsing animation for active state
+                            if (isCompleted) {
+                                xanaxDot.style.animation = 'pulse-glow 2s ease-in-out infinite';
+                            }
                             
-                            const label = document.createElement('span');
-                            label.style.cssText = `
-                                font-size: 11px;
-                                color: #fff;
-                                user-select: none;
-                                cursor: pointer;
+                            // Add number indicator inside dot
+                            const numberIndicator = document.createElement('span');
+                            numberIndicator.style.cssText = `
+                                position: absolute;
+                                top: 50%;
+                                left: 50%;
+                                transform: translate(-50%, -50%);
+                                font-size: 8px;
+                                font-weight: bold;
+                                color: ${isCompleted ? '#fff' : '#999'};
+                                text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+                                pointer-events: none;
                             `;
-                            label.textContent = `${i + 1}`;
+                            numberIndicator.textContent = (i + 1).toString();
+                            xanaxDot.appendChild(numberIndicator);
                             
-                            checkbox.addEventListener('change', (e) => {
-                                if (e.target.checked) {
-                                    // Check this box and all previous ones
-                                    item.completionCount = Math.max(item.completionCount || 0, i + 1);
+                            xanaxDot.addEventListener('click', () => {
+                                // Toggle completion state
+                                if (i < (item.completedCount || 0)) {
+                                    // Clicking on a completed dot - reduce count to this position
+                                    item.completedCount = i;
                                 } else {
-                                    // Uncheck this box and all subsequent ones
-                                    item.completionCount = i;
+                                    // Clicking on an incomplete dot - set count to this position + 1
+                                    item.completedCount = i + 1;
                                 }
                                 
-                                item.completed = item.completionCount >= 3;
+                                // Update overall completion status
+                                item.completed = item.completedCount >= 3;
+                                
                                 this.saveState();
                                 this.refreshDisplay();
                             });
                             
-                            xanaxBox.addEventListener('click', (e) => {
-                                if (e.target !== checkbox) {
-                                    checkbox.click();
-                                }
+                            xanaxDot.addEventListener('mouseenter', () => {
+                                xanaxDot.style.transform = 'scale(1.2)';
+                                xanaxDot.style.boxShadow = isCompleted ? 
+                                    '0 0 12px rgba(231, 76, 60, 0.6), inset 0 1px 2px rgba(255,255,255,0.3)' :
+                                    '0 4px 8px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.2)';
                             });
                             
-                            xanaxBox.addEventListener('mouseenter', () => {
-                                xanaxBox.style.background = 'rgba(255, 255, 255, 0.1)';
+                            xanaxDot.addEventListener('mouseleave', () => {
+                                xanaxDot.style.transform = isCompleted ? 'scale(1.1)' : 'scale(1)';
+                                xanaxDot.style.boxShadow = isCompleted ? 
+                                    '0 0 8px rgba(231, 76, 60, 0.4), inset 0 1px 2px rgba(255,255,255,0.3)' :
+                                    '0 2px 4px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.1)';
                             });
                             
-                            xanaxBox.addEventListener('mouseleave', () => {
-                                xanaxBox.style.background = 'transparent';
-                            });
-                            
-                            xanaxBox.appendChild(checkbox);
-                            xanaxBox.appendChild(label);
-                            xanaxContainer.appendChild(xanaxBox);
+                            xanaxContainer.appendChild(xanaxDot);
                         }
+                        
+                        // Add progress text
+                        const progressText = document.createElement('span');
+                        progressText.style.cssText = `
+                            font-size: 10px;
+                            color: #E74C3C;
+                            font-weight: 600;
+                            margin-left: 4px;
+                            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+                        `;
+                        progressText.textContent = `${item.completedCount || 0}/3`;
+                        xanaxContainer.appendChild(progressText);
                         
                         controls.appendChild(xanaxContainer);
                     } else {
@@ -1870,13 +1905,13 @@
                 if (!xanaxTask) return 0;
                 
                 // Count how many completions the task currently has
-                const currentlyCompleted = xanaxTask.completionCount || 0;
+                const currentlyCompleted = xanaxTask.completedCount || 0;
                 
                 // Auto-complete based on API count but don't exceed current completions
                 if (currentXanaxCount > currentlyCompleted) {
                     const newCompletions = Math.min(currentXanaxCount, xanaxTask.maxCompletions || 3);
                     if (newCompletions > currentlyCompleted) {
-                        xanaxTask.completionCount = newCompletions;
+                        xanaxTask.completedCount = newCompletions;
                         completions = newCompletions - currentlyCompleted;
                         console.log(`✅ Auto-updated Xanax task: ${currentlyCompleted} → ${newCompletions} completions`);
                     }
