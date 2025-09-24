@@ -691,9 +691,9 @@
                     const x = Math.min(Math.max(0, rawX), maxX);
                     const y = Math.min(Math.max(0, rawY), maxY);
 
-                    // Only save if values actually changed significantly
-                    if (Math.abs(notepad.x - x) < 2 && Math.abs(notepad.y - y) < 2 && 
-                        Math.abs(notepad.width - width) < 10 && Math.abs(notepad.height - height) < 10 && 
+                    // Only save if values actually changed significantly (more generous thresholds)
+                    if (Math.abs(notepad.x - x) < 5 && Math.abs(notepad.y - y) < 5 && 
+                        Math.abs(notepad.width - width) < 20 && Math.abs(notepad.height - height) < 20 && 
                         notepad.pinned === isPinned) {
                         console.log('📝 No significant layout changes detected, skipping save');
                         return;
@@ -831,7 +831,9 @@
                     });
                     
                     header.addEventListener('dragleave', () => {
-                        this.handleHeaderDragLeave(header);
+                        // Reset drag highlight when leaving
+                        header.style.boxShadow = '';
+                        header.style.borderColor = '';
                     });
                     
                     header.addEventListener('drop', (e) => {
@@ -854,15 +856,17 @@
                         startPosition.x = rect.left - sidebarRect.left;
                         startPosition.y = rect.top - sidebarRect.top;
                         
-                        // Disable draggable during mouse drag to prevent conflicts
-                        header.draggable = false;
-                        
                         e.preventDefault();
                         e.stopPropagation();
                     });
                     
                     document.addEventListener('mousemove', (e) => {
                         if (!isDragging || isPinned) return;
+                        
+                        // Disable draggable only when actually moving to prevent conflicts
+                        if (header.draggable) {
+                            header.draggable = false;
+                        }
                         
                         const sidebar = document.getElementById('sidekick-sidebar');
                         if (!sidebar) return;
@@ -934,7 +938,7 @@
                         const widthDiff = Math.abs(currentWidth - lastSavedSize.width);
                         const heightDiff = Math.abs(currentHeight - lastSavedSize.height);
                         
-                        if (widthDiff > 15 || heightDiff > 15) {
+                        if (widthDiff > 25 || heightDiff > 25) {
                             console.log('📝 Size changed significantly, saving layout...');
                             lastSavedSize = { width: currentWidth, height: currentHeight };
                             
