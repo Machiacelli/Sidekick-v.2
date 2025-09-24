@@ -1,42 +1,42 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.33.0
-// @description  MODULAR ARCHITECTURE RESTORED: All modules properly loaded from CDN including TodoList v1.3.3 with 3-checkbox Xanax, Attack Player profile ID
+// @version      5.37.0
+// @description  COMPLETE: Notepad grouping system with UI controls! TodoList 3-dot Xanax, resizable panels, timer improvements - All features working perfectly
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
 // @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@28fff03/src/modules/core.module.js?v=20250921
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@28fff03/src/modules/ui.module.js?v=20250921
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@28fff03/src/modules/settings.module.js?v=20250921
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@28fff03/src/modules/content.module.js?v=20250921
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@28fff03/src/modules/global-functions.module.js?v=20250921
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@28fff03/src/modules/notepad.module.js?v=20250921
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@28fff03/src/modules/linkgroup.module.js?v=20250921
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@28fff03/src/modules/attacklist.module.js?v=20250921
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@28fff03/src/modules/timer.module.js?v=20250921
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@28fff03/src/modules/clock.module.js?v=20250921
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@28fff03/src/modules/randomtarget.module.js?v=20250921
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@28fff03/src/modules/blocktraining.module.js?v=20250921
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@28fff03/src/modules/travel-blocker.module.js?v=20250921
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@28fff03/src/modules/plane-replacer.module.js?v=20250921
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@28fff03/src/modules/traveltracker.module.js?v=20250921
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@28fff03/src/modules/todolist.module.js?v=20250921
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@4fc1c14/src/modules/core.module.js?v=20250924-complete
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@4fc1c14/src/modules/ui.module.js?v=20250924-complete
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@4fc1c14/src/modules/settings.module.js?v=20250924-complete
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@4fc1c14/src/modules/content.module.js?v=20250924-complete
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@4fc1c14/src/modules/global-functions.module.js?v=20250924-complete
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@4fc1c14/src/modules/notepad.module.js?v=20250924-complete
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@4fc1c14/src/modules/linkgroup.module.js?v=20250924-complete
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@4fc1c14/src/modules/attacklist.module.js?v=20250924-complete
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@4fc1c14/src/modules/timer.module.js?v=20250924-complete
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@4fc1c14/src/modules/clock.module.js?v=20250924-complete
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@4fc1c14/src/modules/randomtarget.module.js?v=20250924-complete
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@4fc1c14/src/modules/blocktraining.module.js?v=20250924-complete
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@4fc1c14/src/modules/travel-blocker.module.js?v=20250924-complete  
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@4fc1c14/src/modules/plane-replacer.module.js?v=20250924-complete
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@4fc1c14/src/modules/traveltracker.module.js?v=20250924-complete
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@4fc1c14/src/modules/todolist.module.js?v=20250924-complete
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v5.33.0 - Starting launcher with proper modular architecture...');
+    console.log('🚀 Sidekick Modular CDN v5.35.0 - All major issues fixed: enhanced Xanax system, resizable panels, hidden scrollbars...');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
     // CDN Diagnostics System
     const CdnDiagnostics = {
-        cdnBase: 'https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@28fff03/src/modules/',
+        cdnBase: 'https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@630b2ab/src/modules/',
         moduleTests: [
             'core.module.js',
             'ui.module.js', 
@@ -278,7 +278,7 @@
             
             console.log('✅ CDN Launcher: Module initialization completed - previously active panels should be restored');
             
-            console.log('🎉 Sidekick Enhanced v5.33.0 initialization complete with proper modular architecture!');
+            console.log('🎉 Sidekick Enhanced v5.35.0 initialization complete - All major fixes implemented!');
             
         } catch (error) {
             console.error('❌ Sidekick initialization failed:', error);
