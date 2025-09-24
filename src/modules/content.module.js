@@ -124,6 +124,7 @@
                 
                 const menuItems = [
                     { icon: '📝', text: 'Add Notepad', color: '#4CAF50', action: () => this.addNotepad() },
+                    { icon: '📚', text: 'Create Note Group', color: '#673AB7', action: () => this.createNoteGroup() },
                     { icon: '✅', text: 'Add Todo List', color: '#2196F3', action: () => this.addTodoList() },
                     { icon: '⚔️', text: 'Add Attack List', color: '#f44336', action: () => {
                         if (window.SidekickModules?.AttackList) {
@@ -133,7 +134,7 @@
                         }
                     }},
                     { icon: '⏱️', text: 'Add Timer', color: '#ff9800', action: () => this.addTimer() },
-                    { icon: '✈️', text: 'Travel Tracker', color: '#9C27B0', action: () => this.addTravelTracker() },
+                    { icon: '✈️', text: 'Add Travel Tracker', color: '#9C27B0', action: () => this.addTravelTracker() },
                     { icon: '🔗', text: 'Add Link Group', color: '#607D8B', action: () => {
                         if (window.SidekickModules?.LinkGroup) {
                             window.SidekickModules.LinkGroup.addNewLinkGroup();
@@ -240,6 +241,21 @@
                 } else {
                     console.error('Notepad module not available');
                     NotificationSystem.show('Error', 'Notepad module not available', 'error');
+                }
+            },
+
+            createNoteGroup() {
+                console.log('📚 Content module: creating new note group...');
+                if (window.SidekickModules?.Notepad?.showCreateGroupDialog) {
+                    // Create a dummy notepad object for the dialog
+                    window.SidekickModules.Notepad.showCreateGroupDialog({ 
+                        id: 'temp', 
+                        title: 'New Note', 
+                        content: '' 
+                    });
+                } else {
+                    console.error('Notepad module not available');
+                    NotificationSystem.show('Error', 'Notepad grouping not available', 'error');
                 }
             },
 

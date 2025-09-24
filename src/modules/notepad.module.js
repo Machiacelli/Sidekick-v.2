@@ -627,6 +627,46 @@
                                     ">
                                         🎨 Change Color
                                     </button>
+                                    <div style="border-top: 1px solid #555; margin: 4px 0;"></div>
+                                    ${notepad.groupId ? `
+                                    <button class="ungroup-btn" style="
+                                        background: none;
+                                        border: none;
+                                        color: #fff;
+                                        padding: 8px 12px;
+                                        width: 100%;
+                                        text-align: left;
+                                        cursor: pointer;
+                                        font-size: 12px;
+                                    ">
+                                        📤 Remove from Group
+                                    </button>
+                                    ` : `
+                                    <button class="group-btn" style="
+                                        background: none;
+                                        border: none;
+                                        color: #fff;
+                                        padding: 8px 12px;
+                                        width: 100%;
+                                        text-align: left;
+                                        cursor: pointer;
+                                        font-size: 12px;
+                                    ">
+                                        📚 Add to Group
+                                    </button>
+                                    <button class="create-group-btn" style="
+                                        background: none;
+                                        border: none;
+                                        color: #fff;
+                                        padding: 8px 12px;
+                                        width: 100%;
+                                        text-align: left;
+                                        cursor: pointer;
+                                        font-size: 12px;
+                                    ">
+                                        ✨ Create New Group
+                                    </button>
+                                    `}
                                 </div>
                             </div>
                         </div>
@@ -809,6 +849,35 @@
                         e.stopPropagation();
                         dropdownContent.style.display = 'none';
                         this.showColorPicker(notepadElement, notepad);
+                    });
+                }
+
+                // Group functionality
+                const groupBtn = notepadElement.querySelector('.group-btn');
+                const createGroupBtn = notepadElement.querySelector('.create-group-btn');
+                const ungroupBtn = notepadElement.querySelector('.ungroup-btn');
+
+                if (groupBtn) {
+                    groupBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        dropdownContent.style.display = 'none';
+                        this.showGroupSelector(notepad);
+                    });
+                }
+
+                if (createGroupBtn) {
+                    createGroupBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        dropdownContent.style.display = 'none';
+                        this.showCreateGroupDialog(notepad);
+                    });
+                }
+
+                if (ungroupBtn) {
+                    ungroupBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        dropdownContent.style.display = 'none';
+                        this.removeNotepadFromGroup(notepad.id);
                     });
                 }
                 
@@ -1197,6 +1266,220 @@
             toggleGroupExpansion(groupId) {
                 // Future implementation for expanding groups to show all notes
                 console.log('🔄 Toggle group expansion:', groupId);
+            },
+
+            // Show group selector dialog
+            showGroupSelector(notepad) {
+                const existingGroups = this.groups.filter(g => g.id !== notepad.groupId);
+                
+                if (existingGroups.length === 0) {
+                    this.showCreateGroupDialog(notepad);
+                    return;
+                }
+
+                const selectorDiv = document.createElement('div');
+                selectorDiv.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: linear-gradient(135deg, #2c2c2c, #1e1e1e);
+                    border: 2px solid #4CAF50;
+                    border-radius: 12px;
+                    padding: 20px;
+                    z-index: 10000;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                    min-width: 300px;
+                    max-width: 400px;
+                    font-family: 'Segoe UI', sans-serif;
+                `;
+
+                selectorDiv.innerHTML = `
+                    <div style="color: #fff; font-size: 16px; margin-bottom: 15px; text-align: center;">
+                        📚 Select Group for "${notepad.title || 'Untitled'}"
+                    </div>
+                    <div style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;">
+                        ${existingGroups.map(group => `
+                            <button class="group-option" data-group-id="${group.id}" style="
+                                display: block;
+                                width: 100%;
+                                background: #444;
+                                border: 1px solid #666;
+                                color: #fff;
+                                padding: 10px;
+                                margin-bottom: 8px;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                text-align: left;
+                                transition: all 0.2s ease;
+                            ">
+                                📚 ${group.title} (${this.notepads.filter(n => n.groupId === group.id).length} notes)
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button class="create-new-group" style="
+                            background: #4CAF50;
+                            border: none;
+                            color: white;
+                            padding: 8px 16px;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 12px;
+                        ">✨ Create New</button>
+                        <button class="cancel-group" style="
+                            background: #f44336;
+                            border: none;
+                            color: white;
+                            padding: 8px 16px;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 12px;
+                        ">❌ Cancel</button>
+                    </div>
+                `;
+
+                document.body.appendChild(selectorDiv);
+
+                // Add event listeners
+                selectorDiv.querySelectorAll('.group-option').forEach(btn => {
+                    btn.addEventListener('mouseenter', () => {
+                        btn.style.background = '#555';
+                        btn.style.borderColor = '#4CAF50';
+                    });
+                    btn.addEventListener('mouseleave', () => {
+                        btn.style.background = '#444';
+                        btn.style.borderColor = '#666';
+                    });
+                    btn.addEventListener('click', () => {
+                        const groupId = btn.dataset.groupId;
+                        this.addNotepadToGroup(notepad.id, groupId);
+                        selectorDiv.remove();
+                    });
+                });
+
+                selectorDiv.querySelector('.create-new-group').addEventListener('click', () => {
+                    selectorDiv.remove();
+                    this.showCreateGroupDialog(notepad);
+                });
+
+                selectorDiv.querySelector('.cancel-group').addEventListener('click', () => {
+                    selectorDiv.remove();
+                });
+            },
+
+            // Show create group dialog
+            showCreateGroupDialog(notepad) {
+                const dialogDiv = document.createElement('div');
+                dialogDiv.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: linear-gradient(135deg, #2c2c2c, #1e1e1e);
+                    border: 2px solid #4CAF50;
+                    border-radius: 12px;
+                    padding: 25px;
+                    z-index: 10000;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                    min-width: 350px;
+                    font-family: 'Segoe UI', sans-serif;
+                `;
+
+                dialogDiv.innerHTML = `
+                    <div style="color: #fff; font-size: 16px; margin-bottom: 20px; text-align: center;">
+                        ✨ Create New Group
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="color: #ccc; font-size: 14px; display: block; margin-bottom: 5px;">Group Title:</label>
+                        <input type="text" class="group-title-input" placeholder="Enter group name..." style="
+                            width: 100%;
+                            padding: 10px;
+                            border: 1px solid #666;
+                            border-radius: 6px;
+                            background: #333;
+                            color: #fff;
+                            font-size: 14px;
+                            box-sizing: border-box;
+                        ">
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label style="color: #ccc; font-size: 14px; display: block; margin-bottom: 5px;">Position:</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" class="group-x-input" placeholder="X" value="50" style="
+                                width: 80px;
+                                padding: 8px;
+                                border: 1px solid #666;
+                                border-radius: 4px;
+                                background: #333;
+                                color: #fff;
+                                font-size: 12px;
+                            ">
+                            <input type="number" class="group-y-input" placeholder="Y" value="50" style="
+                                width: 80px;
+                                padding: 8px;
+                                border: 1px solid #666;
+                                border-radius: 4px;
+                                background: #333;
+                                color: #fff;
+                                font-size: 12px;
+                            ">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button class="create-group-confirm" style="
+                            background: #4CAF50;
+                            border: none;
+                            color: white;
+                            padding: 10px 20px;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 14px;
+                        ">✨ Create Group</button>
+                        <button class="create-group-cancel" style="
+                            background: #f44336;
+                            border: none;
+                            color: white;
+                            padding: 10px 20px;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 14px;
+                        ">❌ Cancel</button>
+                    </div>
+                `;
+
+                document.body.appendChild(dialogDiv);
+
+                const titleInput = dialogDiv.querySelector('.group-title-input');
+                const xInput = dialogDiv.querySelector('.group-x-input');
+                const yInput = dialogDiv.querySelector('.group-y-input');
+
+                titleInput.focus();
+
+                dialogDiv.querySelector('.create-group-confirm').addEventListener('click', () => {
+                    const title = titleInput.value.trim();
+                    if (!title) {
+                        titleInput.style.borderColor = '#f44336';
+                        return;
+                    }
+
+                    const x = parseInt(xInput.value) || 50;
+                    const y = parseInt(yInput.value) || 50;
+
+                    const groupId = this.createGroup(title, x, y);
+                    this.addNotepadToGroup(notepad.id, groupId);
+                    dialogDiv.remove();
+                });
+
+                dialogDiv.querySelector('.create-group-cancel').addEventListener('click', () => {
+                    dialogDiv.remove();
+                });
+
+                titleInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        dialogDiv.querySelector('.create-group-confirm').click();
+                    }
+                });
             },
 
         };
