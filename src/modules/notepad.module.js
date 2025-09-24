@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Notepad Module
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
-// @description  Notepad functionality for Sidekick sidebar
+// @version      1.1.0
+// @description  ENHANCED: Notepad with elegant grouping system, stacked notes, group titles, sleek navigation
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -26,6 +26,8 @@
         const NotepadModule = {
             notepads: [],
             currentPage: 0,
+            groups: [], // Array of note groups
+            activeGroupNotes: {}, // Track which note is active in each group
 
             init() {
                 console.log('📝 Initializing Notepad Module v3.6.0...');
@@ -40,10 +42,15 @@
             },
 
             loadNotepads() {
-                console.log('📝 Loading notepads...');
+                console.log('📝 Loading notepads and groups...');
                 // Load notepads globally, not page-specific
                 const allNotepads = this.core.loadState(this.core.STORAGE_KEYS.NOTEPADS, []);
                 console.log('📝 Loaded global notepads from storage:', allNotepads);
+                
+                // Load groups
+                this.groups = this.core.loadState('notepad_groups', []);
+                this.activeGroupNotes = this.core.loadState('notepad_active_group_notes', {});
+                console.log('📝 Loaded notepad groups:', this.groups.length, 'groups');
                 
                 // Clamp any loaded layouts to sidebar bounds to avoid broken positions/sizes
                 const sidebar = document.getElementById('sidekick-sidebar');
@@ -76,26 +83,41 @@
                 const container = document.getElementById('sidekick-content');
                 if (container) {
                     // Only clear notepad elements, not all content
-                    const notepads = container.querySelectorAll('.movable-notepad');
+                    const notepads = container.querySelectorAll('.movable-notepad, .notepad-group');
                     notepads.forEach(notepad => notepad.remove());
                     console.log('📝 Cleared existing notepad elements');
                 }
 
-                // Re-render all notepads for current page
-                if (this.notepads && this.notepads.length > 0) {
-                    console.log(`📝 Rendering ${this.notepads.length} notepads...`);
-                    this.notepads.forEach((notepad, index) => {
-                        console.log(`📝 Rendering notepad ${index + 1}:`, notepad.title, notepad.id);
-                        this.renderNotepad(notepad);
+                // Render groups first
+                if (this.groups && this.groups.length > 0) {
+                    console.log(`📝 Rendering ${this.groups.length} groups...`);
+                    this.groups.forEach((group, index) => {
+                        console.log(`📝 Rendering group ${index + 1}:`, group.title, group.id);
+                        this.renderGroup(group);
                     });
+                }
+
+                // Then render individual notepads (those not in groups)
+                if (this.notepads && this.notepads.length > 0) {
+                    const ungroupedNotepads = this.notepads.filter(notepad => !notepad.groupId);
+                    if (ungroupedNotepads.length > 0) {
+                        console.log(`📝 Rendering ${ungroupedNotepads.length} individual notepads...`);
+                        ungroupedNotepads.forEach((notepad, index) => {
+                            console.log(`📝 Rendering notepad ${index + 1}:`, notepad.title, notepad.id);
+                            this.renderNotepad(notepad);
+                        });
+                    }
                 } else {
                     console.log('📝 No notepads to render');
                 }
             },            saveNotepads() {
-                console.log('📝 Saving notepads globally...', this.notepads);
+                console.log('📝 Saving notepads and groups globally...', this.notepads);
                 // Save notepads globally, not page-specific
                 this.core.saveState(this.core.STORAGE_KEYS.NOTEPADS, this.notepads);
-                console.log('📝 Notepads saved to global storage');
+                // Save groups
+                this.core.saveState('notepad_groups', this.groups);
+                this.core.saveState('notepad_active_group_notes', this.activeGroupNotes);
+                console.log('📝 Notepads and groups saved to global storage');
             },
 
             addNotepad(title = 'New Note') {
@@ -186,6 +208,297 @@
                         this.saveNotepads();
                         console.log('📝 Updated notepad layout:', id, layout);
                 }
+            },
+
+            // Group management methods
+            createGroup(title = 'Note Group', notepadIds = []) {
+                const group = {
+                    id: Date.now() + Math.random(),
+                    title: title,
+                    notepadIds: notepadIds,
+                    x: 10 + (this.groups.length * 30),
+                    y: 10 + (this.groups.length * 30),
+                    width: 320,
+                    height: 200,
+                    created: new Date().toISOString(),
+                    modified: new Date().toISOString()
+                };
+                
+                this.groups.push(group);
+                
+                // Set first notepad as active if any
+                if (notepadIds.length > 0) {
+                    this.activeGroupNotes[group.id] = notepadIds[0];
+                }
+                
+                this.saveNotepads();
+                console.log('📝 Created group:', title, 'with', notepadIds.length, 'notes');
+                return group;
+            },
+
+            addNotepadToGroup(notepadId, groupId) {
+                const group = this.groups.find(g => g.id === groupId);
+                if (group && !group.notepadIds.includes(notepadId)) {
+                    group.notepadIds.push(notepadId);
+                    group.modified = new Date().toISOString();
+                    
+                    // Set as active if first note in group
+                    if (group.notepadIds.length === 1) {
+                        this.activeGroupNotes[groupId] = notepadId;
+                    }
+                    
+                    this.saveNotepads();
+                    console.log('📝 Added notepad to group:', notepadId, 'to', group.title);
+                }
+            },
+
+            removeNotepadFromGroup(notepadId, groupId) {
+                const group = this.groups.find(g => g.id === groupId);
+                if (group) {
+                    group.notepadIds = group.notepadIds.filter(id => id !== notepadId);
+                    group.modified = new Date().toISOString();
+                    
+                    // Update active note if removed note was active
+                    if (this.activeGroupNotes[groupId] === notepadId) {
+                        this.activeGroupNotes[groupId] = group.notepadIds[0] || null;
+                    }
+                    
+                    // Remove group if no notes left
+                    if (group.notepadIds.length === 0) {
+                        this.deleteGroup(groupId);
+                    } else {
+                        this.saveNotepads();
+                    }
+                    console.log('📝 Removed notepad from group:', notepadId);
+                }
+            },
+
+            deleteGroup(groupId) {
+                this.groups = this.groups.filter(g => g.id !== groupId);
+                delete this.activeGroupNotes[groupId];
+                this.saveNotepads();
+                console.log('📝 Deleted group:', groupId);
+            },
+
+            setActiveNoteInGroup(groupId, notepadId) {
+                const group = this.groups.find(g => g.id === groupId);
+                if (group && group.notepadIds.includes(notepadId)) {
+                    this.activeGroupNotes[groupId] = notepadId;
+                    this.saveNotepads();
+                    this.refreshDisplay();
+                    console.log('📝 Set active note in group:', notepadId, 'in', group.title);
+                }
+            },
+
+            getGroupForNotepad(notepadId) {
+                return this.groups.find(g => g.notepadIds.includes(notepadId));
+            },
+
+            renderGroup(group) {
+                const contentArea = document.getElementById('sidekick-content');
+                if (!contentArea) return;
+
+                const activeNotepadId = this.activeGroupNotes[group.id];
+                const activeNotepad = this.notepads.find(n => n.id === activeNotepadId);
+                
+                if (!activeNotepad) return;
+
+                // Create group container
+                const groupElement = document.createElement('div');
+                groupElement.id = `group-${group.id}`;
+                groupElement.className = 'sidebar-item notepad-group';
+                groupElement.dataset.groupId = group.id;
+                
+                const sidebar = document.getElementById('sidekick-sidebar');
+                const sidebarWidth = sidebar ? Math.max(200, sidebar.clientWidth) : 500;
+                const sidebarHeight = sidebar ? Math.max(200, sidebar.clientHeight) : 600;
+
+                const minWidth = 200, minHeight = 150;
+                const maxWidth = Math.max(minWidth, sidebarWidth - 16);
+                const maxHeight = Math.max(minHeight, sidebarHeight - 80);
+
+                const desiredWidth = Math.max(minWidth, Math.min(group.width || 320, maxWidth));
+                const desiredHeight = Math.max(minHeight, Math.min(group.height || 200, maxHeight));
+
+                const finalX = Math.min(Math.max(0, group.x || 10), Math.max(0, sidebarWidth - desiredWidth - 8));
+                const finalY = Math.min(Math.max(0, group.y || 10), Math.max(0, sidebarHeight - desiredHeight - 8));
+
+                groupElement.style.cssText = `
+                    position: absolute;
+                    left: ${finalX}px;
+                    top: ${finalY}px;
+                    width: ${desiredWidth}px;
+                    height: ${desiredHeight}px;
+                    background: #2a2a2a;
+                    border: 1px solid #444;
+                    border-radius: 8px;
+                    display: flex;
+                    flex-direction: column;
+                    min-width: ${minWidth}px;
+                    min-height: ${minHeight}px;
+                    max-width: ${maxWidth}px;
+                    max-height: ${maxHeight}px;
+                    z-index: 1000;
+                    resize: both;
+                    overflow: hidden;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                `;
+
+                // Stack effect - show other notes as background layers
+                const stackHTML = group.notepadIds.slice(1, 4).map((id, index) => {
+                    const notepad = this.notepads.find(n => n.id === id);
+                    if (!notepad) return '';
+                    return `
+                        <div style="
+                            position: absolute;
+                            top: ${-3 * (index + 1)}px;
+                            left: ${3 * (index + 1)}px;
+                            right: ${-3 * (index + 1)}px;
+                            height: 20px;
+                            background: linear-gradient(135deg, ${notepad.color || '#4CAF50'}, ${this.darkenColor(notepad.color || '#4CAF50', 20)});
+                            border-radius: 8px 8px 0 0;
+                            opacity: ${0.6 - (index * 0.2)};
+                            z-index: ${-index - 1};
+                            border: 1px solid #555;
+                        "></div>
+                    `;
+                }).join('');
+
+                groupElement.innerHTML = `
+                    ${stackHTML}
+                    <div class="group-header" style="
+                        background: linear-gradient(135deg, ${activeNotepad.color || '#4CAF50'}, ${this.darkenColor(activeNotepad.color || '#4CAF50', 15)});
+                        border-bottom: 1px solid #555;
+                        padding: 6px 12px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        cursor: move;
+                        height: 32px;
+                        flex-shrink: 0;
+                        border-radius: 7px 7px 0 0;
+                        position: relative;
+                        z-index: 10;
+                    ">
+                        <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                            <div class="group-dropdown" style="position: relative; display: inline-block;">
+                                <button class="dropdown-btn" style="
+                                    background: none;
+                                    border: none;
+                                    color: rgba(255,255,255,0.9);
+                                    cursor: pointer;
+                                    font-size: 12px;
+                                    padding: 4px;
+                                    display: flex;
+                                    align-items: center;
+                                    border-radius: 4px;
+                                    transition: background 0.2s;
+                                " title="Group options">
+                                    ⚙️
+                                </button>
+                                <div class="dropdown-content" style="
+                                    display: none;
+                                    position: fixed;
+                                    background: #333;
+                                    min-width: 180px;
+                                    max-height: 300px;
+                                    z-index: 100000;
+                                    border-radius: 6px;
+                                    border: 1px solid #555;
+                                    padding: 6px 0;
+                                    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+                                    overflow-y: auto;
+                                    scrollbar-width: none;
+                                    -ms-overflow-style: none;
+                                ">
+                                    <div style="padding: 8px 12px; color: #888; font-size: 11px; font-weight: 600; text-transform: uppercase; border-bottom: 1px solid #444; margin-bottom: 4px;">
+                                        Group: ${group.title}
+                                    </div>
+                                    <button class="add-note-to-group-btn" style="
+                                        background: none; border: none; color: #fff; padding: 8px 12px; width: 100%;
+                                        text-align: left; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 8px;
+                                        transition: background 0.2s ease;
+                                    ">➕ Add Note to Group</button>
+                                    <button class="rename-group-btn" style="
+                                        background: none; border: none; color: #fff; padding: 8px 12px; width: 100%;
+                                        text-align: left; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 8px;
+                                        transition: background 0.2s ease;
+                                    ">✏️ Rename Group</button>
+                                    <div style="height: 1px; background: #444; margin: 4px 0;"></div>
+                                    <button class="ungroup-notes-btn" style="
+                                        background: none; border: none; color: #ff6b6b; padding: 8px 12px; width: 100%;
+                                        text-align: left; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 8px;
+                                        transition: background 0.2s ease;
+                                    ">📂 Ungroup Notes</button>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 4px; flex: 1;">
+                                <input type="text" class="group-title-input" value="${group.title}" style="
+                                    background: transparent; border: none; color: #fff; font-weight: 600; font-size: 13px;
+                                    outline: none; padding: 0; flex: 1; min-width: 0;
+                                " readonly>
+                                <span style="color: rgba(255,255,255,0.7); font-size: 11px;">(${group.notepadIds.length})</span>
+                            </div>
+                            <div class="note-navigation" style="display: flex; align-items: center; gap: 2px;">
+                                <button class="nav-prev" style="
+                                    background: none; border: none; color: rgba(255,255,255,0.8); cursor: pointer;
+                                    font-size: 14px; padding: 2px 4px; border-radius: 3px; transition: all 0.2s;
+                                    ${group.notepadIds.indexOf(activeNotepadId) === 0 ? 'opacity: 0.3; cursor: not-allowed;' : ''}
+                                " title="Previous note">◀</button>
+                                <span style="color: rgba(255,255,255,0.8); font-size: 11px; font-weight: 500; min-width: 30px; text-align: center;">
+                                    ${group.notepadIds.indexOf(activeNotepadId) + 1}/${group.notepadIds.length}
+                                </span>
+                                <button class="nav-next" style="
+                                    background: none; border: none; color: rgba(255,255,255,0.8); cursor: pointer;
+                                    font-size: 14px; padding: 2px 4px; border-radius: 3px; transition: all 0.2s;
+                                    ${group.notepadIds.indexOf(activeNotepadId) === group.notepadIds.length - 1 ? 'opacity: 0.3; cursor: not-allowed;' : ''}
+                                " title="Next note">▶</button>
+                            </div>
+                        </div>
+                        <button class="close-group-btn" style="
+                            background: none; border: none; color: rgba(255,67,54,0.8); cursor: pointer;
+                            font-size: 16px; padding: 0; width: 18px; height: 18px; display: flex;
+                            align-items: center; justify-content: center; opacity: 0.8; border-radius: 3px;
+                            transition: all 0.2s;
+                        " title="Delete group">×</button>
+                    </div>
+                    
+                    <div class="active-note-title" style="
+                        background: rgba(0,0,0,0.2); color: rgba(255,255,255,0.9); padding: 6px 12px;
+                        font-size: 12px; font-weight: 500; border-bottom: 1px solid rgba(255,255,255,0.1);
+                        display: flex; align-items: center; justify-content: space-between;
+                    ">
+                        <span>📝 ${activeNotepad.title}</span>
+                        <button class="edit-note-title-btn" style="
+                            background: none; border: none; color: rgba(255,255,255,0.6); cursor: pointer;
+                            font-size: 12px; padding: 2px; transition: color 0.2s;
+                        " title="Edit note title">✏️</button>
+                    </div>
+                    
+                    <textarea placeholder="Write your notes here..." data-notepad-id="${activeNotepad.id}" style="
+                        flex: 1; background: transparent; border: none; color: #fff; padding: 12px;
+                        font-size: 13px; font-family: inherit; resize: none; outline: none; line-height: 1.4;
+                        width: 100%; box-sizing: border-box;
+                        scrollbar-width: none; -ms-overflow-style: none;
+                    ">${activeNotepad.content}</textarea>
+                `;
+
+                contentArea.appendChild(groupElement);
+                this.addGroupEventListeners(groupElement, group);
+                this.addGroupDragging(groupElement, group);
+                this.addGroupResizing(groupElement, group);
+            },
+
+            // Helper method to darken colors for gradient effects
+            darkenColor(color, percent) {
+                const num = parseInt(color.replace("#", ""), 16);
+                const amt = Math.round(2.55 * percent);
+                const R = (num >> 16) - amt;
+                const G = (num >> 8 & 0x00FF) - amt;
+                const B = (num & 0x0000FF) - amt;
+                return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                    (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                    (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
             },
 
             renderNotepad(notepad) {
@@ -717,6 +1030,173 @@
                         }
                     });
                 }, 100);
+            },
+
+            // Group event listeners for navigation and interaction
+            addGroupEventListeners(groupElement, group) {
+                const header = groupElement.querySelector('.group-header');
+                const navigationButtons = groupElement.querySelectorAll('.group-nav-btn');
+                const groupControls = groupElement.querySelector('.group-controls');
+
+                // Navigation between stacked notes
+                navigationButtons.forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        const direction = btn.dataset.direction;
+                        const currentIndex = this.activeGroupNotes[group.id] || 0;
+                        const groupNotes = this.notepads.filter(n => n.groupId === group.id);
+                        
+                        if (direction === 'prev') {
+                            this.activeGroupNotes[group.id] = Math.max(0, currentIndex - 1);
+                        } else if (direction === 'next') {
+                            this.activeGroupNotes[group.id] = Math.min(groupNotes.length - 1, currentIndex + 1);
+                        }
+                        
+                        // Update the visual display
+                        this.updateGroupDisplay(groupElement, group);
+                        this.saveNotepads(); // Save active note positions
+                    });
+                });
+
+                // Group dragging
+                this.addGroupDragging(groupElement, group);
+                
+                // Group resizing
+                this.addGroupResizing(groupElement, group);
+
+                // Group controls (expand/collapse, settings)
+                if (groupControls) {
+                    const expandBtn = groupControls.querySelector('.group-expand-btn');
+                    if (expandBtn) {
+                        expandBtn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            this.toggleGroupExpansion(group.id);
+                        });
+                    }
+                }
+            },
+
+            // Add dragging functionality to groups
+            addGroupDragging(groupElement, group) {
+                const header = groupElement.querySelector('.group-header');
+                let isDragging = false;
+                let dragOffset = { x: 0, y: 0 };
+
+                header.addEventListener('mousedown', (e) => {
+                    if (e.target.closest('.group-nav-btn, .group-controls')) return;
+                    
+                    isDragging = true;
+                    const rect = groupElement.getBoundingClientRect();
+                    dragOffset.x = e.clientX - rect.left;
+                    dragOffset.y = e.clientY - rect.top;
+                    
+                    groupElement.style.zIndex = '1000';
+                    e.preventDefault();
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    
+                    const sidebar = document.getElementById('sidekick-content');
+                    const sidebarRect = sidebar.getBoundingClientRect();
+                    
+                    let newX = e.clientX - sidebarRect.left - dragOffset.x;
+                    let newY = e.clientY - sidebarRect.top - dragOffset.y;
+                    
+                    // Constrain to sidebar bounds
+                    const groupRect = groupElement.getBoundingClientRect();
+                    newX = Math.max(0, Math.min(newX, sidebarRect.width - groupRect.width));
+                    newY = Math.max(0, Math.min(newY, sidebarRect.height - groupRect.height));
+                    
+                    groupElement.style.left = newX + 'px';
+                    groupElement.style.top = newY + 'px';
+                    
+                    // Update group position
+                    group.x = newX;
+                    group.y = newY;
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        groupElement.style.zIndex = '100';
+                        this.saveNotepads();
+                    }
+                });
+            },
+
+            // Add resizing functionality to groups
+            addGroupResizing(groupElement, group) {
+                const resizeHandle = groupElement.querySelector('.group-resize-handle');
+                if (!resizeHandle) return;
+
+                let isResizing = false;
+                let startX, startY, startWidth, startHeight;
+
+                resizeHandle.addEventListener('mousedown', (e) => {
+                    isResizing = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    startWidth = parseInt(document.defaultView.getComputedStyle(groupElement).width, 10);
+                    startHeight = parseInt(document.defaultView.getComputedStyle(groupElement).height, 10);
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isResizing) return;
+                    
+                    const newWidth = Math.max(200, startWidth + e.clientX - startX);
+                    const newHeight = Math.max(150, startHeight + e.clientY - startY);
+                    
+                    groupElement.style.width = newWidth + 'px';
+                    groupElement.style.height = newHeight + 'px';
+                    
+                    // Update group dimensions
+                    group.width = newWidth;
+                    group.height = newHeight;
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isResizing) {
+                        isResizing = false;
+                        this.saveNotepads();
+                    }
+                });
+            },
+
+            // Update group display when navigating between notes
+            updateGroupDisplay(groupElement, group) {
+                const groupNotes = this.notepads.filter(n => n.groupId === group.id);
+                const activeIndex = this.activeGroupNotes[group.id] || 0;
+                const activeNote = groupNotes[activeIndex];
+                
+                if (!activeNote) return;
+
+                // Update the visible note content
+                const titleElement = groupElement.querySelector('.group-active-title');
+                const contentElement = groupElement.querySelector('.group-active-content');
+                const counterElement = groupElement.querySelector('.group-counter');
+                
+                if (titleElement) titleElement.textContent = activeNote.title || 'Untitled';
+                if (contentElement) contentElement.textContent = activeNote.content || '';
+                if (counterElement) counterElement.textContent = `${activeIndex + 1}/${groupNotes.length}`;
+
+                // Update navigation button states
+                const prevBtn = groupElement.querySelector('[data-direction="prev"]');
+                const nextBtn = groupElement.querySelector('[data-direction="next"]');
+                
+                if (prevBtn) prevBtn.disabled = activeIndex === 0;
+                if (nextBtn) nextBtn.disabled = activeIndex === groupNotes.length - 1;
+            },
+
+            // Toggle group expansion (future feature)
+            toggleGroupExpansion(groupId) {
+                // Future implementation for expanding groups to show all notes
+                console.log('🔄 Toggle group expansion:', groupId);
             },
 
         };
