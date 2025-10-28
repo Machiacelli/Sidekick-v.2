@@ -9,24 +9,24 @@
 // @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9d74d0/src/modules/core.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9d74d0/src/modules/ui.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9d74d0/src/modules/settings.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9d74d0/src/modules/content.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9d74d0/src/modules/global-functions.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9d74d0/src/modules/notepad.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9d74d0/src/modules/linkgroup.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9d74d0/src/modules/attacklist.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9d74d0/src/modules/timer.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9d74d0/src/modules/clock.module.js?v=20251028-nodrift
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/a9d74d0/src/sidekick-modular-clean.user.js?v=20251028-nodrift
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/a9d74d0/src/sidekick-modular-clean.user.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9d74d0/src/modules/randomtarget.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9d74d0/src/modules/blocktraining.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9d74d0/src/modules/travel-blocker.module.js?v=20251028-nodrift  
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9d74d0/src/modules/plane-replacer.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9d74d0/src/modules/traveltracker.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9d74d0/src/modules/todolist.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/core.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/ui.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/settings.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/content.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/global-functions.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/notepad.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/linkgroup.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/attacklist.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/timer.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/clock.module.js?v=20251028-nodrift
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/d5a1bd2/src/sidekick-modular-clean.user.js?v=20251028-nodrift
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/d5a1bd2/src/sidekick-modular-clean.user.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/randomtarget.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/blocktraining.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/travel-blocker.module.js?v=20251028-nodrift  
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/plane-replacer.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/traveltracker.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/todolist.module.js?v=20251028-nodrift
 // ==/UserScript==
 
 (function() {
@@ -38,7 +38,7 @@
 
     // CDN Diagnostics System
     const CdnDiagnostics = {
-        cdnBase: 'https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a9d74d0/src/modules/',
+        cdnBase: 'https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/',
         moduleTests: [
             'core.module.js',
             'ui.module.js', 
