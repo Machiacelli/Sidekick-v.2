@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Training Blocker Module
 // @namespace    http://tampermonkey.net/
-// @version      2.0.0
-// @description  SIMPLIFIED gym blocker - direct approach with extensive logging
+// @version      2.1.0
+// @description  SIMPLIFIED gym blocker with correct image URL and extensive logging
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -107,7 +107,7 @@
             // Create custom picture container
             const pictureContainer = document.createElement('div');
             pictureContainer.style.cssText = `
-                background: url('https://i.imgur.com/e61a235c-6e14-4e32-80af-27a31ecdb0d9.jpeg') no-repeat center center;
+                background: url('https://i.imgur.com/DExI6Og.png') no-repeat center center;
                 background-size: cover;
                 width: 100%;
                 height: 100%;
