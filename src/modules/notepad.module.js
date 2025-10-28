@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Notepad Module
 // @namespace    http://tampermonkey.net/
-// @version      1.2.0
-// @description  DRAG-DROP GROUPING: Simple drag header onto header to group notes, click headers to navigate, title editing
+// @version      1.3.0
+// @description  DRAG-DROP GROUPING: Simple drag header onto header to group notes, click headers to navigate, title editing. NO SIZE DRIFT on drag!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -719,6 +719,51 @@
                     console.log('📝 Saved improved layout for notepad ' + notepad.id);
                 };
                 
+                const savePositionOnly = () => {
+                    if (this._isProgrammaticChange) {
+                        console.log('📝 Skipping save during programmatic change');
+                        return;
+                    }
+                    
+                    const sidebar = document.getElementById('sidekick-sidebar');
+                    const sidebarWidth = sidebar ? Math.max(200, sidebar.clientWidth) : 500;
+                    const sidebarHeight = sidebar ? Math.max(200, sidebar.clientHeight) : 600;
+
+                    const rawX = parseInt(notepadElement.style.left) || 0;
+                    const rawY = parseInt(notepadElement.style.top) || 0;
+
+                    // Use existing saved dimensions, don't recalculate from offsetWidth
+                    const width = notepad.width || 280;
+                    const height = notepad.height || 150;
+
+                    const maxX = Math.max(0, sidebarWidth - width - 8);
+                    const maxY = Math.max(0, sidebarHeight - height - 8);
+
+                    const x = Math.min(Math.max(0, rawX), maxX);
+                    const y = Math.min(Math.max(0, rawY), maxY);
+
+                    // Only save if position actually changed significantly
+                    if (Math.abs(notepad.x - x) < 5 && Math.abs(notepad.y - y) < 5) {
+                        console.log('📝 No significant position changes detected, skipping save');
+                        return;
+                    }
+
+                    notepad.x = x;
+                    notepad.y = y;
+                    // Don't update width/height during drag!
+
+                    this._isProgrammaticChange = true;
+                    notepadElement.style.left = x + 'px';
+                    notepadElement.style.top = y + 'px';
+                    
+                    setTimeout(() => {
+                        this._isProgrammaticChange = false;
+                    }, 100);
+
+                    this.saveNotepads();
+                    console.log('📝 Saved position only for notepad ' + notepad.id);
+                };
+                
                 // Add enhanced styling and functionality
                 if (contentTextarea) {
                     // Auto-save content on input
@@ -899,8 +944,8 @@
                             const currentY = parseInt(notepadElement.style.top) || 0;
                             
                             if (Math.abs(currentX - startPosition.x) > 3 || Math.abs(currentY - startPosition.y) > 3) {
-                                console.log('📝 Position changed during drag, saving layout...');
-                                saveLayout.call(this);
+                                console.log('📝 Position changed during drag, saving position only (not size)...');
+                                savePositionOnly.call(this);
                             } else {
                                 console.log('📝 Position change too small (likely drift), not saving');
                             }

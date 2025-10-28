@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Training Blocker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.6.0
+// @version      1.7.0
 // @description  Training blocker functionality to prevent training while stacking energy
 // @author       Machiacelli
 // @match        https://www.torn.com/*
@@ -57,33 +57,20 @@
             const gymRoot = document.querySelector('#gymroot');
             
             if (!gymRoot) {
-                console.log('Gym root not found, trying alternative selectors...');
-                // Fallback selectors if gymroot doesn't exist
-                const alternatives = [
-                    '.training-section',
-                    '.training', 
-                    '[class*="training"]',
-                    '.gym',
-                    '[class*="gym"]'
-                ];
-                
-                for (let selector of alternatives) {
-                    const element = document.querySelector(selector);
-                    if (element) {
-                        console.log('Found training element with selector:', selector);
-                        createBlockOverlay(element);
-                        return;
-                    }
-                }
-                
-                console.warn('No training section found to block');
-                return;
+                console.log('Gym root not found on this page, skipping block creation');
+                return; // Don't create overlay if gym isn't present
             }
 
             createBlockOverlay(gymRoot);
         }
 
         function createBlockOverlay(targetElement) {
+            // Ensure the target element has position relative
+            const computedPosition = window.getComputedStyle(targetElement).position;
+            if (computedPosition === 'static') {
+                targetElement.style.position = 'relative';
+            }
+            
             // Create blocking overlay with custom picture (no black tint)
             blockingOverlay = document.createElement('div');
             blockingOverlay.id = 'training-blocker-overlay';
@@ -102,7 +89,7 @@
             // Create custom picture container
             const pictureContainer = document.createElement('div');
             pictureContainer.style.cssText = `
-                background: url('https://i.imgur.com/Ewv4zCy.jpeg') no-repeat center center;
+                background: url('https://i.imgur.com/e61a235c-6e14-4e32-80af-27a31ecdb0d9.jpeg') no-repeat center center;
                 background-size: cover;
                 width: 100%;
                 height: 100%;
@@ -113,22 +100,10 @@
 
             blockingOverlay.appendChild(pictureContainer);
             
-            // Position the overlay relative to the target element (like the original script)
-            const rect = targetElement.getBoundingClientRect();
-            blockingOverlay.style.position = 'fixed';
-            blockingOverlay.style.top = rect.top + 'px';
-            blockingOverlay.style.left = rect.left + 'px';
-            blockingOverlay.style.width = rect.width + 'px';
-            blockingOverlay.style.height = rect.height + 'px';
+            // Append directly to the target element for absolute positioning
+            targetElement.appendChild(blockingOverlay);
             
-            document.body.appendChild(blockingOverlay);
-            
-            console.log('Training blocker positioned over gymroot:', {
-                top: blockingOverlay.style.top,
-                left: blockingOverlay.style.left,
-                width: blockingOverlay.style.width,
-                height: blockingOverlay.style.height
-            });
+            console.log('Training blocker positioned over gymroot (absolute positioning)');
         }
 
         function removeTrainingBlock() {
