@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick To-Do List Module
 // @namespace    http://tampermonkey.net/
-// @version      1.4.0
-// @description  FIXED: Enhanced 3-dot Xanax system with elegant animations, fully resizable panels, hidden scrollbars, proper state management
+// @version      1.4.1
+// @description  FIXED: Panel now properly resizable with visible resize handle
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -25,7 +25,7 @@
     waitForCore(() => {
         const TodoListModule = {
             name: 'TodoList',
-            version: '1.3.2',
+            version: '1.4.1',
             isActive: false,
             core: null,
             todoItems: [],
@@ -168,7 +168,7 @@
                     max-height: 800px;
                     z-index: 1000;
                     resize: ${this.isPinned ? 'none' : 'both'};
-                    overflow: hidden;
+                    overflow: auto;
                 `;
 
                 // Prevent body scroll when scrolling inside panel
