@@ -26,9 +26,9 @@
 
 
 
-### 📝 **Notepad System**- ~~Sidekick-Modular-Full-Featured-Sidebar.user.js (v5.17.0)~~ - **REMOVED**
+### 📝 **Notepad System**- 
 
-- Create unlimited floating notepads- ~~Sidekick-STANDALONE-Emergency.user.js~~ - **REMOVED**
+- Create unlimited floating notepads- 
 
 - Drag-and-drop grouping with stacked navigation
 
@@ -239,7 +239,6 @@ Contributions are welcome! Feel free to:
 
 - **Repository**: [GitHub - Sidekick-v.2](https://github.com/Machiacelli/Sidekick-v.2)
 - **Issues**: [Report a Bug](https://github.com/Machiacelli/Sidekick-v.2/issues)
-- **Torn Forums**: [Sidekick Discussion](https://www.torn.com/forums.php) *(link pending)*
 
 ## 📊 Version History
 
