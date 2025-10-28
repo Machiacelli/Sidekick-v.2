@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.40.0
-// @description  FIXED: No more notepad size drift on drag! Gym blocker mini image bug fixed. New gym blocker image. All features working!
+// @version      5.41.0
+// @description  FIXED: Added missing clock.module.js - gym blocker and API connections now working! Notepad size drift fixed!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -32,7 +32,7 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v5.40.0 - Fixed: Notepad size drift & gym blocker bugs!');
+    console.log('🚀 Sidekick Modular CDN v5.41.0 - Fixed: Added missing clock module for gym blocker and API!');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
@@ -275,6 +275,20 @@
                     window.SidekickModules.LinkGroup.init();
                 } catch (error) {
                     console.error('❌ LinkGroup init failed:', error);
+                }
+            }
+            
+            // Check and restore BlockTraining module (Training Blocker)
+            if (window.SidekickModules.BlockTraining?.restoreTrainingBlocker) {
+                console.log('🚫 Restoring Training Blocker if previously active...');
+                try {
+                    // Give the page more time to load gym elements
+                    setTimeout(() => {
+                        window.SidekickModules.BlockTraining.restoreTrainingBlocker();
+                        console.log('✅ Training Blocker restoration attempted');
+                    }, 2000);
+                } catch (error) {
+                    console.error('❌ Training Blocker restoration failed:', error);
                 }
             }
             
