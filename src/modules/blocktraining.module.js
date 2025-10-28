@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Training Blocker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.8.0
+// @version      1.9.0
 // @description  Training blocker functionality to prevent training while stacking energy
 // @author       Machiacelli
 // @match        https://www.torn.com/*
@@ -28,11 +28,14 @@
         let blockingOverlay = null;
 
         function blockTraining() {
+            console.log('🚫 blockTraining() called');
             isBlocked = true;
             saveState(STORAGE_KEY, true);
+            console.log('🚫 State saved, isBlocked:', isBlocked);
             
             // Immediately create the block if we're on a gym page
             const gymRoot = document.querySelector('#gymroot');
+            console.log('🚫 Looking for #gymroot:', gymRoot);
             if (gymRoot) {
                 console.log('🏋️ Gym detected, creating training block immediately...');
                 createTrainingBlock();

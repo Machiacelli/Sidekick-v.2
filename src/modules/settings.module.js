@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidewinder Settings Module
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
-// @description  Settings and API management for Sidewinder sidebar
+// @version      1.1.0
+// @description  Settings and API management for Sidewinder sidebar with enhanced debugging
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -364,17 +364,28 @@
                     // Block Training toggle
                     const blockTrainingToggle = document.getElementById('block-training-toggle');
                     if (blockTrainingToggle) {
+                        console.log('🎛️ Block Training toggle found in DOM');
+                        
                         // Set initial state
                         if (window.SidekickModules?.BlockTraining) {
-                            blockTrainingToggle.checked = window.SidekickModules.BlockTraining.isEnabled() || false;
+                            const currentState = window.SidekickModules.BlockTraining.isEnabled();
+                            blockTrainingToggle.checked = currentState;
+                            console.log('🎛️ Block Training initial state:', currentState);
+                        } else {
+                            console.warn('⚠️ BlockTraining module not available');
                         }
                         
                         blockTrainingToggle.addEventListener('change', () => {
+                            console.log('🎛️ Block Training toggle clicked, new state:', blockTrainingToggle.checked);
                             if (window.SidekickModules?.BlockTraining?.toggleBlockTraining) {
                                 window.SidekickModules.BlockTraining.toggleBlockTraining();
-                                console.log('🎛️ Block Training toggled:', blockTrainingToggle.checked);
+                                console.log('🎛️ Block Training toggled, isEnabled:', window.SidekickModules.BlockTraining.isEnabled());
+                            } else {
+                                console.error('❌ BlockTraining.toggleBlockTraining not available');
                             }
                         });
+                    } else {
+                        console.error('❌ Block Training toggle element not found in DOM');
                     }
 
                     // Travel Blocker toggle
