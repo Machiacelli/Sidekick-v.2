@@ -18,6 +18,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/linkgroup.module.js?v=20251028-nodrift
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/attacklist.module.js?v=20251028-nodrift
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/timer.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/clock.module.js?v=20251028-nodrift
 // @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/f7c8082/src/sidekick-modular-clean.user.js?v=20251028-nodrift
 // @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/f7c8082/src/sidekick-modular-clean.user.js?v=20251028-nodrift
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/randomtarget.module.js?v=20251028-nodrift
@@ -31,7 +32,7 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v5.37.0 - All major issues fixed: enhanced Xanax system, resizable panels, hidden scrollbars...');
+    console.log('🚀 Sidekick Modular CDN v5.40.0 - Fixed: Notepad size drift & gym blocker bugs!');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
