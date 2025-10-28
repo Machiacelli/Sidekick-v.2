@@ -1,4 +1,4 @@
-// ==UserSc// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/core.module.js?v=20251028-nodriftipt==
+// ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
 // @version      5.40.0
