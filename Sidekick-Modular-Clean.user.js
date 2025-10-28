@@ -1,43 +1,44 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.40.0
-// @description  FIXED: No more notepad size drift on drag! Gym blocker mini image bug fixed. New gym blocker image. All features working!
+// @version      5.41.0
+// @description  FIXED: Gym blocker now activates immediately when toggled ON while on gym page!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
 // @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/core.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/ui.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/settings.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/content.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/global-functions.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/notepad.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/linkgroup.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/attacklist.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/timer.module.js?v=20251028-nodrift
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/f7c8082/src/sidekick-modular-clean.user.js?v=20251028-nodrift
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/f7c8082/src/sidekick-modular-clean.user.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/randomtarget.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/blocktraining.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/travel-blocker.module.js?v=20251028-nodrift  
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/plane-replacer.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/traveltracker.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/todolist.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/core.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/ui.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/settings.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/content.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/global-functions.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/notepad.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/linkgroup.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/attacklist.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/timer.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/clock.module.js?v=20251028-nodrift
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/985d8b1/src/sidekick-modular-clean.user.js?v=20251028-nodrift
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/985d8b1/src/sidekick-modular-clean.user.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/randomtarget.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/blocktraining.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/travel-blocker.module.js?v=20251028-nodrift  
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/plane-replacer.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/traveltracker.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/todolist.module.js?v=20251028-nodrift
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v5.37.0 - All major issues fixed: enhanced Xanax system, resizable panels, hidden scrollbars...');
+    console.log('🚀 Sidekick Modular CDN v5.42.0 - Fixed: Added missing clock module for gym blocker and API!');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
     // CDN Diagnostics System
     const CdnDiagnostics = {
-        cdnBase: 'https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f7c8082/src/modules/',
+        cdnBase: 'https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/',
         moduleTests: [
             'core.module.js',
             'ui.module.js', 
@@ -274,6 +275,20 @@
                     window.SidekickModules.LinkGroup.init();
                 } catch (error) {
                     console.error('❌ LinkGroup init failed:', error);
+                }
+            }
+            
+            // Check and restore BlockTraining module (Training Blocker)
+            if (window.SidekickModules.BlockTraining?.restoreTrainingBlocker) {
+                console.log('🚫 Restoring Training Blocker if previously active...');
+                try {
+                    // Give the page more time to load gym elements
+                    setTimeout(() => {
+                        window.SidekickModules.BlockTraining.restoreTrainingBlocker();
+                        console.log('✅ Training Blocker restoration attempted');
+                    }, 2000);
+                } catch (error) {
+                    console.error('❌ Training Blocker restoration failed:', error);
                 }
             }
             

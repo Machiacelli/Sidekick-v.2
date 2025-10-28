@@ -2,43 +2,43 @@
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
 // @version      5.41.0
-// @description  FIXED: Added missing clock.module.js - gym blocker and API connections now working! Notepad size drift fixed!
+// @description  FIXED: Gym blocker now activates immediately when toggled ON while on gym page!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
 // @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/core.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/ui.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/settings.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/content.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/global-functions.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/notepad.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/linkgroup.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/attacklist.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/timer.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/clock.module.js?v=20251028-nodrift
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/d5a1bd2/src/sidekick-modular-clean.user.js?v=20251028-nodrift
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/d5a1bd2/src/sidekick-modular-clean.user.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/randomtarget.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/blocktraining.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/travel-blocker.module.js?v=20251028-nodrift  
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/plane-replacer.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/traveltracker.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/todolist.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/core.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/ui.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/settings.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/content.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/global-functions.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/notepad.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/linkgroup.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/attacklist.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/timer.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/clock.module.js?v=20251028-nodrift
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/985d8b1/src/sidekick-modular-clean.user.js?v=20251028-nodrift
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/985d8b1/src/sidekick-modular-clean.user.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/randomtarget.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/blocktraining.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/travel-blocker.module.js?v=20251028-nodrift  
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/plane-replacer.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/traveltracker.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/todolist.module.js?v=20251028-nodrift
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v5.41.0 - Fixed: Added missing clock module for gym blocker and API!');
+    console.log('🚀 Sidekick Modular CDN v5.42.0 - Fixed: Added missing clock module for gym blocker and API!');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
     // CDN Diagnostics System
     const CdnDiagnostics = {
-        cdnBase: 'https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d5a1bd2/src/modules/',
+        cdnBase: 'https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@985d8b1/src/modules/',
         moduleTests: [
             'core.module.js',
             'ui.module.js', 
