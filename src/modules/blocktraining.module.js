@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Training Blocker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.9.0
-// @description  Training blocker functionality to prevent training while stacking energy
+// @version      2.0.0
+// @description  SIMPLIFIED gym blocker - direct approach with extensive logging
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -28,29 +28,26 @@
         let blockingOverlay = null;
 
         function blockTraining() {
-            console.log('🚫 blockTraining() called');
+            console.log('🚫 blockTraining() called - ENABLING blocker');
             isBlocked = true;
             saveState(STORAGE_KEY, true);
             console.log('🚫 State saved, isBlocked:', isBlocked);
             
-            // Immediately create the block if we're on a gym page
-            const gymRoot = document.querySelector('#gymroot');
-            console.log('🚫 Looking for #gymroot:', gymRoot);
-            if (gymRoot) {
-                console.log('🏋️ Gym detected, creating training block immediately...');
-                createTrainingBlock();
-            } else {
-                console.log('📄 Not on gym page, will activate when gym is detected');
-            }
+            // ALWAYS try to create the overlay immediately
+            console.log('🚫 Attempting to create overlay NOW');
+            createTrainingBlock();
             
             notify('Training is now blocked!', 'warning');
+            console.log('� blockTraining() complete');
         }
 
         function unblockTraining() {
+            console.log('✅ unblockTraining() called - DISABLING blocker');
             isBlocked = false;
             saveState(STORAGE_KEY, false);
             removeTrainingBlock();
             notify('Training is now unblocked!', 'success');
+            console.log('✅ unblockTraining() complete');
         }
 
         function toggleBlockTraining() {
@@ -62,25 +59,33 @@
         }
 
         function createTrainingBlock() {
+            console.log('🔨 createTrainingBlock() called');
+            
             // Remove existing block if any
             removeTrainingBlock();
 
-            // Target the gymroot specifically like the original script
+            // Target the gymroot specifically
             const gymRoot = document.querySelector('#gymroot');
+            console.log('🔨 Looking for #gymroot element:', gymRoot);
             
             if (!gymRoot) {
-                console.log('Gym root not found on this page, skipping block creation');
+                console.warn('⚠️ Gym root not found on this page - overlay NOT created');
                 return; // Don't create overlay if gym isn't present
             }
 
+            console.log('✅ #gymroot found! Creating overlay...');
             createBlockOverlay(gymRoot);
         }
 
         function createBlockOverlay(targetElement) {
+            console.log('🎨 createBlockOverlay() called with element:', targetElement);
+            
             // Ensure the target element has position relative
             const computedPosition = window.getComputedStyle(targetElement).position;
+            console.log('🎨 Current position:', computedPosition);
             if (computedPosition === 'static') {
                 targetElement.style.position = 'relative';
+                console.log('🎨 Changed position to relative');
             }
             
             // Create blocking overlay with custom picture (no black tint)
@@ -96,6 +101,7 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                background: red;
             `;
 
             // Create custom picture container
@@ -115,7 +121,9 @@
             // Append directly to the target element for absolute positioning
             targetElement.appendChild(blockingOverlay);
             
-            console.log('Training blocker positioned over gymroot (absolute positioning)');
+            console.log('✅✅✅ OVERLAY CREATED AND ADDED TO DOM! ✅✅✅');
+            console.log('Overlay element:', blockingOverlay);
+            console.log('Overlay parent:', blockingOverlay.parentNode);
         }
 
         function removeTrainingBlock() {
