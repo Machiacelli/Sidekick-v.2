@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.47.0
+// @version      5.48.0
 // @description  FIXED: Chain Timer toggle now visible in settings!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
@@ -13,7 +13,7 @@
 // @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/3b9db9c/src/sidekick-modular-clean.user.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/core.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/ui.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@c40707c/src/modules/settings.module.js?v=20250128
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2c075e4/src/modules/settings.module.js?v=20250128
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/content.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/global-functions.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/notepad.module.js?v=20251029
@@ -22,7 +22,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/timer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/clock.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/randomtarget.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8af46da/src/modules/chain-timer.module.js?v=20250128
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2c075e4/src/modules/chain-timer.module.js?v=20250128
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/blocktraining.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
@@ -33,7 +33,7 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v5.47.0 - Chain Timer tab added to Settings!');
+    console.log('🚀 Sidekick Modular CDN v5.48.0 - Chain Timer enhanced with resize!');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
@@ -304,7 +304,7 @@
             
             console.log('✅ CDN Launcher: Module initialization completed - previously active panels should be restored');
             
-            console.log('🎉 Sidekick Enhanced v5.47.0 - Chain Timer tab now in Settings!');
+            console.log('🎉 Sidekick Enhanced v5.48.0 - Resizable Chain Timer!');
             
         } catch (error) {
             console.error('❌ Sidekick initialization failed:', error);
