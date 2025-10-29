@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.5.0
-// @description  Transaction Tracking: Auto-tracks buy/sell transactions for profit/loss calculation
+// @version      1.6.0
+// @description  Import Historical Data: Manually add old stock purchases for profit/loss tracking
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -336,10 +336,36 @@
                     }
                 };
                 
+                // Import historical data option
+                const importDataOption = document.createElement('button');
+                importDataOption.innerHTML = '<span style="margin-right: 8px;">📥</span>Import Historical Data';
+                importDataOption.style.cssText = `
+                    background: none;
+                    border: none;
+                    color: #4CAF50;
+                    padding: 8px 12px;
+                    width: 100%;
+                    text-align: left;
+                    cursor: pointer;
+                    font-size: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: background 0.2s ease;
+                `;
+                importDataOption.onmouseover = () => importDataOption.style.background = '#444';
+                importDataOption.onmouseout = () => importDataOption.style.background = 'none';
+                importDataOption.onclick = (e) => {
+                    e.stopPropagation();
+                    dropdown.style.display = 'none';
+                    this.showImportWindow();
+                };
+                
                 dropdown.appendChild(refreshOption);
                 dropdown.appendChild(pinOption);
                 dropdown.appendChild(autoAddOption);
                 dropdown.appendChild(settingsOption);
+                dropdown.appendChild(importDataOption);
                 dropdown.appendChild(clearDataOption);
                 
                 dropdownContainer.appendChild(dropdownBtn);
@@ -1133,6 +1159,319 @@
                 document.body.appendChild(overlay);
 
                 this.settingsWindow = overlay;
+
+                // Close on overlay click
+                overlay.onclick = (e) => {
+                    if (e.target === overlay) {
+                        overlay.remove();
+                    }
+                };
+            },
+
+            showImportWindow() {
+                const overlay = document.createElement('div');
+                overlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 999999;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                `;
+
+                const window = document.createElement('div');
+                window.style.cssText = `
+                    background: #2a2a2a;
+                    border: 1px solid #444;
+                    border-radius: 8px;
+                    width: 600px;
+                    max-height: 700px;
+                    display: flex;
+                    flex-direction: column;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+                `;
+
+                // Header
+                const header = document.createElement('div');
+                header.style.cssText = `
+                    background: #333;
+                    border-bottom: 1px solid #555;
+                    padding: 12px 16px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    border-radius: 7px 7px 0 0;
+                `;
+                header.innerHTML = `
+                    <div style="color: #fff; font-weight: 600; font-size: 14px;">📥 Import Historical Stock Purchases</div>
+                `;
+
+                const closeButton = document.createElement('button');
+                closeButton.style.cssText = `
+                    background: none;
+                    border: none;
+                    color: #bbb;
+                    cursor: pointer;
+                    font-size: 20px;
+                    padding: 0;
+                    line-height: 1;
+                `;
+                closeButton.textContent = '×';
+                closeButton.onclick = () => overlay.remove();
+                header.appendChild(closeButton);
+
+                // Content
+                const content = document.createElement('div');
+                content.style.cssText = `
+                    padding: 16px;
+                    overflow-y: auto;
+                    flex: 1;
+                `;
+
+                content.innerHTML = `
+                    <div style="color: #ccc; font-size: 13px; margin-bottom: 16px; line-height: 1.6;">
+                        <strong style="color: #4CAF50;">💡 Import Your Old Stock Purchases</strong><br>
+                        Add your historical stock purchases to start tracking profit/loss immediately!<br><br>
+                        
+                        <strong>How to use:</strong><br>
+                        1. Select a stock from the dropdown<br>
+                        2. Enter number of shares purchased<br>
+                        3. Enter the price per share you paid<br>
+                        4. Click "Add Purchase"<br>
+                        5. Repeat for all your historical purchases<br><br>
+                        
+                        <em style="color: #888;">Note: You can add multiple purchases for the same stock at different prices.</em>
+                    </div>
+
+                    <div style="background: #333; padding: 16px; border-radius: 6px; margin-bottom: 16px;">
+                        <div style="margin-bottom: 12px;">
+                            <label style="color: #ccc; font-size: 12px; display: block; margin-bottom: 6px;">Stock:</label>
+                            <select id="import-stock-select" style="
+                                width: 100%;
+                                padding: 8px;
+                                background: #2a2a2a;
+                                border: 1px solid #555;
+                                border-radius: 4px;
+                                color: #fff;
+                                font-size: 13px;
+                            ">
+                                <option value="">Select a stock...</option>
+                                <option value="1">[TCI] Torn City Invest</option>
+                                <option value="2">[CRU] Crude & Co</option>
+                                <option value="3">[TCS] Torn City Stocks</option>
+                                <option value="4">[SYS] Syster</option>
+                                <option value="5">[LAG] Lucky Clothing Co.</option>
+                                <option value="6">[FHC] Feathery Hotels</option>
+                                <option value="7">[SYM] Torn & Shanghai Banking</option>
+                                <option value="8">[IIL] I Industries Ltd.</option>
+                                <option value="9">[GRN] Messaging Inc.</option>
+                                <option value="10">[TMI] TC Music Industries</option>
+                                <option value="11">[TCP] Torn City Health Service</option>
+                                <option value="12">[IOU] Grain</option>
+                                <option value="13">[GRS] TC Media Productions</option>
+                                <option value="14">[CNC] Empty Lunchbox Casinos</option>
+                                <option value="15">[MSG] Alcoholohol</option>
+                                <option value="16">[TMU] Evo Estates</option>
+                                <option value="17">[TCP] HEX</option>
+                                <option value="18">[IIL] TC Clothing</option>
+                                <option value="19">[TCT] The Torn City Times</option>
+                                <option value="20">[CRU] Big Al's Gun Shop</option>
+                                <option value="21">[TCB] TC Television</option>
+                                <option value="22">[TCM] YazBread</option>
+                                <option value="23">[YAZ] Flowers For You</option>
+                                <option value="24">[TCM] Canine Couture</option>
+                                <option value="25">[LSC] Foot Ball Association</option>
+                                <option value="26">[EWM] Sail Boats & Yachts</option>
+                                <option value="27">[TCM] Performance Automobiles</option>
+                                <option value="28">[MCS] Tik</option>
+                                <option value="29">[EWM] The Torn City Museum</option>
+                                <option value="30">[SYM] TC Mining Corp.</option>
+                                <option value="31">[TCM] TC Oil Rig</option>
+                                <option value="32">[TCM] Pharmata</option>
+                                <option value="33">[HRG] Home Retail Group</option>
+                                <option value="34">[TEL] Tell Group</option>
+                                <option value="35">[PRN] Presto Logs</option>
+                            </select>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                            <div>
+                                <label style="color: #ccc; font-size: 12px; display: block; margin-bottom: 6px;">Shares:</label>
+                                <input type="number" id="import-shares" min="1" placeholder="e.g., 1000" style="
+                                    width: 100%;
+                                    padding: 8px;
+                                    background: #2a2a2a;
+                                    border: 1px solid #555;
+                                    border-radius: 4px;
+                                    color: #fff;
+                                    font-size: 13px;
+                                    box-sizing: border-box;
+                                ">
+                            </div>
+                            <div>
+                                <label style="color: #ccc; font-size: 12px; display: block; margin-bottom: 6px;">Price per Share ($):</label>
+                                <input type="number" id="import-price" min="0.01" step="0.01" placeholder="e.g., 45.50" style="
+                                    width: 100%;
+                                    padding: 8px;
+                                    background: #2a2a2a;
+                                    border: 1px solid #555;
+                                    border-radius: 4px;
+                                    color: #fff;
+                                    font-size: 13px;
+                                    box-sizing: border-box;
+                                ">
+                            </div>
+                        </div>
+
+                        <button id="import-add-btn" style="
+                            width: 100%;
+                            padding: 10px;
+                            background: #4CAF50;
+                            border: none;
+                            border-radius: 4px;
+                            color: white;
+                            font-weight: 600;
+                            cursor: pointer;
+                            font-size: 13px;
+                        ">✅ Add Purchase</button>
+                    </div>
+
+                    <div id="import-status" style="
+                        margin-top: 12px;
+                        padding: 12px;
+                        border-radius: 4px;
+                        font-size: 13px;
+                        display: none;
+                    "></div>
+
+                    <div id="import-summary" style="
+                        margin-top: 16px;
+                        padding: 12px;
+                        background: #333;
+                        border-radius: 6px;
+                        color: #ccc;
+                        font-size: 12px;
+                        max-height: 200px;
+                        overflow-y: auto;
+                    "></div>
+                `;
+
+                window.appendChild(header);
+                window.appendChild(content);
+                overlay.appendChild(window);
+                document.body.appendChild(overlay);
+
+                // Setup event handlers
+                const addBtn = content.querySelector('#import-add-btn');
+                const stockSelect = content.querySelector('#import-stock-select');
+                const sharesInput = content.querySelector('#import-shares');
+                const priceInput = content.querySelector('#import-price');
+                const statusDiv = content.querySelector('#import-status');
+                const summaryDiv = content.querySelector('#import-summary');
+
+                const updateSummary = () => {
+                    const purchases = Object.entries(this.trackedTransactions)
+                        .map(([stockId, data]) => {
+                            const purchaseCount = data.purchases?.length || 0;
+                            return purchaseCount > 0 ? `<div style="margin-bottom: 4px;">
+                                <strong style="color: #4CAF50;">${data.name}</strong>: 
+                                ${purchaseCount} purchase${purchaseCount > 1 ? 's' : ''}, 
+                                ${data.totalShares.toLocaleString()} shares, 
+                                avg $${(data.totalInvested / data.totalShares).toFixed(2)}/share
+                            </div>` : '';
+                        })
+                        .filter(html => html !== '')
+                        .join('');
+
+                    if (purchases) {
+                        summaryDiv.innerHTML = `<strong style="color: #fff; display: block; margin-bottom: 8px;">📊 Imported Purchases:</strong>${purchases}`;
+                    } else {
+                        summaryDiv.innerHTML = '<em style="color: #888;">No purchases imported yet</em>';
+                    }
+                };
+
+                updateSummary();
+
+                addBtn.onclick = () => {
+                    const stockId = parseInt(stockSelect.value);
+                    const shares = parseInt(sharesInput.value);
+                    const pricePerShare = parseFloat(priceInput.value);
+
+                    // Validation
+                    if (!stockId) {
+                        statusDiv.style.display = 'block';
+                        statusDiv.style.background = '#f44336';
+                        statusDiv.style.color = '#fff';
+                        statusDiv.textContent = '❌ Please select a stock';
+                        return;
+                    }
+
+                    if (!shares || shares <= 0) {
+                        statusDiv.style.display = 'block';
+                        statusDiv.style.background = '#f44336';
+                        statusDiv.style.color = '#fff';
+                        statusDiv.textContent = '❌ Please enter a valid number of shares';
+                        return;
+                    }
+
+                    if (!pricePerShare || pricePerShare <= 0) {
+                        statusDiv.style.display = 'block';
+                        statusDiv.style.background = '#f44336';
+                        statusDiv.style.color = '#fff';
+                        statusDiv.textContent = '❌ Please enter a valid price per share';
+                        return;
+                    }
+
+                    // Get stock name
+                    const stockName = stockSelect.options[stockSelect.selectedIndex].text.replace(/^\[.*?\]\s*/, '');
+
+                    // Initialize stock tracking if not exists
+                    if (!this.trackedTransactions[stockId]) {
+                        this.trackedTransactions[stockId] = {
+                            name: stockName,
+                            purchases: [],
+                            totalShares: 0,
+                            totalInvested: 0
+                        };
+                    }
+
+                    // Add purchase
+                    const stock = this.trackedTransactions[stockId];
+                    stock.purchases.push({
+                        shares: shares,
+                        price: pricePerShare,
+                        timestamp: Date.now()
+                    });
+                    stock.totalShares += shares;
+                    stock.totalInvested += shares * pricePerShare;
+
+                    // Save
+                    this.core.saveState('stockticker_transactions', this.trackedTransactions);
+
+                    // Show success
+                    statusDiv.style.display = 'block';
+                    statusDiv.style.background = '#4CAF50';
+                    statusDiv.style.color = '#fff';
+                    statusDiv.textContent = `✅ Added ${shares.toLocaleString()} shares of ${stockName} at $${pricePerShare.toFixed(2)}/share`;
+
+                    // Clear inputs
+                    sharesInput.value = '';
+                    priceInput.value = '';
+
+                    // Update summary
+                    updateSummary();
+
+                    // Refresh ticker display if open
+                    if (this.panel && document.body.contains(this.panel)) {
+                        this.fetchStockData();
+                    }
+
+                    console.log(`📥 Imported: ${shares} shares of ${stockName} at $${pricePerShare.toFixed(2)}`);
+                };
 
                 // Close on overlay click
                 overlay.onclick = (e) => {
