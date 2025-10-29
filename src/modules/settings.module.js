@@ -199,6 +199,9 @@
                             <button id="general-tab" class="settings-tab active" style="flex: 1; padding: 15px 20px; background: #2a2a2a; border: none; color: #fff; font-weight: bold; cursor: pointer; border-bottom: 3px solid #4CAF50; font-size: 14px;">
                                 ⚙️ General
                             </button>
+                            <button id="chain-timer-tab" class="settings-tab" style="flex: 1; padding: 15px 20px; background: #333; border: none; color: #aaa; font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; font-size: 14px;">
+                                ⏱️ Chain Timer
+                            </button>
                             <button id="shoplifting-tab" class="settings-tab" style="flex: 1; padding: 15px 20px; background: #333; border: none; color: #aaa; font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; font-size: 14px;">
                                 🏪 Shoplifting Alert
                             </button>
@@ -284,6 +287,11 @@
                                 </div>
                                 <button id="clear-all-data-btn" style="width: 100%; padding: 10px; background: #d32f2f; border: 1px solid #f44336; color: white; border-radius: 6px; cursor: pointer; font-size: 13px;">🗑️ Clear All Data</button>
                             </div>
+                        </div>
+                        
+                        <!-- Chain Timer Tab Content -->
+                        <div id="chain-timer-content" class="tab-content" style="padding: 20px; display: none;">
+                            <!-- Content will be populated by Chain Timer module -->
                         </div>
                         
                         <!-- Shoplifting Tab Content -->
@@ -1209,39 +1217,47 @@
             setupTabSwitching() {
                 // Tab switching functionality
                 const generalTab = document.getElementById('general-tab');
+                const chainTimerTab = document.getElementById('chain-timer-tab');
                 const shopliftingTab = document.getElementById('shoplifting-tab');
                 const generalContent = document.getElementById('general-content');
+                const chainTimerContent = document.getElementById('chain-timer-content');
                 const shopliftingContent = document.getElementById('shoplifting-content');
 
-                if (generalTab && shopliftingTab && generalContent && shopliftingContent) {
-                    generalTab.addEventListener('click', () => {
-                        // Switch to General tab
-                        generalTab.style.background = '#2a2a2a';
-                        generalTab.style.color = '#fff';
-                        generalTab.style.borderBottom = '3px solid #4CAF50';
-                        
-                        shopliftingTab.style.background = '#333';
-                        shopliftingTab.style.color = '#aaa';
-                        shopliftingTab.style.borderBottom = '3px solid transparent';
-                        
-                        generalContent.style.display = 'block';
-                        shopliftingContent.style.display = 'none';
-                    });
-
-                    shopliftingTab.addEventListener('click', () => {
-                        // Switch to Shoplifting tab
-                        shopliftingTab.style.background = '#2a2a2a';
-                        shopliftingTab.style.color = '#fff';
-                        shopliftingTab.style.borderBottom = '3px solid #4CAF50';
-                        
-                        generalTab.style.background = '#333';
-                        generalTab.style.color = '#aaa';
-                        generalTab.style.borderBottom = '3px solid transparent';
-                        
-                        generalContent.style.display = 'none';
-                        shopliftingContent.style.display = 'block';
-                    });
+                // Populate Chain Timer content from module
+                if (chainTimerContent && window.SidekickModules?.ChainTimer?.createSettingsContent) {
+                    const content = window.SidekickModules.ChainTimer.createSettingsContent();
+                    chainTimerContent.appendChild(content);
                 }
+
+                const tabs = [
+                    { button: generalTab, content: generalContent },
+                    { button: chainTimerTab, content: chainTimerContent },
+                    { button: shopliftingTab, content: shopliftingContent }
+                ];
+
+                tabs.forEach(({ button, content }) => {
+                    if (button && content) {
+                        button.addEventListener('click', () => {
+                            // Deactivate all tabs
+                            tabs.forEach(({ button: btn, content: cnt }) => {
+                                if (btn) {
+                                    btn.style.background = '#333';
+                                    btn.style.color = '#aaa';
+                                    btn.style.borderBottom = '3px solid transparent';
+                                }
+                                if (cnt) {
+                                    cnt.style.display = 'none';
+                                }
+                            });
+
+                            // Activate clicked tab
+                            button.style.background = '#2a2a2a';
+                            button.style.color = '#fff';
+                            button.style.borderBottom = '3px solid #4CAF50';
+                            content.style.display = 'block';
+                        });
+                    }
+                });
             },
 
             clearAllData() {
