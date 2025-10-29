@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.2.0
-// @description  FIXED: UI layout matches other panels (dropdown left, close right) + Correct API endpoint
+// @version      1.2.1
+// @description  FIXED: Correct API endpoint user/?selections=stocks + proper data parsing
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -424,15 +424,16 @@
                         return;
                     }
 
-                    // Fetch torn stocks from API (using torn/1 endpoint as per Torn API docs)
+                    // Fetch user's owned stocks from API (correct endpoint)
                     console.log('📈 Stock Ticker: Fetching stock data from API...');
-                    const response = await fetch(`https://api.torn.com/torn/1?selections=stocks&key=${apiKey}`);
+                    const response = await fetch(`https://api.torn.com/user/?selections=stocks&key=${apiKey}`);
                     
                     if (!response.ok) {
                         throw new Error('Failed to fetch stock data');
                     }
 
                     const data = await response.json();
+                    console.log('📈 Stock Ticker: Raw API response:', data);
                     
                     // Remove loading overlay
                     loadingOverlay.remove();
@@ -442,7 +443,9 @@
                         return;
                     }
 
+                    // The API returns stocks in data.stocks object
                     this.stockData = data.stocks || {};
+                    console.log('📈 Stock Ticker: Parsed stock data:', this.stockData);
                     this.renderStocks(content);
 
                 } catch (error) {
@@ -456,6 +459,8 @@
 
             renderStocks(content) {
                 const stocks = this.stockData;
+                
+                console.log('📈 Stock Ticker: Rendering stocks...', stocks);
                 
                 if (!stocks || Object.keys(stocks).length === 0) {
                     content.innerHTML = `
@@ -476,16 +481,19 @@
 
                 // Sort stocks by value (descending)
                 const sortedStocks = Object.entries(stocks).sort((a, b) => {
-                    const valueA = a[1].total_shares * a[1].current_price;
-                    const valueB = b[1].total_shares * b[1].current_price;
+                    const stockA = a[1];
+                    const stockB = b[1];
+                    const valueA = stockA.total_shares * stockA.current_price;
+                    const valueB = stockB.total_shares * stockB.current_price;
                     return valueB - valueA;
                 });
 
                 for (const [stockId, stock] of sortedStocks) {
+                    // Calculate values
                     const currentValue = stock.total_shares * stock.current_price;
                     const invested = stock.total_shares * stock.bought_price;
                     const profit = currentValue - invested;
-                    const profitPercent = ((profit / invested) * 100).toFixed(2);
+                    const profitPercent = invested > 0 ? ((profit / invested) * 100).toFixed(2) : '0.00';
                     
                     totalValue += currentValue;
                     totalInvested += invested;
@@ -493,6 +501,17 @@
                     const isProfit = profit >= 0;
                     const profitColor = isProfit ? '#4CAF50' : '#f44336';
                     const arrow = isProfit ? '↗' : '↘';
+
+                    console.log(`📈 Stock ${stockId}:`, {
+                        name: stock.stock_name,
+                        shares: stock.total_shares,
+                        currentPrice: stock.current_price,
+                        boughtPrice: stock.bought_price,
+                        currentValue,
+                        invested,
+                        profit,
+                        profitPercent
+                    });
 
                     stocksHTML.push(`
                         <div style="
@@ -522,12 +541,16 @@
                                     <div style="color: #fff;">$${stock.current_price.toFixed(2)}</div>
                                 </div>
                                 <div>
+                                    <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Bought At</div>
+                                    <div style="color: #fff;">$${stock.bought_price.toFixed(2)}</div>
+                                </div>
+                                <div>
                                     <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Total Value</div>
                                     <div style="color: #fff;">$${currentValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                                 </div>
-                                <div>
+                                <div style="grid-column: 1 / -1;">
                                     <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Profit/Loss</div>
-                                    <div style="color: ${profitColor};">
+                                    <div style="color: ${profitColor}; font-weight: 600;">
                                         ${isProfit ? '+' : ''}$${profit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                                     </div>
                                 </div>
