@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.3.1
-// @description  FIXED: Panel position/size save + z-index + auto-add in dropdown + short names + value calculations
+// @version      1.3.2
+// @description  FIXED: Stock prices now showing correctly + settings window close button working
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -600,19 +600,31 @@
                     const stockA = a[1];
                     const stockB = b[1];
                     
+                    // Get stock info (handle nested structure)
+                    const stockAInfo = stockA.stock || stockA;
+                    const stockBInfo = stockB.stock || stockB;
+                    
                     // Calculate total shares from transactions
                     const getShares = (stock) => {
                         if (!stock.transactions || !Array.isArray(stock.transactions)) return 0;
-                        return stock.transactions.reduce((sum, t) => sum + t.shares, 0);
+                        return stock.transactions.reduce((sum, t) => sum + (t.shares || 0), 0);
                     };
                     
-                    const valueA = getShares(stockA) * (stockA.current_price || 0);
-                    const valueB = getShares(stockB) * (stockB.current_price || 0);
+                    const valueA = getShares(stockA) * (stockAInfo.current_price || 0);
+                    const valueB = getShares(stockB) * (stockBInfo.current_price || 0);
                     return valueB - valueA;
                 });
 
                 for (const [stockId, stock] of sortedStocks) {
                     console.log(`📈 Raw stock ${stockId} data:`, stock);
+                    
+                    // The API returns stock data nested inside a "stock" object
+                    // Structure: { stock: { current_price: ..., ... }, transactions: [...] }
+                    const stockInfo = stock.stock || stock; // Handle both structures
+                    const transactions = stock.transactions || [];
+                    
+                    console.log(`📈 Stock ${stockId} info:`, stockInfo);
+                    console.log(`📈 Stock ${stockId} transactions:`, transactions);
                     
                     // Get stock name from our list if not in API data
                     const stockNames = {
@@ -624,14 +636,14 @@
                         26: 'EWM', 27: 'SYM', 28: 'TCM', 29: 'EWM', 30: 'SYM',
                         31: 'TCM', 32: 'HRG', 33: 'HRG', 34: 'TEL', 35: 'PRN'
                     };
-                    const stockName = stock.name || stockNames[parseInt(stockId)] || `Stock #${stockId}`;
+                    const stockName = stockInfo.name || stockNames[parseInt(stockId)] || `Stock #${stockId}`;
                     
                     // Calculate average bought price from transactions
                     let totalShares = 0;
                     let totalCost = 0;
                     
-                    if (stock.transactions && Array.isArray(stock.transactions)) {
-                        for (const transaction of stock.transactions) {
+                    if (transactions && Array.isArray(transactions)) {
+                        for (const transaction of transactions) {
                             const shares = transaction.shares || 0;
                             const boughtPrice = transaction.bought_price || 0;
                             totalShares += shares;
@@ -641,7 +653,9 @@
                     
                     const avgBoughtPrice = totalShares > 0 ? totalCost / totalShares : 0;
                     const shares = totalShares;
-                    const currentPrice = stock.current_price || 0;
+                    const currentPrice = stockInfo.current_price || 0;
+                    
+                    console.log(`📈 Stock ${stockId} - Shares: ${shares}, Current Price: ${currentPrice}, Avg Bought: ${avgBoughtPrice}`);
                     
                     // Calculate values
                     const currentValue = shares * currentPrice;
@@ -855,16 +869,22 @@
                 `;
                 header.innerHTML = `
                     <div style="color: #fff; font-weight: 600; font-size: 14px;">📈 Select Stocks to Display</div>
-                    <button style="
-                        background: none;
-                        border: none;
-                        color: #bbb;
-                        cursor: pointer;
-                        font-size: 20px;
-                        padding: 0;
-                        line-height: 1;
-                    " onclick="this.closest('[style*=\\'position: fixed\\']').remove()">×</button>
                 `;
+
+                // Create close button properly with event listener
+                const closeButton = document.createElement('button');
+                closeButton.style.cssText = `
+                    background: none;
+                    border: none;
+                    color: #bbb;
+                    cursor: pointer;
+                    font-size: 20px;
+                    padding: 0;
+                    line-height: 1;
+                `;
+                closeButton.textContent = '×';
+                closeButton.onclick = () => overlay.remove();
+                header.appendChild(closeButton);
 
                 // Content
                 const content = document.createElement('div');
