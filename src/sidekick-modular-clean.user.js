@@ -237,6 +237,16 @@
                 console.log('🔍 Available modules:', Object.keys(window.SidekickModules || {}));
             }
             
+            // Initialize Chain Timer module
+            console.log('⏱️ CDN Launcher: Initializing Chain Timer...');
+            if (window.SidekickModules.ChainTimer?.init) {
+                console.log('⏱️ ChainTimer found, initializing...');
+                window.SidekickModules.ChainTimer.init();
+            } else {
+                console.warn('❌ ChainTimer module not found in SidekickModules');
+                console.log('🔍 Available modules:', Object.keys(window.SidekickModules || {}));
+            }
+            
             // Auto-restore previously active modules by checking their panel states
             console.log('🔄 CDN Launcher: Checking for previously active modules...');
             
