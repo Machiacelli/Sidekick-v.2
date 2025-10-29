@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.49.0
-// @description  FIXED: Chain Timer resize now works from all corners, lower minimums, and no position drift!
+// @version      5.50.0
+// @description  FIXED: Chain Timer - removed resize handles, added time persistence across pages!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -22,7 +22,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/timer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/clock.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/randomtarget.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@489f076/src/modules/chain-timer.module.js?v=20250129
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@042e670/src/modules/chain-timer.module.js?v=20250129
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/blocktraining.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
@@ -33,7 +33,7 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v5.49.0 - Chain Timer resize UX fixed!');
+    console.log('🚀 Sidekick Modular CDN v5.50.0 - Chain Timer improvements!');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
