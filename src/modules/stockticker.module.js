@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.3.4
-// @description  DEBUG: Enhanced logging to diagnose zero values issue
+// @version      1.3.5
+// @description  DEBUG: Super detailed transaction logging to find the issue
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -657,6 +657,8 @@
                     const stockName = stock.name || `Stock #${stockId}`;
                     
                     console.log(`📈 Stock ${stockId} - Name: ${stockName}, Current Price: ${currentPrice}`);
+                    console.log(`📈 Stock ${stockId} - Transactions array:`, transactions);
+                    console.log(`📈 Stock ${stockId} - Transaction count:`, transactions.length);
                     
                     // Calculate average bought price from transactions
                     let totalShares = 0;
@@ -664,8 +666,10 @@
                     
                     if (transactions && Array.isArray(transactions)) {
                         for (const transaction of transactions) {
+                            console.log(`📈 Stock ${stockId} - Processing transaction:`, transaction);
                             const shares = transaction.shares || 0;
                             const boughtPrice = transaction.bought_price || 0;
+                            console.log(`📈 Stock ${stockId} - Transaction: ${shares} shares @ $${boughtPrice}`);
                             totalShares += shares;
                             totalCost += shares * boughtPrice;
                         }
@@ -674,7 +678,7 @@
                     const avgBoughtPrice = totalShares > 0 ? totalCost / totalShares : 0;
                     const shares = totalShares;
                     
-                    console.log(`📈 Stock ${stockId} - Shares: ${shares}, Current Price: ${currentPrice}, Avg Bought: ${avgBoughtPrice}`);
+                    console.log(`📈 Stock ${stockId} - CALCULATED - Shares: ${shares}, Current Price: ${currentPrice}, Avg Bought: ${avgBoughtPrice}, Total Cost: ${totalCost}`);
                     
                     // Calculate values
                     const currentValue = shares * currentPrice;
