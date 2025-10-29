@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.57.0
-// @description  NEW: Stock Ticker with real-time portfolio tracking!
+// @version      5.58.0
+// @description  UPDATED: Stock Ticker now accessible via add menu!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -14,7 +14,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/core.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/ui.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2c075e4/src/modules/settings.module.js?v=20250128
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/content.module.js?v=20251029
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@706f287/src/modules/content.module.js?v=20250129
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/global-functions.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/notepad.module.js?v=20250129
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/linkgroup.module.js?v=20250129
@@ -27,7 +27,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/traveltracker.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@da3da96/src/modules/stockticker.module.js?v=20250129
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@706f287/src/modules/stockticker.module.js?v=20250129
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/todolist.module.js?v=20250129
 // ==/UserScript==
 
