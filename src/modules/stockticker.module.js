@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.7.0
-// @description  Stock names now use dynamic acronyms from Torn API - no more mixed up names!
+// @version      1.7.1
+// @description  Fixed: Shows 'No stocks selected' when all stocks are deselected
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -271,6 +271,7 @@
                     const ownedStockIds = Object.keys(this.stockData).map(id => parseInt(id));
                     this.selectedStocks = ownedStockIds;
                     this.core.saveState('stockticker_selected_stocks', this.selectedStocks);
+                    this.core.saveState('stockticker_has_selection', true); // Mark that user has made a selection
                     
                     // Reset button state
                     autoAddOption.disabled = false;
@@ -658,7 +659,24 @@
 
                 // Filter stocks based on selected stocks
                 let filteredStocks = stocks;
-                if (this.selectedStocks.length > 0) {
+                
+                // Check if user has made a selection (even if empty array)
+                const hasSelectedStocks = this.core.loadState('stockticker_has_selection', false);
+                
+                if (hasSelectedStocks && this.selectedStocks.length === 0) {
+                    // User explicitly deselected all stocks - show message
+                    content.innerHTML = `
+                        <div style="text-align: center; padding: 40px 20px; color: #888;">
+                            <div style="font-size: 32px; margin-bottom: 12px;">🔍</div>
+                            <div>No stocks selected</div>
+                            <div style="font-size: 11px; margin-top: 8px; color: #666;">
+                                Use ⚙️ Select Stocks to choose which stocks to display
+                            </div>
+                        </div>
+                    `;
+                    return;
+                } else if (this.selectedStocks.length > 0) {
+                    // User has selected specific stocks - filter to show only those
                     filteredStocks = {};
                     for (const [stockId, stockData] of Object.entries(stocks)) {
                         if (this.selectedStocks.includes(parseInt(stockId))) {
@@ -666,6 +684,7 @@
                         }
                     }
                 }
+                // If hasSelectedStocks is false and selectedStocks is empty, show all stocks (initial state)
 
                 console.log('📈 Stock Ticker: Filtered stocks:', filteredStocks);
 
@@ -1155,6 +1174,7 @@
                             this.selectedStocks = this.selectedStocks.filter(id => id !== stock.id);
                         }
                         this.core.saveState('stockticker_selected_stocks', this.selectedStocks);
+                        this.core.saveState('stockticker_has_selection', true); // Mark that user has made a selection
                         this.fetchStockData(); // Refresh display
                     };
 

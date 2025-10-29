@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Chain Timer Module
 // @namespace    http://tampermonkey.net/
-// @version      2.4.1
-// @description  Chain timer monitor with settings tab and floating mirror display
+// @version      2.5.0
+// @description  Chain timer now follows sidebar minimize/maximize like Random Target floater!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -244,12 +244,14 @@
                     min-width: 40px;
                     min-height: 30px;
                     box-sizing: border-box;
+                    transition: left 0.3s ease;
                 `;
                 this.floatingDisplay.innerHTML = `<div id="floating-chain-time" style="color: #ff9800; font-size: 20px; font-weight: bold; text-align: center; pointer-events: none;">${savedTime}</div>`;
                 
                 this.addDragging(this.floatingDisplay);
                 this.addResizing(this.floatingDisplay);
                 this.updateFontSize(this.floatingDisplay);
+                this.setupSidebarObserver();
                 document.body.appendChild(this.floatingDisplay);
             },
 
@@ -257,6 +259,12 @@
                 if (this.floatingDisplay) {
                     this.floatingDisplay.remove();
                     this.floatingDisplay = null;
+                }
+                
+                // Clean up sidebar observer
+                if (this.sidebarObserver) {
+                    this.sidebarObserver.disconnect();
+                    this.sidebarObserver = null;
                 }
             },
 
@@ -296,6 +304,49 @@
                 });
                 
                 resizeObserver.observe(element);
+            },
+
+            setupSidebarObserver() {
+                // Watch for sidebar minimize/maximize to adjust position
+                const sidebarWidthOffset = 350; // Approximate sidebar width
+                
+                const checkSidebarState = () => {
+                    const sidebar = document.getElementById('sidekick-sidebar');
+                    if (!sidebar || !this.floatingDisplay) return;
+                    
+                    const isSidebarHidden = sidebar.classList.contains('hidden');
+                    const currentLeft = parseInt(this.floatingDisplay.style.left) || 0;
+                    
+                    // Only adjust if position is in the sidebar area (left side of screen)
+                    if (currentLeft < sidebarWidthOffset) {
+                        if (isSidebarHidden) {
+                            // Sidebar minimized - move floater left
+                            this.floatingDisplay.style.left = '10px';
+                        } else {
+                            // Sidebar expanded - restore position
+                            const savedPosition = this.loadDisplayPosition();
+                            if (savedPosition.x >= sidebarWidthOffset) {
+                                this.floatingDisplay.style.left = savedPosition.x + 'px';
+                            }
+                        }
+                    }
+                };
+                
+                // Initial check
+                checkSidebarState();
+                
+                // Watch for class changes on body (sidebar state changes)
+                const observer = new MutationObserver(() => {
+                    checkSidebarState();
+                });
+                
+                observer.observe(document.body, {
+                    attributes: true,
+                    attributeFilter: ['class']
+                });
+                
+                // Store observer for cleanup
+                this.sidebarObserver = observer;
             },
 
             startMonitoring() {
