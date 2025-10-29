@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.6.5
-// @description  CRITICAL FIX: Profit/loss now calculated correctly using tracked shares only!
+// @version      1.7.0
+// @description  Stock names now use dynamic acronyms from Torn API - no more mixed up names!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -620,7 +620,8 @@
                         this.stockData[stockId] = {
                             ...userStock,
                             current_price: marketStock?.current_price || 0,
-                            name: marketStock?.name || userStock.name || `Stock #${stockId}`
+                            name: marketStock?.name || userStock.name || `Stock #${stockId}`,
+                            acronym: marketStock?.acronym || `#${stockId}` // Store acronym from API
                         };
                     }
                     
@@ -701,24 +702,13 @@
                     const shares = stock.shares || 0;
                     const currentPrice = stock.current_price || 0;
                     const stockName = stock.name || `Stock #${stockId}`;
+                    const stockAcronym = stock.acronym || stockId; // Use acronym from API
                     const transactionCount = stock.transactions || 0;
                     
-                    console.log(`📈 Stock ${stockId} - Name: ${stockName}, Shares: ${shares}, Current Price: ${currentPrice}, Transactions: ${transactionCount}`);
+                    console.log(`📈 Stock ${stockId} - Acronym: ${stockAcronym}, Name: ${stockName}, Shares: ${shares}, Current Price: ${currentPrice}, Transactions: ${transactionCount}`);
                     
                     // Calculate current value
                     const currentValue = shares * currentPrice;
-                    
-                    // Get short name from stock list (CORRECTED acronyms from Torn City Wiki)
-                    const stockNames = {
-                        1: 'TCI', 2: 'CNC', 3: 'IST', 4: 'SYS', 5: 'IOU',
-                        6: 'FHG', 7: 'TSB', 8: 'IIL', 9: 'MSG', 10: 'TMI',
-                        11: 'THS', 12: 'GRN', 13: 'TCP', 14: 'ELT', 15: 'ASS',
-                        16: 'EVL', 17: 'CBD', 18: 'TCC', 19: 'TCT', 20: 'BAG',
-                        21: 'WLT', 22: 'YAZ', 23: 'PTS', 24: 'EWM', 25: 'LSC',
-                        26: 'SYM', 27: 'MUN', 28: 'WSU', 29: 'LOS', 30: 'LAG',
-                        31: 'PRN', 32: 'HRG', 33: 'TGP', 34: 'TCM', 35: 'MCS'
-                    };
-                    const shortName = stockNames[stockId] || stockId;
                     
                     // Calculate profit/loss from tracked transactions
                     let profitLoss = null;
@@ -763,7 +753,7 @@
                            onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#3a3a3a';">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                 <div style="font-weight: 600; color: #fff; font-size: 14px;">
-                                    [${shortName}] ${stockName}
+                                    [${stockAcronym}] ${stockName}
                                 </div>
                                 <div style="color: ${profitColor}; font-weight: 600; font-size: 13px;">
                                     ${profitDisplay}${percentDisplay}
