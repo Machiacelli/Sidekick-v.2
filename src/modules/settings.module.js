@@ -260,16 +260,6 @@
                             </div>
                             <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin: 12px 0;">
                                 <div style="display: flex; flex-direction: column;">
-                                    <span style="color: #fff; font-weight: bold; font-size: 14px;">⏱️ Chain Timer</span>
-                                    <span style="color: #aaa; font-size: 12px;">Monitor chain timeout with alerts</span>
-                                </div>
-                                <label class="chain-timer-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
-                                    <input type="checkbox" id="chain-timer-toggle" style="opacity: 0; width: 0; height: 0;">
-                                    <span class="chain-timer-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
-                                </label>
-                            </div>
-                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin: 12px 0;">
-                                <div style="display: flex; flex-direction: column;">
                                     <span style="color: #fff; font-weight: bold; font-size: 14px;">🏋️ Auto Gym Optimizer</span>
                                     <span style="color: #aaa; font-size: 12px;">Automatically switches to best gym for each stat</span>
                                 </div>
@@ -508,68 +498,6 @@
                         }, 500); // Check every 500ms for better responsiveness
                     } else {
                         console.error('❌ Random Target toggle element not found in DOM');
-                    }
-
-                    // Chain Timer toggle
-                    const chainTimerToggle = document.getElementById('chain-timer-toggle');
-                    console.log('🔍 Looking for Chain Timer toggle:', chainTimerToggle);
-                    
-                    if (chainTimerToggle) {
-                        // Set initial state
-                        if (window.SidekickModules?.ChainTimer) {
-                            const savedState = window.SidekickModules.Core.loadState('chain_timer_active', false);
-                            const moduleState = window.SidekickModules.ChainTimer.isActive;
-                            
-                            const shouldBeChecked = moduleState !== undefined ? moduleState : savedState;
-                            chainTimerToggle.checked = shouldBeChecked;
-                            
-                            console.log('✅ Chain Timer toggle initialized:', {
-                                savedState: savedState,
-                                moduleState: moduleState,
-                                finalState: shouldBeChecked
-                            });
-                            
-                            // Update toggle appearance
-                            if (shouldBeChecked) {
-                                const slider = chainTimerToggle.nextElementSibling;
-                                if (slider && slider.classList.contains('chain-timer-slider')) {
-                                    slider.style.backgroundColor = '#4CAF50';
-                                }
-                            }
-                        }
-                        
-                        chainTimerToggle.addEventListener('change', () => {
-                            console.log('🎛️ Chain Timer toggle changed to:', chainTimerToggle.checked);
-                            if (window.SidekickModules?.ChainTimer) {
-                                window.SidekickModules.ChainTimer.activate();
-                                console.log('🎛️ Chain Timer toggled:', chainTimerToggle.checked);
-                            } else {
-                                console.error('❌ ChainTimer module not available for activation');
-                            }
-                        });
-
-                        // Sync toggle with module state
-                        setInterval(() => {
-                            if (window.SidekickModules?.ChainTimer && chainTimerToggle) {
-                                const currentState = window.SidekickModules.Core.loadState('chain_timer_active', false);
-                                const moduleState = window.SidekickModules.ChainTimer.isActive;
-                                
-                                const shouldBeChecked = moduleState !== undefined ? moduleState : currentState;
-                                
-                                if (chainTimerToggle.checked !== shouldBeChecked) {
-                                    chainTimerToggle.checked = shouldBeChecked;
-                                    console.log('🔄 Chain Timer toggle synced to:', shouldBeChecked);
-                                }
-                                
-                                // Update toggle appearance
-                                const slider = chainTimerToggle.nextElementSibling;
-                                if (slider && slider.classList.contains('chain-timer-slider')) {
-                                    slider.style.backgroundColor = shouldBeChecked ? '#4CAF50' : '#ccc';
-                                }
-                            }
-                        }, 500);
-                    } else {
-                        console.error('❌ Chain Timer toggle element not found in DOM');
                     }
 
                     // Auto Gym toggle

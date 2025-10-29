@@ -93,17 +93,28 @@
                         <p style="margin: 0; color: #ccc; font-size: 12px;">Configure alerts for when your chain timer is running low</p>
                     </div>
 
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin-bottom: 20px;">
+                        <div style="display: flex; flex-direction: column;">
+                            <span style="color: #fff; font-weight: bold; font-size: 14px;">Enable Chain Timer</span>
+                            <span style="color: #aaa; font-size: 12px;">Turn on/off chain timer monitoring</span>
+                        </div>
+                        <label class="chain-timer-main-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
+                            <input type="checkbox" id="chain-timer-toggle" style="opacity: 0; width: 0; height: 0;">
+                            <span class="chain-timer-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
+                        </label>
+                    </div>
+
                     <div style="margin-bottom: 20px;">
                         <label style="display: block; margin-bottom: 8px; color: #ff9800; font-weight: bold;">Alert Threshold</label>
                         <select id="chain-threshold-dropdown" style="width: 100%; padding: 8px; background: #2a2a2a; color: #fff; border: 1px solid #ff9800; border-radius: 4px; font-size: 14px;">
-                            <option value="60">1 minute (60 seconds)</option>
-                            <option value="90">1.5 minutes (90 seconds)</option>
-                            <option value="120">2 minutes (120 seconds)</option>
-                            <option value="150">2.5 minutes (150 seconds)</option>
-                            <option value="180">3 minutes (180 seconds)</option>
-                            <option value="210">3.5 minutes (210 seconds)</option>
-                            <option value="240" selected>4 minutes (240 seconds)</option>
-                            <option value="270">4.5 minutes (270 seconds)</option>
+                            <option value="60">1 minute</option>
+                            <option value="90">1.5 minutes</option>
+                            <option value="120">2 minutes</option>
+                            <option value="150">2.5 minutes</option>
+                            <option value="180">3 minutes</option>
+                            <option value="210">3.5 minutes</option>
+                            <option value="240" selected>4 minutes</option>
+                            <option value="270">4.5 minutes</option>
                         </select>
                     </div>
 
@@ -122,15 +133,34 @@
                     </div>
 
                     <div style="margin-top: 20px; padding: 12px; background: rgba(255,152,0,0.1); border-left: 3px solid #ff9800; border-radius: 4px;">
-                        <p style="margin: 0; color: #ccc; font-size: 12px;">ℹ️ The floating timer can be dragged anywhere on the screen. Position is saved automatically.</p>
+                        <p style="margin: 0; color: #ccc; font-size: 12px;">ℹ️ The floating timer can be dragged and resized. Position and size are saved automatically.</p>
                     </div>
                 `;
 
                 // Set current values
                 setTimeout(() => {
+                    const mainToggle = content.querySelector('#chain-timer-toggle');
                     const thresholdDropdown = content.querySelector('#chain-threshold-dropdown');
                     const alertsToggle = content.querySelector('#chain-alerts-toggle');
                     const popupToggle = content.querySelector('#chain-popup-toggle');
+
+                    if (mainToggle) {
+                        mainToggle.checked = this.isActive;
+                        mainToggle.addEventListener('change', () => {
+                            this.activate();
+                        });
+
+                        // Sync toggle with module state
+                        setInterval(() => {
+                            if (mainToggle.checked !== this.isActive) {
+                                mainToggle.checked = this.isActive;
+                            }
+                            const slider = mainToggle.nextElementSibling;
+                            if (slider && slider.classList.contains('chain-timer-slider')) {
+                                slider.style.backgroundColor = this.isActive ? '#4CAF50' : '#ccc';
+                            }
+                        }, 500);
+                    }
 
                     if (thresholdDropdown) {
                         thresholdDropdown.value = this.alertThresholdInSeconds.toString();
@@ -169,12 +199,34 @@
                 if (this.floatingDisplay) return;
 
                 const savedPosition = this.loadDisplayPosition();
+                const savedSize = this.loadDisplaySize();
+                
                 this.floatingDisplay = document.createElement('div');
                 this.floatingDisplay.id = 'chain-timer-floating';
-                this.floatingDisplay.style.cssText = `position: fixed; left: ${savedPosition.x}px; top: ${savedPosition.y}px; background: rgba(0,0,0,0.8); border: 2px solid #ff9800; border-radius: 8px; padding: 12px 20px; z-index: 9999; cursor: move;`;
-                this.floatingDisplay.innerHTML = '<div id="floating-chain-time" style="color: #ff9800; font-size: 20px; font-weight: bold;">--:--</div>';
+                this.floatingDisplay.style.cssText = `
+                    position: fixed; 
+                    left: ${savedPosition.x}px; 
+                    top: ${savedPosition.y}px; 
+                    width: ${savedSize.width}px;
+                    height: ${savedSize.height}px;
+                    background: rgba(0,0,0,0.8); 
+                    border: 2px solid #ff9800; 
+                    border-radius: 8px; 
+                    padding: 12px 20px; 
+                    z-index: 9999; 
+                    cursor: move;
+                    resize: both;
+                    overflow: hidden;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-width: 80px;
+                    min-height: 40px;
+                `;
+                this.floatingDisplay.innerHTML = '<div id="floating-chain-time" style="color: #ff9800; font-size: 20px; font-weight: bold; text-align: center;">--:--</div>';
                 
                 this.addDragging(this.floatingDisplay);
+                this.addResizing(this.floatingDisplay);
                 document.body.appendChild(this.floatingDisplay);
             },
 
@@ -327,6 +379,35 @@
                 const x = parseInt(element.style.left) || 20;
                 const y = parseInt(element.style.top) || 100;
                 this.core.saveState('chain_timer_position', { x, y });
+            },
+
+            loadDisplaySize() {
+                return this.core.loadState('chain_timer_size', { width: 120, height: 60 });
+            },
+
+            saveDisplaySize(element) {
+                const width = parseInt(element.style.width) || 120;
+                const height = parseInt(element.style.height) || 60;
+                this.core.saveState('chain_timer_size', { width, height });
+            },
+
+            addResizing(element) {
+                // Create resize observer to save size when user resizes
+                const resizeObserver = new ResizeObserver(() => {
+                    this.saveDisplaySize(element);
+                    
+                    // Adjust font size based on container size
+                    const display = element.querySelector('#floating-chain-time');
+                    if (display) {
+                        const containerWidth = element.offsetWidth;
+                        const containerHeight = element.offsetHeight;
+                        const minDimension = Math.min(containerWidth, containerHeight);
+                        const fontSize = Math.max(12, Math.min(32, minDimension * 0.4));
+                        display.style.fontSize = fontSize + 'px';
+                    }
+                });
+                
+                resizeObserver.observe(element);
             },
 
             updateSettingsToggle(isActive) {
