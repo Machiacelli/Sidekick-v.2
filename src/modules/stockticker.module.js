@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.4.0
-// @description  FIXED: Now uses correct API structure (shares as number, no transaction history)
+// @version      1.4.1
+// @description  UI Fixed: Removed loading flash, fixed duplicate price, added short names [CODE] format
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -475,20 +475,8 @@
                 if (!content) return;
 
                 try {
-                    // Show loading indicator
-                    const loadingOverlay = document.createElement('div');
-                    loadingOverlay.style.cssText = `
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        color: #4CAF50;
-                        font-size: 24px;
-                        z-index: 10;
-                    `;
-                    loadingOverlay.textContent = '🔄';
-                    content.style.position = 'relative';
-                    content.appendChild(loadingOverlay);
+                    // Remove loading indicator - causes UI flicker
+                    // Just fetch data silently in the background
 
                     // Get API key from Core module's storage (same way TodoList does it)
                     console.log('📈 Stock Ticker: Attempting to fetch API key...');
@@ -498,7 +486,6 @@
                     
                     if (!this.core || !this.core.loadState || !this.core.STORAGE_KEYS) {
                         console.error('❌ Stock Ticker: Core module not properly loaded');
-                        loadingOverlay.remove();
                         this.showError(content, 'Core module not loaded. Please refresh the page.');
                         return;
                     }
@@ -509,10 +496,10 @@
                     
                     if (!apiKey) {
                         console.error('❌ Stock Ticker: No API key found in storage');
-                        loadingOverlay.remove();
                         this.showError(content, 'No API key found. Please set your API key in Settings.');
                         return;
                     }
+
 
                     // Fetch BOTH user portfolio and market prices
                     // User endpoint gives us transactions, torn endpoint gives current prices
@@ -532,13 +519,11 @@
                     
                     console.log('📈 Stock Ticker: User portfolio data:', userData);
                     console.log('📈 Stock Ticker: Market price data:', marketData);
-                    
-                    // Remove loading overlay
-                    loadingOverlay.remove();
 
                     if (userData.error) {
                         this.showError(content, 'API Error: ' + userData.error.error);
                         return;
+
                     }
 
                     if (marketData.error) {
@@ -656,8 +641,17 @@
                     // Calculate current value (we can't calculate profit without transaction history)
                     const currentValue = shares * currentPrice;
                     
-                    // We don't have bought price data, so we can't show profit/loss
-                    // Just show shares and current value
+                    // Get short name from stock list
+                    const stockNames = {
+                        1: 'TCI', 2: 'CRU', 3: 'TCS', 4: 'SYS', 5: 'LAG',
+                        6: 'FHC', 7: 'SYM', 8: 'IIL', 9: 'GRN', 10: 'TMI',
+                        11: 'TCP', 12: 'IOU', 13: 'GRS', 14: 'CNC', 15: 'MSG',
+                        16: 'TMU', 17: 'TCP', 18: 'IIL', 19: 'TCT', 20: 'CRU',
+                        21: 'TCB', 22: 'TCM', 23: 'YAZ', 24: 'TCM', 25: 'LSC',
+                        26: 'EWM', 27: 'TCM', 28: 'MCS', 29: 'EWM', 30: 'SYM',
+                        31: 'TCM', 32: 'TCM', 33: 'HRG', 34: 'TEL', 35: 'PRN'
+                    };
+                    const shortName = stockNames[stockId] || stockId;
                     
                     totalValue += currentValue;
 
@@ -680,24 +674,20 @@
                            onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#3a3a3a';">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                 <div style="font-weight: 600; color: #fff; font-size: 14px;">
-                                    ${stockName}
+                                    [${shortName}] ${stockName}
                                 </div>
-                                <div style="color: #4CAF50; font-weight: 600; font-size: 14px;">
+                                <div style="color: #4CAF50; font-weight: 600; font-size: 13px;">
                                     ${shares.toLocaleString()} shares
                                 </div>
                             </div>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
                                 <div>
-                                    <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Current Price</div>
+                                    <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Price</div>
                                     <div style="color: #fff;">$${currentPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                                 </div>
                                 <div>
-                                    <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Current Price</div>
-                                    <div style="color: #fff;">$${currentPrice.toFixed(2)}</div>
-                                </div>
-                                <div>
                                     <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Total Value</div>
-                                    <div style="color: #fff; font-weight: 600;">$${currentValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                                    <div style="color: #4CAF50; font-weight: 600;">$${currentValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                                 </div>
                             </div>
                         </div>
