@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.0.3
-// @description  FIXED: API key now properly retrieved from Core.loadState
+// @version      1.0.4
+// @description  FIXED: Hidden scrollbar + comprehensive API key debugging
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -226,7 +226,18 @@
                     flex: 1;
                     color: #ccc;
                     font-size: 13px;
+                    scrollbar-width: none; /* Firefox */
+                    -ms-overflow-style: none; /* IE and Edge */
                 `;
+                
+                // Hide scrollbar for Chrome, Safari and Opera
+                const style = document.createElement('style');
+                style.textContent = `
+                    .stockticker-content::-webkit-scrollbar {
+                        display: none;
+                    }
+                `;
+                document.head.appendChild(style);
 
                 // Loading state
                 content.innerHTML = `
@@ -326,22 +337,34 @@
                     content.appendChild(loadingOverlay);
 
                     // Get API key from Core module's storage (same way Settings module does it)
+                    console.log('📈 Stock Ticker: Attempting to fetch API key...');
+                    console.log('📈 Stock Ticker: window.SidekickModules:', window.SidekickModules);
+                    
                     const Core = window.SidekickModules?.Core;
+                    console.log('📈 Stock Ticker: Core module:', Core);
+                    console.log('📈 Stock Ticker: Core.loadState:', Core?.loadState);
+                    console.log('📈 Stock Ticker: Core.STORAGE_KEYS:', Core?.STORAGE_KEYS);
+                    
                     if (!Core || !Core.loadState || !Core.STORAGE_KEYS) {
+                        console.error('❌ Stock Ticker: Core module not properly loaded');
                         loadingOverlay.remove();
                         this.showError(content, 'Core module not loaded. Please refresh the page.');
                         return;
                     }
                     
+                    console.log('📈 Stock Ticker: API_KEY constant:', Core.STORAGE_KEYS.API_KEY);
                     const apiKey = Core.loadState(Core.STORAGE_KEYS.API_KEY, '');
+                    console.log('📈 Stock Ticker: Retrieved API key:', apiKey ? `${apiKey.substring(0, 4)}...` : 'EMPTY');
                     
                     if (!apiKey) {
+                        console.error('❌ Stock Ticker: No API key found in storage');
                         loadingOverlay.remove();
                         this.showError(content, 'No API key found. Please set your API key in Settings.');
                         return;
                     }
 
                     // Fetch user's torn stocks from API
+                    console.log('📈 Stock Ticker: Fetching stock data from API...');
                     const response = await fetch(`/torn-api/user?selections=stocks&key=${apiKey}`);
                     
                     if (!response.ok) {
