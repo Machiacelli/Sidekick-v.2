@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.6.4
-// @description  Auto-convert shorthand notation (k/m/b) to actual numbers as you type!
+// @version      1.6.5
+// @description  CRITICAL FIX: Profit/loss now calculated correctly using tracked shares only!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -729,7 +729,10 @@
                     const trackedStock = this.trackedTransactions[stockId];
                     if (trackedStock && trackedStock.totalShares > 0) {
                         avgBuyPrice = trackedStock.totalInvested / trackedStock.totalShares;
-                        profitLoss = currentValue - trackedStock.totalInvested;
+                        
+                        // IMPORTANT: Calculate profit based on tracked shares ONLY, not total portfolio shares
+                        const trackedCurrentValue = trackedStock.totalShares * currentPrice;
+                        profitLoss = trackedCurrentValue - trackedStock.totalInvested;
                         profitPercent = (profitLoss / trackedStock.totalInvested) * 100;
                         isTracked = true;
                         
