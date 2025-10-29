@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.0.2
-// @description  FIXED: API key integration and reduced minimum size to 250x150
+// @version      1.0.3
+// @description  FIXED: API key now properly retrieved from Core.loadState
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -325,8 +325,15 @@
                     content.style.position = 'relative';
                     content.appendChild(loadingOverlay);
 
-                    // Get API key from Settings module
-                    const apiKey = window.SidekickModules?.Settings?.getApiKey?.() || '';
+                    // Get API key from Core module's storage (same way Settings module does it)
+                    const Core = window.SidekickModules?.Core;
+                    if (!Core || !Core.loadState || !Core.STORAGE_KEYS) {
+                        loadingOverlay.remove();
+                        this.showError(content, 'Core module not loaded. Please refresh the page.');
+                        return;
+                    }
+                    
+                    const apiKey = Core.loadState(Core.STORAGE_KEYS.API_KEY, '');
                     
                     if (!apiKey) {
                         loadingOverlay.remove();
