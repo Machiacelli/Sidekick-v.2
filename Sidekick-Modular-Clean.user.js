@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.48.0
-// @description  FIXED: Chain Timer toggle now visible in settings!
+// @version      5.77.0
+// @description  Stock Ticker: Import Historical Data to track old purchases!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -14,26 +14,28 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/core.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/ui.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2c075e4/src/modules/settings.module.js?v=20250128
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/content.module.js?v=20251029
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@706f287/src/modules/content.module.js?v=20250129
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/global-functions.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/notepad.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/linkgroup.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/attacklist.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/timer.module.js?v=20251029
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/notepad.module.js?v=20250129
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/linkgroup.module.js?v=20250129
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/attacklist.module.js?v=20250129
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/timer.module.js?v=20250129
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/clock.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/randomtarget.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2c075e4/src/modules/chain-timer.module.js?v=20250128
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@e136d9f/src/modules/chain-timer.module.js?v=20250129
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/blocktraining.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/traveltracker.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@0afc02a/src/modules/todolist.module.js?v=20251029
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@e9ba8b5/src/modules/stockticker.module.js?v=20250129
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/todolist.module.js?v=20250129
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v5.48.0 - Chain Timer enhanced with resize!');
+    console.log('🚀 Sidekick Modular CDN v5.77.0 - Stock Ticker with Import Historical Data!');
+    console.log('� NEW: Import your old stock purchases to track profit/loss immediately');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
@@ -244,6 +246,7 @@
                 window.SidekickModules.ChainTimer.init();
             } else {
                 console.warn('❌ ChainTimer module not found in SidekickModules');
+                console.log('🔍 Available modules:', Object.keys(window.SidekickModules || {}));
             }
             
             // Auto-restore previously active modules by checking their panel states
@@ -288,6 +291,16 @@
                 }
             }
             
+            // Check and restore Stock Ticker module
+            if (window.SidekickModules.StockTicker?.init) {
+                console.log('📈 Initializing Stock Ticker module (checks for previously open panel)...');
+                try {
+                    window.SidekickModules.StockTicker.init();
+                } catch (error) {
+                    console.error('❌ Stock Ticker init failed:', error);
+                }
+            }
+            
             // Check and restore BlockTraining module (Training Blocker)
             if (window.SidekickModules.BlockTraining?.restoreTrainingBlocker) {
                 console.log('🚫 Restoring Training Blocker if previously active...');
@@ -304,7 +317,7 @@
             
             console.log('✅ CDN Launcher: Module initialization completed - previously active panels should be restored');
             
-            console.log('🎉 Sidekick Enhanced v5.48.0 - Resizable Chain Timer!');
+            console.log('🎉 Sidekick Enhanced v5.35.0 initialization complete - All major fixes implemented!');
             
         } catch (error) {
             console.error('❌ Sidekick initialization failed:', error);
