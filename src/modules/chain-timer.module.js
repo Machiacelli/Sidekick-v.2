@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Chain Timer Module
 // @namespace    http://tampermonkey.net/
-// @version      2.2.0
+// @version      2.3.0
 // @description  Chain timer monitor with settings tab and floating mirror display
 // @author       Machiacelli
 // @match        https://www.torn.com/*
@@ -200,6 +200,7 @@
 
                 const savedPosition = this.loadDisplayPosition();
                 const savedSize = this.loadDisplaySize();
+                const savedTime = this.loadLastTime();
                 
                 this.floatingDisplay = document.createElement('div');
                 this.floatingDisplay.id = 'chain-timer-floating';
@@ -215,6 +216,7 @@
                     padding: 12px 20px; 
                     z-index: 9999; 
                     cursor: move;
+                    resize: both;
                     overflow: hidden;
                     display: flex;
                     align-items: center;
@@ -223,10 +225,10 @@
                     min-height: 30px;
                     box-sizing: border-box;
                 `;
-                this.floatingDisplay.innerHTML = '<div id="floating-chain-time" style="color: #ff9800; font-size: 20px; font-weight: bold; text-align: center; pointer-events: none;">--:--</div>';
+                this.floatingDisplay.innerHTML = `<div id="floating-chain-time" style="color: #ff9800; font-size: 20px; font-weight: bold; text-align: center; pointer-events: none;">${savedTime}</div>`;
                 
-                this.addResizeHandles(this.floatingDisplay);
                 this.addDragging(this.floatingDisplay);
+                this.addResizing(this.floatingDisplay);
                 this.updateFontSize(this.floatingDisplay);
                 document.body.appendChild(this.floatingDisplay);
             },
@@ -238,106 +240,11 @@
                 }
             },
 
-            addResizeHandles(element) {
-                const handles = {
-                    'nw': { cursor: 'nw-resize', position: 'top: -5px; left: -5px;' },
-                    'n':  { cursor: 'n-resize',  position: 'top: -5px; left: 50%; transform: translateX(-50%);' },
-                    'ne': { cursor: 'ne-resize', position: 'top: -5px; right: -5px;' },
-                    'e':  { cursor: 'e-resize',  position: 'top: 50%; right: -5px; transform: translateY(-50%);' },
-                    'se': { cursor: 'se-resize', position: 'bottom: -5px; right: -5px;' },
-                    's':  { cursor: 's-resize',  position: 'bottom: -5px; left: 50%; transform: translateX(-50%);' },
-                    'sw': { cursor: 'sw-resize', position: 'bottom: -5px; left: -5px;' },
-                    'w':  { cursor: 'w-resize',  position: 'top: 50%; left: -5px; transform: translateY(-50%);' }
-                };
-
-                Object.keys(handles).forEach(dir => {
-                    const handle = document.createElement('div');
-                    handle.className = `resize-handle resize-${dir}`;
-                    handle.style.cssText = `
-                        position: absolute;
-                        ${handles[dir].position}
-                        width: 10px;
-                        height: 10px;
-                        background: #ff9800;
-                        border: 1px solid #000;
-                        border-radius: 50%;
-                        cursor: ${handles[dir].cursor};
-                        z-index: 10;
-                    `;
-
-                    let isResizing = false;
-                    let startX, startY, startWidth, startHeight, startLeft, startTop;
-
-                    handle.addEventListener('mousedown', (e) => {
-                        e.stopPropagation(); // Prevent dragging while resizing
-                        isResizing = true;
-                        startX = e.clientX;
-                        startY = e.clientY;
-                        startWidth = parseInt(getComputedStyle(element).width);
-                        startHeight = parseInt(getComputedStyle(element).height);
-                        startLeft = parseInt(element.style.left);
-                        startTop = parseInt(element.style.top);
-                        
-                        const handleResize = (e) => {
-                            if (!isResizing) return;
-
-                            const dx = e.clientX - startX;
-                            const dy = e.clientY - startY;
-                            let newWidth = startWidth;
-                            let newHeight = startHeight;
-                            let newLeft = startLeft;
-                            let newTop = startTop;
-
-                            // Handle horizontal resizing
-                            if (dir.includes('e')) {
-                                newWidth = Math.max(40, startWidth + dx);
-                            } else if (dir.includes('w')) {
-                                newWidth = Math.max(40, startWidth - dx);
-                                newLeft = startLeft + (startWidth - newWidth);
-                            }
-
-                            // Handle vertical resizing
-                            if (dir.includes('s')) {
-                                newHeight = Math.max(30, startHeight + dy);
-                            } else if (dir.includes('n')) {
-                                newHeight = Math.max(30, startHeight - dy);
-                                newTop = startTop + (startHeight - newHeight);
-                            }
-
-                            element.style.width = newWidth + 'px';
-                            element.style.height = newHeight + 'px';
-                            element.style.left = newLeft + 'px';
-                            element.style.top = newTop + 'px';
-                            
-                            this.updateFontSize(element);
-                        };
-
-                        const stopResize = () => {
-                            if (isResizing) {
-                                isResizing = false;
-                                this.saveDisplaySize(element);
-                                this.saveDisplayPosition(element);
-                                document.removeEventListener('mousemove', handleResize);
-                                document.removeEventListener('mouseup', stopResize);
-                            }
-                        };
-
-                        document.addEventListener('mousemove', handleResize);
-                        document.addEventListener('mouseup', stopResize);
-                    });
-
-                    element.appendChild(handle);
-                });
-            },
-
             addDragging(element) {
                 let isDragging = false;
                 let startX, startY, initialX, initialY;
 
                 element.addEventListener('mousedown', (e) => {
-                    // Don't drag if clicking on resize handles
-                    if (e.target.classList.contains('resize-handle')) return;
-                    
                     isDragging = true;
                     startX = e.clientX;
                     startY = e.clientY;
@@ -359,6 +266,16 @@
                         this.saveDisplayPosition(element);
                     }
                 });
+            },
+
+            addResizing(element) {
+                // Use ResizeObserver to track when user resizes via CSS resize
+                const resizeObserver = new ResizeObserver(() => {
+                    this.saveDisplaySize(element);
+                    this.updateFontSize(element);
+                });
+                
+                resizeObserver.observe(element);
             },
 
             startMonitoring() {
@@ -411,7 +328,11 @@
             updateDisplays(timeText) {
                 if (this.floatingDisplay) {
                     const display = this.floatingDisplay.querySelector('#floating-chain-time');
-                    if (display) display.textContent = timeText;
+                    if (display) {
+                        display.textContent = timeText;
+                        // Save the current time for quick display on next page load
+                        this.saveLastTime(timeText);
+                    }
                 }
             },
 
@@ -485,6 +406,14 @@
                 const width = parseInt(element.style.width) || 120;
                 const height = parseInt(element.style.height) || 60;
                 this.core.saveState('chain_timer_size', { width, height });
+            },
+
+            loadLastTime() {
+                return this.core.loadState('chain_timer_last_time', '--:--');
+            },
+
+            saveLastTime(timeText) {
+                this.core.saveState('chain_timer_last_time', timeText);
             },
 
             updateFontSize(element) {
