@@ -9,6 +9,8 @@
 // @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/3b9db9c/src/sidekick-modular-clean.user.js?v=20251029
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/3b9db9c/src/sidekick-modular-clean.user.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/core.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/ui.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@b228079/src/modules/settings.module.js?v=20251029
@@ -19,8 +21,6 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/attacklist.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/timer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/clock.module.js?v=20251029
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/3b9db9c/src/sidekick-modular-clean.user.js?v=20251029
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/3b9db9c/src/sidekick-modular-clean.user.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/randomtarget.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@b228079/src/modules/chain-timer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/blocktraining.module.js?v=20251029

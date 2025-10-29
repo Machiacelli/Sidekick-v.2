@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Sidekick Chain Timer Module
+// @name         Sidekick Random Target Module
 // @namespace    http://tampermonkey.net/
 // @version      1.0.0
-// @description  Chain timer monitor with alerts - movable floating interface
+// @description  Random target finder for Torn chains - modular approach
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -23,318 +23,196 @@
     }
 
     waitForCore(() => {
-        const ChainTimerModule = {
-            name: 'ChainTimer',
+        const RandomTargetModule = {
+            name: 'RandomTarget',
             version: '1.0.0',
             isActive: false,
-            timerPanel: null,
-            monitorInterval: null,
-            flashInterval: null,
-            isFlashing: false,
-            lastAlertTime: 0,
+            targetButton: null,
             
             // Configuration
             config: {
-                alertThreshold: 90, // seconds - default 90s
-                alertsEnabled: true,
-                popupEnabled: true
+                enableApiChecks: false, // requires valid public api key if set to true
+                apiKey: '', // public API key
+                maxXanax: 1000,
+                maxRefills: 500,
+                maxSEs: 1,
+                minID: 1000000,
+                maxID: 3400000
             },
 
             init() {
-                console.log('⏱️ Initializing Chain Timer Module v1.0.0...');
+                console.log('🎯 Initializing Random Target Module v1.0.0...');
                 this.core = window.SidekickModules.Core;
                 
                 if (!this.core) {
-                    console.error('❌ Core module not available for Chain Timer');
+                    console.error('❌ Core module not available for Random Target');
                     return false;
                 }
 
                 // Load saved configuration
                 this.loadConfig();
                 
-                // Check if timer was previously active and restore it
-                this.restoreTimerState();
+                // Check if button was previously active and restore it
+                this.restoreButtonState();
                 
-                console.log('✅ Chain Timer module initialized successfully');
+                console.log('✅ Random Target module initialized successfully');
                 return true;
             },
 
-            // Main activation method - called when user toggles Chain Timer switch
+            // Main activation method - called when user toggles Random Target switch
             activate() {
-                console.log('⏱️ Chain Timer module activation toggled');
+                console.log('🎯 Random Target module activated!');
                 
                 if (this.isActive) {
-                    this.hideTimerPanel();
+                    this.hideTargetButton();
                     this.isActive = false;
-                    this.core.saveState('chain_timer_active', false);
+                    this.core.saveState('random_target_active', false);
                     this.updateSettingsToggle(false);
                     return;
                 }
 
-                this.showTimerPanel();
+                this.showTargetButton();
                 this.isActive = true;
-                this.core.saveState('chain_timer_active', true);
+                this.core.saveState('random_target_active', true);
                 this.updateSettingsToggle(true);
             },
 
-            showTimerPanel() {
-                console.log('⏱️ showTimerPanel() called');
+            showTargetButton() {
+                console.log('🎯 showTargetButton() called - current targetButton:', !!this.targetButton, 'isActive:', this.isActive);
                 
-                if (this.timerPanel) {
-                    console.log('⏱️ Panel already exists, not creating duplicate');
+                if (this.targetButton) {
+                    console.log('🎯 Button already exists, not creating duplicate');
                     return;
                 }
                 
                 this.isActive = true;
-                this.core.saveState('chain_timer_active', true);
+                this.core.saveState('random_target_active', true);
                 
-                // Load saved panel position
-                const savedPosition = this.loadPanelPosition();
+                // Load saved button position
+                const savedPosition = this.loadButtonPosition();
                 
-                // Create timer panel
-                this.timerPanel = document.createElement('div');
-                this.timerPanel.id = 'chain-timer-panel';
-                this.timerPanel.style.cssText = `
+                // Create target button
+                this.targetButton = document.createElement('button');
+                this.targetButton.id = 'random-target-button';
+                this.targetButton.innerHTML = '🎯';
+                this.targetButton.style.cssText = `
                     position: fixed;
                     left: ${savedPosition.x}px;
                     top: ${savedPosition.y}px;
                     background: #2a2a2a;
-                    border: 2px solid #ff9800;
-                    border-radius: 8px;
-                    padding: 12px;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+                    color: white;
+                    border: 2px solid #4CAF50;
+                    padding: 6px;
+                    border-radius: 50%;
+                    cursor: move;
+                    font-weight: bold;
+                    font-size: 16px;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
                     z-index: 9999;
                     user-select: none;
-                    min-width: 200px;
-                    font-family: Arial, sans-serif;
+                    transition: all 0.2s ease;
+                    width: 40px;
+                    height: 40px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                 `;
 
-                // Build panel content
-                this.timerPanel.innerHTML = `
-                    <div style="
-                        cursor: move;
-                        margin-bottom: 10px;
-                        padding-bottom: 8px;
-                        border-bottom: 1px solid #444;
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                    ">
-                        <span style="font-size: 18px;">⏱️</span>
-                        <span style="color: #fff; font-weight: bold; font-size: 14px;">Chain Timer</span>
-                    </div>
-                    
-                    <div style="margin-bottom: 10px;">
-                        <label style="color: #ccc; font-size: 12px; display: block; margin-bottom: 4px;">
-                            Alert Threshold:
-                        </label>
-                        <select id="chain-alert-threshold" style="
-                            width: 100%;
-                            padding: 6px;
-                            background: #333;
-                            color: #fff;
-                            border: 1px solid #555;
-                            border-radius: 4px;
-                            font-size: 12px;
-                            cursor: pointer;
-                        ">
-                            <option value="60">60 seconds</option>
-                            <option value="90" ${this.config.alertThreshold === 90 ? 'selected' : ''}>90 seconds</option>
-                            <option value="120" ${this.config.alertThreshold === 120 ? 'selected' : ''}>120 seconds</option>
-                            <option value="150" ${this.config.alertThreshold === 150 ? 'selected' : ''}>150 seconds</option>
-                            <option value="180" ${this.config.alertThreshold === 180 ? 'selected' : ''}>180 seconds</option>
-                            <option value="210" ${this.config.alertThreshold === 210 ? 'selected' : ''}>210 seconds</option>
-                            <option value="240" ${this.config.alertThreshold === 240 ? 'selected' : ''}>240 seconds</option>
-                            <option value="270" ${this.config.alertThreshold === 270 ? 'selected' : ''}>270 seconds</option>
-                        </select>
-                    </div>
-                    
-                    <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
-                        <label style="color: #ccc; font-size: 12px;">Alerts:</label>
-                        <label class="switch" style="position: relative; display: inline-block; width: 40px; height: 20px;">
-                            <input type="checkbox" id="chain-alerts-toggle" ${this.config.alertsEnabled ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
-                            <span style="
-                                position: absolute;
-                                cursor: pointer;
-                                top: 0;
-                                left: 0;
-                                right: 0;
-                                bottom: 0;
-                                background-color: ${this.config.alertsEnabled ? '#4CAF50' : '#ccc'};
-                                transition: .4s;
-                                border-radius: 20px;
-                            ">
-                                <span style="
-                                    position: absolute;
-                                    content: '';
-                                    height: 14px;
-                                    width: 14px;
-                                    left: ${this.config.alertsEnabled ? '23px' : '3px'};
-                                    bottom: 3px;
-                                    background-color: white;
-                                    transition: .4s;
-                                    border-radius: 50%;
-                                "></span>
-                            </span>
-                        </label>
-                    </div>
-                    
-                    <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <label style="color: #ccc; font-size: 12px;">Popup:</label>
-                        <label class="switch" style="position: relative; display: inline-block; width: 40px; height: 20px;">
-                            <input type="checkbox" id="chain-popup-toggle" ${this.config.popupEnabled ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
-                            <span style="
-                                position: absolute;
-                                cursor: pointer;
-                                top: 0;
-                                left: 0;
-                                right: 0;
-                                bottom: 0;
-                                background-color: ${this.config.popupEnabled ? '#4CAF50' : '#ccc'};
-                                transition: .4s;
-                                border-radius: 20px;
-                            ">
-                                <span style="
-                                    position: absolute;
-                                    content: '';
-                                    height: 14px;
-                                    width: 14px;
-                                    left: ${this.config.popupEnabled ? '23px' : '3px'};
-                                    bottom: 3px;
-                                    background-color: white;
-                                    transition: .4s;
-                                    border-radius: 50%;
-                                "></span>
-                            </span>
-                        </label>
-                    </div>
-                    
-                    <div id="chain-timer-status" style="
-                        margin-top: 10px;
-                        padding-top: 8px;
-                        border-top: 1px solid #444;
-                        color: #888;
-                        font-size: 11px;
-                        text-align: center;
-                    ">
-                        Monitoring...
-                    </div>
-                `;
+                // Add hover effects
+                this.targetButton.addEventListener('mouseenter', () => {
+                    this.targetButton.style.transform = 'scale(1.05)';
+                    this.targetButton.style.borderColor = '#45a049';
+                    this.targetButton.style.boxShadow = '0 6px 12px rgba(0,0,0,0.4)';
+                });
 
-                // Add event listeners
-                this.attachEventListeners();
+                this.targetButton.addEventListener('mouseleave', () => {
+                    this.targetButton.style.transform = 'scale(1)';
+                    this.targetButton.style.borderColor = '#4CAF50';
+                    this.targetButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+                });
+
+                // Add double-click event (changed from single click)
+                this.targetButton.addEventListener('dblclick', () => {
+                    this.findTarget();
+                });
 
                 // Add dragging functionality
-                this.addDragging(this.timerPanel);
+                this.addDragging(this.targetButton);
 
                 // Add to page
-                document.body.appendChild(this.timerPanel);
-                console.log('⏱️ Chain Timer panel created and added to page');
+                document.body.appendChild(this.targetButton);
+                console.log('🎯 Random Target button created and added to page');
                 
-                // Start monitoring
-                this.startMonitoring();
+                // Verify button is actually visible
+                setTimeout(() => {
+                    if (this.targetButton) {
+                        const rect = this.targetButton.getBoundingClientRect();
+                        console.log('🎯 Button position on screen:', { 
+                            left: rect.left, 
+                            top: rect.top, 
+                            visible: rect.width > 0 && rect.height > 0,
+                            inViewport: rect.left >= 0 && rect.top >= 0 && rect.right <= window.innerWidth && rect.bottom <= window.innerHeight
+                        });
+                    }
+                }, 100);
                 
-                // Save active state
-                this.core.saveState('chain_timer_active', true);
+                // Add viewport resize handler to keep button visible
+                this.addViewportResizeHandler(this.targetButton);
+                
+                // Save button active state
+                window.SidekickModules.Core.saveState('random_target_active', true);
             },
 
-            hideTimerPanel() {
-                if (this.timerPanel) {
-                    this.timerPanel.remove();
-                    this.timerPanel = null;
+            hideTargetButton() {
+                if (this.targetButton) {
+                    // Clean up resize handler
+                    if (this.targetButton.viewportResizeHandler) {
+                        window.removeEventListener('resize', this.targetButton.viewportResizeHandler);
+                        this.targetButton.viewportResizeHandler = null;
+                    }
+                    
+                    this.targetButton.remove();
+                    this.targetButton = null;
                 }
-                
-                // Stop monitoring
-                this.stopMonitoring();
-                
-                // Stop any active flashing
-                this.stopFlashing();
-                
                 this.isActive = false;
-                this.core.saveState('chain_timer_active', false);
-            },
-
-            attachEventListeners() {
-                // Alert threshold dropdown
-                const thresholdSelect = this.timerPanel.querySelector('#chain-alert-threshold');
-                if (thresholdSelect) {
-                    thresholdSelect.addEventListener('change', (e) => {
-                        this.config.alertThreshold = parseInt(e.target.value);
-                        this.saveConfig();
-                        console.log('⏱️ Alert threshold changed to:', this.config.alertThreshold);
-                    });
-                }
-
-                // Alerts toggle
-                const alertsToggle = this.timerPanel.querySelector('#chain-alerts-toggle');
-                if (alertsToggle) {
-                    alertsToggle.addEventListener('change', (e) => {
-                        this.config.alertsEnabled = e.target.checked;
-                        this.saveConfig();
-                        this.updateToggleUI(alertsToggle);
-                        console.log('⏱️ Alerts enabled:', this.config.alertsEnabled);
-                        
-                        // Stop flashing if alerts are disabled
-                        if (!this.config.alertsEnabled) {
-                            this.stopFlashing();
-                        }
-                    });
-                }
-
-                // Popup toggle
-                const popupToggle = this.timerPanel.querySelector('#chain-popup-toggle');
-                if (popupToggle) {
-                    popupToggle.addEventListener('change', (e) => {
-                        this.config.popupEnabled = e.target.checked;
-                        this.saveConfig();
-                        this.updateToggleUI(popupToggle);
-                        console.log('⏱️ Popup enabled:', this.config.popupEnabled);
-                    });
-                }
-            },
-
-            updateToggleUI(toggleInput) {
-                const slider = toggleInput.nextElementSibling;
-                const knob = slider?.querySelector('span');
                 
-                if (slider) {
-                    slider.style.backgroundColor = toggleInput.checked ? '#4CAF50' : '#ccc';
-                }
-                
-                if (knob) {
-                    knob.style.left = toggleInput.checked ? '23px' : '3px';
-                }
+                // Save button inactive state
+                window.SidekickModules.Core.saveState('random_target_active', false);
             },
 
-            addDragging(panel) {
+            addDragging(button) {
                 let isDragging = false;
                 let dragOffset = { x: 0, y: 0 };
-                let hasMoved = false;
-                let startPosition = { x: 0, y: 0 };
+                let hasMoved = false; // Track if button actually moved during drag
+                let startPosition = { x: 0, y: 0 }; // Track starting position
                 
-                const header = panel.querySelector('div');
-                
-                header.addEventListener('mousedown', (e) => {
-                    isDragging = true;
-                    hasMoved = false;
-                    const rect = panel.getBoundingClientRect();
-                    dragOffset.x = e.clientX - rect.left;
-                    dragOffset.y = e.clientY - rect.top;
-                    startPosition.x = rect.left;
-                    startPosition.y = rect.top;
-                    e.preventDefault();
-                    header.style.cursor = 'grabbing';
+                button.addEventListener('mousedown', (e) => {
+                    if (e.target === button) {
+                        isDragging = true;
+                        hasMoved = false;
+                        const rect = button.getBoundingClientRect();
+                        dragOffset.x = e.clientX - rect.left;
+                        dragOffset.y = e.clientY - rect.top;
+                        startPosition.x = rect.left;
+                        startPosition.y = rect.top;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Change cursor during drag
+                        button.style.cursor = 'grabbing';
+                    }
                 });
                 
                 document.addEventListener('mousemove', (e) => {
                     if (!isDragging) return;
                     
                     e.preventDefault();
+                    e.stopPropagation();
                     
                     const newX = e.clientX - dragOffset.x;
                     const newY = e.clientY - dragOffset.y;
                     
-                    // Check if panel has moved significantly
+                    // Check if button has moved significantly (more than 5 pixels)
                     const deltaX = Math.abs(newX - startPosition.x);
                     const deltaY = Math.abs(newY - startPosition.y);
                     if (deltaX > 5 || deltaY > 5) {
@@ -342,276 +220,309 @@
                     }
                     
                     // Keep within viewport bounds
-                    const maxX = window.innerWidth - panel.offsetWidth;
-                    const maxY = window.innerHeight - panel.offsetHeight;
+                    const maxX = window.innerWidth - button.offsetWidth;
+                    const maxY = window.innerHeight - button.offsetHeight;
                     
-                    panel.style.left = Math.max(0, Math.min(newX, maxX)) + 'px';
-                    panel.style.top = Math.max(0, Math.min(newY, maxY)) + 'px';
+                    button.style.left = Math.max(0, Math.min(newX, maxX)) + 'px';
+                    button.style.top = Math.max(0, Math.min(newY, maxY)) + 'px';
                 });
                 
-                document.addEventListener('mouseup', () => {
+                document.addEventListener('mouseup', (e) => {
                     if (isDragging) {
                         isDragging = false;
-                        header.style.cursor = 'move';
+                        button.style.cursor = 'move';
                         
+                        // Only save position if button actually moved
                         if (hasMoved) {
-                            this.savePanelPosition(panel);
+                            this.saveButtonPosition(button);
+                        }
+                        
+                        // Prevent click event from firing after drag
+                        if (hasMoved) {
+                            e.preventDefault();
+                            e.stopPropagation();
                         }
                     }
                 });
             },
 
-            startMonitoring() {
-                console.log('⏱️ Starting chain timer monitoring...');
+            saveButtonPosition(button) {
+                const currentX = parseInt(button.style.left) || 10;
+                const currentY = parseInt(button.style.top) || 10;
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                const buttonSize = button.offsetWidth || 40;
                 
-                // Clear any existing interval
-                if (this.monitorInterval) {
-                    clearInterval(this.monitorInterval);
-                }
+                // Calculate and save relative position as percentages (0-100)
+                const relativeX = Math.max(0, Math.min(100, (currentX / (viewportWidth - buttonSize)) * 100));
+                const relativeY = Math.max(0, Math.min(100, (currentY / (viewportHeight - buttonSize)) * 100));
                 
-                // Check every second
-                this.monitorInterval = setInterval(() => {
-                    this.checkChainTimer();
-                }, 1000);
+                // Save relative position instead of absolute
+                window.SidekickModules.Core.saveState('random_target_relative_position', { 
+                    x: relativeX, 
+                    y: relativeY 
+                });
+                
+                // Also save current viewport for reference
+                window.SidekickModules.Core.saveState('random_target_viewport', {
+                    width: viewportWidth,
+                    height: viewportHeight
+                });
+                
+                console.log('💾 Saved relative position:', { x: relativeX.toFixed(1) + '%', y: relativeY.toFixed(1) + '%' });
             },
 
-            stopMonitoring() {
-                console.log('⏱️ Stopping chain timer monitoring...');
+            addViewportResizeHandler(button) {
+                // Handle viewport resize to maintain relative position
+                const handleResize = () => {
+                    // Get the saved relative position
+                    const relativePosition = window.SidekickModules.Core.loadState('random_target_relative_position', { x: 10, y: 10 });
+                    
+                    // Get current viewport dimensions
+                    const viewportWidth = window.innerWidth;
+                    const viewportHeight = window.innerHeight;
+                    const buttonSize = button.offsetWidth || 40;
+                    
+                    // Convert relative percentages to absolute pixels for new viewport
+                    const newX = Math.round((relativePosition.x / 100) * (viewportWidth - buttonSize));
+                    const newY = Math.round((relativePosition.y / 100) * (viewportHeight - buttonSize));
+                    
+                    // Ensure the position is within current viewport bounds
+                    const maxX = Math.max(0, viewportWidth - buttonSize);
+                    const maxY = Math.max(0, viewportHeight - buttonSize);
+                    
+                    const finalX = Math.max(0, Math.min(newX, maxX));
+                    const finalY = Math.max(0, Math.min(newY, maxY));
+                    
+                    // Update button position to maintain relative location
+                    button.style.left = finalX + 'px';
+                    button.style.top = finalY + 'px';
+                    
+                    console.log('🎯 Maintained relative position during resize:', { 
+                        relative: { x: relativePosition.x.toFixed(1) + '%', y: relativePosition.y.toFixed(1) + '%' },
+                        absolute: { x: finalX, y: finalY }
+                    });
+                };
                 
-                if (this.monitorInterval) {
-                    clearInterval(this.monitorInterval);
-                    this.monitorInterval = null;
+                // Add resize event listener with debouncing for performance
+                let resizeTimeout;
+                const debouncedHandleResize = () => {
+                    clearTimeout(resizeTimeout);
+                    resizeTimeout = setTimeout(handleResize, 100);
+                };
+                
+                window.addEventListener('resize', debouncedHandleResize);
+                
+                // Store reference for cleanup
+                button.viewportResizeHandler = debouncedHandleResize;
+            },
+
+            loadButtonPosition() {
+                try {
+                    // Load relative position (percentages) instead of absolute
+                    const relativePosition = window.SidekickModules.Core.loadState('random_target_relative_position', { x: 10, y: 10 });
+                    
+                    // Get current viewport dimensions
+                    const viewportWidth = window.innerWidth;
+                    const viewportHeight = window.innerHeight;
+                    const buttonSize = 40; // Button width/height
+                    
+                    // Convert relative percentages back to absolute pixels for current viewport
+                    const absoluteX = Math.round((relativePosition.x / 100) * (viewportWidth - buttonSize));
+                    const absoluteY = Math.round((relativePosition.y / 100) * (viewportHeight - buttonSize));
+                    
+                    // Ensure the position is within current viewport bounds
+                    const maxX = Math.max(0, viewportWidth - buttonSize);
+                    const maxY = Math.max(0, viewportHeight - buttonSize);
+                    
+                    const finalX = Math.max(0, Math.min(absoluteX, maxX));
+                    const finalY = Math.max(0, Math.min(absoluteY, maxY));
+                    
+                    console.log('🎯 Loaded relative position:', { x: relativePosition.x.toFixed(1) + '%', y: relativePosition.y.toFixed(1) + '%' });
+                    console.log('🎯 Converted to absolute:', { x: finalX, y: finalY });
+                    
+                    return { x: finalX, y: finalY };
+                } catch (error) {
+                    console.error('❌ Error loading button position:', error);
+                    return { x: 10, y: 10 };
                 }
             },
 
-            checkChainTimer() {
-                // Look for chain timer element on the page
-                // Torn typically shows chain info in various places, we need to find the timer
-                const chainTimerElement = this.findChainTimerElement();
-                
-                if (!chainTimerElement) {
-                    this.updateStatus('No active chain detected');
-                    this.stopFlashing();
-                    return;
-                }
-                
-                const timeLeft = this.parseTimeLeft(chainTimerElement.textContent);
-                
-                if (timeLeft === null) {
-                    this.updateStatus('Unable to parse timer');
-                    return;
-                }
-                
-                // Update status display
-                this.updateStatus(`Chain: ${this.formatTime(timeLeft)}`);
-                
-                // Check if we should alert
-                if (this.config.alertsEnabled && timeLeft <= this.config.alertThreshold && timeLeft > 0) {
-                    // Start flashing if not already
-                    if (!this.isFlashing) {
-                        this.startFlashing();
+            restoreButtonState() {
+                try {
+                    const wasActive = window.SidekickModules.Core.loadState('random_target_active', false);
+                    console.log('🔄 Restoring Random Target button state - wasActive:', wasActive);
+                    
+                    if (wasActive) {
+                        console.log('🔄 Random Target was previously active, restoring button...');
+                        this.isActive = false; // Set to false so showTargetButton will work correctly
                         
-                        // Show popup if enabled (only once per alert period)
-                        if (this.config.popupEnabled && Date.now() - this.lastAlertTime > 30000) {
-                            this.showPopupAlert(timeLeft);
-                            this.lastAlertTime = Date.now();
-                        }
+                        // Small delay to ensure DOM is ready
+                        setTimeout(() => {
+                            this.showTargetButton();
+                            this.updateSettingsToggle(true);
+                        }, 500);
+                    } else {
+                        console.log('🔄 Random Target was not previously active');
+                        this.isActive = false;
                     }
-                } else {
-                    // Stop flashing if time is above threshold or chain ended
-                    if (this.isFlashing && timeLeft > this.config.alertThreshold) {
-                        this.stopFlashing();
-                    }
+                } catch (error) {
+                    console.error('❌ Failed to restore button state:', error);
                 }
             },
 
-            findChainTimerElement() {
-                // Try multiple selectors for chain timer
-                // These are common locations on Torn where chain info appears
-                
-                // Option 1: Chain countdown in sidebar
-                let timer = document.querySelector('[class*="chain"] [class*="cooldown"]');
-                if (timer) return timer;
-                
-                // Option 2: Chain bar with time
-                timer = document.querySelector('[class*="chain-time"]');
-                if (timer) return timer;
-                
-                // Option 3: Generic timer in chain area
-                timer = document.querySelector('[class*="chain"] [class*="time"]');
-                if (timer) return timer;
-                
-                // Option 4: Look for text containing time format
-                const timeRegex = /\d{1,2}:\d{2}/;
-                const allElements = document.querySelectorAll('[class*="chain"] *');
-                for (const el of allElements) {
-                    if (timeRegex.test(el.textContent) && !el.querySelector('*')) {
-                        return el;
-                    }
-                }
-                
-                return null;
-            },
-
-            parseTimeLeft(timeString) {
-                // Parse time string to seconds
-                // Formats: "5:30", "0:45", "10:00", etc.
-                const match = timeString.match(/(\d{1,2}):(\d{2})/);
-                
-                if (!match) return null;
-                
-                const minutes = parseInt(match[1]);
-                const seconds = parseInt(match[2]);
-                
-                return (minutes * 60) + seconds;
-            },
-
-            formatTime(seconds) {
-                const mins = Math.floor(seconds / 60);
-                const secs = seconds % 60;
-                return `${mins}:${secs.toString().padStart(2, '0')}`;
-            },
-
-            startFlashing() {
-                if (this.isFlashing) return;
-                
-                console.log('⏱️ Starting screen flash alert');
-                this.isFlashing = true;
-                
-                // Create flash overlay
-                const flashOverlay = document.createElement('div');
-                flashOverlay.id = 'chain-timer-flash';
-                flashOverlay.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(255, 0, 0, 0.15);
-                    pointer-events: none;
-                    z-index: 99999;
-                    animation: chainFlash 1s ease-in-out infinite;
-                `;
-                
-                // Add CSS animation
-                if (!document.getElementById('chain-flash-style')) {
-                    const style = document.createElement('style');
-                    style.id = 'chain-flash-style';
-                    style.textContent = `
-                        @keyframes chainFlash {
-                            0%, 100% { opacity: 0; }
-                            50% { opacity: 1; }
-                        }
-                    `;
-                    document.head.appendChild(style);
-                }
-                
-                document.body.appendChild(flashOverlay);
-            },
-
-            stopFlashing() {
-                if (!this.isFlashing) return;
-                
-                console.log('⏱️ Stopping screen flash alert');
-                this.isFlashing = false;
-                
-                const flashOverlay = document.getElementById('chain-timer-flash');
-                if (flashOverlay) {
-                    flashOverlay.remove();
-                }
-            },
-
-            showPopupAlert(timeLeft) {
-                if (!this.config.popupEnabled) return;
-                
-                const message = `⚠️ Chain Timer Alert!\n\nTime remaining: ${this.formatTime(timeLeft)}\n\nChain will timeout soon!`;
-                alert(message);
-            },
-
-            updateStatus(message) {
-                if (!this.timerPanel) return;
-                
-                const statusEl = this.timerPanel.querySelector('#chain-timer-status');
-                if (statusEl) {
-                    statusEl.textContent = message;
-                }
-            },
-
-            // Configuration management
             loadConfig() {
-                const saved = this.core.loadState('chain_timer_config', null);
-                if (saved) {
-                    this.config = { ...this.config, ...saved };
+                try {
+                    const savedConfig = window.SidekickModules.Core.loadState('random_target_config', {});
+                    this.config = { ...this.config, ...savedConfig };
+                    console.log('📂 Loaded random target config:', this.config);
+                } catch (error) {
+                    console.error('❌ Failed to load config:', error);
                 }
-                console.log('⏱️ Loaded config:', this.config);
             },
 
             saveConfig() {
-                this.core.saveState('chain_timer_config', this.config);
-                console.log('⏱️ Saved config:', this.config);
-            },
-
-            // Position management
-            loadPanelPosition() {
-                const saved = this.core.loadState('chain_timer_position', { x: 20, y: 200 });
-                
-                // Ensure position is within current viewport
-                const maxX = window.innerWidth - 220;
-                const maxY = window.innerHeight - 200;
-                
-                return {
-                    x: Math.max(0, Math.min(saved.x, maxX)),
-                    y: Math.max(0, Math.min(saved.y, maxY))
-                };
-            },
-
-            savePanelPosition(panel) {
-                const x = parseInt(panel.style.left) || 20;
-                const y = parseInt(panel.style.top) || 200;
-                
-                this.core.saveState('chain_timer_position', { x, y });
-                console.log('⏱️ Saved position:', { x, y });
-            },
-
-            // Restore state on page load
-            restoreTimerState() {
-                const wasActive = this.core.loadState('chain_timer_active', false);
-                
-                if (wasActive) {
-                    console.log('⏱️ Restoring previously active timer...');
-                    setTimeout(() => {
-                        this.showTimerPanel();
-                    }, 1000);
+                try {
+                    window.SidekickModules.Core.saveState('random_target_config', this.config);
+                    console.log('💾 Saved random target config');
+                } catch (error) {
+                    console.error('❌ Failed to save config:', error);
                 }
             },
 
-            // Settings panel integration
+            getRandomNumber(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            },
+
+            async findTarget() {
+                console.log('🎯 Finding random target...');
+                
+                let success = false;
+                let randID = this.getRandomNumber(this.config.minID, this.config.maxID);
+
+                if (this.config.enableApiChecks && this.config.apiKey) {
+                    try {
+                        let user;
+                        
+                        // Use enhanced API system if available
+                        if (window.SidekickModules?.Api?.makeRequest) {
+                            console.log(`🔄 RandomTarget: Using enhanced API system for user ${randID}`);
+                            user = await window.SidekickModules.Api.makeRequest(`user/${randID}`, 'basic,personalstats');
+                        } else {
+                            // Fallback to direct fetch with V2 error handling
+                            console.log(`🔄 RandomTarget: Using direct fetch fallback for user ${randID}`);
+                            const url = `https://api.torn.com/user/${randID}?selections=basic,personalstats&key=${this.config.apiKey}`;
+                            const response = await fetch(url);
+                            user = await response.json();
+                            
+                            // Handle API V2 migration errors
+                            if (user.error) {
+                                const errorCode = user.error.code;
+                                if (errorCode === 22) {
+                                    console.warn(`🔄 RandomTarget: Selection only available in API v1 for user ${randID}`);
+                                } else if (errorCode === 23) {
+                                    console.warn(`🔄 RandomTarget: Selection only available in API v2 for user ${randID}`);
+                                } else if (errorCode === 19) {
+                                    console.warn(`🔄 RandomTarget: Must be migrated to 2.0 for user ${randID}`);
+                                }
+                            }
+                        }
+
+                        if (user.status && user.status.state !== 'Okay') {
+                            console.log(`User ${randID} discarded because not Okay`);
+                            success = false;
+                        } else if (user.personalstats && user.personalstats.xantaken > this.config.maxXanax) {
+                            console.log(`User ${randID} discarded because too many Xanax`);
+                            success = false;
+                        } else if (user.personalstats && user.personalstats.refills > this.config.maxRefills) {
+                            console.log(`User ${randID} discarded because too many refills`);
+                            success = false;
+                        } else if (user.personalstats && user.personalstats.statenhancersused > this.config.maxSEs) {
+                            console.log(`User ${randID} discarded because too many SEs`);
+                            success = false;
+                        } else {
+                            success = true;
+                        }
+
+                        if (success) {
+                            this.openProfile(randID);
+                        } else {
+                            // Retry with delay to respect API rate limits
+                            setTimeout(() => this.findTarget(), 200);
+                        }
+                    } catch (error) {
+                        console.error('❌ Error checking user:', error);
+                        // Fallback to random ID without API checks
+                        this.openProfile(randID);
+                    }
+                } else {
+                    // No API checks, use random ID directly
+                    this.openProfile(randID);
+                }
+            },
+
+            openProfile(userId) {
+                // Profile link - you can change this to attack link if preferred
+                const profileLink = `https://www.torn.com/profiles.php?XID=${userId}`;
+                
+                // Open in new tab
+                window.open(profileLink, '_blank');
+                
+                // Show notification
+                window.SidekickModules.Core.NotificationSystem.show(
+                    'Random Target',
+                    `Found target: ${userId}`,
+                    'success'
+                );
+            },
+
+            // Method to update configuration (called from settings)
+            updateConfig(newConfig) {
+                this.config = { ...this.config, ...newConfig };
+                this.saveConfig();
+                console.log('⚙️ Random target config updated:', this.config);
+            },
+
+            // Method to update the settings toggle to reflect current state
             updateSettingsToggle(isActive) {
-                const toggle = document.getElementById('chain-timer-toggle');
-                if (toggle && toggle.checked !== isActive) {
-                    toggle.checked = isActive;
-                    
-                    // Update toggle UI
-                    const slider = toggle.nextElementSibling;
-                    const knob = slider?.querySelector('span');
-                    
-                    if (slider) {
-                        slider.style.backgroundColor = isActive ? '#4CAF50' : '#ccc';
+                try {
+                    const toggle = document.getElementById('random-target-toggle');
+                    if (toggle) {
+                        toggle.checked = isActive;
+                        console.log('🔄 Updated Random Target toggle to:', isActive);
                     }
-                    
-                    if (knob) {
-                        knob.style.left = isActive ? '23px' : '3px';
-                    }
+                } catch (error) {
+                    console.error('❌ Failed to update settings toggle:', error);
                 }
             }
         };
 
         // Register module globally
-        if (!window.SidekickModules) {
+        if (typeof window.SidekickModules === 'undefined') {
             window.SidekickModules = {};
         }
-        window.SidekickModules.ChainTimer = ChainTimerModule;
+        window.SidekickModules.RandomTarget = RandomTargetModule;
+
+        console.log('🎯 Random Target module registered globally');
+        console.log('🔍 Random Target module check:', {
+            'SidekickModules exists': !!window.SidekickModules,
+            'RandomTarget exists': !!window.SidekickModules.RandomTarget,
+            'RandomTarget.activate exists': !!window.SidekickModules.RandomTarget?.activate,
+            'Available modules': Object.keys(window.SidekickModules)
+        });
         
-        console.log('⏱️ Chain Timer module loaded and ready');
+        // Additional debugging
+        console.log('🎯 RandomTarget module object:', RandomTargetModule);
+        console.log('🎯 RandomTarget module name:', RandomTargetModule.name);
+        console.log('🎯 RandomTarget module activate method:', typeof RandomTargetModule.activate);
+
+        // Fallback registration - ensure module is available
+        setTimeout(() => {
+            if (!window.SidekickModules.RandomTarget) {
+                console.warn('⚠️ RandomTarget not found, re-registering...');
+                window.SidekickModules.RandomTarget = RandomTargetModule;
+                console.log('✅ RandomTarget re-registered');
+            }
+        }, 1000);
     });
 })();
