@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.45.1
+// @version      5.46.0
 // @description  FIXED: Chain Timer toggle now visible in settings!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
@@ -22,7 +22,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/timer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/clock.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/randomtarget.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@b228079/src/modules/chain-timer.module.js?v=20251029
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8af46da/src/modules/chain-timer.module.js?v=20250128
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/blocktraining.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
