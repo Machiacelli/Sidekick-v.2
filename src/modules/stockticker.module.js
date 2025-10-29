@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1
-// @description  UPDATED: Integrated with add menu instead of registerTool
+// @version      1.0.2
+// @description  FIXED: API key integration and reduced minimum size to 250x150
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -101,8 +101,8 @@
                     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
                     display: flex;
                     flex-direction: column;
-                    min-width: 300px;
-                    min-height: 200px;
+                    min-width: 250px;
+                    min-height: 150px;
                     max-width: 500px;
                     max-height: 600px;
                     z-index: 1000;
@@ -325,8 +325,17 @@
                     content.style.position = 'relative';
                     content.appendChild(loadingOverlay);
 
+                    // Get API key from Settings module
+                    const apiKey = window.SidekickModules?.Settings?.getApiKey?.() || '';
+                    
+                    if (!apiKey) {
+                        loadingOverlay.remove();
+                        this.showError(content, 'No API key found. Please set your API key in Settings.');
+                        return;
+                    }
+
                     // Fetch user's torn stocks from API
-                    const response = await fetch('/torn-api/user?selections=stocks&key=');
+                    const response = await fetch(`/torn-api/user?selections=stocks&key=${apiKey}`);
                     
                     if (!response.ok) {
                         throw new Error('Failed to fetch stock data');
