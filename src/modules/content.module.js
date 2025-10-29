@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidewinder Content Module
 // @namespace    http://tampermonkey.net/
-// @version      2.0.0
-// @description  Enhanced Content management: Fixed Pages system with proper isolation, immediate UI updates, state management per page
+// @version      2.0.1
+// @description  UPDATED: Added Stock Ticker to add menu
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -133,6 +133,13 @@
                         }
                     }},
                     { icon: '⏱️', text: 'Add Timer', color: '#ff9800', action: () => this.addTimer() },
+                    { icon: '📈', text: 'Add Stock Ticker', color: '#1e40af', action: () => {
+                        if (window.SidekickModules?.StockTicker) {
+                            window.SidekickModules.StockTicker.show();
+                        } else {
+                            alert('Stock Ticker module not loaded!');
+                        }
+                    }},
                     { icon: '✈️', text: 'Add Travel Tracker', color: '#9C27B0', action: () => this.addTravelTracker() },
                     { icon: '🔗', text: 'Add Link Group', color: '#607D8B', action: () => {
                         if (window.SidekickModules?.LinkGroup) {

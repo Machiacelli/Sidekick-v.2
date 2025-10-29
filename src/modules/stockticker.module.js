@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
-// @description  Display owned stocks with real-time price changes and profit/loss tracking
+// @version      1.0.1
+// @description  UPDATED: Integrated with add menu instead of registerTool
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -33,17 +33,6 @@
             
             init() {
                 console.log('📈 Stock Ticker: Initializing...');
-                
-                // Register with UI module
-                if (window.SidekickModules.UI) {
-                    window.SidekickModules.UI.registerTool({
-                        id: 'stockticker',
-                        name: 'Stock Ticker',
-                        icon: '📈',
-                        category: 'tools',
-                        action: () => this.toggle()
-                    });
-                }
                 
                 // Check if panel was previously open
                 const wasActive = this.core.loadState('stockticker_active');
