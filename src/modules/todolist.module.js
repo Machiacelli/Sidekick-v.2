@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick To-Do List Module
 // @namespace    http://tampermonkey.net/
-// @version      1.4.4
-// @description  FIXED: Added visible draggable resize handle with proper mouse tracking
+// @version      1.4.5
+// @description  FIXED: Lowered minimum size to 200x150 for more compact panels
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -162,8 +162,8 @@
                     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
                     display: flex;
                     flex-direction: column;
-                    min-width: 280px;
-                    min-height: 200px;
+                    min-width: 200px;
+                    min-height: 150px;
                     max-width: 600px;
                     max-height: 800px;
                     z-index: 1000;
@@ -205,11 +205,11 @@
                         const width = startWidth + (e.clientX - startX);
                         const height = startHeight + (e.clientY - startY);
                         
-                        // Apply constraints
-                        if (width >= 280 && width <= 600) {
+                        // Apply constraints - Lower minimums for compact size
+                        if (width >= 200 && width <= 600) {
                             panel.style.width = width + 'px';
                         }
-                        if (height >= 200 && height <= 800) {
+                        if (height >= 150 && height <= 800) {
                             panel.style.height = height + 'px';
                         }
                     });
