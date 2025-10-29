@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.2.2
-// @description  FIXED: Correct stock data property names (transactions array structure)
+// @version      1.3.0
+// @description  ADDED: Stock selection window with checkboxes + auto-add owned stocks button
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -30,9 +30,14 @@
             updateInterval: null,
             refreshRate: 30000, // 30 seconds
             stockData: {},
+            selectedStocks: [], // Array of stock IDs to display
+            settingsWindow: null,
             
             init() {
                 console.log('📈 Stock Ticker: Initializing...');
+                
+                // Load selected stocks from storage
+                this.selectedStocks = this.core.loadState('stockticker_selected_stocks', []);
                 
                 // Check if panel was previously open
                 const wasActive = this.core.loadState('stockticker_active');
@@ -218,8 +223,34 @@
                     dropdown.style.display = 'none';
                 };
                 
+                // Settings option
+                const settingsOption = document.createElement('button');
+                settingsOption.innerHTML = '<span style="margin-right: 8px;">⚙️</span>Select Stocks';
+                settingsOption.style.cssText = `
+                    background: none;
+                    border: none;
+                    color: #fff;
+                    padding: 8px 12px;
+                    width: 100%;
+                    text-align: left;
+                    cursor: pointer;
+                    font-size: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: background 0.2s ease;
+                `;
+                settingsOption.onmouseover = () => settingsOption.style.background = '#444';
+                settingsOption.onmouseout = () => settingsOption.style.background = 'none';
+                settingsOption.onclick = (e) => {
+                    e.stopPropagation();
+                    this.showSettingsWindow();
+                    dropdown.style.display = 'none';
+                };
+                
                 dropdown.appendChild(refreshOption);
                 dropdown.appendChild(pinOption);
+                dropdown.appendChild(settingsOption);
                 
                 dropdownContainer.appendChild(dropdownBtn);
                 dropdownContainer.appendChild(dropdown);
@@ -475,12 +506,38 @@
                     return;
                 }
 
+                // Filter stocks based on selected stocks
+                let filteredStocks = stocks;
+                if (this.selectedStocks.length > 0) {
+                    filteredStocks = {};
+                    for (const [stockId, stockData] of Object.entries(stocks)) {
+                        if (this.selectedStocks.includes(parseInt(stockId))) {
+                            filteredStocks[stockId] = stockData;
+                        }
+                    }
+                }
+
+                console.log('📈 Stock Ticker: Filtered stocks:', filteredStocks);
+
+                if (Object.keys(filteredStocks).length === 0) {
+                    content.innerHTML = `
+                        <div style="text-align: center; padding: 40px 20px; color: #888;">
+                            <div style="font-size: 32px; margin-bottom: 12px;">🔍</div>
+                            <div>No selected stocks to display</div>
+                            <div style="font-size: 11px; margin-top: 8px; color: #666;">
+                                Use ⚙️ Select Stocks to choose which stocks to display
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
                 let totalValue = 0;
                 let totalInvested = 0;
                 const stocksHTML = [];
 
                 // Sort stocks by value (descending)
-                const sortedStocks = Object.entries(stocks).sort((a, b) => {
+                const sortedStocks = Object.entries(filteredStocks).sort((a, b) => {
                     const stockA = a[1];
                     const stockB = b[1];
                     
@@ -679,6 +736,214 @@
                 if (pinned !== null) {
                     this.isPinned = pinned;
                 }
+            },
+
+            showSettingsWindow() {
+                if (this.settingsWindow && document.body.contains(this.settingsWindow)) {
+                    return; // Already open
+                }
+
+                const overlay = document.createElement('div');
+                overlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 100000;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                `;
+
+                const window = document.createElement('div');
+                window.style.cssText = `
+                    background: #2a2a2a;
+                    border: 1px solid #444;
+                    border-radius: 8px;
+                    width: 500px;
+                    max-height: 600px;
+                    display: flex;
+                    flex-direction: column;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+                `;
+
+                // Header
+                const header = document.createElement('div');
+                header.style.cssText = `
+                    background: #333;
+                    border-bottom: 1px solid #555;
+                    padding: 12px 16px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    border-radius: 7px 7px 0 0;
+                `;
+                header.innerHTML = `
+                    <div style="color: #fff; font-weight: 600; font-size: 14px;">📈 Select Stocks to Display</div>
+                    <button style="
+                        background: none;
+                        border: none;
+                        color: #bbb;
+                        cursor: pointer;
+                        font-size: 20px;
+                        padding: 0;
+                        line-height: 1;
+                    " onclick="this.closest('[style*=\\'position: fixed\\']').remove()">×</button>
+                `;
+
+                // Content
+                const content = document.createElement('div');
+                content.style.cssText = `
+                    padding: 16px;
+                    overflow-y: auto;
+                    flex: 1;
+                `;
+
+                // Auto-add button
+                const autoAddBtn = document.createElement('button');
+                autoAddBtn.textContent = '✨ Auto-Add Owned Stocks';
+                autoAddBtn.style.cssText = `
+                    background: linear-gradient(135deg, #4CAF50, #45a049);
+                    color: white;
+                    border: none;
+                    padding: 10px 16px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 13px;
+                    font-weight: 600;
+                    width: 100%;
+                    margin-bottom: 16px;
+                    transition: transform 0.2s;
+                `;
+                autoAddBtn.onmouseover = () => autoAddBtn.style.transform = 'scale(1.02)';
+                autoAddBtn.onmouseout = () => autoAddBtn.style.transform = 'scale(1)';
+                autoAddBtn.onclick = async () => {
+                    autoAddBtn.disabled = true;
+                    autoAddBtn.textContent = '⏳ Loading...';
+                    
+                    await this.fetchStockData();
+                    
+                    // Auto-select owned stocks
+                    const ownedStockIds = Object.keys(this.stockData).map(id => parseInt(id));
+                    this.selectedStocks = ownedStockIds;
+                    this.core.saveState('stockticker_selected_stocks', this.selectedStocks);
+                    
+                    // Refresh the settings window
+                    overlay.remove();
+                    this.showSettingsWindow();
+                    
+                    // Refresh the ticker display
+                    this.fetchStockData();
+                };
+
+                content.appendChild(autoAddBtn);
+
+                // Stock list
+                const stockList = document.createElement('div');
+                stockList.style.cssText = `
+                    display: grid;
+                    gap: 8px;
+                `;
+
+                // All available Torn stocks (IDs 1-35 approximately)
+                const allStocks = [
+                    { id: 1, name: 'Torn City Invest' },
+                    { id: 2, name: 'Crude' },
+                    { id: 3, name: 'TCS' },
+                    { id: 4, name: 'Syster' },
+                    { id: 5, name: 'Lucky Clothing Co.' },
+                    { id: 6, name: 'Feathery Hotels' },
+                    { id: 7, name: 'Torn & Shanghai Banking' },
+                    { id: 8, name: 'I Industries Ltd.' },
+                    { id: 9, name: 'Messaging Inc.' },
+                    { id: 10, name: 'TC Music Industries' },
+                    { id: 11, name: 'Torn City Health Service' },
+                    { id: 12, name: 'Grain' },
+                    { id: 13, name: 'TC Media Productions' },
+                    { id: 14, name: 'Empty Lunchbox Casinos' },
+                    { id: 15, name: 'Alcoholohol' },
+                    { id: 16, name: 'Evo Estates' },
+                    { id: 17, name: 'HEX' },
+                    { id: 18, name: 'TC Clothing' },
+                    { id: 19, name: 'The Torn City Times' },
+                    { id: 20, name: 'Big Al\'s Gun Shop' },
+                    { id: 21, name: 'TC Television' },
+                    { id: 22, name: 'YazBread' },
+                    { id: 23, name: 'Flowers For You' },
+                    { id: 24, name: 'Canine Couture' },
+                    { id: 25, name: 'Foot Ball Association' },
+                    { id: 26, name: 'Sail Boats & Yachts' },
+                    { id: 27, name: 'Performance Automobiles' },
+                    { id: 28, name: 'Tik' },
+                    { id: 29, name: 'The Torn City Museum' },
+                    { id: 30, name: 'TC Mining Corp.' },
+                    { id: 31, name: 'TC Oil Rig' },
+                    { id: 32, name: 'Pharmata' },
+                    { id: 33, name: 'Home Retail Group' },
+                    { id: 34, name: 'Tell Group' },
+                    { id: 35, name: 'Presto Logs' }
+                ];
+
+                allStocks.forEach(stock => {
+                    const checkbox = document.createElement('label');
+                    checkbox.style.cssText = `
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        padding: 8px 12px;
+                        background: #333;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        transition: background 0.2s;
+                    `;
+                    checkbox.onmouseover = () => checkbox.style.background = '#3a3a3a';
+                    checkbox.onmouseout = () => checkbox.style.background = '#333';
+
+                    const input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.checked = this.selectedStocks.includes(stock.id);
+                    input.style.cssText = `
+                        cursor: pointer;
+                        width: 18px;
+                        height: 18px;
+                    `;
+                    input.onchange = () => {
+                        if (input.checked) {
+                            if (!this.selectedStocks.includes(stock.id)) {
+                                this.selectedStocks.push(stock.id);
+                            }
+                        } else {
+                            this.selectedStocks = this.selectedStocks.filter(id => id !== stock.id);
+                        }
+                        this.core.saveState('stockticker_selected_stocks', this.selectedStocks);
+                        this.fetchStockData(); // Refresh display
+                    };
+
+                    const label = document.createElement('span');
+                    label.textContent = `${stock.name}`;
+                    label.style.cssText = 'color: #fff; font-size: 13px; flex: 1;';
+
+                    checkbox.appendChild(input);
+                    checkbox.appendChild(label);
+                    stockList.appendChild(checkbox);
+                });
+
+                content.appendChild(stockList);
+                window.appendChild(header);
+                window.appendChild(content);
+                overlay.appendChild(window);
+                document.body.appendChild(overlay);
+
+                this.settingsWindow = overlay;
+
+                // Close on overlay click
+                overlay.onclick = (e) => {
+                    if (e.target === overlay) {
+                        overlay.remove();
+                    }
+                };
             }
         };
 
