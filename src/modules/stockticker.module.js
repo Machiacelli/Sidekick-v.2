@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.3.2
-// @description  FIXED: Stock prices now showing correctly + settings window close button working
+// @version      1.3.3
+// @description  FIXED: Now fetches both user portfolio AND market prices for accurate display
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -514,28 +514,53 @@
                         return;
                     }
 
-                    // Fetch user's owned stocks from API (correct endpoint)
-                    console.log('📈 Stock Ticker: Fetching stock data from API...');
-                    const response = await fetch(`https://api.torn.com/user/?selections=stocks&key=${apiKey}`);
+                    // Fetch BOTH user portfolio and market prices
+                    // User endpoint gives us transactions, torn endpoint gives current prices
+                    console.log('📈 Stock Ticker: Fetching portfolio and market data...');
                     
-                    if (!response.ok) {
+                    const [userResponse, marketResponse] = await Promise.all([
+                        fetch(`https://api.torn.com/user/?selections=stocks&key=${apiKey}`),
+                        fetch(`https://api.torn.com/torn/?selections=stocks&key=${apiKey}`)
+                    ]);
+                    
+                    if (!userResponse.ok || !marketResponse.ok) {
                         throw new Error('Failed to fetch stock data');
                     }
 
-                    const data = await response.json();
-                    console.log('📈 Stock Ticker: Raw API response:', data);
+                    const userData = await userResponse.json();
+                    const marketData = await marketResponse.json();
+                    
+                    console.log('📈 Stock Ticker: User portfolio data:', userData);
+                    console.log('📈 Stock Ticker: Market price data:', marketData);
                     
                     // Remove loading overlay
                     loadingOverlay.remove();
 
-                    if (data.error) {
-                        this.showError(content, 'API Error: ' + data.error.error);
+                    if (userData.error) {
+                        this.showError(content, 'API Error: ' + userData.error.error);
                         return;
                     }
 
-                    // The API returns stocks in data.stocks object
-                    this.stockData = data.stocks || {};
-                    console.log('📈 Stock Ticker: Parsed stock data:', this.stockData);
+                    if (marketData.error) {
+                        this.showError(content, 'API Error: ' + marketData.error.error);
+                        return;
+                    }
+
+                    // Combine the data: user portfolio with market prices
+                    const userStocks = userData.stocks || {};
+                    const marketStocks = marketData.stocks || {};
+                    
+                    // Merge: add current_price from market data to user portfolio stocks
+                    this.stockData = {};
+                    for (const [stockId, userStock] of Object.entries(userStocks)) {
+                        this.stockData[stockId] = {
+                            ...userStock,
+                            current_price: marketStocks[stockId]?.current_price || 0,
+                            name: marketStocks[stockId]?.name || userStock.name
+                        };
+                    }
+                    
+                    console.log('📈 Stock Ticker: Combined stock data:', this.stockData);
                     this.renderStocks(content);
 
                 } catch (error) {
@@ -600,43 +625,25 @@
                     const stockA = a[1];
                     const stockB = b[1];
                     
-                    // Get stock info (handle nested structure)
-                    const stockAInfo = stockA.stock || stockA;
-                    const stockBInfo = stockB.stock || stockB;
-                    
                     // Calculate total shares from transactions
                     const getShares = (stock) => {
                         if (!stock.transactions || !Array.isArray(stock.transactions)) return 0;
                         return stock.transactions.reduce((sum, t) => sum + (t.shares || 0), 0);
                     };
                     
-                    const valueA = getShares(stockA) * (stockAInfo.current_price || 0);
-                    const valueB = getShares(stockB) * (stockBInfo.current_price || 0);
+                    const valueA = getShares(stockA) * (stockA.current_price || 0);
+                    const valueB = getShares(stockB) * (stockB.current_price || 0);
                     return valueB - valueA;
                 });
 
                 for (const [stockId, stock] of sortedStocks) {
-                    console.log(`📈 Raw stock ${stockId} data:`, stock);
+                    console.log(`📈 Processing stock ${stockId}:`, stock);
                     
-                    // The API returns stock data nested inside a "stock" object
-                    // Structure: { stock: { current_price: ..., ... }, transactions: [...] }
-                    const stockInfo = stock.stock || stock; // Handle both structures
                     const transactions = stock.transactions || [];
+                    const currentPrice = stock.current_price || 0;
+                    const stockName = stock.name || `Stock #${stockId}`;
                     
-                    console.log(`📈 Stock ${stockId} info:`, stockInfo);
-                    console.log(`📈 Stock ${stockId} transactions:`, transactions);
-                    
-                    // Get stock name from our list if not in API data
-                    const stockNames = {
-                        1: 'TCI', 2: 'CRU', 3: 'TCS', 4: 'SYS', 5: 'LAG',
-                        6: 'FHC', 7: 'SYM', 8: 'IIL', 9: 'GRN', 10: 'TMI',
-                        11: 'TCP', 12: 'IOU', 13: 'GRS', 14: 'CNC', 15: 'MSG',
-                        16: 'TMU', 17: 'HEX', 18: 'TCT', 19: 'TCT', 20: 'CRU',
-                        21: 'TCB', 22: 'YAZ', 23: 'LSC', 24: 'EWM', 25: 'MCS',
-                        26: 'EWM', 27: 'SYM', 28: 'TCM', 29: 'EWM', 30: 'SYM',
-                        31: 'TCM', 32: 'HRG', 33: 'HRG', 34: 'TEL', 35: 'PRN'
-                    };
-                    const stockName = stockInfo.name || stockNames[parseInt(stockId)] || `Stock #${stockId}`;
+                    console.log(`📈 Stock ${stockId} - Name: ${stockName}, Current Price: ${currentPrice}`);
                     
                     // Calculate average bought price from transactions
                     let totalShares = 0;
@@ -653,7 +660,6 @@
                     
                     const avgBoughtPrice = totalShares > 0 ? totalCost / totalShares : 0;
                     const shares = totalShares;
-                    const currentPrice = stockInfo.current_price || 0;
                     
                     console.log(`📈 Stock ${stockId} - Shares: ${shares}, Current Price: ${currentPrice}, Avg Bought: ${avgBoughtPrice}`);
                     
