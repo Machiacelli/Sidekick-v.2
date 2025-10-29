@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick To-Do List Module
 // @namespace    http://tampermonkey.net/
-// @version      1.4.3
-// @description  FIXED: Reverted to overflow auto for proper resize handle visibility
+// @version      1.4.4
+// @description  FIXED: Added visible draggable resize handle with proper mouse tracking
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -167,9 +167,62 @@
                     max-width: 600px;
                     max-height: 800px;
                     z-index: 1000;
-                    resize: ${this.isPinned ? 'none' : 'both'};
-                    overflow: auto;
                 `;
+                
+                // Add resize handle if not pinned
+                if (!this.isPinned) {
+                    const resizeHandle = document.createElement('div');
+                    resizeHandle.className = 'todo-resize-handle';
+                    resizeHandle.style.cssText = `
+                        position: absolute;
+                        bottom: 0;
+                        right: 0;
+                        width: 20px;
+                        height: 20px;
+                        cursor: nwse-resize;
+                        z-index: 10;
+                        background: linear-gradient(135deg, transparent 0%, transparent 50%, #666 50%, #666 100%);
+                        border-bottom-right-radius: 8px;
+                    `;
+                    
+                    // Add resize functionality
+                    let isResizing = false;
+                    let startX, startY, startWidth, startHeight;
+                    
+                    resizeHandle.addEventListener('mousedown', (e) => {
+                        isResizing = true;
+                        startX = e.clientX;
+                        startY = e.clientY;
+                        startWidth = panel.offsetWidth;
+                        startHeight = panel.offsetHeight;
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
+                    
+                    document.addEventListener('mousemove', (e) => {
+                        if (!isResizing) return;
+                        
+                        const width = startWidth + (e.clientX - startX);
+                        const height = startHeight + (e.clientY - startY);
+                        
+                        // Apply constraints
+                        if (width >= 280 && width <= 600) {
+                            panel.style.width = width + 'px';
+                        }
+                        if (height >= 200 && height <= 800) {
+                            panel.style.height = height + 'px';
+                        }
+                    });
+                    
+                    document.addEventListener('mouseup', () => {
+                        if (isResizing) {
+                            isResizing = false;
+                            this.savePanelSize(panel);
+                        }
+                    });
+                    
+                    panel.appendChild(resizeHandle);
+                }
 
                 // Prevent body scroll when scrolling inside panel
                 panel.addEventListener('wheel', (e) => {
