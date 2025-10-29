@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.6.2
-// @description  CORRECTED stock names from accurate Torn City Wiki list
+// @version      1.6.3
+// @description  Added shorthand notation support (k/m/b) for import shares and price inputs
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -952,6 +952,31 @@
                 return stockMap[stockName] || null;
             },
 
+            // Parse shorthand notation (e.g., "5k" -> 5000, "1.5m" -> 1500000, "2b" -> 2000000000)
+            parseShorthandNumber(value) {
+                if (typeof value === 'number') return value;
+                if (!value) return null;
+                
+                const str = String(value).toLowerCase().trim();
+                
+                // Match number with optional k/m/b suffix
+                const match = str.match(/^([\d.]+)\s*([kmb])?$/);
+                if (!match) return parseFloat(str) || null;
+                
+                const num = parseFloat(match[1]);
+                const suffix = match[2];
+                
+                if (!suffix) return num;
+                
+                const multipliers = {
+                    'k': 1000,
+                    'm': 1000000,
+                    'b': 1000000000
+                };
+                
+                return num * (multipliers[suffix] || 1);
+            },
+
             startAutoRefresh() {
                 this.stopAutoRefresh();
                 this.updateInterval = setInterval(() => {
@@ -1298,7 +1323,7 @@
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                             <div>
                                 <label style="color: #ccc; font-size: 12px; display: block; margin-bottom: 6px;">Shares:</label>
-                                <input type="number" id="import-shares" min="1" placeholder="e.g., 1000" style="
+                                <input type="text" id="import-shares" placeholder="e.g., 1000, 5k, 1.5m" style="
                                     width: 100%;
                                     padding: 8px;
                                     background: #2a2a2a;
@@ -1308,10 +1333,11 @@
                                     font-size: 13px;
                                     box-sizing: border-box;
                                 ">
+                                <div style="font-size: 10px; color: #888; margin-top: 4px;">Use k, m, b for thousands, millions, billions</div>
                             </div>
                             <div>
                                 <label style="color: #ccc; font-size: 12px; display: block; margin-bottom: 6px;">Price per Share ($):</label>
-                                <input type="number" id="import-price" min="0.01" step="0.01" placeholder="e.g., 45.50" style="
+                                <input type="text" id="import-price" placeholder="e.g., 45.50, 1.2k" style="
                                     width: 100%;
                                     padding: 8px;
                                     background: #2a2a2a;
@@ -1321,6 +1347,7 @@
                                     font-size: 13px;
                                     box-sizing: border-box;
                                 ">
+                                <div style="font-size: 10px; color: #888; margin-top: 4px;">Supports shorthand: k, m, b</div>
                             </div>
                         </div>
 
@@ -1395,8 +1422,8 @@
 
                 addBtn.onclick = () => {
                     const stockId = parseInt(stockSelect.value);
-                    const shares = parseInt(sharesInput.value);
-                    const pricePerShare = parseFloat(priceInput.value);
+                    const shares = this.parseShorthandNumber(sharesInput.value);
+                    const pricePerShare = this.parseShorthandNumber(priceInput.value);
 
                     // Validation
                     if (!stockId) {
@@ -1411,7 +1438,7 @@
                         statusDiv.style.display = 'block';
                         statusDiv.style.background = '#f44336';
                         statusDiv.style.color = '#fff';
-                        statusDiv.textContent = '❌ Please enter a valid number of shares';
+                        statusDiv.textContent = '❌ Please enter a valid number of shares (e.g., 1000 or 1k)';
                         return;
                     }
 
@@ -1419,7 +1446,7 @@
                         statusDiv.style.display = 'block';
                         statusDiv.style.background = '#f44336';
                         statusDiv.style.color = '#fff';
-                        statusDiv.textContent = '❌ Please enter a valid price per share';
+                        statusDiv.textContent = '❌ Please enter a valid price per share (e.g., 45.50 or 1.5k)';
                         return;
                     }
 
