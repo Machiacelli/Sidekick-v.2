@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.84.0
-// @description  Stock Ticker & Chain Timer: Multiple fixes - deselection, sidebar-aware positioning!
+// @version      5.85.0
+// @description  Stock Ticker v1.8.0: MAJOR FIX - Transaction tracking now works for ALL stocks!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -27,16 +27,16 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/traveltracker.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@affc546/src/modules/stockticker.module.js?v=20250129
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2007dce/src/modules/stockticker.module.js?v=20250129
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/todolist.module.js?v=20250129
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v5.84.0 - Multiple fixes!');
-    console.log('✅ Stock Ticker: Now shows "No stocks selected" when all deselected');
-    console.log('✅ Chain Timer: Floater now follows sidebar minimize/maximize!');
+    console.log('🚀 Sidekick Modular CDN v5.85.0 - Stock Ticker MAJOR FIX!');
+    console.log('✅ Stock Ticker v1.8.0: Transaction tracking now uses dynamic API mapping');
+    console.log('✅ ALL stocks should now be tracked correctly - no more missing data!');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
