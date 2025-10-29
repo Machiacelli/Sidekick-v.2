@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.1.0
-// @description  UPDATED: Dropdown menu + fixed API key using this.core (like TodoList)
+// @version      1.1.1
+// @description  FIXED: Correct API URL - https://api.torn.com/user
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -407,7 +407,7 @@
 
                     // Fetch user's torn stocks from API
                     console.log('📈 Stock Ticker: Fetching stock data from API...');
-                    const response = await fetch(`/torn-api/user?selections=stocks&key=${apiKey}`);
+                    const response = await fetch(`https://api.torn.com/user/?selections=stocks&key=${apiKey}`);
                     
                     if (!response.ok) {
                         throw new Error('Failed to fetch stock data');
