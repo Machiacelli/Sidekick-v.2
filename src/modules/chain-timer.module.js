@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Chain Timer Module
 // @namespace    http://tampermonkey.net/
-// @version      2.0.0
+// @version      2.2.0
 // @description  Chain timer monitor with settings tab and floating mirror display
 // @author       Machiacelli
 // @match        https://www.torn.com/*
@@ -85,7 +85,7 @@
 
             createSettingsContent() {
                 const content = document.createElement('div');
-                content.style.cssText = 'padding: 20px; color: #fff;';
+                content.style.cssText = 'padding: 20px; color: #fff; overflow-x: hidden;';
                 
                 content.innerHTML = `
                     <div style="margin-bottom: 20px;">
@@ -94,11 +94,11 @@
                     </div>
 
                     <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin-bottom: 20px;">
-                        <div style="display: flex; flex-direction: column;">
+                        <div style="display: flex; flex-direction: column; flex: 1; min-width: 0;">
                             <span style="color: #fff; font-weight: bold; font-size: 14px;">Enable Chain Timer</span>
                             <span style="color: #aaa; font-size: 12px;">Turn on/off chain timer monitoring</span>
                         </div>
-                        <label class="chain-timer-main-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
+                        <label class="chain-timer-main-switch" style="position: relative; display: inline-block; width: 50px; height: 24px; flex-shrink: 0;">
                             <input type="checkbox" id="chain-timer-toggle" style="opacity: 0; width: 0; height: 0;">
                             <span class="chain-timer-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
                         </label>
@@ -106,7 +106,7 @@
 
                     <div style="margin-bottom: 20px;">
                         <label style="display: block; margin-bottom: 8px; color: #ff9800; font-weight: bold;">Alert Threshold</label>
-                        <select id="chain-threshold-dropdown" style="width: 100%; padding: 8px; background: #2a2a2a; color: #fff; border: 1px solid #ff9800; border-radius: 4px; font-size: 14px;">
+                        <select id="chain-threshold-dropdown" style="width: 100%; padding: 8px; background: #2a2a2a; color: #fff; border: 1px solid #ff9800; border-radius: 4px; font-size: 14px; box-sizing: border-box;">
                             <option value="60">1 minute</option>
                             <option value="90">1.5 minutes</option>
                             <option value="120">2 minutes</option>
@@ -120,20 +120,20 @@
 
                     <div style="margin-bottom: 15px;">
                         <label style="display: flex; align-items: center; cursor: pointer;">
-                            <input type="checkbox" id="chain-alerts-toggle" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+                            <input type="checkbox" id="chain-alerts-toggle" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;">
                             <span style="color: #fff; font-size: 14px;">Enable Screen Flash Alerts</span>
                         </label>
                     </div>
 
                     <div style="margin-bottom: 15px;">
                         <label style="display: flex; align-items: center; cursor: pointer;">
-                            <input type="checkbox" id="chain-popup-toggle" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+                            <input type="checkbox" id="chain-popup-toggle" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;">
                             <span style="color: #fff; font-size: 14px;">Enable Popup Alerts</span>
                         </label>
                     </div>
 
                     <div style="margin-top: 20px; padding: 12px; background: rgba(255,152,0,0.1); border-left: 3px solid #ff9800; border-radius: 4px;">
-                        <p style="margin: 0; color: #ccc; font-size: 12px;">ℹ️ The floating timer can be dragged and resized. Position and size are saved automatically.</p>
+                        <p style="margin: 0; color: #ccc; font-size: 12px;">ℹ️ The floating timer can be dragged and resized from any corner. Position and size are saved automatically.</p>
                     </div>
                 `;
 
@@ -215,18 +215,19 @@
                     padding: 12px 20px; 
                     z-index: 9999; 
                     cursor: move;
-                    resize: both;
                     overflow: hidden;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    min-width: 80px;
-                    min-height: 40px;
+                    min-width: 40px;
+                    min-height: 30px;
+                    box-sizing: border-box;
                 `;
-                this.floatingDisplay.innerHTML = '<div id="floating-chain-time" style="color: #ff9800; font-size: 20px; font-weight: bold; text-align: center;">--:--</div>';
+                this.floatingDisplay.innerHTML = '<div id="floating-chain-time" style="color: #ff9800; font-size: 20px; font-weight: bold; text-align: center; pointer-events: none;">--:--</div>';
                 
+                this.addResizeHandles(this.floatingDisplay);
                 this.addDragging(this.floatingDisplay);
-                this.addResizing(this.floatingDisplay);
+                this.updateFontSize(this.floatingDisplay);
                 document.body.appendChild(this.floatingDisplay);
             },
 
@@ -237,16 +238,111 @@
                 }
             },
 
+            addResizeHandles(element) {
+                const handles = {
+                    'nw': { cursor: 'nw-resize', position: 'top: -5px; left: -5px;' },
+                    'n':  { cursor: 'n-resize',  position: 'top: -5px; left: 50%; transform: translateX(-50%);' },
+                    'ne': { cursor: 'ne-resize', position: 'top: -5px; right: -5px;' },
+                    'e':  { cursor: 'e-resize',  position: 'top: 50%; right: -5px; transform: translateY(-50%);' },
+                    'se': { cursor: 'se-resize', position: 'bottom: -5px; right: -5px;' },
+                    's':  { cursor: 's-resize',  position: 'bottom: -5px; left: 50%; transform: translateX(-50%);' },
+                    'sw': { cursor: 'sw-resize', position: 'bottom: -5px; left: -5px;' },
+                    'w':  { cursor: 'w-resize',  position: 'top: 50%; left: -5px; transform: translateY(-50%);' }
+                };
+
+                Object.keys(handles).forEach(dir => {
+                    const handle = document.createElement('div');
+                    handle.className = `resize-handle resize-${dir}`;
+                    handle.style.cssText = `
+                        position: absolute;
+                        ${handles[dir].position}
+                        width: 10px;
+                        height: 10px;
+                        background: #ff9800;
+                        border: 1px solid #000;
+                        border-radius: 50%;
+                        cursor: ${handles[dir].cursor};
+                        z-index: 10;
+                    `;
+
+                    let isResizing = false;
+                    let startX, startY, startWidth, startHeight, startLeft, startTop;
+
+                    handle.addEventListener('mousedown', (e) => {
+                        e.stopPropagation(); // Prevent dragging while resizing
+                        isResizing = true;
+                        startX = e.clientX;
+                        startY = e.clientY;
+                        startWidth = parseInt(getComputedStyle(element).width);
+                        startHeight = parseInt(getComputedStyle(element).height);
+                        startLeft = parseInt(element.style.left);
+                        startTop = parseInt(element.style.top);
+                        
+                        const handleResize = (e) => {
+                            if (!isResizing) return;
+
+                            const dx = e.clientX - startX;
+                            const dy = e.clientY - startY;
+                            let newWidth = startWidth;
+                            let newHeight = startHeight;
+                            let newLeft = startLeft;
+                            let newTop = startTop;
+
+                            // Handle horizontal resizing
+                            if (dir.includes('e')) {
+                                newWidth = Math.max(40, startWidth + dx);
+                            } else if (dir.includes('w')) {
+                                newWidth = Math.max(40, startWidth - dx);
+                                newLeft = startLeft + (startWidth - newWidth);
+                            }
+
+                            // Handle vertical resizing
+                            if (dir.includes('s')) {
+                                newHeight = Math.max(30, startHeight + dy);
+                            } else if (dir.includes('n')) {
+                                newHeight = Math.max(30, startHeight - dy);
+                                newTop = startTop + (startHeight - newHeight);
+                            }
+
+                            element.style.width = newWidth + 'px';
+                            element.style.height = newHeight + 'px';
+                            element.style.left = newLeft + 'px';
+                            element.style.top = newTop + 'px';
+                            
+                            this.updateFontSize(element);
+                        };
+
+                        const stopResize = () => {
+                            if (isResizing) {
+                                isResizing = false;
+                                this.saveDisplaySize(element);
+                                this.saveDisplayPosition(element);
+                                document.removeEventListener('mousemove', handleResize);
+                                document.removeEventListener('mouseup', stopResize);
+                            }
+                        };
+
+                        document.addEventListener('mousemove', handleResize);
+                        document.addEventListener('mouseup', stopResize);
+                    });
+
+                    element.appendChild(handle);
+                });
+            },
+
             addDragging(element) {
                 let isDragging = false;
                 let startX, startY, initialX, initialY;
 
                 element.addEventListener('mousedown', (e) => {
+                    // Don't drag if clicking on resize handles
+                    if (e.target.classList.contains('resize-handle')) return;
+                    
                     isDragging = true;
                     startX = e.clientX;
                     startY = e.clientY;
-                    initialX = element.offsetLeft;
-                    initialY = element.offsetTop;
+                    initialX = parseInt(element.style.left);
+                    initialY = parseInt(element.style.top);
                 });
 
                 document.addEventListener('mousemove', (e) => {
@@ -391,23 +487,16 @@
                 this.core.saveState('chain_timer_size', { width, height });
             },
 
-            addResizing(element) {
-                // Create resize observer to save size when user resizes
-                const resizeObserver = new ResizeObserver(() => {
-                    this.saveDisplaySize(element);
-                    
-                    // Adjust font size based on container size
-                    const display = element.querySelector('#floating-chain-time');
-                    if (display) {
-                        const containerWidth = element.offsetWidth;
-                        const containerHeight = element.offsetHeight;
-                        const minDimension = Math.min(containerWidth, containerHeight);
-                        const fontSize = Math.max(12, Math.min(32, minDimension * 0.4));
-                        display.style.fontSize = fontSize + 'px';
-                    }
-                });
-                
-                resizeObserver.observe(element);
+            updateFontSize(element) {
+                // Adjust font size based on container size
+                const display = element.querySelector('#floating-chain-time');
+                if (display) {
+                    const containerWidth = element.offsetWidth;
+                    const containerHeight = element.offsetHeight;
+                    const minDimension = Math.min(containerWidth, containerHeight);
+                    const fontSize = Math.max(12, Math.min(32, minDimension * 0.4));
+                    display.style.fontSize = fontSize + 'px';
+                }
             },
 
             updateSettingsToggle(isActive) {
