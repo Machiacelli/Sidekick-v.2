@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.54.0
-// @description  FIXED: TodoList now has visible draggable resize handle!
+// @version      5.55.0
+// @description  FIXED: TodoList minimum size lowered to 200x150!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -27,13 +27,13 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/traveltracker.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a03e1/src/modules/todolist.module.js?v=20250129
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@96ca2ce/src/modules/todolist.module.js?v=20250129
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v5.54.0 - TodoList draggable resize handle!');
+    console.log('🚀 Sidekick Modular CDN v5.55.0 - TodoList compact size!');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
