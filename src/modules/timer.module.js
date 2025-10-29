@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Timer Module
 // @namespace    http://tampermonkey.net/
-// @version      1.1.0
-// @description  ENHANCED: Hidden scrollbars, custom timer with days/hours/minutes input, improved UX
+// @version      1.1.1
+// @description  FIXED: Drag jump bug - panel stays under cursor
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -361,9 +361,16 @@
                     if (this.isPinned) return;
                     
                     isDragging = true;
-                    const rect = panel.getBoundingClientRect();
-                    dragOffset.x = e.clientX - rect.left;
-                    dragOffset.y = e.clientY - rect.top;
+                    const sidebar = document.getElementById('sidekick-sidebar');
+                    const sidebarRect = sidebar ? sidebar.getBoundingClientRect() : { left: 0, top: 0 };
+                    
+                    // Calculate offset from mouse to panel's current position (relative to sidebar)
+                    const currentLeft = parseInt(panel.style.left) || 0;
+                    const currentTop = parseInt(panel.style.top) || 0;
+                    
+                    dragOffset.x = (e.clientX - sidebarRect.left) - currentLeft;
+                    dragOffset.y = (e.clientY - sidebarRect.top) - currentTop;
+                    
                     e.preventDefault();
                 });
                 

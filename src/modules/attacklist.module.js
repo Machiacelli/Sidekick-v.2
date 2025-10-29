@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Attack List Module
 // @namespace    http://tampermonkey.net/
-// @version      3.1.0
-// @description  Enhanced Attack List with API integration and status tracking
+// @version      3.1.1
+// @description  FIXED: Drag jump bug - panel stays under cursor
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -504,12 +504,15 @@
                     }
 
                     isDragging = true;
-                    const rect = element.getBoundingClientRect();
                     const sidebar = document.getElementById('sidekick-sidebar');
                     const sidebarRect = sidebar.getBoundingClientRect();
                     
-                    dragOffset.x = e.clientX - rect.left;
-                    dragOffset.y = e.clientY - rect.top;
+                    // Calculate offset from mouse to element's current position (relative to sidebar)
+                    const currentLeft = parseInt(element.style.left) || 0;
+                    const currentTop = parseInt(element.style.top) || 0;
+                    
+                    dragOffset.x = (e.clientX - sidebarRect.left) - currentLeft;
+                    dragOffset.y = (e.clientY - sidebarRect.top) - currentTop;
                     
                     // Bring to front when dragging starts
                     element.style.zIndex = Date.now();

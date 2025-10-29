@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Notepad Module
 // @namespace    http://tampermonkey.net/
-// @version      1.4.0
-// @description  Hidden scrollbars with scroll functionality preserved
+// @version      1.4.1
+// @description  FIXED: Drag jump bug + hidden scrollbars
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -905,15 +905,18 @@
                         
                         dragStartTime = Date.now();
                         isDragging = true;
-                        const rect = notepadElement.getBoundingClientRect();
                         const sidebar = document.getElementById('sidekick-sidebar');
                         const sidebarRect = sidebar ? sidebar.getBoundingClientRect() : { left: 0, top: 0 };
                         
-                        dragOffset.x = e.clientX - rect.left;
-                        dragOffset.y = e.clientY - rect.top;
+                        // Calculate offset from mouse to notepad's current position (relative to sidebar)
+                        const currentLeft = parseInt(notepadElement.style.left) || 0;
+                        const currentTop = parseInt(notepadElement.style.top) || 0;
                         
-                        startPosition.x = rect.left - sidebarRect.left;
-                        startPosition.y = rect.top - sidebarRect.top;
+                        dragOffset.x = (e.clientX - sidebarRect.left) - currentLeft;
+                        dragOffset.y = (e.clientY - sidebarRect.top) - currentTop;
+                        
+                        startPosition.x = currentLeft;
+                        startPosition.y = currentTop;
                         
                         e.preventDefault();
                         e.stopPropagation();

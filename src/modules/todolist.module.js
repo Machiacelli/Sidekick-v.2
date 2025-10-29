@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick To-Do List Module
 // @namespace    http://tampermonkey.net/
-// @version      1.4.5
-// @description  FIXED: Lowered minimum size to 200x150 for more compact panels
+// @version      1.4.6
+// @description  FIXED: Drag jump bug - panels now stay under cursor when dragging
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -746,15 +746,18 @@
                     if (this.isPinned) return;
                     
                     isDragging = true;
-                    const rect = panel.getBoundingClientRect();
                     const sidebar = document.getElementById('sidekick-sidebar');
                     const sidebarRect = sidebar ? sidebar.getBoundingClientRect() : { left: 0, top: 0 };
                     
-                    dragOffset.x = e.clientX - rect.left;
-                    dragOffset.y = e.clientY - rect.top;
+                    // Calculate offset from mouse to panel's current position (relative to sidebar)
+                    const currentLeft = parseInt(panel.style.left) || 0;
+                    const currentTop = parseInt(panel.style.top) || 0;
                     
-                    startPosition.x = rect.left - sidebarRect.left;
-                    startPosition.y = rect.top - sidebarRect.top;
+                    dragOffset.x = (e.clientX - sidebarRect.left) - currentLeft;
+                    dragOffset.y = (e.clientY - sidebarRect.top) - currentTop;
+                    
+                    startPosition.x = currentLeft;
+                    startPosition.y = currentTop;
                     
                     e.preventDefault();
                     e.stopPropagation();
