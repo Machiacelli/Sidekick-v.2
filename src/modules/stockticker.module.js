@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.7.1
-// @description  Fixed: Shows 'No stocks selected' when all stocks are deselected
+// @version      1.8.0
+// @description  MAJOR FIX: Transaction tracking now uses dynamic API mapping - all stocks tracked correctly!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -30,6 +30,7 @@
             updateInterval: null,
             refreshRate: 30000, // 30 seconds
             stockData: {},
+            stockNameToIdMap: {}, // Dynamic mapping from API
             selectedStocks: [], // Array of stock IDs to display
             settingsWindow: null,
             transactionObserver: null, // MutationObserver for tracking transactions
@@ -610,6 +611,22 @@
                     
                     // Merge: add current_price from market data to user portfolio stocks
                     this.stockData = {};
+                    this.stockNameToIdMap = {}; // Reset mapping
+                    
+                    // Build mapping from ALL stocks (not just owned)
+                    for (const [stockId, marketStock] of Object.entries(marketStocks)) {
+                        if (marketStock) {
+                            // Map both full name and acronym to ID
+                            const fullName = marketStock.name;
+                            const acronym = marketStock.acronym;
+                            
+                            this.stockNameToIdMap[fullName.toLowerCase()] = parseInt(stockId);
+                            this.stockNameToIdMap[acronym.toLowerCase()] = parseInt(stockId);
+                            
+                            console.log(`📊 Mapped stock: "${fullName}" / "${acronym}" -> ID ${stockId}`);
+                        }
+                    }
+                    
                     for (const [stockId, userStock] of Object.entries(userStocks)) {
                         const marketStock = marketStocks[stockId];
                         console.log(`📈 Merging stock ${stockId}:`, {
@@ -626,6 +643,7 @@
                         };
                     }
                     
+                    console.log('📈 Stock Ticker: Stock name mapping:', this.stockNameToIdMap);
                     console.log('📈 Stock Ticker: Combined stock data:', this.stockData);
                     console.log('📈 Stock Ticker: First combined stock:', this.stockData[Object.keys(this.stockData)[0]]);
                     this.renderStocks(content);
@@ -876,12 +894,26 @@
             },
 
             recordTransaction(type, stockName, shares, pricePerShare) {
+                // Check if we have the stock mapping - if not, we need to fetch it first
+                if (Object.keys(this.stockNameToIdMap).length === 0) {
+                    console.log('📊 Stock name mapping not available yet, fetching stock data...');
+                    // Queue this transaction to retry after fetching
+                    this.fetchStockData().then(() => {
+                        // Retry the transaction recording
+                        this.recordTransaction(type, stockName, shares, pricePerShare);
+                    });
+                    return;
+                }
+                
                 // Find stock ID by name
                 const stockId = this.getStockIdByName(stockName);
                 if (!stockId) {
-                    console.warn(`⚠️ Could not find stock ID for: ${stockName}`);
+                    console.warn(`⚠️ Could not find stock ID for: "${stockName}"`);
+                    console.log('📊 Transaction will not be tracked. Available stock names:', Object.keys(this.stockNameToIdMap).slice(0, 10));
                     return;
                 }
+
+                console.log(`✅ Found stock ID ${stockId} for "${stockName}"`);
 
                 // Initialize stock tracking if not exists
                 if (!this.trackedTransactions[stockId]) {
@@ -946,22 +978,26 @@
             },
 
             getStockIdByName(stockName) {
-                const stockMap = {
-                    'Alcoholics Synonymous': 15, 'Big Al\'s Gun Shop': 20, 'Crude & Co': 2,
-                    'Eaglewood Mercenary': 24, 'Empty Lunchbox Traders': 14, 'Evil Ducks Candy Corp': 16,
-                    'Feathery Hotels Group': 6, 'Grain': 12, 'Herbal Releaf Co.': 17,
-                    'Home Retail Group': 32, 'I Industries Ltd.': 8, 'Insured On Us': 5,
-                    'International School TC': 3, 'Legal Authorities Group': 30,
-                    'Lo Squalo Waste Management': 29, 'Lucky Shots Casino': 25,
-                    'Mc Smoogle Corp': 35, 'Messaging Inc.': 9, 'Munster Beverage Corp.': 27,
-                    'Performance Ribaldry Network': 31, 'PointLess': 23, 'Symbiotic Ltd.': 26,
-                    'Syscore MFG': 4, 'TC Media Productions': 13, 'TC Music Industries': 10,
-                    'Tell Group Plc.': 33, 'The Torn City Times': 19, 'Torn & Shanghai Banking': 7,
-                    'Torn City Clothing': 18, 'Torn City Health Service': 11,
-                    'Torn City Investments': 1, 'Torn City Motors': 34,
-                    'West Side University': 28, 'Wind Lines Travel': 21, 'Yazoo': 22
-                };
-                return stockMap[stockName] || null;
+                if (!stockName) return null;
+                
+                // Try exact match (case-insensitive)
+                const lowerName = stockName.toLowerCase().trim();
+                if (this.stockNameToIdMap[lowerName]) {
+                    console.log(`✅ Found stock ID for "${stockName}": ${this.stockNameToIdMap[lowerName]}`);
+                    return this.stockNameToIdMap[lowerName];
+                }
+                
+                // Try partial match - find stock name that contains the search term
+                for (const [mappedName, stockId] of Object.entries(this.stockNameToIdMap)) {
+                    if (mappedName.includes(lowerName) || lowerName.includes(mappedName)) {
+                        console.log(`✅ Found partial match for "${stockName}" -> "${mappedName}": ID ${stockId}`);
+                        return stockId;
+                    }
+                }
+                
+                console.warn(`⚠️ Could not find stock ID for: "${stockName}"`);
+                console.log('📊 Available mappings:', Object.keys(this.stockNameToIdMap));
+                return null;
             },
 
             // Parse shorthand notation (e.g., "5k" -> 5000, "1.5m" -> 1500000, "2b" -> 2000000000)
