@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.56.0
-// @description  MAJOR FIX: Drag jump bug resolved on all panels!
+// @version      5.57.0
+// @description  NEW: Stock Ticker with real-time portfolio tracking!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -27,13 +27,14 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/traveltracker.module.js?v=20251029
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@da3da96/src/modules/stockticker.module.js?v=20250129
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/todolist.module.js?v=20250129
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v5.56.0 - Drag jump bug FIXED!');
+    console.log('🚀 Sidekick Modular CDN v5.57.0 - Stock Ticker added!');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
@@ -286,6 +287,16 @@
                     window.SidekickModules.LinkGroup.init();
                 } catch (error) {
                     console.error('❌ LinkGroup init failed:', error);
+                }
+            }
+            
+            // Check and restore Stock Ticker module
+            if (window.SidekickModules.StockTicker?.init) {
+                console.log('📈 Initializing Stock Ticker module (checks for previously open panel)...');
+                try {
+                    window.SidekickModules.StockTicker.init();
+                } catch (error) {
+                    console.error('❌ Stock Ticker init failed:', error);
                 }
             }
             
