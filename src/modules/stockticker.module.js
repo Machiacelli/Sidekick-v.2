@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.3.3
-// @description  FIXED: Now fetches both user portfolio AND market prices for accurate display
+// @version      1.3.4
+// @description  DEBUG: Enhanced logging to diagnose zero values issue
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -550,17 +550,30 @@
                     const userStocks = userData.stocks || {};
                     const marketStocks = marketData.stocks || {};
                     
+                    console.log('📈 Stock Ticker: User stocks keys:', Object.keys(userStocks));
+                    console.log('📈 Stock Ticker: Market stocks keys:', Object.keys(marketStocks).length, 'stocks');
+                    console.log('📈 Stock Ticker: Sample market stock:', marketStocks['1']);
+                    console.log('📈 Stock Ticker: Sample user stock:', userStocks[Object.keys(userStocks)[0]]);
+                    
                     // Merge: add current_price from market data to user portfolio stocks
                     this.stockData = {};
                     for (const [stockId, userStock] of Object.entries(userStocks)) {
+                        const marketStock = marketStocks[stockId];
+                        console.log(`📈 Merging stock ${stockId}:`, {
+                            userStock,
+                            marketStock,
+                            current_price: marketStock?.current_price
+                        });
+                        
                         this.stockData[stockId] = {
                             ...userStock,
-                            current_price: marketStocks[stockId]?.current_price || 0,
-                            name: marketStocks[stockId]?.name || userStock.name
+                            current_price: marketStock?.current_price || 0,
+                            name: marketStock?.name || userStock.name || `Stock #${stockId}`
                         };
                     }
                     
                     console.log('📈 Stock Ticker: Combined stock data:', this.stockData);
+                    console.log('📈 Stock Ticker: First combined stock:', this.stockData[Object.keys(this.stockData)[0]]);
                     this.renderStocks(content);
 
                 } catch (error) {
