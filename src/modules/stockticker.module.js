@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.1.1
-// @description  FIXED: Correct API URL - https://api.torn.com/user
+// @version      1.2.0
+// @description  FIXED: UI layout matches other panels (dropdown left, close right) + Correct API endpoint
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -122,73 +122,68 @@
                     cursor: ${this.isPinned ? 'default' : 'move'};
                     height: 32px;
                     flex-shrink: 0;
+                    border-radius: 7px 7px 0 0;
                 `;
 
-                const titleSection = document.createElement('div');
-                titleSection.style.cssText = 'display: flex; align-items: center; gap: 8px;';
+                // LEFT SIDE: Dropdown arrow + Emoji + Title
+                const leftSection = document.createElement('div');
+                leftSection.style.cssText = 'display: flex; align-items: center; gap: 4px;';
                 
-                const icon = document.createElement('span');
-                icon.textContent = '📈';
-                icon.style.fontSize = '16px';
-                
-                const title = document.createElement('span');
-                title.textContent = 'Stock Ticker';
-                title.style.cssText = 'color: #fff; font-weight: 600; font-size: 13px;';
-                
-                titleSection.appendChild(icon);
-                titleSection.appendChild(title);
-
-                const controls = document.createElement('div');
-                controls.style.cssText = 'display: flex; align-items: center; gap: 4px;';
-
-                // Menu button (with dropdown)
-                const menuBtn = document.createElement('button');
-                menuBtn.innerHTML = '⋮';
-                menuBtn.title = 'Options';
-                menuBtn.style.cssText = `
+                // Dropdown button
+                const dropdownBtn = document.createElement('button');
+                dropdownBtn.innerHTML = '▼';
+                dropdownBtn.title = 'Options';
+                dropdownBtn.style.cssText = `
                     background: none;
                     border: none;
                     color: #bbb;
                     cursor: pointer;
-                    font-size: 18px;
-                    padding: 4px 6px;
-                    border-radius: 4px;
+                    font-size: 12px;
+                    padding: 2px;
+                    display: flex;
+                    align-items: center;
                     transition: all 0.2s;
-                    position: relative;
                 `;
-                menuBtn.onmouseover = () => menuBtn.style.background = '#444';
-                menuBtn.onmouseout = () => menuBtn.style.background = 'none';
+                dropdownBtn.onmouseover = () => dropdownBtn.style.color = '#fff';
+                dropdownBtn.onmouseout = () => dropdownBtn.style.color = '#bbb';
+                
+                // Dropdown menu container
+                const dropdownContainer = document.createElement('div');
+                dropdownContainer.style.cssText = 'position: relative; display: inline-block;';
                 
                 // Dropdown menu
                 const dropdown = document.createElement('div');
                 dropdown.style.cssText = `
-                    position: absolute;
-                    top: 100%;
-                    right: 0;
-                    background: #2a2a2a;
-                    border: 1px solid #555;
-                    border-radius: 4px;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                    z-index: 10000;
-                    min-width: 140px;
                     display: none;
-                    margin-top: 4px;
+                    position: fixed;
+                    background: #333;
+                    min-width: 140px;
+                    z-index: 100000;
+                    border-radius: 4px;
+                    border: 1px solid #555;
+                    padding: 4px 0;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
                 `;
                 
                 // Refresh option
-                const refreshOption = document.createElement('div');
+                const refreshOption = document.createElement('button');
                 refreshOption.innerHTML = '<span style="margin-right: 8px;">🔄</span>Refresh';
                 refreshOption.style.cssText = `
+                    background: none;
+                    border: none;
+                    color: #fff;
                     padding: 8px 12px;
-                    color: #ccc;
+                    width: 100%;
+                    text-align: left;
                     cursor: pointer;
-                    font-size: 13px;
+                    font-size: 12px;
                     display: flex;
                     align-items: center;
-                    transition: background 0.2s;
+                    gap: 8px;
+                    transition: background 0.2s ease;
                 `;
-                refreshOption.onmouseover = () => refreshOption.style.background = '#333';
-                refreshOption.onmouseout = () => refreshOption.style.background = 'transparent';
+                refreshOption.onmouseover = () => refreshOption.style.background = '#444';
+                refreshOption.onmouseout = () => refreshOption.style.background = 'none';
                 refreshOption.onclick = (e) => {
                     e.stopPropagation();
                     this.fetchStockData();
@@ -196,23 +191,28 @@
                 };
                 
                 // Pin option
-                const pinOption = document.createElement('div');
-                pinOption.innerHTML = `<span style="margin-right: 8px;">${this.isPinned ? '📌' : '📍'}</span>${this.isPinned ? 'Unpin' : 'Pin'}`;
+                const pinOption = document.createElement('button');
+                pinOption.innerHTML = `<span style="margin-right: 8px;">${this.isPinned ? '📌' : '📍'}</span>${this.isPinned ? 'Unpin' : 'Pin Panel'}`;
                 pinOption.style.cssText = `
+                    background: none;
+                    border: none;
+                    color: #fff;
                     padding: 8px 12px;
-                    color: #ccc;
+                    width: 100%;
+                    text-align: left;
                     cursor: pointer;
-                    font-size: 13px;
+                    font-size: 12px;
                     display: flex;
                     align-items: center;
-                    transition: background 0.2s;
+                    gap: 8px;
+                    transition: background 0.2s ease;
                 `;
-                pinOption.onmouseover = () => pinOption.style.background = '#333';
-                pinOption.onmouseout = () => pinOption.style.background = 'transparent';
+                pinOption.onmouseover = () => pinOption.style.background = '#444';
+                pinOption.onmouseout = () => pinOption.style.background = 'none';
                 pinOption.onclick = (e) => {
                     e.stopPropagation();
                     this.isPinned = !this.isPinned;
-                    pinOption.innerHTML = `<span style="margin-right: 8px;">${this.isPinned ? '📌' : '📍'}</span>${this.isPinned ? 'Unpin' : 'Pin'}`;
+                    pinOption.innerHTML = `<span style="margin-right: 8px;">${this.isPinned ? '📌' : '📍'}</span>${this.isPinned ? 'Unpin' : 'Pin Panel'}`;
                     header.style.cursor = this.isPinned ? 'default' : 'move';
                     this.core.saveState('stockticker_pinned', this.isPinned);
                     dropdown.style.display = 'none';
@@ -221,20 +221,42 @@
                 dropdown.appendChild(refreshOption);
                 dropdown.appendChild(pinOption);
                 
-                menuBtn.appendChild(dropdown);
+                dropdownContainer.appendChild(dropdownBtn);
+                dropdownContainer.appendChild(dropdown);
                 
                 // Toggle dropdown on click
-                menuBtn.onclick = (e) => {
+                dropdownBtn.onclick = (e) => {
                     e.stopPropagation();
-                    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+                    const isVisible = dropdown.style.display === 'block';
+                    dropdown.style.display = isVisible ? 'none' : 'block';
+                    
+                    if (!isVisible) {
+                        const rect = dropdownBtn.getBoundingClientRect();
+                        dropdown.style.left = rect.left + 'px';
+                        dropdown.style.top = (rect.bottom + 4) + 'px';
+                    }
                 };
                 
                 // Close dropdown when clicking outside
                 document.addEventListener('click', () => {
                     dropdown.style.display = 'none';
                 });
+                
+                // Emoji icon
+                const icon = document.createElement('span');
+                icon.textContent = '📈';
+                icon.style.fontSize = '16px';
+                
+                // Title
+                const title = document.createElement('span');
+                title.textContent = 'Stock Ticker';
+                title.style.cssText = 'color: #fff; font-weight: 600; font-size: 13px;';
+                
+                leftSection.appendChild(dropdownContainer);
+                leftSection.appendChild(icon);
+                leftSection.appendChild(title);
 
-                // Close button (outside dropdown)
+                // RIGHT SIDE: Close button
                 const closeBtn = document.createElement('button');
                 closeBtn.innerHTML = '×';
                 closeBtn.title = 'Close';
@@ -256,11 +278,8 @@
                     this.hide();
                 };
 
-                controls.appendChild(menuBtn);
-                controls.appendChild(closeBtn);
-
-                header.appendChild(titleSection);
-                header.appendChild(controls);
+                header.appendChild(leftSection);
+                header.appendChild(closeBtn);
 
                 // Content area
                 const content = document.createElement('div');
@@ -405,9 +424,9 @@
                         return;
                     }
 
-                    // Fetch user's torn stocks from API
+                    // Fetch torn stocks from API (using torn/1 endpoint as per Torn API docs)
                     console.log('📈 Stock Ticker: Fetching stock data from API...');
-                    const response = await fetch(`https://api.torn.com/user/?selections=stocks&key=${apiKey}`);
+                    const response = await fetch(`https://api.torn.com/torn/1?selections=stocks&key=${apiKey}`);
                     
                     if (!response.ok) {
                         throw new Error('Failed to fetch stock data');
