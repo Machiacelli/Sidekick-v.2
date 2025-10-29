@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.3.5
-// @description  DEBUG: Super detailed transaction logging to find the issue
+// @version      1.3.6
+// @description  Removed portfolio summary section - cleaner display
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -754,37 +754,8 @@
                 const totalProfitPercent = ((totalProfit / totalInvested) * 100).toFixed(2);
                 const isTotalProfit = totalProfit >= 0;
 
-                const summaryHTML = `
-                    <div style="
-                        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
-                        border: 1px solid #3b82f6;
-                        border-radius: 8px;
-                        padding: 16px;
-                        margin-bottom: 16px;
-                        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-                    ">
-                        <div style="color: #93c5fd; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
-                            Portfolio Summary
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                            <div>
-                                <div style="color: #bfdbfe; font-size: 10px; margin-bottom: 4px;">Total Value</div>
-                                <div style="color: #fff; font-size: 18px; font-weight: 700;">
-                                    $${totalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                                </div>
-                            </div>
-                            <div>
-                                <div style="color: #bfdbfe; font-size: 10px; margin-bottom: 4px;">Total P/L</div>
-                                <div style="color: ${isTotalProfit ? '#4ade80' : '#f87171'}; font-size: 18px; font-weight: 700;">
-                                    ${isTotalProfit ? '+' : ''}$${totalProfit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                                    <span style="font-size: 14px; margin-left: 4px;">(${isTotalProfit ? '+' : ''}${totalProfitPercent}%)</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                content.innerHTML = summaryHTML + stocksHTML.join('');
+                // Removed portfolio summary - display only individual stocks
+                content.innerHTML = stocksHTML.join('');
 
                 // Update last refresh time
                 const now = new Date().toLocaleTimeString();
