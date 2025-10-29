@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.3.6
-// @description  Removed portfolio summary section - cleaner display
+// @version      1.4.0
+// @description  FIXED: Now uses correct API structure (shares as number, no transaction history)
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -630,78 +630,42 @@
                 }
 
                 let totalValue = 0;
-                let totalInvested = 0;
                 const stocksHTML = [];
 
-                // Sort stocks by value (descending)
+                // Sort stocks by value (descending) - shares is directly available
                 const sortedStocks = Object.entries(filteredStocks).sort((a, b) => {
                     const stockA = a[1];
                     const stockB = b[1];
                     
-                    // Calculate total shares from transactions
-                    const getShares = (stock) => {
-                        if (!stock.transactions || !Array.isArray(stock.transactions)) return 0;
-                        return stock.transactions.reduce((sum, t) => sum + (t.shares || 0), 0);
-                    };
-                    
-                    const valueA = getShares(stockA) * (stockA.current_price || 0);
-                    const valueB = getShares(stockB) * (stockB.current_price || 0);
+                    const valueA = (stockA.shares || 0) * (stockA.current_price || 0);
+                    const valueB = (stockB.shares || 0) * (stockB.current_price || 0);
                     return valueB - valueA;
                 });
 
                 for (const [stockId, stock] of sortedStocks) {
                     console.log(`📈 Processing stock ${stockId}:`, stock);
                     
-                    const transactions = stock.transactions || [];
+                    // ACTUAL API STRUCTURE: shares is a number, transactions is a count
+                    const shares = stock.shares || 0;
                     const currentPrice = stock.current_price || 0;
                     const stockName = stock.name || `Stock #${stockId}`;
+                    const transactionCount = stock.transactions || 0;
                     
-                    console.log(`📈 Stock ${stockId} - Name: ${stockName}, Current Price: ${currentPrice}`);
-                    console.log(`📈 Stock ${stockId} - Transactions array:`, transactions);
-                    console.log(`📈 Stock ${stockId} - Transaction count:`, transactions.length);
+                    console.log(`📈 Stock ${stockId} - Name: ${stockName}, Shares: ${shares}, Current Price: ${currentPrice}, Transactions: ${transactionCount}`);
                     
-                    // Calculate average bought price from transactions
-                    let totalShares = 0;
-                    let totalCost = 0;
-                    
-                    if (transactions && Array.isArray(transactions)) {
-                        for (const transaction of transactions) {
-                            console.log(`📈 Stock ${stockId} - Processing transaction:`, transaction);
-                            const shares = transaction.shares || 0;
-                            const boughtPrice = transaction.bought_price || 0;
-                            console.log(`📈 Stock ${stockId} - Transaction: ${shares} shares @ $${boughtPrice}`);
-                            totalShares += shares;
-                            totalCost += shares * boughtPrice;
-                        }
-                    }
-                    
-                    const avgBoughtPrice = totalShares > 0 ? totalCost / totalShares : 0;
-                    const shares = totalShares;
-                    
-                    console.log(`📈 Stock ${stockId} - CALCULATED - Shares: ${shares}, Current Price: ${currentPrice}, Avg Bought: ${avgBoughtPrice}, Total Cost: ${totalCost}`);
-                    
-                    // Calculate values
+                    // Calculate current value (we can't calculate profit without transaction history)
                     const currentValue = shares * currentPrice;
-                    const invested = totalCost;
-                    const profit = currentValue - invested;
-                    const profitPercent = invested > 0 ? ((profit / invested) * 100).toFixed(2) : '0.00';
+                    
+                    // We don't have bought price data, so we can't show profit/loss
+                    // Just show shares and current value
                     
                     totalValue += currentValue;
-                    totalInvested += invested;
-
-                    const isProfit = profit >= 0;
-                    const profitColor = isProfit ? '#4CAF50' : '#f44336';
-                    const arrow = isProfit ? '↗' : '↘';
 
                     console.log(`📈 Stock ${stockId} calculated:`, {
                         name: stockName,
                         shares,
                         currentPrice,
-                        avgBoughtPrice,
-                        currentValue,
-                        invested,
-                        profit,
-                        profitPercent
+                        currentValue
                     });
 
                     stocksHTML.push(`
@@ -718,43 +682,29 @@
                                 <div style="font-weight: 600; color: #fff; font-size: 14px;">
                                     ${stockName}
                                 </div>
-                                <div style="color: ${profitColor}; font-weight: 600; font-size: 14px;">
-                                    ${arrow} ${profitPercent}%
+                                <div style="color: #4CAF50; font-weight: 600; font-size: 14px;">
+                                    ${shares.toLocaleString()} shares
                                 </div>
                             </div>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
                                 <div>
-                                    <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Shares</div>
-                                    <div style="color: #fff;">${shares.toLocaleString()}</div>
+                                    <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Current Price</div>
+                                    <div style="color: #fff;">$${currentPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                                 </div>
                                 <div>
                                     <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Current Price</div>
                                     <div style="color: #fff;">$${currentPrice.toFixed(2)}</div>
                                 </div>
                                 <div>
-                                    <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Avg Bought At</div>
-                                    <div style="color: #fff;">$${avgBoughtPrice.toFixed(2)}</div>
-                                </div>
-                                <div>
                                     <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Total Value</div>
-                                    <div style="color: #fff;">$${currentValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                                </div>
-                                <div style="grid-column: 1 / -1;">
-                                    <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Profit/Loss</div>
-                                    <div style="color: ${profitColor}; font-weight: 600;">
-                                        ${isProfit ? '+' : ''}$${profit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                                    </div>
+                                    <div style="color: #fff; font-weight: 600;">$${currentValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                                 </div>
                             </div>
                         </div>
                     `);
                 }
 
-                const totalProfit = totalValue - totalInvested;
-                const totalProfitPercent = ((totalProfit / totalInvested) * 100).toFixed(2);
-                const isTotalProfit = totalProfit >= 0;
-
-                // Removed portfolio summary - display only individual stocks
+                // Removed portfolio summary and profit/loss calculations (not available from API)
                 content.innerHTML = stocksHTML.join('');
 
                 // Update last refresh time
