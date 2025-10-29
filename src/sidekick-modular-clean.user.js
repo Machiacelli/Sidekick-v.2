@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.59.0
-// @description  FIXED: Stock Ticker API key integration and resizing
+// @version      5.60.0
+// @description  FIXED: Stock Ticker API key retrieval corrected
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -27,14 +27,14 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/traveltracker.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d47d38b/src/modules/stockticker.module.js?v=20250129
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@bb5a1f4/src/modules/stockticker.module.js?v=20250129
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/todolist.module.js?v=20250129
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v5.59.0 - Stock Ticker API key fix!');
+    console.log('🚀 Sidekick Modular CDN v5.60.0 - Stock Ticker API key fix v2!');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
