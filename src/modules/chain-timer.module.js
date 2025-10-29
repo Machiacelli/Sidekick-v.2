@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Chain Timer Module
 // @namespace    http://tampermonkey.net/
-// @version      2.3.0
+// @version      2.4.0
 // @description  Chain timer monitor with settings tab and floating mirror display
 // @author       Machiacelli
 // @match        https://www.torn.com/*
@@ -40,6 +40,7 @@
             alertThresholdInSeconds: 240,
             alertsEnabled: true,
             popupEnabled: true,
+            displayEnabled: true,
 
             init() {
                 console.log('⏱️ Initializing Chain Timer Module v2.0.0...');
@@ -69,7 +70,9 @@
 
                 this.isActive = true;
                 this.core.saveState('chain_timer_active', true);
-                this.showFloatingDisplay();
+                if (this.displayEnabled) {
+                    this.showFloatingDisplay();
+                }
                 this.startMonitoring();
                 this.updateSettingsToggle(true);
             },
@@ -132,8 +135,15 @@
                         </label>
                     </div>
 
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="chain-display-toggle" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;">
+                            <span style="color: #fff; font-size: 14px;">Show Floating Timer Display</span>
+                        </label>
+                    </div>
+
                     <div style="margin-top: 20px; padding: 12px; background: rgba(255,152,0,0.1); border-left: 3px solid #ff9800; border-radius: 4px;">
-                        <p style="margin: 0; color: #ccc; font-size: 12px;">ℹ️ The floating timer can be dragged and resized from any corner. Position and size are saved automatically.</p>
+                        <p style="margin: 0; color: #ccc; font-size: 12px;">ℹ️ The floating timer can be dragged and resized from the bottom-right corner. Position and size are saved automatically.</p>
                     </div>
                 `;
 
@@ -143,6 +153,7 @@
                     const thresholdDropdown = content.querySelector('#chain-threshold-dropdown');
                     const alertsToggle = content.querySelector('#chain-alerts-toggle');
                     const popupToggle = content.querySelector('#chain-popup-toggle');
+                    const displayToggle = content.querySelector('#chain-display-toggle');
 
                     if (mainToggle) {
                         mainToggle.checked = this.isActive;
@@ -187,6 +198,19 @@
                         popupToggle.addEventListener('change', (e) => {
                             this.popupEnabled = e.target.checked;
                             this.saveConfig();
+                        });
+                    }
+
+                    if (displayToggle) {
+                        displayToggle.checked = this.displayEnabled !== false;
+                        displayToggle.addEventListener('change', (e) => {
+                            this.displayEnabled = e.target.checked;
+                            this.saveConfig();
+                            if (this.displayEnabled) {
+                                this.showFloatingDisplay();
+                            } else {
+                                this.hideFloatingDisplay();
+                            }
                         });
                     }
                 }, 100);
@@ -377,6 +401,7 @@
                     this.alertThresholdInSeconds = config.alertThreshold || 240;
                     this.alertsEnabled = config.alertsEnabled !== false;
                     this.popupEnabled = config.popupEnabled !== false;
+                    this.displayEnabled = config.displayEnabled !== false;
                 }
             },
 
@@ -384,7 +409,8 @@
                 this.core.saveState('chain_timer_config', {
                     alertThreshold: this.alertThresholdInSeconds,
                     alertsEnabled: this.alertsEnabled,
-                    popupEnabled: this.popupEnabled
+                    popupEnabled: this.popupEnabled,
+                    displayEnabled: this.displayEnabled
                 });
             },
 

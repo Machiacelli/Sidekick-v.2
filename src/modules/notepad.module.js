@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Notepad Module
 // @namespace    http://tampermonkey.net/
-// @version      1.3.0
-// @description  DRAG-DROP GROUPING: Simple drag header onto header to group notes, click headers to navigate, title editing. NO SIZE DRIFT on drag!
+// @version      1.4.0
+// @description  Hidden scrollbars with scroll functionality preserved
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -440,7 +440,7 @@
                                   line-height: 1.4;
                                   scrollbar-width: none;
                                   -ms-overflow-style: none;
-                              ">${activeNote.content}</textarea>
+                              " class="notepad-textarea">${activeNote.content}</textarea>
                 `;
 
                 contentArea.appendChild(groupElement);
@@ -642,8 +642,22 @@
                         line-height: 1.4;
                         width: 100%;
                         box-sizing: border-box;
-                    ">${notepad.content}</textarea>
+                        scrollbar-width: none;
+                        -ms-overflow-style: none;
+                    " class="notepad-textarea">${notepad.content}</textarea>
                 `;
+
+                // Add CSS to hide webkit scrollbars
+                if (!document.getElementById('notepad-scrollbar-style')) {
+                    const style = document.createElement('style');
+                    style.id = 'notepad-scrollbar-style';
+                    style.textContent = `
+                        .notepad-textarea::-webkit-scrollbar {
+                            display: none;
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
 
                 // Add enhanced functionality with movable controls
                 this.setupNotepadHandlers(notepadElement, notepad);
