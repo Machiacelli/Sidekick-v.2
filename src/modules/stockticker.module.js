@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.2.1
-// @description  FIXED: Correct API endpoint user/?selections=stocks + proper data parsing
+// @version      1.2.2
+// @description  FIXED: Correct stock data property names (transactions array structure)
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -483,15 +483,39 @@
                 const sortedStocks = Object.entries(stocks).sort((a, b) => {
                     const stockA = a[1];
                     const stockB = b[1];
-                    const valueA = stockA.total_shares * stockA.current_price;
-                    const valueB = stockB.total_shares * stockB.current_price;
+                    
+                    // Calculate total shares from transactions
+                    const getShares = (stock) => {
+                        if (!stock.transactions || !Array.isArray(stock.transactions)) return 0;
+                        return stock.transactions.reduce((sum, t) => sum + t.shares, 0);
+                    };
+                    
+                    const valueA = getShares(stockA) * (stockA.current_price || 0);
+                    const valueB = getShares(stockB) * (stockB.current_price || 0);
                     return valueB - valueA;
                 });
 
                 for (const [stockId, stock] of sortedStocks) {
+                    console.log(`📈 Raw stock ${stockId} data:`, stock);
+                    
+                    // Calculate average bought price from transactions
+                    let totalShares = 0;
+                    let totalCost = 0;
+                    
+                    if (stock.transactions && Array.isArray(stock.transactions)) {
+                        for (const transaction of stock.transactions) {
+                            totalShares += transaction.shares;
+                            totalCost += transaction.shares * transaction.bought_price;
+                        }
+                    }
+                    
+                    const avgBoughtPrice = totalShares > 0 ? totalCost / totalShares : 0;
+                    const shares = totalShares;
+                    const currentPrice = stock.current_price || 0;
+                    
                     // Calculate values
-                    const currentValue = stock.total_shares * stock.current_price;
-                    const invested = stock.total_shares * stock.bought_price;
+                    const currentValue = shares * currentPrice;
+                    const invested = totalCost;
                     const profit = currentValue - invested;
                     const profitPercent = invested > 0 ? ((profit / invested) * 100).toFixed(2) : '0.00';
                     
@@ -502,11 +526,11 @@
                     const profitColor = isProfit ? '#4CAF50' : '#f44336';
                     const arrow = isProfit ? '↗' : '↘';
 
-                    console.log(`📈 Stock ${stockId}:`, {
-                        name: stock.stock_name,
-                        shares: stock.total_shares,
-                        currentPrice: stock.current_price,
-                        boughtPrice: stock.bought_price,
+                    console.log(`📈 Stock ${stockId} calculated:`, {
+                        name: stock.name,
+                        shares,
+                        currentPrice,
+                        avgBoughtPrice,
                         currentValue,
                         invested,
                         profit,
@@ -525,7 +549,7 @@
                            onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#3a3a3a';">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                 <div style="font-weight: 600; color: #fff; font-size: 14px;">
-                                    ${stock.stock_name || 'Stock #' + stockId}
+                                    ${stock.name || 'Stock #' + stockId}
                                 </div>
                                 <div style="color: ${profitColor}; font-weight: 600; font-size: 14px;">
                                     ${arrow} ${profitPercent}%
@@ -534,15 +558,15 @@
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
                                 <div>
                                     <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Shares</div>
-                                    <div style="color: #fff;">${stock.total_shares.toLocaleString()}</div>
+                                    <div style="color: #fff;">${shares.toLocaleString()}</div>
                                 </div>
                                 <div>
                                     <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Current Price</div>
-                                    <div style="color: #fff;">$${stock.current_price.toFixed(2)}</div>
+                                    <div style="color: #fff;">$${currentPrice.toFixed(2)}</div>
                                 </div>
                                 <div>
-                                    <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Bought At</div>
-                                    <div style="color: #fff;">$${stock.bought_price.toFixed(2)}</div>
+                                    <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Avg Bought At</div>
+                                    <div style="color: #fff;">$${avgBoughtPrice.toFixed(2)}</div>
                                 </div>
                                 <div>
                                     <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Total Value</div>
