@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.3.0
-// @description  ADDED: Stock selection window with checkboxes + auto-add owned stocks button
+// @version      1.3.1
+// @description  FIXED: Panel position/size save + z-index + auto-add in dropdown + short names + value calculations
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -98,6 +98,10 @@
             createPanel() {
                 const panel = document.createElement('div');
                 panel.className = 'stockticker-panel';
+                
+                // Load saved size or use defaults
+                const savedSize = this.core.loadState('stockticker_size', { width: 320, height: 400 });
+                
                 panel.style.cssText = `
                     position: absolute;
                     background: #222;
@@ -106,13 +110,15 @@
                     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
                     display: flex;
                     flex-direction: column;
+                    width: ${savedSize.width}px;
+                    height: ${savedSize.height}px;
                     min-width: 250px;
                     min-height: 150px;
-                    max-width: 500px;
-                    max-height: 600px;
+                    max-width: 600px;
+                    max-height: 800px;
                     z-index: 1000;
                     resize: both;
-                    overflow: auto;
+                    overflow: hidden;
                 `;
 
                 const header = document.createElement('div');
@@ -223,6 +229,48 @@
                     dropdown.style.display = 'none';
                 };
                 
+                // Auto-add owned stocks option
+                const autoAddOption = document.createElement('button');
+                autoAddOption.innerHTML = '<span style="margin-right: 8px;">✨</span>Auto-Add Owned Stocks';
+                autoAddOption.style.cssText = `
+                    background: none;
+                    border: none;
+                    color: #fff;
+                    padding: 8px 12px;
+                    width: 100%;
+                    text-align: left;
+                    cursor: pointer;
+                    font-size: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: background 0.2s ease;
+                `;
+                autoAddOption.onmouseover = () => autoAddOption.style.background = '#444';
+                autoAddOption.onmouseout = () => autoAddOption.style.background = 'none';
+                autoAddOption.onclick = async (e) => {
+                    e.stopPropagation();
+                    dropdown.style.display = 'none';
+                    
+                    // Show loading state
+                    autoAddOption.disabled = true;
+                    autoAddOption.innerHTML = '<span style="margin-right: 8px;">⏳</span>Loading...';
+                    
+                    await this.fetchStockData();
+                    
+                    // Auto-select owned stocks
+                    const ownedStockIds = Object.keys(this.stockData).map(id => parseInt(id));
+                    this.selectedStocks = ownedStockIds;
+                    this.core.saveState('stockticker_selected_stocks', this.selectedStocks);
+                    
+                    // Reset button state
+                    autoAddOption.disabled = false;
+                    autoAddOption.innerHTML = '<span style="margin-right: 8px;">✨</span>Auto-Add Owned Stocks';
+                    
+                    // Refresh the ticker display
+                    this.fetchStockData();
+                };
+                
                 // Settings option
                 const settingsOption = document.createElement('button');
                 settingsOption.innerHTML = '<span style="margin-right: 8px;">⚙️</span>Select Stocks';
@@ -250,6 +298,7 @@
                 
                 dropdown.appendChild(refreshOption);
                 dropdown.appendChild(pinOption);
+                dropdown.appendChild(autoAddOption);
                 dropdown.appendChild(settingsOption);
                 
                 dropdownContainer.appendChild(dropdownBtn);
@@ -347,6 +396,16 @@
 
                 // Add dragging functionality
                 this.addDragging(panel, header);
+                
+                // Add resize observer to save size
+                const resizeObserver = new ResizeObserver(() => {
+                    const size = {
+                        width: panel.offsetWidth,
+                        height: panel.offsetHeight
+                    };
+                    this.core.saveState('stockticker_size', size);
+                });
+                resizeObserver.observe(panel);
 
                 return panel;
             },
@@ -555,14 +614,28 @@
                 for (const [stockId, stock] of sortedStocks) {
                     console.log(`📈 Raw stock ${stockId} data:`, stock);
                     
+                    // Get stock name from our list if not in API data
+                    const stockNames = {
+                        1: 'TCI', 2: 'CRU', 3: 'TCS', 4: 'SYS', 5: 'LAG',
+                        6: 'FHC', 7: 'SYM', 8: 'IIL', 9: 'GRN', 10: 'TMI',
+                        11: 'TCP', 12: 'IOU', 13: 'GRS', 14: 'CNC', 15: 'MSG',
+                        16: 'TMU', 17: 'HEX', 18: 'TCT', 19: 'TCT', 20: 'CRU',
+                        21: 'TCB', 22: 'YAZ', 23: 'LSC', 24: 'EWM', 25: 'MCS',
+                        26: 'EWM', 27: 'SYM', 28: 'TCM', 29: 'EWM', 30: 'SYM',
+                        31: 'TCM', 32: 'HRG', 33: 'HRG', 34: 'TEL', 35: 'PRN'
+                    };
+                    const stockName = stock.name || stockNames[parseInt(stockId)] || `Stock #${stockId}`;
+                    
                     // Calculate average bought price from transactions
                     let totalShares = 0;
                     let totalCost = 0;
                     
                     if (stock.transactions && Array.isArray(stock.transactions)) {
                         for (const transaction of stock.transactions) {
-                            totalShares += transaction.shares;
-                            totalCost += transaction.shares * transaction.bought_price;
+                            const shares = transaction.shares || 0;
+                            const boughtPrice = transaction.bought_price || 0;
+                            totalShares += shares;
+                            totalCost += shares * boughtPrice;
                         }
                     }
                     
@@ -584,7 +657,7 @@
                     const arrow = isProfit ? '↗' : '↘';
 
                     console.log(`📈 Stock ${stockId} calculated:`, {
-                        name: stock.name,
+                        name: stockName,
                         shares,
                         currentPrice,
                         avgBoughtPrice,
@@ -606,7 +679,7 @@
                            onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#3a3a3a';">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                 <div style="font-weight: 600; color: #fff; font-size: 14px;">
-                                    ${stock.name || 'Stock #' + stockId}
+                                    ${stockName}
                                 </div>
                                 <div style="color: ${profitColor}; font-weight: 600; font-size: 14px;">
                                     ${arrow} ${profitPercent}%
@@ -751,7 +824,7 @@
                     width: 100%;
                     height: 100%;
                     background: rgba(0, 0, 0, 0.7);
-                    z-index: 100000;
+                    z-index: 999999;
                     display: flex;
                     justify-content: center;
                     align-items: center;
@@ -801,45 +874,6 @@
                     flex: 1;
                 `;
 
-                // Auto-add button
-                const autoAddBtn = document.createElement('button');
-                autoAddBtn.textContent = '✨ Auto-Add Owned Stocks';
-                autoAddBtn.style.cssText = `
-                    background: linear-gradient(135deg, #4CAF50, #45a049);
-                    color: white;
-                    border: none;
-                    padding: 10px 16px;
-                    border-radius: 6px;
-                    cursor: pointer;
-                    font-size: 13px;
-                    font-weight: 600;
-                    width: 100%;
-                    margin-bottom: 16px;
-                    transition: transform 0.2s;
-                `;
-                autoAddBtn.onmouseover = () => autoAddBtn.style.transform = 'scale(1.02)';
-                autoAddBtn.onmouseout = () => autoAddBtn.style.transform = 'scale(1)';
-                autoAddBtn.onclick = async () => {
-                    autoAddBtn.disabled = true;
-                    autoAddBtn.textContent = '⏳ Loading...';
-                    
-                    await this.fetchStockData();
-                    
-                    // Auto-select owned stocks
-                    const ownedStockIds = Object.keys(this.stockData).map(id => parseInt(id));
-                    this.selectedStocks = ownedStockIds;
-                    this.core.saveState('stockticker_selected_stocks', this.selectedStocks);
-                    
-                    // Refresh the settings window
-                    overlay.remove();
-                    this.showSettingsWindow();
-                    
-                    // Refresh the ticker display
-                    this.fetchStockData();
-                };
-
-                content.appendChild(autoAddBtn);
-
                 // Stock list
                 const stockList = document.createElement('div');
                 stockList.style.cssText = `
@@ -847,43 +881,43 @@
                     gap: 8px;
                 `;
 
-                // All available Torn stocks (IDs 1-35 approximately)
+                // All available Torn stocks with short names
                 const allStocks = [
-                    { id: 1, name: 'Torn City Invest' },
-                    { id: 2, name: 'Crude' },
-                    { id: 3, name: 'TCS' },
-                    { id: 4, name: 'Syster' },
-                    { id: 5, name: 'Lucky Clothing Co.' },
-                    { id: 6, name: 'Feathery Hotels' },
-                    { id: 7, name: 'Torn & Shanghai Banking' },
-                    { id: 8, name: 'I Industries Ltd.' },
-                    { id: 9, name: 'Messaging Inc.' },
-                    { id: 10, name: 'TC Music Industries' },
-                    { id: 11, name: 'Torn City Health Service' },
-                    { id: 12, name: 'Grain' },
-                    { id: 13, name: 'TC Media Productions' },
-                    { id: 14, name: 'Empty Lunchbox Casinos' },
-                    { id: 15, name: 'Alcoholohol' },
-                    { id: 16, name: 'Evo Estates' },
-                    { id: 17, name: 'HEX' },
-                    { id: 18, name: 'TC Clothing' },
-                    { id: 19, name: 'The Torn City Times' },
-                    { id: 20, name: 'Big Al\'s Gun Shop' },
-                    { id: 21, name: 'TC Television' },
-                    { id: 22, name: 'YazBread' },
-                    { id: 23, name: 'Flowers For You' },
-                    { id: 24, name: 'Canine Couture' },
-                    { id: 25, name: 'Foot Ball Association' },
-                    { id: 26, name: 'Sail Boats & Yachts' },
-                    { id: 27, name: 'Performance Automobiles' },
-                    { id: 28, name: 'Tik' },
-                    { id: 29, name: 'The Torn City Museum' },
-                    { id: 30, name: 'TC Mining Corp.' },
-                    { id: 31, name: 'TC Oil Rig' },
-                    { id: 32, name: 'Pharmata' },
-                    { id: 33, name: 'Home Retail Group' },
-                    { id: 34, name: 'Tell Group' },
-                    { id: 35, name: 'Presto Logs' }
+                    { id: 1, short: 'TCI', name: 'Torn City Invest' },
+                    { id: 2, short: 'CRU', name: 'Crude & Co' },
+                    { id: 3, short: 'TCS', name: 'Torn City Stocks' },
+                    { id: 4, short: 'SYS', name: 'Syster' },
+                    { id: 5, short: 'LAG', name: 'Lucky Clothing Co.' },
+                    { id: 6, short: 'FHC', name: 'Feathery Hotels' },
+                    { id: 7, short: 'SYM', name: 'Torn & Shanghai Banking' },
+                    { id: 8, short: 'IIL', name: 'I Industries Ltd.' },
+                    { id: 9, short: 'GRN', name: 'Messaging Inc.' },
+                    { id: 10, short: 'TMI', name: 'TC Music Industries' },
+                    { id: 11, short: 'TCP', name: 'Torn City Health Service' },
+                    { id: 12, short: 'IOU', name: 'Grain' },
+                    { id: 13, short: 'GRS', name: 'TC Media Productions' },
+                    { id: 14, short: 'CNC', name: 'Empty Lunchbox Casinos' },
+                    { id: 15, short: 'MSG', name: 'Alcoholohol' },
+                    { id: 16, short: 'TMU', name: 'Evo Estates' },
+                    { id: 17, short: 'TCP', name: 'HEX' },
+                    { id: 18, short: 'IIL', name: 'TC Clothing' },
+                    { id: 19, short: 'TCT', name: 'The Torn City Times' },
+                    { id: 20, short: 'CRU', name: 'Big Al\'s Gun Shop' },
+                    { id: 21, short: 'TCB', name: 'TC Television' },
+                    { id: 22, short: 'TCM', name: 'YazBread' },
+                    { id: 23, short: 'YAZ', name: 'Flowers For You' },
+                    { id: 24, short: 'TCM', name: 'Canine Couture' },
+                    { id: 25, short: 'LSC', name: 'Foot Ball Association' },
+                    { id: 26, short: 'EWM', name: 'Sail Boats & Yachts' },
+                    { id: 27, short: 'TCM', name: 'Performance Automobiles' },
+                    { id: 28, short: 'MCS', name: 'Tik' },
+                    { id: 29, short: 'EWM', name: 'The Torn City Museum' },
+                    { id: 30, short: 'SYM', name: 'TC Mining Corp.' },
+                    { id: 31, short: 'TCM', name: 'TC Oil Rig' },
+                    { id: 32, short: 'TCM', name: 'Pharmata' },
+                    { id: 33, short: 'HRG', name: 'Home Retail Group' },
+                    { id: 34, short: 'TEL', name: 'Tell Group' },
+                    { id: 35, short: 'PRN', name: 'Presto Logs' }
                 ];
 
                 allStocks.forEach(stock => {
@@ -922,7 +956,7 @@
                     };
 
                     const label = document.createElement('span');
-                    label.textContent = `${stock.name}`;
+                    label.textContent = `[${stock.short}] ${stock.name}`;
                     label.style.cssText = 'color: #fff; font-size: 13px; flex: 1;';
 
                     checkbox.appendChild(input);
