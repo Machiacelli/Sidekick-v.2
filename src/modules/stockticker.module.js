@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.0.4
-// @description  FIXED: Hidden scrollbar + comprehensive API key debugging
+// @version      1.1.0
+// @description  UPDATED: Dropdown menu + fixed API key using this.core (like TodoList)
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -141,54 +141,100 @@
                 const controls = document.createElement('div');
                 controls.style.cssText = 'display: flex; align-items: center; gap: 4px;';
 
-                // Refresh button
-                const refreshBtn = document.createElement('button');
-                refreshBtn.innerHTML = '🔄';
-                refreshBtn.title = 'Refresh stocks';
-                refreshBtn.style.cssText = `
+                // Menu button (with dropdown)
+                const menuBtn = document.createElement('button');
+                menuBtn.innerHTML = '⋮';
+                menuBtn.title = 'Options';
+                menuBtn.style.cssText = `
                     background: none;
                     border: none;
                     color: #bbb;
                     cursor: pointer;
-                    font-size: 14px;
+                    font-size: 18px;
                     padding: 4px 6px;
                     border-radius: 4px;
                     transition: all 0.2s;
+                    position: relative;
                 `;
-                refreshBtn.onmouseover = () => refreshBtn.style.background = '#444';
-                refreshBtn.onmouseout = () => refreshBtn.style.background = 'none';
-                refreshBtn.onclick = (e) => {
+                menuBtn.onmouseover = () => menuBtn.style.background = '#444';
+                menuBtn.onmouseout = () => menuBtn.style.background = 'none';
+                
+                // Dropdown menu
+                const dropdown = document.createElement('div');
+                dropdown.style.cssText = `
+                    position: absolute;
+                    top: 100%;
+                    right: 0;
+                    background: #2a2a2a;
+                    border: 1px solid #555;
+                    border-radius: 4px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    z-index: 10000;
+                    min-width: 140px;
+                    display: none;
+                    margin-top: 4px;
+                `;
+                
+                // Refresh option
+                const refreshOption = document.createElement('div');
+                refreshOption.innerHTML = '<span style="margin-right: 8px;">🔄</span>Refresh';
+                refreshOption.style.cssText = `
+                    padding: 8px 12px;
+                    color: #ccc;
+                    cursor: pointer;
+                    font-size: 13px;
+                    display: flex;
+                    align-items: center;
+                    transition: background 0.2s;
+                `;
+                refreshOption.onmouseover = () => refreshOption.style.background = '#333';
+                refreshOption.onmouseout = () => refreshOption.style.background = 'transparent';
+                refreshOption.onclick = (e) => {
                     e.stopPropagation();
                     this.fetchStockData();
+                    dropdown.style.display = 'none';
                 };
-
-                // Pin button
-                const pinBtn = document.createElement('button');
-                pinBtn.innerHTML = this.isPinned ? '📌' : '📍';
-                pinBtn.title = this.isPinned ? 'Unpin panel' : 'Pin panel';
-                pinBtn.style.cssText = `
-                    background: none;
-                    border: none;
-                    color: ${this.isPinned ? '#4CAF50' : '#bbb'};
+                
+                // Pin option
+                const pinOption = document.createElement('div');
+                pinOption.innerHTML = `<span style="margin-right: 8px;">${this.isPinned ? '📌' : '📍'}</span>${this.isPinned ? 'Unpin' : 'Pin'}`;
+                pinOption.style.cssText = `
+                    padding: 8px 12px;
+                    color: #ccc;
                     cursor: pointer;
-                    font-size: 14px;
-                    padding: 4px 6px;
-                    border-radius: 4px;
-                    transition: all 0.2s;
+                    font-size: 13px;
+                    display: flex;
+                    align-items: center;
+                    transition: background 0.2s;
                 `;
-                pinBtn.onmouseover = () => pinBtn.style.background = '#444';
-                pinBtn.onmouseout = () => pinBtn.style.background = 'none';
-                pinBtn.onclick = (e) => {
+                pinOption.onmouseover = () => pinOption.style.background = '#333';
+                pinOption.onmouseout = () => pinOption.style.background = 'transparent';
+                pinOption.onclick = (e) => {
                     e.stopPropagation();
                     this.isPinned = !this.isPinned;
-                    pinBtn.innerHTML = this.isPinned ? '📌' : '📍';
-                    pinBtn.style.color = this.isPinned ? '#4CAF50' : '#bbb';
-                    pinBtn.title = this.isPinned ? 'Unpin panel' : 'Pin panel';
+                    pinOption.innerHTML = `<span style="margin-right: 8px;">${this.isPinned ? '📌' : '📍'}</span>${this.isPinned ? 'Unpin' : 'Pin'}`;
                     header.style.cursor = this.isPinned ? 'default' : 'move';
                     this.core.saveState('stockticker_pinned', this.isPinned);
+                    dropdown.style.display = 'none';
                 };
+                
+                dropdown.appendChild(refreshOption);
+                dropdown.appendChild(pinOption);
+                
+                menuBtn.appendChild(dropdown);
+                
+                // Toggle dropdown on click
+                menuBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+                };
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', () => {
+                    dropdown.style.display = 'none';
+                });
 
-                // Close button
+                // Close button (outside dropdown)
                 const closeBtn = document.createElement('button');
                 closeBtn.innerHTML = '×';
                 closeBtn.title = 'Close';
@@ -210,8 +256,7 @@
                     this.hide();
                 };
 
-                controls.appendChild(refreshBtn);
-                controls.appendChild(pinBtn);
+                controls.appendChild(menuBtn);
                 controls.appendChild(closeBtn);
 
                 header.appendChild(titleSection);
@@ -336,24 +381,21 @@
                     content.style.position = 'relative';
                     content.appendChild(loadingOverlay);
 
-                    // Get API key from Core module's storage (same way Settings module does it)
+                    // Get API key from Core module's storage (same way TodoList does it)
                     console.log('📈 Stock Ticker: Attempting to fetch API key...');
-                    console.log('📈 Stock Ticker: window.SidekickModules:', window.SidekickModules);
+                    console.log('📈 Stock Ticker: this.core:', this.core);
+                    console.log('📈 Stock Ticker: this.core.loadState:', this.core?.loadState);
+                    console.log('📈 Stock Ticker: this.core.STORAGE_KEYS:', this.core?.STORAGE_KEYS);
                     
-                    const Core = window.SidekickModules?.Core;
-                    console.log('📈 Stock Ticker: Core module:', Core);
-                    console.log('📈 Stock Ticker: Core.loadState:', Core?.loadState);
-                    console.log('📈 Stock Ticker: Core.STORAGE_KEYS:', Core?.STORAGE_KEYS);
-                    
-                    if (!Core || !Core.loadState || !Core.STORAGE_KEYS) {
+                    if (!this.core || !this.core.loadState || !this.core.STORAGE_KEYS) {
                         console.error('❌ Stock Ticker: Core module not properly loaded');
                         loadingOverlay.remove();
                         this.showError(content, 'Core module not loaded. Please refresh the page.');
                         return;
                     }
                     
-                    console.log('📈 Stock Ticker: API_KEY constant:', Core.STORAGE_KEYS.API_KEY);
-                    const apiKey = Core.loadState(Core.STORAGE_KEYS.API_KEY, '');
+                    console.log('📈 Stock Ticker: API_KEY constant:', this.core.STORAGE_KEYS.API_KEY);
+                    const apiKey = this.core.loadState(this.core.STORAGE_KEYS.API_KEY, '');
                     console.log('📈 Stock Ticker: Retrieved API key:', apiKey ? `${apiKey.substring(0, 4)}...` : 'EMPTY');
                     
                     if (!apiKey) {
