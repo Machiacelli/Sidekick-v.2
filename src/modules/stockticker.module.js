@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.6.3
-// @description  Added shorthand notation support (k/m/b) for import shares and price inputs
+// @version      1.6.4
+// @description  Auto-convert shorthand notation (k/m/b) to actual numbers as you type!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -1323,7 +1323,7 @@
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                             <div>
                                 <label style="color: #ccc; font-size: 12px; display: block; margin-bottom: 6px;">Shares:</label>
-                                <input type="text" id="import-shares" placeholder="e.g., 1000, 5k, 1.5m" style="
+                                <input type="text" id="import-shares" placeholder="Type: 5k, 1.5m, 2000" style="
                                     width: 100%;
                                     padding: 8px;
                                     background: #2a2a2a;
@@ -1333,11 +1333,11 @@
                                     font-size: 13px;
                                     box-sizing: border-box;
                                 ">
-                                <div style="font-size: 10px; color: #888; margin-top: 4px;">Use k, m, b for thousands, millions, billions</div>
+                                <div style="font-size: 10px; color: #888; margin-top: 4px;">Auto-converts: 5k→5000, 1m→1000000</div>
                             </div>
                             <div>
                                 <label style="color: #ccc; font-size: 12px; display: block; margin-bottom: 6px;">Price per Share ($):</label>
-                                <input type="text" id="import-price" placeholder="e.g., 45.50, 1.2k" style="
+                                <input type="text" id="import-price" placeholder="Type: 1.2k, 45.50" style="
                                     width: 100%;
                                     padding: 8px;
                                     background: #2a2a2a;
@@ -1347,7 +1347,7 @@
                                     font-size: 13px;
                                     box-sizing: border-box;
                                 ">
-                                <div style="font-size: 10px; color: #888; margin-top: 4px;">Supports shorthand: k, m, b</div>
+                                <div style="font-size: 10px; color: #888; margin-top: 4px;">Auto-converts: k→×1000, m→×1000000</div>
                             </div>
                         </div>
 
@@ -1417,6 +1417,39 @@
                         summaryDiv.innerHTML = '<em style="color: #888;">No purchases imported yet</em>';
                     }
                 };
+
+                // Auto-convert shorthand notation as user types
+                const handleShorthandInput = (input) => {
+                    input.addEventListener('input', (e) => {
+                        const value = e.target.value.toLowerCase().trim();
+                        
+                        // Check if ends with k, m, or b
+                        if (value.match(/[\d.]+\s*[kmb]$/)) {
+                            const converted = this.parseShorthandNumber(value);
+                            if (converted !== null) {
+                                e.target.value = converted.toString();
+                                // Trigger visual feedback
+                                e.target.style.background = '#1a4d1a';
+                                setTimeout(() => {
+                                    e.target.style.background = '#2a2a2a';
+                                }, 200);
+                            }
+                        }
+                    });
+                    
+                    // Also handle on blur (when user leaves the field)
+                    input.addEventListener('blur', (e) => {
+                        const value = e.target.value.trim();
+                        const converted = this.parseShorthandNumber(value);
+                        if (converted !== null && value.match(/[kmb]/i)) {
+                            e.target.value = converted.toString();
+                        }
+                    });
+                };
+
+                // Apply auto-conversion to both inputs
+                handleShorthandInput(sharesInput);
+                handleShorthandInput(priceInput);
 
                 updateSummary();
 
