@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Chain Timer Module
 // @namespace    http://tampermonkey.net/
-// @version      2.4.0
+// @version      2.4.1
 // @description  Chain timer monitor with settings tab and floating mirror display
 // @author       Machiacelli
 // @match        https://www.torn.com/*
@@ -140,10 +140,6 @@
                             <input type="checkbox" id="chain-display-toggle" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;">
                             <span style="color: #fff; font-size: 14px;">Show Floating Timer Display</span>
                         </label>
-                    </div>
-
-                    <div style="margin-top: 20px; padding: 12px; background: rgba(255,152,0,0.1); border-left: 3px solid #ff9800; border-radius: 4px;">
-                        <p style="margin: 0; color: #ccc; font-size: 12px;">ℹ️ The floating timer can be dragged and resized from the bottom-right corner. Position and size are saved automatically.</p>
                     </div>
                 `;
 

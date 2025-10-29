@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick To-Do List Module
 // @namespace    http://tampermonkey.net/
-// @version      1.4.1
-// @description  FIXED: Panel now properly resizable with visible resize handle
+// @version      1.4.2
+// @description  FIXED: Panel now properly resizable with overflow hidden
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -168,7 +168,7 @@
                     max-height: 800px;
                     z-index: 1000;
                     resize: ${this.isPinned ? 'none' : 'both'};
-                    overflow: auto;
+                    overflow: hidden;
                 `;
 
                 // Prevent body scroll when scrolling inside panel
