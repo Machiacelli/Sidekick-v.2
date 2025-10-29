@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.6.1
-// @description  Fixed stock names and acronyms from Torn Wiki, alphabetically sorted
+// @version      1.6.2
+// @description  CORRECTED stock names from accurate Torn City Wiki list
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -708,15 +708,15 @@
                     // Calculate current value
                     const currentValue = shares * currentPrice;
                     
-                    // Get short name from stock list (correct acronyms from Torn Wiki)
+                    // Get short name from stock list (CORRECTED acronyms from Torn City Wiki)
                     const stockNames = {
-                        1: 'TCI', 2: 'CRU', 3: 'TCS', 4: 'SYS', 5: 'IOU',
-                        6: 'FHG', 7: 'TCB', 8: 'IIL', 9: 'MCS', 10: 'TMI',
-                        11: 'TCH', 12: 'GRN', 13: 'TCM', 14: 'ENC', 15: 'ALI',
-                        16: 'EVL', 17: 'HEX', 18: 'TCC', 19: 'TCT', 20: 'BAG',
-                        21: 'TCD', 22: 'YAZ', 23: 'FLO', 24: 'CNC', 25: 'LSC',
-                        26: 'SYM', 27: 'MUN', 28: 'WSU', 29: 'TMC', 30: 'TCN',
-                        31: 'TCO', 32: 'PRN', 33: 'HRG', 34: 'TEI', 35: 'PRO'
+                        1: 'TCI', 2: 'CNC', 3: 'IST', 4: 'SYS', 5: 'IOU',
+                        6: 'FHG', 7: 'TSB', 8: 'IIL', 9: 'MSG', 10: 'TMI',
+                        11: 'THS', 12: 'GRN', 13: 'TCP', 14: 'ELT', 15: 'ASS',
+                        16: 'EVL', 17: 'CBD', 18: 'TCC', 19: 'TCT', 20: 'BAG',
+                        21: 'WLT', 22: 'YAZ', 23: 'PTS', 24: 'EWM', 25: 'LSC',
+                        26: 'SYM', 27: 'MUN', 28: 'WSU', 29: 'LOS', 30: 'LAG',
+                        31: 'PRN', 32: 'HRG', 33: 'TGP', 34: 'TCM', 35: 'MCS'
                     };
                     const shortName = stockNames[stockId] || stockId;
                     
@@ -935,19 +935,19 @@
 
             getStockIdByName(stockName) {
                 const stockMap = {
-                    'Alcoholohol': 15, 'Big Al\'s Gun Shop': 20, 'Canine Couture': 24,
-                    'Crude & Co': 2, 'Empty Lunchbox Casinos': 14, 'Evo Estates': 16,
-                    'Feathery Hotels': 6, 'Flowers For You': 23, 'Grain': 12,
-                    'HEX': 17, 'Home Retail Group': 33, 'I Industries Ltd.': 8,
-                    'Leg & Arm Corp': 25, 'Lucky Clothing Co.': 5, 'Messaging Inc.': 9,
-                    'Performance Automobiles': 27, 'Pharmata': 32, 'Presto Logs': 35,
-                    'Sail Boats & Yachts': 26, 'Syster': 4, 'TC Clothing': 18,
-                    'TC Media Productions': 13, 'TC Mining Corp.': 30, 'TC Music Industries': 10,
-                    'TC Oil Rig': 31, 'TC Television': 21, 'Tell Group': 34,
-                    'The Torn City Museum': 29, 'The Torn City Times': 19,
-                    'Torn & Shanghai Banking': 7, 'Torn City Health Service': 11,
-                    'Torn City Invest': 1, 'Torn City Stocks': 3,
-                    'West Side University': 28, 'YazBread': 22
+                    'Alcoholics Synonymous': 15, 'Big Al\'s Gun Shop': 20, 'Crude & Co': 2,
+                    'Eaglewood Mercenary': 24, 'Empty Lunchbox Traders': 14, 'Evil Ducks Candy Corp': 16,
+                    'Feathery Hotels Group': 6, 'Grain': 12, 'Herbal Releaf Co.': 17,
+                    'Home Retail Group': 32, 'I Industries Ltd.': 8, 'Insured On Us': 5,
+                    'International School TC': 3, 'Legal Authorities Group': 30,
+                    'Lo Squalo Waste Management': 29, 'Lucky Shots Casino': 25,
+                    'Mc Smoogle Corp': 35, 'Messaging Inc.': 9, 'Munster Beverage Corp.': 27,
+                    'Performance Ribaldry Network': 31, 'PointLess': 23, 'Symbiotic Ltd.': 26,
+                    'Syscore MFG': 4, 'TC Media Productions': 13, 'TC Music Industries': 10,
+                    'Tell Group Plc.': 33, 'The Torn City Times': 19, 'Torn & Shanghai Banking': 7,
+                    'Torn City Clothing': 18, 'Torn City Health Service': 11,
+                    'Torn City Investments': 1, 'Torn City Motors': 34,
+                    'West Side University': 28, 'Wind Lines Travel': 21, 'Yazoo': 22
                 };
                 return stockMap[stockName] || null;
             },
@@ -1068,41 +1068,41 @@
 
                 // All available Torn stocks with short names (alphabetically sorted by acronym)
                 const allStocks = [
-                    { id: 15, short: 'ALI', name: 'Alcoholohol' },
+                    { id: 15, short: 'ASS', name: 'Alcoholics Synonymous' },
                     { id: 20, short: 'BAG', name: 'Big Al\'s Gun Shop' },
-                    { id: 24, short: 'CNC', name: 'Canine Couture' },
-                    { id: 2, short: 'CRU', name: 'Crude & Co' },
-                    { id: 14, short: 'ENC', name: 'Empty Lunchbox Casinos' },
-                    { id: 16, short: 'EVL', name: 'Evo Estates' },
-                    { id: 23, short: 'FLO', name: 'Flowers For You' },
-                    { id: 6, short: 'FHG', name: 'Feathery Hotels' },
+                    { id: 17, short: 'CBD', name: 'Herbal Releaf Co.' },
+                    { id: 2, short: 'CNC', name: 'Crude & Co' },
+                    { id: 14, short: 'ELT', name: 'Empty Lunchbox Traders' },
+                    { id: 16, short: 'EVL', name: 'Evil Ducks Candy Corp' },
+                    { id: 24, short: 'EWM', name: 'Eaglewood Mercenary' },
+                    { id: 6, short: 'FHG', name: 'Feathery Hotels Group' },
                     { id: 12, short: 'GRN', name: 'Grain' },
-                    { id: 17, short: 'HEX', name: 'HEX' },
-                    { id: 33, short: 'HRG', name: 'Home Retail Group' },
+                    { id: 32, short: 'HRG', name: 'Home Retail Group' },
                     { id: 8, short: 'IIL', name: 'I Industries Ltd.' },
-                    { id: 5, short: 'IOU', name: 'Lucky Clothing Co.' },
-                    { id: 25, short: 'LSC', name: 'Leg & Arm Corp' },
-                    { id: 9, short: 'MCS', name: 'Messaging Inc.' },
-                    { id: 27, short: 'MUN', name: 'Performance Automobiles' },
-                    { id: 32, short: 'PRN', name: 'Pharmata' },
-                    { id: 35, short: 'PRO', name: 'Presto Logs' },
-                    { id: 26, short: 'SYM', name: 'Sail Boats & Yachts' },
-                    { id: 4, short: 'SYS', name: 'Syster' },
-                    { id: 7, short: 'TCB', name: 'Torn & Shanghai Banking' },
-                    { id: 18, short: 'TCC', name: 'TC Clothing' },
-                    { id: 21, short: 'TCD', name: 'TC Television' },
-                    { id: 11, short: 'TCH', name: 'Torn City Health Service' },
-                    { id: 1, short: 'TCI', name: 'Torn City Invest' },
-                    { id: 13, short: 'TCM', name: 'TC Media Productions' },
-                    { id: 30, short: 'TCN', name: 'TC Mining Corp.' },
-                    { id: 31, short: 'TCO', name: 'TC Oil Rig' },
-                    { id: 3, short: 'TCS', name: 'Torn City Stocks' },
+                    { id: 5, short: 'IOU', name: 'Insured On Us' },
+                    { id: 3, short: 'IST', name: 'International School TC' },
+                    { id: 30, short: 'LAG', name: 'Legal Authorities Group' },
+                    { id: 29, short: 'LOS', name: 'Lo Squalo Waste Management' },
+                    { id: 25, short: 'LSC', name: 'Lucky Shots Casino' },
+                    { id: 35, short: 'MCS', name: 'Mc Smoogle Corp' },
+                    { id: 9, short: 'MSG', name: 'Messaging Inc.' },
+                    { id: 27, short: 'MUN', name: 'Munster Beverage Corp.' },
+                    { id: 31, short: 'PRN', name: 'Performance Ribaldry Network' },
+                    { id: 23, short: 'PTS', name: 'PointLess' },
+                    { id: 26, short: 'SYM', name: 'Symbiotic Ltd.' },
+                    { id: 4, short: 'SYS', name: 'Syscore MFG' },
+                    { id: 18, short: 'TCC', name: 'Torn City Clothing' },
+                    { id: 1, short: 'TCI', name: 'Torn City Investments' },
+                    { id: 34, short: 'TCM', name: 'Torn City Motors' },
+                    { id: 13, short: 'TCP', name: 'TC Media Productions' },
                     { id: 19, short: 'TCT', name: 'The Torn City Times' },
-                    { id: 34, short: 'TEI', name: 'Tell Group' },
-                    { id: 29, short: 'TMC', name: 'The Torn City Museum' },
+                    { id: 33, short: 'TGP', name: 'Tell Group Plc.' },
+                    { id: 11, short: 'THS', name: 'Torn City Health Service' },
                     { id: 10, short: 'TMI', name: 'TC Music Industries' },
+                    { id: 7, short: 'TSB', name: 'Torn & Shanghai Banking' },
+                    { id: 21, short: 'WLT', name: 'Wind Lines Travel' },
                     { id: 28, short: 'WSU', name: 'West Side University' },
-                    { id: 22, short: 'YAZ', name: 'YazBread' }
+                    { id: 22, short: 'YAZ', name: 'Yazoo' }
                 ];
 
                 allStocks.forEach(stock => {
@@ -1257,41 +1257,41 @@
                                 font-size: 13px;
                             ">
                                 <option value="">Select a stock...</option>
-                                <option value="15">[ALI] Alcoholohol</option>
+                                <option value="15">[ASS] Alcoholics Synonymous</option>
                                 <option value="20">[BAG] Big Al's Gun Shop</option>
-                                <option value="24">[CNC] Canine Couture</option>
-                                <option value="2">[CRU] Crude & Co</option>
-                                <option value="14">[ENC] Empty Lunchbox Casinos</option>
-                                <option value="16">[EVL] Evo Estates</option>
-                                <option value="6">[FHG] Feathery Hotels</option>
-                                <option value="23">[FLO] Flowers For You</option>
+                                <option value="17">[CBD] Herbal Releaf Co.</option>
+                                <option value="2">[CNC] Crude & Co</option>
+                                <option value="14">[ELT] Empty Lunchbox Traders</option>
+                                <option value="16">[EVL] Evil Ducks Candy Corp</option>
+                                <option value="24">[EWM] Eaglewood Mercenary</option>
+                                <option value="6">[FHG] Feathery Hotels Group</option>
                                 <option value="12">[GRN] Grain</option>
-                                <option value="17">[HEX] HEX</option>
-                                <option value="33">[HRG] Home Retail Group</option>
+                                <option value="32">[HRG] Home Retail Group</option>
                                 <option value="8">[IIL] I Industries Ltd.</option>
-                                <option value="5">[IOU] Lucky Clothing Co.</option>
-                                <option value="25">[LSC] Leg & Arm Corp</option>
-                                <option value="9">[MCS] Messaging Inc.</option>
-                                <option value="27">[MUN] Performance Automobiles</option>
-                                <option value="32">[PRN] Pharmata</option>
-                                <option value="35">[PRO] Presto Logs</option>
-                                <option value="26">[SYM] Sail Boats & Yachts</option>
-                                <option value="4">[SYS] Syster</option>
-                                <option value="7">[TCB] Torn & Shanghai Banking</option>
-                                <option value="18">[TCC] TC Clothing</option>
-                                <option value="21">[TCD] TC Television</option>
-                                <option value="11">[TCH] Torn City Health Service</option>
-                                <option value="1">[TCI] Torn City Invest</option>
-                                <option value="13">[TCM] TC Media Productions</option>
-                                <option value="30">[TCN] TC Mining Corp.</option>
-                                <option value="31">[TCO] TC Oil Rig</option>
-                                <option value="3">[TCS] Torn City Stocks</option>
+                                <option value="5">[IOU] Insured On Us</option>
+                                <option value="3">[IST] International School TC</option>
+                                <option value="30">[LAG] Legal Authorities Group</option>
+                                <option value="29">[LOS] Lo Squalo Waste Management</option>
+                                <option value="25">[LSC] Lucky Shots Casino</option>
+                                <option value="35">[MCS] Mc Smoogle Corp</option>
+                                <option value="9">[MSG] Messaging Inc.</option>
+                                <option value="27">[MUN] Munster Beverage Corp.</option>
+                                <option value="31">[PRN] Performance Ribaldry Network</option>
+                                <option value="23">[PTS] PointLess</option>
+                                <option value="26">[SYM] Symbiotic Ltd.</option>
+                                <option value="4">[SYS] Syscore MFG</option>
+                                <option value="18">[TCC] Torn City Clothing</option>
+                                <option value="1">[TCI] Torn City Investments</option>
+                                <option value="34">[TCM] Torn City Motors</option>
+                                <option value="13">[TCP] TC Media Productions</option>
                                 <option value="19">[TCT] The Torn City Times</option>
-                                <option value="34">[TEI] Tell Group</option>
-                                <option value="29">[TMC] The Torn City Museum</option>
+                                <option value="33">[TGP] Tell Group Plc.</option>
+                                <option value="11">[THS] Torn City Health Service</option>
                                 <option value="10">[TMI] TC Music Industries</option>
+                                <option value="7">[TSB] Torn & Shanghai Banking</option>
+                                <option value="21">[WLT] Wind Lines Travel</option>
                                 <option value="28">[WSU] West Side University</option>
-                                <option value="22">[YAZ] YazBread</option>
+                                <option value="22">[YAZ] Yazoo</option>
                             </select>
                         </div>
 
