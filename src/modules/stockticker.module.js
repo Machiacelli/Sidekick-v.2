@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.4.1
-// @description  UI Fixed: Removed loading flash, fixed duplicate price, added short names [CODE] format
+// @version      1.5.0
+// @description  Transaction Tracking: Auto-tracks buy/sell transactions for profit/loss calculation
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -32,12 +32,21 @@
             stockData: {},
             selectedStocks: [], // Array of stock IDs to display
             settingsWindow: null,
+            transactionObserver: null, // MutationObserver for tracking transactions
+            trackedTransactions: {}, // Store tracked purchase data
             
             init() {
                 console.log('📈 Stock Ticker: Initializing...');
                 
                 // Load selected stocks from storage
                 this.selectedStocks = this.core.loadState('stockticker_selected_stocks', []);
+                
+                // Load tracked transactions
+                this.trackedTransactions = this.core.loadState('stockticker_transactions', {});
+                console.log('📊 Stock Ticker: Loaded tracked transactions:', this.trackedTransactions);
+                
+                // Start monitoring stock transactions if on stocks page
+                this.startTransactionMonitoring();
                 
                 // Check if panel was previously open
                 const wasActive = this.core.loadState('stockticker_active');
@@ -296,10 +305,42 @@
                     dropdown.style.display = 'none';
                 };
                 
+                // Clear tracking data option
+                const clearDataOption = document.createElement('button');
+                clearDataOption.innerHTML = '<span style="margin-right: 8px;">🗑️</span>Clear Tracking Data';
+                clearDataOption.style.cssText = `
+                    background: none;
+                    border: none;
+                    color: #f44336;
+                    padding: 8px 12px;
+                    width: 100%;
+                    text-align: left;
+                    cursor: pointer;
+                    font-size: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: background 0.2s ease;
+                `;
+                clearDataOption.onmouseover = () => clearDataOption.style.background = '#444';
+                clearDataOption.onmouseout = () => clearDataOption.style.background = 'none';
+                clearDataOption.onclick = (e) => {
+                    e.stopPropagation();
+                    dropdown.style.display = 'none';
+                    
+                    if (confirm('⚠️ This will delete all tracked transaction data.\n\nProfit/Loss calculations will reset.\n\nContinue?')) {
+                        this.trackedTransactions = {};
+                        this.core.saveState('stockticker_transactions', {});
+                        console.log('🗑️ Cleared all transaction tracking data');
+                        this.fetchStockData(); // Refresh display
+                    }
+                };
+                
                 dropdown.appendChild(refreshOption);
                 dropdown.appendChild(pinOption);
                 dropdown.appendChild(autoAddOption);
                 dropdown.appendChild(settingsOption);
+                dropdown.appendChild(clearDataOption);
                 
                 dropdownContainer.appendChild(dropdownBtn);
                 dropdownContainer.appendChild(dropdown);
@@ -638,7 +679,7 @@
                     
                     console.log(`📈 Stock ${stockId} - Name: ${stockName}, Shares: ${shares}, Current Price: ${currentPrice}, Transactions: ${transactionCount}`);
                     
-                    // Calculate current value (we can't calculate profit without transaction history)
+                    // Calculate current value
                     const currentValue = shares * currentPrice;
                     
                     // Get short name from stock list
@@ -653,14 +694,33 @@
                     };
                     const shortName = stockNames[stockId] || stockId;
                     
+                    // Calculate profit/loss from tracked transactions
+                    let profitLoss = null;
+                    let profitPercent = null;
+                    let avgBuyPrice = null;
+                    let isTracked = false;
+                    
+                    const trackedStock = this.trackedTransactions[stockId];
+                    if (trackedStock && trackedStock.totalShares > 0) {
+                        avgBuyPrice = trackedStock.totalInvested / trackedStock.totalShares;
+                        profitLoss = currentValue - trackedStock.totalInvested;
+                        profitPercent = (profitLoss / trackedStock.totalInvested) * 100;
+                        isTracked = true;
+                        
+                        console.log(`� Stock ${stockId} P/L: $${profitLoss.toFixed(2)} (${profitPercent.toFixed(2)}%)`);
+                    }
+                    
                     totalValue += currentValue;
 
-                    console.log(`📈 Stock ${stockId} calculated:`, {
-                        name: stockName,
-                        shares,
-                        currentPrice,
-                        currentValue
-                    });
+                    // Build stock card with profit/loss if tracked
+                    const profitColor = profitLoss === null ? '#888' : (profitLoss >= 0 ? '#4CAF50' : '#f44336');
+                    const profitSign = profitLoss > 0 ? '+' : '';
+                    const profitDisplay = profitLoss === null 
+                        ? 'Not tracked' 
+                        : `${profitSign}$${profitLoss.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    const percentDisplay = profitPercent === null 
+                        ? '' 
+                        : ` (${profitSign}${profitPercent.toFixed(2)}%)`;
 
                     stocksHTML.push(`
                         <div style="
@@ -676,18 +736,18 @@
                                 <div style="font-weight: 600; color: #fff; font-size: 14px;">
                                     [${shortName}] ${stockName}
                                 </div>
-                                <div style="color: #4CAF50; font-weight: 600; font-size: 13px;">
-                                    ${shares.toLocaleString()} shares
+                                <div style="color: ${profitColor}; font-weight: 600; font-size: 13px;">
+                                    ${profitDisplay}${percentDisplay}
                                 </div>
                             </div>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
                                 <div>
-                                    <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Price</div>
+                                    <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Current Price</div>
                                     <div style="color: #fff;">$${currentPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                                 </div>
                                 <div>
                                     <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Total Value</div>
-                                    <div style="color: #4CAF50; font-weight: 600;">$${currentValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                                    <div style="color: #fff;">$${currentValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                                 </div>
                             </div>
                         </div>
@@ -719,6 +779,154 @@
                         ">Retry</button>
                     </div>
                 `;
+            },
+
+            // Transaction Tracking System
+            startTransactionMonitoring() {
+                // Only monitor on stocks page
+                if (!window.location.href.includes('/stockexchange.php')) {
+                    console.log('📈 Stock Ticker: Not on stocks page, skipping transaction monitoring');
+                    return;
+                }
+
+                console.log('📈 Stock Ticker: Starting transaction monitoring...');
+
+                // Monitor for stock purchase/sale confirmations
+                const observer = new MutationObserver((mutations) => {
+                    for (const mutation of mutations) {
+                        for (const node of mutation.addedNodes) {
+                            if (node.nodeType === 1) { // Element node
+                                // Look for success messages
+                                const message = node.textContent || '';
+                                
+                                // Match patterns like "You bought 1,000 shares of Stock Name for $5,000.00"
+                                const buyMatch = message.match(/You bought ([\d,]+) shares of (.+?) for \$([\d,]+\.?\d*)/i);
+                                if (buyMatch) {
+                                    const shares = parseInt(buyMatch[1].replace(/,/g, ''));
+                                    const stockName = buyMatch[2].trim();
+                                    const totalCost = parseFloat(buyMatch[3].replace(/,/g, ''));
+                                    const pricePerShare = totalCost / shares;
+                                    
+                                    console.log(`💰 BUY detected: ${shares} shares of ${stockName} at $${pricePerShare.toFixed(2)}/share`);
+                                    this.recordTransaction('buy', stockName, shares, pricePerShare);
+                                }
+                                
+                                // Match patterns like "You sold 1,000 shares of Stock Name for $6,000.00"
+                                const sellMatch = message.match(/You sold ([\d,]+) shares of (.+?) for \$([\d,]+\.?\d*)/i);
+                                if (sellMatch) {
+                                    const shares = parseInt(sellMatch[1].replace(/,/g, ''));
+                                    const stockName = sellMatch[2].trim();
+                                    const totalRevenue = parseFloat(sellMatch[3].replace(/,/g, ''));
+                                    const pricePerShare = totalRevenue / shares;
+                                    
+                                    console.log(`💸 SELL detected: ${shares} shares of ${stockName} at $${pricePerShare.toFixed(2)}/share`);
+                                    this.recordTransaction('sell', stockName, shares, pricePerShare);
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Observe the entire document for changes
+                observer.observe(document.body, {
+                    childList: true,
+                    subtree: true
+                });
+
+                this.transactionObserver = observer;
+                console.log('✅ Stock Ticker: Transaction monitoring started');
+            },
+
+            recordTransaction(type, stockName, shares, pricePerShare) {
+                // Find stock ID by name
+                const stockId = this.getStockIdByName(stockName);
+                if (!stockId) {
+                    console.warn(`⚠️ Could not find stock ID for: ${stockName}`);
+                    return;
+                }
+
+                // Initialize stock tracking if not exists
+                if (!this.trackedTransactions[stockId]) {
+                    this.trackedTransactions[stockId] = {
+                        name: stockName,
+                        purchases: [], // Array of {shares, price, timestamp}
+                        totalShares: 0,
+                        totalInvested: 0
+                    };
+                }
+
+                const stock = this.trackedTransactions[stockId];
+                const timestamp = Date.now();
+
+                if (type === 'buy') {
+                    // Add purchase record
+                    stock.purchases.push({
+                        shares: shares,
+                        price: pricePerShare,
+                        timestamp: timestamp
+                    });
+                    stock.totalShares += shares;
+                    stock.totalInvested += shares * pricePerShare;
+
+                    console.log(`✅ Recorded BUY: ${shares} shares of ${stockName} at $${pricePerShare.toFixed(2)}`);
+                } else if (type === 'sell') {
+                    // FIFO (First In, First Out) - sell oldest purchases first
+                    let sharesToSell = shares;
+                    let totalCostBasis = 0;
+
+                    while (sharesToSell > 0 && stock.purchases.length > 0) {
+                        const oldestPurchase = stock.purchases[0];
+                        
+                        if (oldestPurchase.shares <= sharesToSell) {
+                            // Sell entire oldest purchase
+                            totalCostBasis += oldestPurchase.shares * oldestPurchase.price;
+                            sharesToSell -= oldestPurchase.shares;
+                            stock.purchases.shift(); // Remove from array
+                        } else {
+                            // Partial sell of oldest purchase
+                            totalCostBasis += sharesToSell * oldestPurchase.price;
+                            oldestPurchase.shares -= sharesToSell;
+                            sharesToSell = 0;
+                        }
+                    }
+
+                    stock.totalShares -= shares;
+                    stock.totalInvested -= totalCostBasis;
+
+                    const profit = (shares * pricePerShare) - totalCostBasis;
+                    console.log(`✅ Recorded SELL: ${shares} shares of ${stockName} at $${pricePerShare.toFixed(2)}, Profit: $${profit.toFixed(2)}`);
+                }
+
+                // Save to storage
+                this.core.saveState('stockticker_transactions', this.trackedTransactions);
+                console.log('💾 Saved transactions to storage');
+
+                // Refresh display if panel is open
+                if (this.panel && document.body.contains(this.panel)) {
+                    this.fetchStockData();
+                }
+            },
+
+            getStockIdByName(stockName) {
+                const stockMap = {
+                    'Torn City Invest': 1, 'Crude & Co': 2, 'Torn City Stocks': 3,
+                    'Syster': 4, 'Lucky Clothing Co.': 5, 'Feathery Hotels': 6,
+                    'Torn & Shanghai Banking': 7, 'I Industries Ltd.': 8,
+                    'Messaging Inc.': 9, 'TC Music Industries': 10,
+                    'Torn City Health Service': 11, 'Grain': 12,
+                    'TC Media Productions': 13, 'Empty Lunchbox Casinos': 14,
+                    'Alcoholohol': 15, 'Evo Estates': 16, 'HEX': 17,
+                    'TC Clothing': 18, 'The Torn City Times': 19,
+                    'Big Al\'s Gun Shop': 20, 'TC Television': 21,
+                    'YazBread': 22, 'Flowers For You': 23,
+                    'Canine Couture': 24, 'Foot Ball Association': 25,
+                    'Sail Boats & Yachts': 26, 'Performance Automobiles': 27,
+                    'Tik': 28, 'The Torn City Museum': 29,
+                    'TC Mining Corp.': 30, 'TC Oil Rig': 31,
+                    'Pharmata': 32, 'Home Retail Group': 33,
+                    'Tell Group': 34, 'Presto Logs': 35
+                };
+                return stockMap[stockName] || null;
             },
 
             startAutoRefresh() {
