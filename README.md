@@ -197,13 +197,6 @@ Sidekick-Script/
         └── images/
 ```
 
-### Adding New Features
-1. Create new module in `/src/modules/`
-2. Follow existing module pattern
-3. Export to `window.SidekickModules`
-4. Add @require to main script
-5. Commit and CDN will auto-update
-
 ## 🐛 Troubleshooting
 
 ### Sidebar Not Appearing
@@ -226,14 +219,6 @@ The script includes automatic CDN diagnostics. Check console for:
 ## 📝 License
 
 MIT License - See [LICENSE.txt](LICENSE.txt) for details
-
-## 👥 Contributing
-
-Contributions are welcome! Feel free to:
-- Report bugs
-- Suggest new features
-- Submit pull requests
-- Improve documentation
 
 ## 🔗 Links
 

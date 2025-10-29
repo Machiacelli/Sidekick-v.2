@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.41.0
-// @description  FIXED: Corrected gym blocker image URL - should work now!
+// @version      5.45.0
+// @description  NEW: Chain Timer with alerts! TodoList now resizable!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -22,17 +22,18 @@
 // @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/3781930/src/sidekick-modular-clean.user.js?v=20251028-nodrift
 // @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/3781930/src/sidekick-modular-clean.user.js?v=20251028-nodrift
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/randomtarget.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@b228079/src/modules/chain-timer.module.js?v=20251028
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/blocktraining.module.js?v=20251028-nodrift
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251028-nodrift  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251028-nodrift
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/traveltracker.module.js?v=20251028-nodrift
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/todolist.module.js?v=20251028-nodrift
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@0afc02a/src/modules/todolist.module.js?v=20251029
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v5.44.0 - Fixed: Added missing clock module for gym blocker and API!');
+    console.log('🚀 Sidekick Modular CDN v5.45.0 - NEW: Chain Timer with alerts + TodoList resizable!');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
@@ -236,6 +237,15 @@
                 console.log('🔍 Available modules:', Object.keys(window.SidekickModules || {}));
             }
             
+            // Initialize Chain Timer module
+            console.log('⏱️ CDN Launcher: Initializing Chain Timer...');
+            if (window.SidekickModules.ChainTimer?.init) {
+                console.log('⏱️ ChainTimer found, initializing...');
+                window.SidekickModules.ChainTimer.init();
+            } else {
+                console.warn('❌ ChainTimer module not found in SidekickModules');
+            }
+            
             // Auto-restore previously active modules by checking their panel states
             console.log('🔄 CDN Launcher: Checking for previously active modules...');
             
@@ -294,7 +304,7 @@
             
             console.log('✅ CDN Launcher: Module initialization completed - previously active panels should be restored');
             
-            console.log('🎉 Sidekick Enhanced v5.35.0 initialization complete - All major fixes implemented!');
+            console.log('🎉 Sidekick Enhanced v5.45.0 - Chain Timer and TodoList resize features added!');
             
         } catch (error) {
             console.error('❌ Sidekick initialization failed:', error);
