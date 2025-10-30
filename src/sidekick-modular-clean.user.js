@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.95.0
-// @description  Stock Ticker v1.17.0: SLEEK WARNING - Animated badge alerts when tracked shares mismatch actual holdings
+// @version      5.96.0
+// @description  Stock Ticker v1.18.1: Compact sort button with arrow icon, removed Total Value field
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -27,7 +27,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/traveltracker.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@afb6ca8/src/modules/stockticker.module.js?v=20250130
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1ed1f1b/src/modules/stockticker.module.js?v=20250130
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/todolist.module.js?v=20250129
 // ==/UserScript==
 
