@@ -1037,23 +1037,6 @@
                                     <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Current Price</div>
                                     <div style="color: #fff;">$${currentPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                                 </div>
-                                ${!isTracked ? `
-                                <div>
-                                    <button onclick="event.stopPropagation(); window.SidekickModules.StockTicker.showImportWindow(${stockId}, '${stockAcronym}')" style="
-                                        padding: 4px 12px;
-                                        background: linear-gradient(135deg, #4CAF50, #45a049);
-                                        border: none;
-                                        border-radius: 4px;
-                                        color: white;
-                                        font-size: 11px;
-                                        font-weight: 600;
-                                        cursor: pointer;
-                                        transition: all 0.2s;
-                                    " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                        📥 Track
-                                    </button>
-                                </div>
-                                ` : ''}
                             </div>
                         </div>
                     `);
