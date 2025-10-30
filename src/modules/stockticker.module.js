@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.16.0
-// @description  VISUAL FIX: Use K/M/B notation for P/L display, remove percentages
+// @version      1.17.0
+// @description  SLEEK WARNING: Visual badge alerts when tracked shares mismatch actual holdings
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -54,6 +54,25 @@
             
             init() {
                 console.log('📈 Stock Ticker: Initializing...');
+                
+                // Add warning animation styles
+                if (!document.getElementById('stockticker-warning-styles')) {
+                    const style = document.createElement('style');
+                    style.id = 'stockticker-warning-styles';
+                    style.textContent = `
+                        @keyframes pulse-warning {
+                            0%, 100% {
+                                opacity: 1;
+                                transform: scale(1);
+                            }
+                            50% {
+                                opacity: 0.85;
+                                transform: scale(1.02);
+                            }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
                 
                 // Load selected stocks from storage
                 this.selectedStocks = this.core.loadState('stockticker_selected_stocks', []);
@@ -890,22 +909,50 @@
                         totalValue += currentValue;
                     }
 
+                    // Check for mismatch between tracked shares and actual shares
+                    const hasDataMismatch = trackedStock && trackedStock.totalShares > 0 && 
+                                          shares > 0 && 
+                                          Math.abs(shares - trackedStock.totalShares) / shares > 0.1; // >10% difference
+                    
                     // Build stock card with profit/loss if tracked
                     const profitColor = profitLoss === null ? '#888' : (profitLoss >= 0 ? '#4CAF50' : '#f44336');
                     const profitDisplay = profitLoss === null 
                         ? 'Not tracked' 
                         : this.formatCurrency(profitLoss);
 
+                    // Warning badge for data mismatch
+                    const warningBadge = hasDataMismatch ? `
+                        <div style="
+                            position: absolute;
+                            top: 8px;
+                            right: 8px;
+                            background: linear-gradient(135deg, #ff9800, #f57c00);
+                            color: white;
+                            padding: 4px 8px;
+                            border-radius: 12px;
+                            font-size: 10px;
+                            font-weight: 600;
+                            cursor: help;
+                            box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+                            animation: pulse-warning 2s ease-in-out infinite;
+                        " title="Warning: Tracked shares (${trackedStock.totalShares.toLocaleString()}) don't match current holdings (${shares.toLocaleString()}). P/L may be inaccurate. Click 'Manual Input' to update.">
+                            ⚠️ Data Mismatch
+                        </div>
+                    ` : '';
+
                     stocksHTML.push(`
                         <div style="
+                            position: relative;
                             background: #2a2a2a;
-                            border: 1px solid #3a3a3a;
+                            border: 1px solid ${hasDataMismatch ? '#ff9800' : '#3a3a3a'};
                             border-radius: 6px;
                             padding: 12px;
                             margin-bottom: 8px;
                             transition: all 0.2s;
-                        " onmouseover="this.style.background='#333'; this.style.borderColor='#444';" 
-                           onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#3a3a3a';">
+                            ${hasDataMismatch ? 'box-shadow: 0 0 0 1px rgba(255, 152, 0, 0.2);' : ''}
+                        " onmouseover="this.style.background='#333'; this.style.borderColor='${hasDataMismatch ? '#ffa726' : '#444'}';" 
+                           onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='${hasDataMismatch ? '#ff9800' : '#3a3a3a'}';">
+                            ${warningBadge}
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                 <div style="font-weight: 600; color: #fff; font-size: 14px;">
                                     [${stockAcronym}] ${stockName}
