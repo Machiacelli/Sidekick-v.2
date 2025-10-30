@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.91.0
-// @description  Stock Ticker v1.14.0: FIX - P/L calculated on actual owned shares, prevents ghost P/L for sold stocks
+// @version      5.93.0
+// @description  Stock Ticker v1.16.0: VISUAL FIX - K/M/B notation for P/L, removed percentages. NEXT: Debug why P/L calculations incorrect
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -27,7 +27,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/traveltracker.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a251ec9/src/modules/stockticker.module.js?v=20250130
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@40a9a97/src/modules/stockticker.module.js?v=20250130
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/todolist.module.js?v=20250129
 // ==/UserScript==
 
