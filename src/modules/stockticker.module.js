@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.12.0
-// @description  CRITICAL FIX: Updated transaction detection to match new Torn format - "at $X each" instead of "for $X total"
+// @version      1.13.0
+// @description  FIX: Pass stock ID directly to recordTransaction to prevent lookup failures
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -1002,7 +1002,7 @@
                     const shares = parseInt(buyMatch[1].replace(/,/g, ''));
                     
                     // Check if using new format (at $X each) or legacy format (for $X total)
-                    let pricePerShare, stockName;
+                    let pricePerShare, stockName, stockId = null;
                     
                     if (message.includes('at $') && message.includes('each')) {
                         // NEW FORMAT: "at $1,197.06 each"
@@ -1011,7 +1011,7 @@
                         // Stock name must be extracted from URL since it's not in the message
                         const urlMatch = window.location.href.match(/stockID=(\d+)/);
                         if (urlMatch) {
-                            const stockId = parseInt(urlMatch[1]);
+                            stockId = parseInt(urlMatch[1]);
                             // Find stock name from our combined data
                             if (this.combinedStocks && this.combinedStocks[stockId]) {
                                 stockName = this.combinedStocks[stockId].acronym || this.combinedStocks[stockId].name;
@@ -1027,11 +1027,12 @@
                         stockName = buyMatch[2].trim();
                         const totalCost = parseFloat(buyMatch[3].replace(/,/g, ''));
                         pricePerShare = totalCost / shares;
+                        // stockId will be looked up in recordTransaction
                     }
                     
                     const totalCost = pricePerShare * shares;
                     console.log(`💰 BUY detected: ${shares} shares of "${stockName}" at $${pricePerShare.toFixed(2)}/share (total: $${totalCost.toFixed(2)})`);
-                    this.recordTransaction('buy', stockName, shares, pricePerShare);
+                    this.recordTransaction('buy', stockName, shares, pricePerShare, stockId);
                     return;
                 }
                 
@@ -1059,7 +1060,7 @@
                     const shares = parseInt(sellMatch[1].replace(/,/g, ''));
                     
                     // Check if using new format (at $X each) or legacy format (for $X total)
-                    let pricePerShare, stockName;
+                    let pricePerShare, stockName, stockId = null;
                     
                     if (message.includes('at $') && message.includes('each')) {
                         // NEW FORMAT: "at $1,197.06 each"
@@ -1068,7 +1069,7 @@
                         // Stock name must be extracted from URL since it's not in the message
                         const urlMatch = window.location.href.match(/stockID=(\d+)/);
                         if (urlMatch) {
-                            const stockId = parseInt(urlMatch[1]);
+                            stockId = parseInt(urlMatch[1]);
                             // Find stock name from our combined data
                             if (this.combinedStocks && this.combinedStocks[stockId]) {
                                 stockName = this.combinedStocks[stockId].acronym || this.combinedStocks[stockId].name;
@@ -1084,35 +1085,40 @@
                         stockName = sellMatch[2].trim();
                         const totalRevenue = parseFloat(sellMatch[3].replace(/,/g, ''));
                         pricePerShare = totalRevenue / shares;
+                        // stockId will be looked up in recordTransaction
                     }
                     
                     const totalRevenue = pricePerShare * shares;
                     console.log(`💸 SELL detected: ${shares} shares of "${stockName}" at $${pricePerShare.toFixed(2)}/share (total: $${totalRevenue.toFixed(2)})`);
-                    this.recordTransaction('sell', stockName, shares, pricePerShare);
+                    this.recordTransaction('sell', stockName, shares, pricePerShare, stockId);
                 }
             },
 
-            recordTransaction(type, stockName, shares, pricePerShare) {
-                // Check if we have the stock mapping - if not, we need to fetch it first
-                if (Object.keys(this.stockNameToIdMap).length === 0) {
-                    console.log('📊 Stock name mapping not available yet, fetching stock data...');
-                    // Queue this transaction to retry after fetching
-                    this.fetchStockData().then(() => {
-                        // Retry the transaction recording
-                        this.recordTransaction(type, stockName, shares, pricePerShare);
-                    });
-                    return;
-                }
-                
-                // Find stock ID by name
-                const stockId = this.getStockIdByName(stockName);
+            recordTransaction(type, stockName, shares, pricePerShare, stockId = null) {
+                // If stockId is provided directly (from new format), use it
+                // Otherwise look it up by name (legacy format)
                 if (!stockId) {
-                    console.warn(`⚠️ Could not find stock ID for: "${stockName}"`);
-                    console.log('📊 Transaction will not be tracked. Available stock names:', Object.keys(this.stockNameToIdMap).slice(0, 10));
-                    return;
+                    // Check if we have the stock mapping - if not, we need to fetch it first
+                    if (Object.keys(this.stockNameToIdMap).length === 0) {
+                        console.log('📊 Stock name mapping not available yet, fetching stock data...');
+                        // Queue this transaction to retry after fetching
+                        this.fetchStockData().then(() => {
+                            // Retry the transaction recording
+                            this.recordTransaction(type, stockName, shares, pricePerShare, stockId);
+                        });
+                        return;
+                    }
+                    
+                    // Find stock ID by name
+                    stockId = this.getStockIdByName(stockName);
+                    if (!stockId) {
+                        console.warn(`⚠️ Could not find stock ID for: "${stockName}"`);
+                        console.log('📊 Transaction will not be tracked. Available stock names:', Object.keys(this.stockNameToIdMap).slice(0, 10));
+                        return;
+                    }
                 }
 
-                console.log(`✅ Found stock ID ${stockId} for "${stockName}"`);
+                console.log(`✅ Found/using stock ID ${stockId} for "${stockName}"`);
 
                 // Initialize stock tracking if not exists
                 if (!this.trackedTransactions[stockId]) {
