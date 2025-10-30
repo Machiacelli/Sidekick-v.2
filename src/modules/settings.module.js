@@ -296,7 +296,60 @@
                                 </div>
                                 <label class="shoplifting-monitor-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
                                     <input type="checkbox" id="shoplifting-monitor-toggle" style="opacity: 0; width: 0; height: 0;">
-                                    
+                                    <span class="shoplifting-monitor-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
+                                </label>
+                            </div>
+                            
+                            <div id="shoplifting-config" style="display: none;">
+                                <div style="background: #333; border-radius: 6px; padding: 15px; margin: 12px 0;">
+                                    <label style="display: block; margin-bottom: 8px; color: #aaa; font-weight: bold; font-size: 14px;">Shoplifting API Key:</label>
+                                    <input type="text" id="shoplifting-api-key-input" value=""
+                                           placeholder="Enter API key for shoplifting data..."
+                                           style="width: 100%; background: #2a2a2a; border: 1px solid #555; color: #fff; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 14px; box-sizing: border-box;">
+                                    <div style="font-size: 12px; color: #666; margin-top: 6px;">
+                                        <a href="https://www.torn.com/preferences.php#tab=api?step=addNewKey&title=ShopliftingAPI&torn=shoplifting" target="_blank" style="color: #4CAF50; text-decoration: none;">🔗 Create Shoplifting API Key</a><br>
+                                        <span style="color: #ff9800; font-size: 11px;">⚠️ Must enable "shoplifting" selection when creating the API key</span>
+                                    </div>
+                                    <button id="test-shoplifting-api-btn" style="width: 100%; margin-top: 10px; padding: 10px; background: linear-gradient(135deg, #2196F3, #1976D2); border: none; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
+                                        🧪 Test Shoplifting API
+                                    </button>
+                                </div>
+                                <div style="background: #333; border-radius: 6px; padding: 15px; margin: 12px 0;">
+                                    <h5 style="color: #aaa; margin: 0 0 12px 0; font-size: 13px; font-weight: bold;">📍 Shop Monitoring Settings</h5>
+                                    <div style="font-size: 12px; color: #666; margin-bottom: 15px; padding: 10px; background: #2a2a2a; border-radius: 4px; border-left: 3px solid #4CAF50;">
+                                        <strong>How to use:</strong><br>
+                                        • Click shop name for "all security down" alerts<br>
+                                        • Click individual security icons (📹 cameras, 👮 guards, 🔒 locks) for specific alerts
+                                    </div>
+                                    <div id="shop-alert-settings" style="display: grid; gap: 8px;">
+                                        <!-- Shop settings will be dynamically generated -->
+                                    </div>
+                                </div>
+                                <div style="background: #333; border-radius: 6px; padding: 15px; margin: 12px 0;">
+                                    <h5 style="color: #aaa; margin: 0 0 12px 0; font-size: 13px; font-weight: bold;">🔔 Notification Settings</h5>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0;">
+                                        <span style="color: #ccc; font-size: 13px;">Play Sound</span>
+                                        <label class="notification-sound-switch" style="position: relative; display: inline-block; width: 40px; height: 20px;">
+                                            <input type="checkbox" id="notification-sound-toggle" style="opacity: 0; width: 0; height: 0;">
+                                            <span class="notification-sound-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 20px;"></span>
+                                        </label>
+                                    </div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0;">
+                                        <span style="color: #ccc; font-size: 13px;">Auto-redirect to Crimes</span>
+                                        <label class="auto-redirect-switch" style="position: relative; display: inline-block; width: 40px; height: 20px;">
+                                            <input type="checkbox" id="auto-redirect-toggle" style="opacity: 0; width: 0; height: 0;">
+                                            <span class="auto-redirect-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 20px;"></span>
+                                        </label>
+                                    </div>
+                                    <div style="margin: 12px 0;">
+                                        <label style="display: block; margin-bottom: 6px; color: #aaa; font-size: 12px;">Check Interval (minutes):</label>
+                                        <input type="number" id="check-interval-input" min="1" max="10" value="1"
+                                               style="width: 100%; background: #2a2a2a; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 4px; font-size: 13px; box-sizing: border-box;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <!-- Xanax Viewer Tab Content -->
                         <div id="xanax-viewer-content" class="tab-content" style="padding: 20px; display: none;">
                             <div style="margin-bottom: 20px;">
@@ -358,59 +411,6 @@
                                 <p style="margin: 0; color: #fff; font-size: 13px; line-height: 1.6;">
                                     <strong>💡 Tip:</strong> Use a separate Public API key for Xanax Viewer to keep it independent from combat API calls. This prevents hitting API limits during important fights.
                                 </p>
-                            </div>
-                        </div>
-                                    <span class="shoplifting-monitor-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
-                                </label>
-                            </div>
-                            
-                            <div id="shoplifting-config" style="display: none;">
-                                <div style="background: #333; border-radius: 6px; padding: 15px; margin: 12px 0;">
-                                    <label style="display: block; margin-bottom: 8px; color: #aaa; font-weight: bold; font-size: 14px;">Shoplifting API Key:</label>
-                                    <input type="text" id="shoplifting-api-key-input" value=""
-                                           placeholder="Enter API key for shoplifting data..."
-                                           style="width: 100%; background: #2a2a2a; border: 1px solid #555; color: #fff; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 14px; box-sizing: border-box;">
-                                    <div style="font-size: 12px; color: #666; margin-top: 6px;">
-                                        <a href="https://www.torn.com/preferences.php#tab=api?step=addNewKey&title=ShopliftingAPI&torn=shoplifting" target="_blank" style="color: #4CAF50; text-decoration: none;">🔗 Create Shoplifting API Key</a><br>
-                                        <span style="color: #ff9800; font-size: 11px;">⚠️ Must enable "shoplifting" selection when creating the API key</span>
-                                    </div>
-                                    <button id="test-shoplifting-api-btn" style="width: 100%; margin-top: 10px; padding: 10px; background: linear-gradient(135deg, #2196F3, #1976D2); border: none; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
-                                        🧪 Test Shoplifting API
-                                    </button>
-                                </div>
-                                <div style="background: #333; border-radius: 6px; padding: 15px; margin: 12px 0;">
-                                    <h5 style="color: #aaa; margin: 0 0 12px 0; font-size: 13px; font-weight: bold;">📍 Shop Monitoring Settings</h5>
-                                    <div style="font-size: 12px; color: #666; margin-bottom: 15px; padding: 10px; background: #2a2a2a; border-radius: 4px; border-left: 3px solid #4CAF50;">
-                                        <strong>How to use:</strong><br>
-                                        • Click shop name for "all security down" alerts<br>
-                                        • Click individual security icons (📹 cameras, 👮 guards, 🔒 locks) for specific alerts
-                                    </div>
-                                    <div id="shop-alert-settings" style="display: grid; gap: 8px;">
-                                        <!-- Shop settings will be dynamically generated -->
-                                    </div>
-                                </div>
-                                <div style="background: #333; border-radius: 6px; padding: 15px; margin: 12px 0;">
-                                    <h5 style="color: #aaa; margin: 0 0 12px 0; font-size: 13px; font-weight: bold;">🔔 Notification Settings</h5>
-                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0;">
-                                        <span style="color: #ccc; font-size: 13px;">Play Sound</span>
-                                        <label class="notification-sound-switch" style="position: relative; display: inline-block; width: 40px; height: 20px;">
-                                            <input type="checkbox" id="notification-sound-toggle" style="opacity: 0; width: 0; height: 0;">
-                                            <span class="notification-sound-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 20px;"></span>
-                                        </label>
-                                    </div>
-                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0;">
-                                        <span style="color: #ccc; font-size: 13px;">Auto-redirect to Crimes</span>
-                                        <label class="auto-redirect-switch" style="position: relative; display: inline-block; width: 40px; height: 20px;">
-                                            <input type="checkbox" id="auto-redirect-toggle" style="opacity: 0; width: 0; height: 0;">
-                                            <span class="auto-redirect-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 20px;"></span>
-                                        </label>
-                                    </div>
-                                    <div style="margin: 12px 0;">
-                                        <label style="display: block; margin-bottom: 6px; color: #aaa; font-size: 12px;">Check Interval (minutes):</label>
-                                        <input type="number" id="check-interval-input" min="1" max="10" value="1"
-                                               style="width: 100%; background: #2a2a2a; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 4px; font-size: 13px; box-sizing: border-box;">
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
