@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.86.0
-// @description  Stock Ticker v1.9.0: CRITICAL FIX - Panel size validation and reset option!
+// @version      5.87.0
+// @description  Stock Ticker v1.10.0: Enhanced transaction detection with debugging!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -27,17 +27,18 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/traveltracker.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@43ed8dd/src/modules/stockticker.module.js?v=20250129
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d77095b/src/modules/stockticker.module.js?v=20250129
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/todolist.module.js?v=20250129
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v5.86.0 - Stock Ticker CRITICAL FIX!');
-    console.log('✅ Stock Ticker v1.9.0: Panel size validation and reset option added');
-    console.log('🔧 Panel now validates size on load and resize - prevents becoming unusable');
-    console.log('💡 TIP: Use dropdown menu → "Reset Size & Position" if panel is stuck!');
+    console.log('🚀 Sidekick Modular CDN v5.87.0 - Stock Ticker Transaction Detection!');
+    console.log('✅ Stock Ticker v1.10.0: Enhanced pattern matching for transaction messages');
+    console.log('� Now detecting multiple message formats (bought/have bought, names/acronyms)');
+    console.log('📊 Check console for debug logs showing detected transactions');
+    console.log('💡 TIP: Open console (F12) when buying/selling to see transaction detection in action');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
