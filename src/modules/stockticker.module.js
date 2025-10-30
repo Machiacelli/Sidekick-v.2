@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.18.0
+// @version      1.18.1
 // @description  SLEEK WARNING: Visual badge alerts when tracked shares mismatch actual holdings
 // @author       Machiacelli
 // @match        https://www.torn.com/*
@@ -503,59 +503,112 @@
                 leftSection.appendChild(icon);
                 leftSection.appendChild(title);
 
-                // MIDDLE: Sort dropdown
-                const sortContainer = document.createElement('div');
-                sortContainer.style.cssText = `
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    margin-left: 16px;
-                `;
-
-                const sortLabel = document.createElement('span');
-                sortLabel.textContent = 'Sort:';
-                sortLabel.style.cssText = 'color: #888; font-size: 11px;';
-
-                const sortDropdown = document.createElement('select');
-                sortDropdown.style.cssText = `
+                // MIDDLE: Sort button with dropdown menu
+                const sortButton = document.createElement('button');
+                sortButton.innerHTML = '⇅';
+                sortButton.title = 'Sort stocks';
+                sortButton.style.cssText = `
                     background: #2a2a2a;
                     border: 1px solid #444;
                     border-radius: 4px;
-                    color: #fff;
-                    padding: 4px 8px;
-                    font-size: 11px;
+                    color: #888;
                     cursor: pointer;
-                    outline: none;
-                    transition: border-color 0.2s;
+                    font-size: 16px;
+                    padding: 2px 8px;
+                    line-height: 1;
+                    margin-left: 12px;
+                    transition: all 0.2s;
+                    height: 24px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                 `;
-                sortDropdown.innerHTML = `
-                    <option value="value-desc">Value (High→Low)</option>
-                    <option value="value-asc">Value (Low→High)</option>
-                    <option value="name-asc">Name (A→Z)</option>
-                    <option value="name-desc">Name (Z→A)</option>
-                    <option value="profit-desc">Profit (High→Low)</option>
-                    <option value="profit-asc">Profit (Low→High)</option>
+
+                // Sort dropdown menu (hidden by default)
+                const sortMenu = document.createElement('div');
+                sortMenu.style.cssText = `
+                    position: fixed;
+                    background: #2a2a2a;
+                    border: 1px solid #444;
+                    border-radius: 6px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    z-index: 999999;
+                    display: none;
+                    min-width: 160px;
+                    overflow: hidden;
                 `;
+
+                const sortOptions = [
+                    { value: 'value-desc', label: 'Value ↓' },
+                    { value: 'value-asc', label: 'Value ↑' },
+                    { value: 'name-asc', label: 'Name A→Z' },
+                    { value: 'name-desc', label: 'Name Z→A' },
+                    { value: 'profit-desc', label: 'Profit ↓' },
+                    { value: 'profit-asc', label: 'Profit ↑' }
+                ];
+
+                sortOptions.forEach(option => {
+                    const optionBtn = document.createElement('button');
+                    optionBtn.textContent = option.label;
+                    optionBtn.style.cssText = `
+                        background: none;
+                        border: none;
+                        color: #ccc;
+                        padding: 8px 12px;
+                        width: 100%;
+                        text-align: left;
+                        cursor: pointer;
+                        font-size: 12px;
+                        transition: background 0.2s;
+                    `;
+                    optionBtn.onmouseover = () => optionBtn.style.background = '#333';
+                    optionBtn.onmouseout = () => optionBtn.style.background = 'none';
+                    optionBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        this.currentSortOption = option.value;
+                        this.core.saveState('stockticker_sort_preference', option.value);
+                        console.log(`📊 Sort changed to: ${option.value}`);
+                        sortMenu.style.display = 'none';
+                        this.fetchStockData();
+                    };
+                    sortMenu.appendChild(optionBtn);
+                });
 
                 // Load saved sort preference
                 const savedSort = this.core.loadState('stockticker_sort_preference') || 'value-desc';
-                sortDropdown.value = savedSort;
                 this.currentSortOption = savedSort;
 
-                // Save preference and refresh on change
-                sortDropdown.onchange = () => {
-                    this.currentSortOption = sortDropdown.value;
-                    this.core.saveState('stockticker_sort_preference', sortDropdown.value);
-                    console.log(`📊 Sort changed to: ${sortDropdown.value}`);
-                    this.fetchStockData(); // Refresh display with new sort
+                // Toggle menu on button click
+                sortButton.onclick = (e) => {
+                    e.stopPropagation();
+                    const isVisible = sortMenu.style.display === 'block';
+                    sortMenu.style.display = isVisible ? 'none' : 'block';
+                    
+                    if (!isVisible) {
+                        const rect = sortButton.getBoundingClientRect();
+                        sortMenu.style.left = rect.left + 'px';
+                        sortMenu.style.top = (rect.bottom + 4) + 'px';
+                    }
                 };
 
-                sortDropdown.onmouseover = () => sortDropdown.style.borderColor = '#666';
-                sortDropdown.onmouseout = () => sortDropdown.style.borderColor = '#444';
+                sortButton.onmouseover = () => {
+                    sortButton.style.background = '#333';
+                    sortButton.style.borderColor = '#666';
+                    sortButton.style.color = '#fff';
+                };
+                sortButton.onmouseout = () => {
+                    sortButton.style.background = '#2a2a2a';
+                    sortButton.style.borderColor = '#444';
+                    sortButton.style.color = '#888';
+                };
 
-                sortContainer.appendChild(sortLabel);
-                sortContainer.appendChild(sortDropdown);
-                leftSection.appendChild(sortContainer);
+                // Close menu when clicking outside
+                document.addEventListener('click', () => {
+                    sortMenu.style.display = 'none';
+                });
+
+                leftSection.appendChild(sortButton);
+                document.body.appendChild(sortMenu);
 
                 // RIGHT SIDE: Close button
                 const closeBtn = document.createElement('button');
@@ -1067,14 +1120,10 @@
                                     ${profitDisplay}
                                 </div>
                             </div>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
-                                <div>
-                                    <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Current Price</div>
-                                    <div style="color: #fff;">$${currentPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                                </div>
-                                <div>
-                                    <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Total Value</div>
-                                    <div style="color: #fff;">$${currentValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                            <div style="font-size: 12px;">
+                                <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Current Price</div>
+                                <div style="color: #fff;">$${currentPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                            </div>
                                 </div>
                             </div>
                         </div>
