@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.9.0
-// @description  CRITICAL FIX: Added size validation and reset option to prevent panel from becoming unusable
+// @version      1.10.0
+// @description  Enhanced transaction detection with multiple message patterns and improved name matching
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -926,6 +926,7 @@
                 }
 
                 console.log('📈 Stock Ticker: Starting transaction monitoring...');
+                console.log('💡 Stock Ticker: Will log ALL detected messages for debugging');
 
                 // Monitor for stock purchase/sale confirmations
                 const observer = new MutationObserver((mutations) => {
@@ -935,27 +936,58 @@
                                 // Look for success messages
                                 const message = node.textContent || '';
                                 
-                                // Match patterns like "You bought 1,000 shares of Stock Name for $5,000.00"
-                                const buyMatch = message.match(/You bought ([\d,]+) shares of (.+?) for \$([\d,]+\.?\d*)/i);
+                                // Log any message that contains "bought" or "sold" for debugging
+                                if (message.toLowerCase().includes('bought') || message.toLowerCase().includes('sold')) {
+                                    console.log('🔍 Transaction message detected:', message);
+                                }
+                                
+                                // Try multiple patterns to match Torn's transaction messages
+                                
+                                // Pattern 1: "You bought 1,000 shares of Stock Name for $5,000.00"
+                                let buyMatch = message.match(/You bought ([\d,]+) shares of (.+?) for \$([\d,]+\.?\d*)/i);
+                                
+                                // Pattern 2: "You have bought 1,000 shares of Stock Name for $5,000.00"
+                                if (!buyMatch) {
+                                    buyMatch = message.match(/You have bought ([\d,]+) shares of (.+?) for \$([\d,]+\.?\d*)/i);
+                                }
+                                
+                                // Pattern 3: Using acronym instead of full name
+                                if (!buyMatch) {
+                                    buyMatch = message.match(/You (?:have )?bought ([\d,]+) shares of ([A-Z]{2,5}) for \$([\d,]+\.?\d*)/i);
+                                }
+                                
                                 if (buyMatch) {
                                     const shares = parseInt(buyMatch[1].replace(/,/g, ''));
                                     const stockName = buyMatch[2].trim();
                                     const totalCost = parseFloat(buyMatch[3].replace(/,/g, ''));
                                     const pricePerShare = totalCost / shares;
                                     
-                                    console.log(`💰 BUY detected: ${shares} shares of ${stockName} at $${pricePerShare.toFixed(2)}/share`);
+                                    console.log(`💰 BUY detected: ${shares} shares of "${stockName}" at $${pricePerShare.toFixed(2)}/share (total: $${totalCost.toFixed(2)})`);
                                     this.recordTransaction('buy', stockName, shares, pricePerShare);
                                 }
                                 
-                                // Match patterns like "You sold 1,000 shares of Stock Name for $6,000.00"
-                                const sellMatch = message.match(/You sold ([\d,]+) shares of (.+?) for \$([\d,]+\.?\d*)/i);
+                                // Try multiple patterns for SELL messages
+                                
+                                // Pattern 1: "You sold 1,000 shares of Stock Name for $6,000.00"
+                                let sellMatch = message.match(/You sold ([\d,]+) shares of (.+?) for \$([\d,]+\.?\d*)/i);
+                                
+                                // Pattern 2: "You have sold 1,000 shares of Stock Name for $6,000.00"
+                                if (!sellMatch) {
+                                    sellMatch = message.match(/You have sold ([\d,]+) shares of (.+?) for \$([\d,]+\.?\d*)/i);
+                                }
+                                
+                                // Pattern 3: Using acronym instead of full name
+                                if (!sellMatch) {
+                                    sellMatch = message.match(/You (?:have )?sold ([\d,]+) shares of ([A-Z]{2,5}) for \$([\d,]+\.?\d*)/i);
+                                }
+                                
                                 if (sellMatch) {
                                     const shares = parseInt(sellMatch[1].replace(/,/g, ''));
                                     const stockName = sellMatch[2].trim();
                                     const totalRevenue = parseFloat(sellMatch[3].replace(/,/g, ''));
                                     const pricePerShare = totalRevenue / shares;
                                     
-                                    console.log(`💸 SELL detected: ${shares} shares of ${stockName} at $${pricePerShare.toFixed(2)}/share`);
+                                    console.log(`💸 SELL detected: ${shares} shares of "${stockName}" at $${pricePerShare.toFixed(2)}/share (total: $${totalRevenue.toFixed(2)})`);
                                     this.recordTransaction('sell', stockName, shares, pricePerShare);
                                 }
                             }
@@ -1060,23 +1092,47 @@
             getStockIdByName(stockName) {
                 if (!stockName) return null;
                 
-                // Try exact match (case-insensitive)
                 const lowerName = stockName.toLowerCase().trim();
+                
+                console.log(`🔍 Looking up stock ID for: "${stockName}"`);
+                console.log(`📊 Available mappings count: ${Object.keys(this.stockNameToIdMap).length}`);
+                
+                // Try exact match (case-insensitive)
                 if (this.stockNameToIdMap[lowerName]) {
-                    console.log(`✅ Found stock ID for "${stockName}": ${this.stockNameToIdMap[lowerName]}`);
+                    console.log(`✅ Exact match found for "${stockName}": ID ${this.stockNameToIdMap[lowerName]}`);
                     return this.stockNameToIdMap[lowerName];
                 }
                 
-                // Try partial match - find stock name that contains the search term
+                // Try partial match - find stock name that contains the search term OR vice versa
                 for (const [mappedName, stockId] of Object.entries(this.stockNameToIdMap)) {
-                    if (mappedName.includes(lowerName) || lowerName.includes(mappedName)) {
-                        console.log(`✅ Found partial match for "${stockName}" -> "${mappedName}": ID ${stockId}`);
+                    // Check if mappedName contains search term
+                    if (mappedName.includes(lowerName)) {
+                        console.log(`✅ Partial match (mapped contains search): "${stockName}" in "${mappedName}" -> ID ${stockId}`);
+                        return stockId;
+                    }
+                    
+                    // Check if search term contains mappedName (useful for acronyms)
+                    if (lowerName.includes(mappedName)) {
+                        console.log(`✅ Partial match (search contains mapped): "${mappedName}" in "${stockName}" -> ID ${stockId}`);
+                        return stockId;
+                    }
+                }
+                
+                // Last resort: try fuzzy matching for common variations
+                // Remove common words and punctuation for comparison
+                const cleanName = lowerName.replace(/\s*(ltd|inc|corp|co|plc|group|the)\s*/gi, '').replace(/[^a-z0-9]/g, '');
+                
+                for (const [mappedName, stockId] of Object.entries(this.stockNameToIdMap)) {
+                    const cleanMapped = mappedName.replace(/\s*(ltd|inc|corp|co|plc|group|the)\s*/gi, '').replace(/[^a-z0-9]/g, '');
+                    
+                    if (cleanName === cleanMapped) {
+                        console.log(`✅ Fuzzy match found: "${stockName}" ~= "${mappedName}" -> ID ${stockId}`);
                         return stockId;
                     }
                 }
                 
                 console.warn(`⚠️ Could not find stock ID for: "${stockName}"`);
-                console.log('📊 Available mappings:', Object.keys(this.stockNameToIdMap));
+                console.log('� Sample available mappings:', Object.keys(this.stockNameToIdMap).slice(0, 10).join(', '));
                 return null;
             },
 
