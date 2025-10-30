@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.17.0
+// @version      1.18.0
 // @description  SLEEK WARNING: Visual badge alerts when tracked shares mismatch actual holdings
 // @author       Machiacelli
 // @match        https://www.torn.com/*
@@ -503,6 +503,60 @@
                 leftSection.appendChild(icon);
                 leftSection.appendChild(title);
 
+                // MIDDLE: Sort dropdown
+                const sortContainer = document.createElement('div');
+                sortContainer.style.cssText = `
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    margin-left: 16px;
+                `;
+
+                const sortLabel = document.createElement('span');
+                sortLabel.textContent = 'Sort:';
+                sortLabel.style.cssText = 'color: #888; font-size: 11px;';
+
+                const sortDropdown = document.createElement('select');
+                sortDropdown.style.cssText = `
+                    background: #2a2a2a;
+                    border: 1px solid #444;
+                    border-radius: 4px;
+                    color: #fff;
+                    padding: 4px 8px;
+                    font-size: 11px;
+                    cursor: pointer;
+                    outline: none;
+                    transition: border-color 0.2s;
+                `;
+                sortDropdown.innerHTML = `
+                    <option value="value-desc">Value (High→Low)</option>
+                    <option value="value-asc">Value (Low→High)</option>
+                    <option value="name-asc">Name (A→Z)</option>
+                    <option value="name-desc">Name (Z→A)</option>
+                    <option value="profit-desc">Profit (High→Low)</option>
+                    <option value="profit-asc">Profit (Low→High)</option>
+                `;
+
+                // Load saved sort preference
+                const savedSort = this.core.loadState('stockticker_sort_preference') || 'value-desc';
+                sortDropdown.value = savedSort;
+                this.currentSortOption = savedSort;
+
+                // Save preference and refresh on change
+                sortDropdown.onchange = () => {
+                    this.currentSortOption = sortDropdown.value;
+                    this.core.saveState('stockticker_sort_preference', sortDropdown.value);
+                    console.log(`📊 Sort changed to: ${sortDropdown.value}`);
+                    this.fetchStockData(); // Refresh display with new sort
+                };
+
+                sortDropdown.onmouseover = () => sortDropdown.style.borderColor = '#666';
+                sortDropdown.onmouseout = () => sortDropdown.style.borderColor = '#444';
+
+                sortContainer.appendChild(sortLabel);
+                sortContainer.appendChild(sortDropdown);
+                leftSection.appendChild(sortContainer);
+
                 // RIGHT SIDE: Close button
                 const closeBtn = document.createElement('button');
                 closeBtn.innerHTML = '×';
@@ -841,14 +895,66 @@
                 let totalValue = 0;
                 const stocksHTML = [];
 
-                // Sort stocks by value (descending) - shares is directly available
+                // Get current sort option (default to value descending)
+                const sortOption = this.currentSortOption || 'value-desc';
+                console.log(`📊 Sorting stocks by: ${sortOption}`);
+
+                // Sort stocks based on selected option
                 const sortedStocks = Object.entries(filteredStocks).sort((a, b) => {
                     const stockA = a[1];
                     const stockB = b[1];
+                    const stockIdA = a[0];
+                    const stockIdB = b[0];
                     
-                    const valueA = (stockA.shares || 0) * (stockA.current_price || 0);
-                    const valueB = (stockB.shares || 0) * (stockB.current_price || 0);
-                    return valueB - valueA;
+                    const sharesA = stockA.shares || 0;
+                    const sharesB = stockB.shares || 0;
+                    const valueA = sharesA * (stockA.current_price || 0);
+                    const valueB = sharesB * (stockB.current_price || 0);
+                    
+                    // Calculate profit for sorting
+                    const trackedA = this.trackedTransactions[stockIdA];
+                    const trackedB = this.trackedTransactions[stockIdB];
+                    
+                    let profitA = null;
+                    let profitB = null;
+                    
+                    if (sharesA > 0 && trackedA && trackedA.totalShares > 0) {
+                        const avgBuyPriceA = trackedA.totalInvested / trackedA.totalShares;
+                        const estimatedInvestmentA = sharesA * avgBuyPriceA;
+                        profitA = valueA - estimatedInvestmentA;
+                    }
+                    
+                    if (sharesB > 0 && trackedB && trackedB.totalShares > 0) {
+                        const avgBuyPriceB = trackedB.totalInvested / trackedB.totalShares;
+                        const estimatedInvestmentB = sharesB * avgBuyPriceB;
+                        profitB = valueB - estimatedInvestmentB;
+                    }
+                    
+                    // Sort based on selected option
+                    switch(sortOption) {
+                        case 'value-desc':
+                            return valueB - valueA; // High to low
+                        case 'value-asc':
+                            return valueA - valueB; // Low to high
+                        case 'name-asc':
+                            return (stockA.name || '').localeCompare(stockB.name || ''); // A to Z
+                        case 'name-desc':
+                            return (stockB.name || '').localeCompare(stockA.name || ''); // Z to A
+                        case 'profit-desc':
+                            // Sort by profit (high to low), put untracked at end
+                            if (profitA === null && profitB === null) return 0;
+                            if (profitA === null) return 1; // Move untracked to end
+                            if (profitB === null) return -1;
+                            return profitB - profitA;
+                        case 'profit-asc':
+                            // Sort by profit (low to high), put untracked at end
+                            if (profitA === null && profitB === null) return 0;
+                            if (profitA === null) return 1; // Move untracked to end
+                            if (profitB === null) return -1;
+                            return profitA - profitB;
+                        default:
+                            return valueB - valueA; // Default to value descending
+                    }
                 });
 
                 for (const [stockId, stock] of sortedStocks) {
@@ -1761,21 +1867,126 @@
                 const summaryDiv = content.querySelector('#import-summary');
 
                 const updateSummary = () => {
-                    const purchases = Object.entries(this.trackedTransactions)
-                        .map(([stockId, data]) => {
-                            const purchaseCount = data.purchases?.length || 0;
-                            return purchaseCount > 0 ? `<div style="margin-bottom: 4px;">
-                                <strong style="color: #4CAF50;">${data.name}</strong>: 
-                                ${purchaseCount} purchase${purchaseCount > 1 ? 's' : ''}, 
-                                ${data.totalShares.toLocaleString()} shares, 
-                                avg $${(data.totalInvested / data.totalShares).toFixed(2)}/share
-                            </div>` : '';
-                        })
-                        .filter(html => html !== '')
-                        .join('');
+                    let allPurchasesHTML = '';
+                    let hasPurchases = false;
 
-                    if (purchases) {
-                        summaryDiv.innerHTML = `<strong style="color: #fff; display: block; margin-bottom: 8px;">📊 Imported Purchases:</strong>${purchases}`;
+                    Object.entries(this.trackedTransactions).forEach(([stockId, data]) => {
+                        if (!data.purchases || data.purchases.length === 0) return;
+                        
+                        hasPurchases = true;
+                        
+                        // Stock header
+                        allPurchasesHTML += `
+                            <div style="margin-bottom: 12px; background: #2a2a2a; border-radius: 6px; padding: 10px; border: 1px solid #444;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: #4CAF50; font-size: 13px;">${data.name}</strong>
+                                    <div style="font-size: 11px; color: #888;">
+                                        Total: ${data.totalShares.toLocaleString()} shares @ avg $${(data.totalInvested / data.totalShares).toFixed(2)}
+                                    </div>
+                                </div>
+                        `;
+
+                        // Individual purchases
+                        data.purchases.forEach((purchase, index) => {
+                            const date = new Date(purchase.timestamp).toLocaleDateString('en-US', {
+                                month: 'short', 
+                                day: 'numeric', 
+                                year: 'numeric'
+                            });
+                            
+                            allPurchasesHTML += `
+                                <div style="
+                                    display: flex; 
+                                    justify-content: space-between; 
+                                    align-items: center; 
+                                    padding: 6px 8px; 
+                                    background: #333; 
+                                    border-radius: 4px; 
+                                    margin-bottom: 4px;
+                                    font-size: 11px;
+                                ">
+                                    <div style="color: #ccc;">
+                                        📅 ${date} • ${purchase.shares.toLocaleString()} shares @ $${purchase.price.toFixed(2)}
+                                    </div>
+                                    <button 
+                                        data-stock-id="${stockId}" 
+                                        data-purchase-index="${index}"
+                                        style="
+                                            background: #d32f2f;
+                                            border: none;
+                                            color: white;
+                                            padding: 4px 8px;
+                                            border-radius: 3px;
+                                            cursor: pointer;
+                                            font-size: 10px;
+                                            font-weight: 600;
+                                        "
+                                        onmouseover="this.style.background='#b71c1c'"
+                                        onmouseout="this.style.background='#d32f2f'"
+                                    >🗑️ Delete</button>
+                                </div>
+                            `;
+                        });
+
+                        allPurchasesHTML += `</div>`;
+                    });
+
+                    if (hasPurchases) {
+                        summaryDiv.innerHTML = `
+                            <strong style="color: #fff; display: block; margin-bottom: 12px; font-size: 13px;">
+                                📊 Your Tracked Purchases
+                            </strong>
+                            ${allPurchasesHTML}
+                        `;
+
+                        // Add delete button event listeners
+                        summaryDiv.querySelectorAll('button[data-stock-id]').forEach(btn => {
+                            btn.onclick = () => {
+                                const stockId = btn.getAttribute('data-stock-id');
+                                const purchaseIndex = parseInt(btn.getAttribute('data-purchase-index'));
+                                
+                                if (confirm('⚠️ Delete this purchase entry?\n\nThis will recalculate your total shares and average cost.')) {
+                                    const stock = this.trackedTransactions[stockId];
+                                    const deletedPurchase = stock.purchases[purchaseIndex];
+                                    
+                                    console.log(`🗑️ Deleting purchase: ${deletedPurchase.shares} shares at $${deletedPurchase.price}`);
+                                    
+                                    // Remove from totals
+                                    stock.totalShares -= deletedPurchase.shares;
+                                    stock.totalInvested -= deletedPurchase.shares * deletedPurchase.price;
+                                    
+                                    // Remove from purchases array
+                                    stock.purchases.splice(purchaseIndex, 1);
+                                    
+                                    // If no purchases left, remove entire stock entry
+                                    if (stock.purchases.length === 0) {
+                                        console.log(`📊 No purchases left for ${stock.name}, removing tracking entry`);
+                                        delete this.trackedTransactions[stockId];
+                                    }
+                                    
+                                    // Save
+                                    this.core.saveState('stockticker_transactions', this.trackedTransactions);
+                                    console.log('✅ Purchase deleted and data saved');
+                                    
+                                    // Update summary display
+                                    updateSummary();
+                                    
+                                    // Refresh ticker display if open
+                                    if (this.panel && document.body.contains(this.panel)) {
+                                        this.fetchStockData();
+                                    }
+                                    
+                                    // Show success message
+                                    statusDiv.style.display = 'block';
+                                    statusDiv.style.background = '#4CAF50';
+                                    statusDiv.style.color = '#fff';
+                                    statusDiv.textContent = '✅ Purchase deleted successfully';
+                                    setTimeout(() => {
+                                        statusDiv.style.display = 'none';
+                                    }, 3000);
+                                }
+                            };
+                        });
                     } else {
                         summaryDiv.innerHTML = '<em style="color: #888;">No purchases imported yet</em>';
                     }
@@ -1821,12 +2032,21 @@
                     const shares = this.parseShorthandNumber(sharesInput.value);
                     const pricePerShare = this.parseShorthandNumber(priceInput.value);
 
+                    console.log('📥 Import Form Submission:', {
+                        stockId,
+                        shares,
+                        pricePerShare,
+                        sharesRaw: sharesInput.value,
+                        priceRaw: priceInput.value
+                    });
+
                     // Validation
                     if (!stockId) {
                         statusDiv.style.display = 'block';
                         statusDiv.style.background = '#f44336';
                         statusDiv.style.color = '#fff';
                         statusDiv.textContent = '❌ Please select a stock';
+                        console.warn('❌ Validation failed: No stock selected');
                         return;
                     }
 
@@ -1835,6 +2055,7 @@
                         statusDiv.style.background = '#f44336';
                         statusDiv.style.color = '#fff';
                         statusDiv.textContent = '❌ Please enter a valid number of shares (e.g., 1000 or 1k)';
+                        console.warn('❌ Validation failed: Invalid shares', shares);
                         return;
                     }
 
@@ -1843,6 +2064,7 @@
                         statusDiv.style.background = '#f44336';
                         statusDiv.style.color = '#fff';
                         statusDiv.textContent = '❌ Please enter a valid price per share (e.g., 45.50 or 1.5k)';
+                        console.warn('❌ Validation failed: Invalid price', pricePerShare);
                         return;
                     }
 
@@ -1851,6 +2073,7 @@
 
                     // Initialize stock tracking if not exists
                     if (!this.trackedTransactions[stockId]) {
+                        console.log(`🆕 Initializing new stock tracking for: ${stockName} (ID: ${stockId})`);
                         this.trackedTransactions[stockId] = {
                             name: stockName,
                             purchases: [],
@@ -1861,16 +2084,50 @@
 
                     // Add purchase
                     const stock = this.trackedTransactions[stockId];
-                    stock.purchases.push({
+                    const purchaseData = {
                         shares: shares,
                         price: pricePerShare,
                         timestamp: Date.now()
-                    });
+                    };
+                    
+                    stock.purchases.push(purchaseData);
                     stock.totalShares += shares;
                     stock.totalInvested += shares * pricePerShare;
 
+                    console.log('✅ Purchase added to memory:', {
+                        stock: stockName,
+                        purchase: purchaseData,
+                        newTotals: {
+                            totalShares: stock.totalShares,
+                            totalInvested: stock.totalInvested,
+                            avgPrice: stock.totalInvested / stock.totalShares,
+                            purchaseCount: stock.purchases.length
+                        }
+                    });
+
                     // Save
-                    this.core.saveState('stockticker_transactions', this.trackedTransactions);
+                    try {
+                        this.core.saveState('stockticker_transactions', this.trackedTransactions);
+                        console.log('💾 Data saved to storage successfully');
+                        
+                        // Verify save worked
+                        const verified = this.core.loadState('stockticker_transactions');
+                        if (verified && verified[stockId]) {
+                            console.log('✅ Save verified! Data retrieved from storage:', {
+                                totalShares: verified[stockId].totalShares,
+                                purchaseCount: verified[stockId].purchases.length
+                            });
+                        } else {
+                            console.error('❌ Save verification failed! Data not found in storage');
+                        }
+                    } catch (error) {
+                        console.error('❌ Error saving data:', error);
+                        statusDiv.style.display = 'block';
+                        statusDiv.style.background = '#f44336';
+                        statusDiv.style.color = '#fff';
+                        statusDiv.textContent = '❌ Error saving data: ' + error.message;
+                        return;
+                    }
 
                     // Show success
                     statusDiv.style.display = 'block';
@@ -1890,7 +2147,7 @@
                         this.fetchStockData();
                     }
 
-                    console.log(`📥 Imported: ${shares} shares of ${stockName} at $${pricePerShare.toFixed(2)}`);
+                    console.log(`📥 Import complete for: ${shares} shares of ${stockName} at $${pricePerShare.toFixed(2)}`);
                 };
 
                 // Close on overlay click
