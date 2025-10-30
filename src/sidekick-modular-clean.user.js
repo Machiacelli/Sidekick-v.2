@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.7.0
-// @description  Travel Tracker v3.3.3 + NPC Attack Timer v1.0.0 + Time on Tab v1.0.1
+// @version      6.8.0
+// @description  Xanax Viewer v1.0.0 + UI: 31px hamburger button + Travel Tracker v3.3.3 + NPC Attack Timer v1.0.0
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -14,8 +14,8 @@
 // @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/6b35683/src/sidekick-modular-clean.user.js?v=20251030
 // @connect      api.lzpt.io
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/core.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/ui.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/settings.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@df3d5af/src/modules/ui.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@9385acc/src/modules/settings.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/content.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/global-functions.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/notepad.module.js?v=20251030
@@ -32,15 +32,18 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@b789c1c/src/modules/stockticker.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@78a5175/src/modules/timeontab.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@552a4bb/src/modules/npc-attack-timer.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@9385acc/src/modules/xanax-viewer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/todolist.module.js?v=20251030
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.7.0 - Travel Tracker & NPC Attack Timer!');
-    console.log('✅ NEW: NPC Attack Timer - Shows Loot Rangers attack times in news ticker');
-    console.log('✅ FIXED: Travel Tracker v3.3.3 - No more "cancelled" notification when minimizing sidebar');
+    console.log('🚀 Sidekick Modular CDN v6.8.0 - Xanax Viewer + UI Improvements!');
+    console.log('✅ NEW: Xanax Viewer v1.0.0 - View Xanax usage on faction/profile pages with dedicated settings tab');
+    console.log('✅ UPDATED: Hamburger button reduced to 31px (1px smaller)');
+    console.log('✅ NPC Attack Timer - Shows Loot Rangers attack times in news ticker');
+    console.log('✅ Travel Tracker v3.3.3 - No more "cancelled" notification when minimizing sidebar');
     console.log('✅ Travel Tracker persistent tracking - continues even when sidebar is minimized');
     console.log('✅ Time on Tab URL matching - works on travel/hospital/raceway/faction pages');
     console.log('📝 Stock Ticker: Fixed stock IDs, UI cleanup, enhanced debugging');
@@ -339,6 +342,17 @@
                     console.log('✅ NPC Attack Timer initialized successfully');
                 } catch (error) {
                     console.error('❌ NPC Attack Timer init failed:', error);
+                }
+            }
+            
+            // Initialize Xanax Viewer module
+            if (window.SidekickModules.XanaxViewer?.init) {
+                console.log('💊 Initializing Xanax Viewer module...');
+                try {
+                    window.SidekickModules.XanaxViewer.init();
+                    console.log('✅ Xanax Viewer initialized successfully');
+                } catch (error) {
+                    console.error('❌ Xanax Viewer init failed:', error);
                 }
             }
             
