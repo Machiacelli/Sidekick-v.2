@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Time on Tab Module
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1
 // @description  Display remaining travel time, hospital time, raceway time, and time left for chain on tab title
 // @author       Machiacelli
 // @match        https://www.torn.com/*
@@ -24,7 +24,7 @@
     waitForCore(() => {
         const TimeOnTabModule = {
             name: 'TimeOnTab',
-            version: '1.0.0',
+            version: '1.0.1',
             
             // Constants
             title: "[Time on Tab Title]: ",
@@ -52,7 +52,7 @@
             observers: [],
 
             init() {
-                console.log('⏰ Initializing Time on Tab Module v1.0.0...');
+                console.log('⏰ Initializing Time on Tab Module v1.0.1...');
                 this.core = window.SidekickModules.Core;
                 
                 if (!this.core) {
@@ -176,17 +176,29 @@
             startObservingBasedOnURL() {
                 const url = window.location.href;
                 
-                if (url === this.URL_TRAVEL) {
+                console.log('🔍 Time on Tab: Checking URL:', url);
+                
+                // Check for travel page (use includes instead of exact match)
+                if (url.includes('torn.com/page.php') && url.includes('sid=travel')) {
+                    console.log('✈️ Travel page detected, starting travel observer');
                     this.startObservingTravel();
-                } else if (url === this.URL_HOSPITAL) {
-                    // For Hospital Times
+                }
+                // Check for hospital page
+                else if (url.includes('torn.com/hospitalview.php')) {
+                    console.log('🏥 Hospital page detected, starting hospital observer');
                     this.startObserving(this.ID_HOSPITAL, this.TEXT_HOSPITAL);
-                } else if (url.startsWith(this.URL_RACEWAY)) {
-                    // For Raceway
+                }
+                // Check for raceway page
+                else if (url.includes('torn.com/loader.php') && url.includes('sid=racing')) {
+                    console.log('🏁 Raceway page detected, starting raceway observer');
                     this.startObserving(this.ID_RACEWAY, this.TEXT_RACEWAY);
-                } else if (url.startsWith(this.URL_CHAIN)) {
-                    // For Chain
+                }
+                // Check for faction page (chain)
+                else if (url.includes('torn.com/factions.php')) {
+                    console.log('⛓️ Faction page detected, starting chain observer');
                     this.startObservingChain();
+                } else {
+                    console.log('⏸️ No matching page for Time on Tab');
                 }
             },
 

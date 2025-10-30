@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Travel Tracker Module
 // @namespace    http://tampermonkey.net/
-// @version      3.3.0
-// @description  Travel tracker with dropdown menu selection, improved multi-tab handling, and private plane terminology
+// @version      3.3.1
+// @description  Travel tracker with dropdown menu, strict multi-tab isolation, and private plane terminology
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -25,12 +25,13 @@
     waitForCore(() => {
         const TravelTrackerModule = {
             name: 'TravelTracker',
-            version: '3.3.0',
+            version: '3.3.1',
             isActive: false,
             isMarkingMode: false,
             currentTracker: null,
             statusDisplay: null,
             tabId: null, // Unique identifier for this tab
+            isTrackingTab: false, // Flag to indicate if this tab created the tracker
             
             // Travel times table (in minutes) - based on Torn Wiki
             travelTimes: {
@@ -50,7 +51,7 @@
             },
 
             init() {
-                console.log('✈️ Initializing Travel Tracker Module v3.3.0...');
+                console.log('✈️ Initializing Travel Tracker Module v3.3.1...');
                 this.core = window.SidekickModules.Core;
                 
                 if (!this.core) {
@@ -62,11 +63,8 @@
                 this.tabId = 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                 console.log('🆔 Tab ID:', this.tabId);
 
-                // Load any saved tracking data
+                // Load any saved tracking data (but be strict about restoring)
                 this.loadState();
-                
-                // Mark this tab as active
-                this.markTabActive();
                 
                 console.log('✅ Travel Tracker module initialized successfully');
                 return true;
@@ -374,6 +372,8 @@
                 };
                 
                 this.currentTracker = tracker;
+                this.isTrackingTab = true; // Mark this tab as the tracking tab
+                this.markTabActive(); // Mark as active tracking tab
                 this.saveState();
                 
                 // Create status display
@@ -743,6 +743,14 @@
                 
                 // Clear current tracker
                 this.currentTracker = null;
+                this.isTrackingTab = false;
+                
+                // Clear active tab marker
+                try {
+                    localStorage.removeItem('travel_tracker_active_tab');
+                } catch (e) {
+                    console.warn('Failed to clear active tab marker');
+                }
                 
                 // Save state immediately
                 this.saveState();
@@ -895,23 +903,29 @@
                     const state = this.core.loadState('travel_tracker_state', {});
                     
                     if (state.currentTracker) {
-                        // Check if the tracker belongs to this tab or if we should claim it
                         const savedTabId = state.currentTracker.tabId;
                         
+                        // STRICT: Only restore if this exact tab created it (tab IDs match)
+                        // This prevents restoration on new page loads in other tabs
                         if (savedTabId === this.tabId) {
                             // This is our tracker, restore it
                             this.currentTracker = state.currentTracker;
+                            this.isTrackingTab = true;
                             console.log('📂 Restored own tracker:', state.currentTracker);
                             this.restoreTracker();
-                        } else if (this.isActiveTab()) {
-                            // We're the active tab, claim the tracker
-                            console.log('🔄 Claiming tracker from another tab');
-                            this.currentTracker = state.currentTracker;
-                            this.currentTracker.tabId = this.tabId;
-                            this.restoreTracker();
                         } else {
-                            // Another tab is tracking, don't interfere
-                            console.log('⏸️ Another tab is actively tracking, not restoring here');
+                            // Different tab - check if we should claim it
+                            const isActivelyTracking = this.isActiveTab();
+                            
+                            if (!isActivelyTracking) {
+                                // The tracking tab appears to be gone (stale)
+                                // But DON'T claim it automatically - wait for user action
+                                console.log('⏸️ Found stale tracker from another tab, but not auto-claiming');
+                                console.log('💡 User can manually start a new tracker if needed');
+                            } else {
+                                // Another tab is actively tracking
+                                console.log('⏸️ Another tab is actively tracking, not restoring here');
+                            }
                         }
                     }
                 } catch (error) {
@@ -922,13 +936,16 @@
             restoreTracker() {
                 if (!this.currentTracker) return;
                 
-                // Only restore if this is the active tab
-                if (!this.isActiveTab()) {
-                    console.log('⏸️ Not restoring tracker - another tab is active');
+                // STRICT: Only restore if this tab is marked as the tracking tab
+                if (!this.isTrackingTab) {
+                    console.log('⏸️ Not restoring tracker - not the tracking tab');
                     return;
                 }
                 
                 console.log('🔄 Restoring tracker display and monitoring...');
+                
+                // Mark as active
+                this.markTabActive();
                 
                 // Create status display
                 this.createStatusDisplay();
