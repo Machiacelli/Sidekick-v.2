@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.4.0
-// @description  Stock Ticker v1.25.0: Fixed stock IDs, improved UI, enhanced debugging
+// @version      6.4.1
+// @description  Fixed Travel Tracker initialization - now properly initializes before activation
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -34,12 +34,9 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.4.0 - Stock Ticker Fully Fixed!');
-    console.log('✅ FIXED: Stock selection checkboxes now match correct stocks (TSB=TSB, not THC)');
-    console.log('✅ REMOVED: Reset Size & Position button (unused)');
-    console.log('✅ MOVED: Clear Data button now inside Import window for safety');
-    console.log('✅ ADDED: Clear Stock Selection option in dropdown menu');
-    console.log('🔍 ENHANCED: Detailed console logging to debug tracking data');
+    console.log('🚀 Sidekick Modular CDN v6.4.1 - Travel Tracker Fixed!');
+    console.log('✅ FIXED: Travel Tracker now properly initializes before activation');
+    console.log('📝 Previous fixes: Stock selection checkboxes, UI cleanup, enhanced debugging');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
@@ -302,6 +299,17 @@
                     window.SidekickModules.StockTicker.init();
                 } catch (error) {
                     console.error('❌ Stock Ticker init failed:', error);
+                }
+            }
+            
+            // Initialize Travel Tracker module
+            if (window.SidekickModules.TravelTracker?.init) {
+                console.log('✈️ Initializing Travel Tracker module...');
+                try {
+                    window.SidekickModules.TravelTracker.init();
+                    console.log('✅ Travel Tracker initialized successfully');
+                } catch (error) {
+                    console.error('❌ Travel Tracker init failed:', error);
                 }
             }
             
