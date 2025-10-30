@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.13.0
-// @description  FIX: Pass stock ID directly to recordTransaction to prevent lookup failures
+// @version      1.14.0
+// @description  FIX: P/L now calculated on actual shares owned (API), not tracked shares - prevents showing P/L for stocks you've sold
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -824,7 +824,7 @@
                     
                     console.log(`📈 Stock ${stockId} - Acronym: ${stockAcronym}, Name: ${stockName}, Shares: ${shares}, Current Price: ${currentPrice}, Transactions: ${transactionCount}`);
                     
-                    // Calculate current value
+                    // Calculate current value based on ACTUAL shares owned (from API)
                     const currentValue = shares * currentPrice;
                     
                     // Calculate profit/loss from tracked transactions
@@ -834,19 +834,32 @@
                     let isTracked = false;
                     
                     const trackedStock = this.trackedTransactions[stockId];
-                    if (trackedStock && trackedStock.totalShares > 0) {
+                    
+                    // CRITICAL FIX: Only show P/L if you CURRENTLY own shares AND have tracking data
+                    if (shares > 0 && trackedStock && trackedStock.totalShares > 0) {
+                        // Calculate average buy price from tracked data
                         avgBuyPrice = trackedStock.totalInvested / trackedStock.totalShares;
                         
-                        // IMPORTANT: Calculate profit based on tracked shares ONLY, not total portfolio shares
-                        const trackedCurrentValue = trackedStock.totalShares * currentPrice;
-                        profitLoss = trackedCurrentValue - trackedStock.totalInvested;
-                        profitPercent = (profitLoss / trackedStock.totalInvested) * 100;
+                        // Calculate P/L based on ACTUAL shares owned (from API), not tracked shares
+                        // This handles the case where you've sold some shares or bought more outside tracking
+                        const estimatedInvestment = shares * avgBuyPrice;
+                        profitLoss = currentValue - estimatedInvestment;
+                        profitPercent = (profitLoss / estimatedInvestment) * 100;
                         isTracked = true;
                         
-                        console.log(`� Stock ${stockId} P/L: $${profitLoss.toFixed(2)} (${profitPercent.toFixed(2)}%)`);
+                        console.log(`💰 Stock ${stockId} P/L: $${profitLoss.toFixed(2)} (${profitPercent.toFixed(2)}%) - ${shares} shares owned at avg $${avgBuyPrice.toFixed(2)}`);
+                    } else if (shares > 0) {
+                        // You own shares but no tracking data
+                        console.log(`📊 Stock ${stockId}: ${shares} shares owned but not tracked`);
+                    } else if (trackedStock && trackedStock.totalShares > 0) {
+                        // You have tracking data but don't own shares anymore - clear stale data
+                        console.log(`🗑️ Stock ${stockId}: Clearing stale tracking data (0 shares owned)`);
                     }
                     
-                    totalValue += currentValue;
+                    // Only add to total value if you actually own shares
+                    if (shares > 0) {
+                        totalValue += currentValue;
+                    }
 
                     // Build stock card with profit/loss if tracked
                     const profitColor = profitLoss === null ? '#888' : (profitLoss >= 0 ? '#4CAF50' : '#f44336');
