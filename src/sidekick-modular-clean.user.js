@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.4.1
-// @description  Fixed Travel Tracker initialization - now properly initializes before activation
+// @version      6.4.2
+// @description  Travel Tracker v3.1.0: Improved plane detection with manual selection dialog
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -26,7 +26,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/blocktraining.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/traveltracker.module.js?v=20251029
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@811ee3f/src/modules/traveltracker.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@b789c1c/src/modules/stockticker.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/todolist.module.js?v=20251030
 // ==/UserScript==
@@ -34,9 +34,10 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.4.1 - Travel Tracker Fixed!');
-    console.log('✅ FIXED: Travel Tracker now properly initializes before activation');
-    console.log('📝 Previous fixes: Stock selection checkboxes, UI cleanup, enhanced debugging');
+    console.log('🚀 Sidekick Modular CDN v6.4.2 - Travel Tracker Enhanced!');
+    console.log('✅ NEW: Manual plane type selection dialog with improved detection');
+    console.log('✅ FIXED: Travel Tracker initialization, plane detection accuracy');
+    console.log('📝 Stock Ticker: Fixed stock IDs, UI cleanup, enhanced debugging');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
