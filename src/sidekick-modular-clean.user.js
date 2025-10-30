@@ -1,16 +1,18 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.6.2
-// @description  Travel Tracker v3.3.2: Persistent tracking (no cancellation) + Time on Tab v1.0.1: Fixed URL matching
+// @version      6.7.0
+// @description  Travel Tracker v3.3.3 + NPC Attack Timer v1.0.0 + Time on Tab v1.0.1
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
 // @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @grant        GM_xmlhttpRequest
 // @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/5f6ea23/src/sidekick-modular-clean.user.js?v=20251030
 // @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/5f6ea23/src/sidekick-modular-clean.user.js?v=20251030
+// @connect      api.lzpt.io
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/core.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/ui.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/settings.module.js?v=20251030
@@ -26,20 +28,21 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/blocktraining.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@0885d6d/src/modules/traveltracker.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@05edd8b/src/modules/traveltracker.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@b789c1c/src/modules/stockticker.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@78a5175/src/modules/timeontab.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@552a4bb/src/modules/npc-attack-timer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/todolist.module.js?v=20251030
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.6.2 - Persistent Travel Tracking!');
-    console.log('✅ FIXED: Travel Tracker now persists - no cancellation when minimizing sidebar');
-    console.log('✅ FIXED: Time on Tab URL matching - works on travel/hospital/raceway pages');
-    console.log('✅ Travel Tracker dropdown menu for plane type selection');
-    console.log('✅ "Private Jet" → "Private Plane" terminology');
+    console.log('🚀 Sidekick Modular CDN v6.7.0 - Travel Tracker & NPC Attack Timer!');
+    console.log('✅ NEW: NPC Attack Timer - Shows Loot Rangers attack times in news ticker');
+    console.log('✅ FIXED: Travel Tracker v3.3.3 - No more "cancelled" notification when minimizing sidebar');
+    console.log('✅ Travel Tracker persistent tracking - continues even when sidebar is minimized');
+    console.log('✅ Time on Tab URL matching - works on travel/hospital/raceway/faction pages');
     console.log('📝 Stock Ticker: Fixed stock IDs, UI cleanup, enhanced debugging');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
@@ -325,6 +328,17 @@
                     console.log('✅ Time on Tab initialized successfully');
                 } catch (error) {
                     console.error('❌ Time on Tab init failed:', error);
+                }
+            }
+            
+            // Initialize NPC Attack Timer module
+            if (window.SidekickModules.NPCAttackTimer?.init) {
+                console.log('⚔️ Initializing NPC Attack Timer module...');
+                try {
+                    window.SidekickModules.NPCAttackTimer.init();
+                    console.log('✅ NPC Attack Timer initialized successfully');
+                } catch (error) {
+                    console.error('❌ NPC Attack Timer init failed:', error);
                 }
             }
             
