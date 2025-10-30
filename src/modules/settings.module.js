@@ -205,6 +205,9 @@
                             <button id="shoplifting-tab" class="settings-tab" style="flex: 1; padding: 15px 20px; background: #333; border: none; color: #aaa; font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; font-size: 14px;">
                                 🏪 Shoplifting Alert
                             </button>
+                            <button id="xanax-viewer-tab" class="settings-tab" style="flex: 1; padding: 15px 20px; background: #333; border: none; color: #aaa; font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; font-size: 14px;">
+                                💊 Xanax Viewer
+                            </button>
                         </div>
                         
                         <!-- General Tab Content -->
@@ -293,6 +296,70 @@
                                 </div>
                                 <label class="shoplifting-monitor-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
                                     <input type="checkbox" id="shoplifting-monitor-toggle" style="opacity: 0; width: 0; height: 0;">
+                                    
+                        <!-- Xanax Viewer Tab Content -->
+                        <div id="xanax-viewer-content" class="tab-content" style="padding: 20px; display: none;">
+                            <div style="margin-bottom: 20px;">
+                                <h3 style="color: #fff; margin: 0 0 12px 0; font-size: 16px; font-weight: bold;">💊 Xanax Viewer Settings</h3>
+                                <p style="color: #aaa; font-size: 13px; margin: 0 0 20px 0;">View Xanax usage stats on faction and profile pages. Uses a separate API key to avoid combat call limits.</p>
+                            </div>
+                            
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin-bottom: 20px;">
+                                <div style="display: flex; flex-direction: column;">
+                                    <span style="color: #fff; font-weight: bold; font-size: 14px;">Enable Xanax Viewer</span>
+                                    <span style="color: #aaa; font-size: 12px;">Show Xanax stats on faction and profile pages</span>
+                                </div>
+                                <label class="xanax-viewer-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
+                                    <input type="checkbox" id="xanax-viewer-enabled-toggle" style="opacity: 0; width: 0; height: 0;">
+                                    <span class="xanax-viewer-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
+                                </label>
+                            </div>
+
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; color: #fff; font-weight: bold; font-size: 14px;">Xanax Viewer API Key:</label>
+                                <input type="text" id="xanax-api-key-input" placeholder="Enter a separate API key for Xanax Viewer..."
+                                       style="width: 100%; background: #333; border: 1px solid #555; color: #fff; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 14px; box-sizing: border-box;">
+                                <div style="font-size: 12px; color: #666; margin-top: 6px;">
+                                    ⚠️ Use a separate API key to avoid combat API call limits. Get it from: <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" style="color: #4CAF50; text-decoration: none;">Torn Preferences</a>
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; color: #fff; font-weight: bold; font-size: 14px;">Auto-Fetch Limit: <span id="xanax-auto-limit-value">0</span> members</label>
+                                <input type="range" id="xanax-auto-limit-slider" min="0" max="100" value="0" 
+                                       style="width: 100%; height: 6px; background: #555; border-radius: 5px; outline: none; cursor: pointer;">
+                                <div style="font-size: 12px; color: #666; margin-top: 6px;">
+                                    Automatically fetch Xanax stats for the closest members by level when visiting faction page (0 = disabled)
+                                </div>
+                            </div>
+
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin-bottom: 20px;">
+                                <div style="display: flex; flex-direction: column;">
+                                    <span style="color: #fff; font-weight: bold; font-size: 14px;">Show Relative Values</span>
+                                    <span style="color: #aaa; font-size: 12px;">Display Xanax stats relative to your own usage</span>
+                                </div>
+                                <label class="xanax-relative-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
+                                    <input type="checkbox" id="xanax-relative-toggle" style="opacity: 0; width: 0; height: 0;">
+                                    <span class="xanax-relative-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
+                                </label>
+                            </div>
+
+                            <div style="border-top: 1px solid #444; margin: 20px 0; padding-top: 20px;">
+                                <h4 style="color: #fff; margin: 0 0 12px 0; font-size: 14px; font-weight: bold;">Cache Management</h4>
+                                <p style="color: #aaa; font-size: 13px; margin: 0 0 12px 0;">
+                                    Cached profiles: <span id="xanax-cache-count" style="color: #4CAF50; font-weight: bold;">0</span>
+                                </p>
+                                <button id="xanax-clear-cache-btn" style="padding: 10px 16px; background: #d32f2f; border: 1px solid #f44336; color: white; border-radius: 6px; cursor: pointer; font-size: 13px;">
+                                    🗑️ Clear Cache
+                                </button>
+                            </div>
+
+                            <div style="margin-top: 20px; padding: 16px; background: #1e1e1e; border-left: 4px solid #ff9800; border-radius: 6px;">
+                                <p style="margin: 0; color: #fff; font-size: 13px; line-height: 1.6;">
+                                    <strong>💡 Tip:</strong> Use a separate Public API key for Xanax Viewer to keep it independent from combat API calls. This prevents hitting API limits during important fights.
+                                </p>
+                            </div>
+                        </div>
                                     <span class="shoplifting-monitor-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
                                 </label>
                             </div>
@@ -588,6 +655,9 @@
                     
                     // Initialize shoplifting monitor
                     this.initShopliftingMonitor();
+                    
+                    // Initialize xanax viewer
+                    this.initXanaxViewer();
 
                 }, 100);
                 
@@ -946,6 +1016,115 @@
                 }
             },
 
+            // Xanax Viewer UI Interface Functions
+            initXanaxViewer() {
+                const enabledToggle = document.getElementById('xanax-viewer-enabled-toggle');
+                const apiKeyInput = document.getElementById('xanax-api-key-input');
+                const autoLimitSlider = document.getElementById('xanax-auto-limit-slider');
+                const autoLimitValue = document.getElementById('xanax-auto-limit-value');
+                const relativeToggle = document.getElementById('xanax-relative-toggle');
+                const cacheCount = document.getElementById('xanax-cache-count');
+                const clearCacheBtn = document.getElementById('xanax-clear-cache-btn');
+                
+                if (!enabledToggle) return;
+                
+                // Wait for Xanax Viewer module to be available
+                if (!window.SidekickModules?.XanaxViewer) {
+                    setTimeout(() => this.initXanaxViewer(), 100);
+                    return;
+                }
+                
+                const XanaxModule = window.SidekickModules.XanaxViewer;
+                const settings = XanaxModule.getSettings();
+                
+                // Load current settings
+                enabledToggle.checked = settings.enabled;
+                if (apiKeyInput) apiKeyInput.value = settings.apiKey;
+                if (autoLimitSlider) autoLimitSlider.value = settings.autoLimit;
+                if (autoLimitValue) autoLimitValue.textContent = settings.autoLimit;
+                if (relativeToggle) relativeToggle.checked = settings.showRelative;
+                
+                // Update cache count
+                if (cacheCount) {
+                    const cache = XanaxModule.getCache();
+                    cacheCount.textContent = Object.keys(cache).length;
+                }
+                
+                // Update slider appearances
+                this.updateXanaxSlider(enabledToggle, settings.enabled);
+                this.updateXanaxSlider(relativeToggle, settings.showRelative);
+                
+                // Event listeners
+                if (enabledToggle) {
+                    enabledToggle.addEventListener('change', (e) => {
+                        const currentSettings = XanaxModule.getSettings();
+                        XanaxModule.saveSettings({
+                            ...currentSettings,
+                            enabled: e.target.checked
+                        });
+                        this.updateXanaxSlider(enabledToggle, e.target.checked);
+                        NotificationSystem.show('Xanax Viewer', `Xanax Viewer ${e.target.checked ? 'enabled' : 'disabled'}. Refresh to apply.`, 'info');
+                    });
+                }
+                
+                if (apiKeyInput) {
+                    apiKeyInput.addEventListener('change', (e) => {
+                        const currentSettings = XanaxModule.getSettings();
+                        XanaxModule.saveSettings({
+                            ...currentSettings,
+                            apiKey: e.target.value.trim()
+                        });
+                        NotificationSystem.show('Saved', 'API key saved. Refresh to apply.', 'info');
+                    });
+                }
+                
+                if (autoLimitSlider) {
+                    autoLimitSlider.addEventListener('input', (e) => {
+                        if (autoLimitValue) autoLimitValue.textContent = e.target.value;
+                    });
+                    
+                    autoLimitSlider.addEventListener('change', (e) => {
+                        const currentSettings = XanaxModule.getSettings();
+                        XanaxModule.saveSettings({
+                            ...currentSettings,
+                            autoLimit: parseInt(e.target.value)
+                        });
+                        NotificationSystem.show('Saved', `Auto-fetch limit set to ${e.target.value}`, 'info');
+                    });
+                }
+                
+                if (relativeToggle) {
+                    relativeToggle.addEventListener('change', (e) => {
+                        const currentSettings = XanaxModule.getSettings();
+                        XanaxModule.saveSettings({
+                            ...currentSettings,
+                            showRelative: e.target.checked
+                        });
+                        this.updateXanaxSlider(relativeToggle, e.target.checked);
+                        NotificationSystem.show('Saved', `Relative values ${e.target.checked ? 'enabled' : 'disabled'}. Refresh to apply.`, 'info');
+                    });
+                }
+                
+                if (clearCacheBtn) {
+                    clearCacheBtn.addEventListener('click', () => {
+                        if (confirm('Clear all cached Xanax data?')) {
+                            XanaxModule.clearCache();
+                            if (cacheCount) cacheCount.textContent = '0';
+                            NotificationSystem.show('Cleared', 'Xanax cache cleared successfully', 'info');
+                        }
+                    });
+                }
+            },
+            
+            updateXanaxSlider(toggle, isChecked) {
+                if (!toggle) return;
+                const slider = toggle.nextElementSibling;
+                if (slider) {
+                    slider.style.backgroundColor = isChecked ? '#4CAF50' : '#ccc';
+                    slider.style.boxShadow = isChecked ? '0 0 10px rgba(76, 175, 80, 0.5)' : 'none';
+                }
+            },
+
             importData() {
                 const input = document.createElement('input');
                 input.type = 'file';
@@ -1070,7 +1249,7 @@
                     
                     /* All slider backgrounds */
                     .travel-blocker-slider, .block-training-slider, .random-target-slider, .chain-timer-slider, .auto-gym-slider,
-                    .shoplifting-monitor-slider, .notification-sound-slider, .auto-redirect-slider {
+                    .shoplifting-monitor-slider, .notification-sound-slider, .auto-redirect-slider, .xanax-viewer-slider, .xanax-relative-slider {
                         position: absolute !important;
                         cursor: pointer !important;
                         top: 0 !important;
@@ -1084,7 +1263,7 @@
 
                     /* White dots on all sliders */
                     .travel-blocker-slider:before, .block-training-slider:before, .random-target-slider:before, .chain-timer-slider:before, .auto-gym-slider:before,
-                    .shoplifting-monitor-slider:before, .notification-sound-slider:before, .auto-redirect-slider:before {
+                    .shoplifting-monitor-slider:before, .notification-sound-slider:before, .auto-redirect-slider:before, .xanax-viewer-slider:before, .xanax-relative-slider:before {
                         position: absolute !important;
                         content: "" !important;
                         height: 18px !important;
@@ -1113,7 +1292,9 @@
                     #auto-gym-toggle:checked + .auto-gym-slider,
                     #shoplifting-monitor-toggle:checked + .shoplifting-monitor-slider,
                     #notification-sound-toggle:checked + .notification-sound-slider,
-                    #auto-redirect-toggle:checked + .auto-redirect-slider {
+                    #auto-redirect-toggle:checked + .auto-redirect-slider,
+                    #xanax-viewer-enabled-toggle:checked + .xanax-viewer-slider,
+                    #xanax-relative-toggle:checked + .xanax-relative-slider {
                         background-color: #4CAF50 !important;
                     }
 
@@ -1123,7 +1304,9 @@
                     #random-target-toggle:checked + .random-target-slider:before,
                     #chain-timer-toggle:checked + .chain-timer-slider:before,
                     #auto-gym-toggle:checked + .auto-gym-slider:before,
-                    #shoplifting-monitor-toggle:checked + .shoplifting-monitor-slider:before {
+                    #shoplifting-monitor-toggle:checked + .shoplifting-monitor-slider:before,
+                    #xanax-viewer-enabled-toggle:checked + .xanax-viewer-slider:before,
+                    #xanax-relative-toggle:checked + .xanax-relative-slider:before {
                         transform: translateX(26px) !important;
                     }
 
@@ -1135,7 +1318,7 @@
 
                     /* Hover effects */
                     .travel-blocker-slider:hover, .block-training-slider:hover, .random-target-slider:hover, .chain-timer-slider:hover, .auto-gym-slider:hover,
-                    .shoplifting-monitor-slider:hover, .notification-sound-slider:hover, .auto-redirect-slider:hover {
+                    .shoplifting-monitor-slider:hover, .notification-sound-slider:hover, .auto-redirect-slider:hover, .xanax-viewer-slider:hover, .xanax-relative-slider:hover {
                         box-shadow: 0 0 1px rgba(255,255,255,0.5) !important;
                     }
                 `;
@@ -1147,9 +1330,11 @@
                 const generalTab = document.getElementById('general-tab');
                 const chainTimerTab = document.getElementById('chain-timer-tab');
                 const shopliftingTab = document.getElementById('shoplifting-tab');
+                const xanaxViewerTab = document.getElementById('xanax-viewer-tab');
                 const generalContent = document.getElementById('general-content');
                 const chainTimerContent = document.getElementById('chain-timer-content');
                 const shopliftingContent = document.getElementById('shoplifting-content');
+                const xanaxViewerContent = document.getElementById('xanax-viewer-content');
 
                 // Populate Chain Timer content from module
                 if (chainTimerContent && window.SidekickModules?.ChainTimer?.createSettingsContent) {
@@ -1160,7 +1345,8 @@
                 const tabs = [
                     { button: generalTab, content: generalContent },
                     { button: chainTimerTab, content: chainTimerContent },
-                    { button: shopliftingTab, content: shopliftingContent }
+                    { button: shopliftingTab, content: shopliftingContent },
+                    { button: xanaxViewerTab, content: xanaxViewerContent }
                 ];
 
                 tabs.forEach(({ button, content }) => {
