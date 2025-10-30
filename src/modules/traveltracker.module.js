@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Travel Tracker Module
 // @namespace    http://tampermonkey.net/
-// @version      3.3.1
-// @description  Travel tracker with dropdown menu, strict multi-tab isolation, and private plane terminology
+// @version      3.3.2
+// @description  Travel tracker with dropdown menu, strict multi-tab isolation, persistent tracking, and private plane terminology
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -25,7 +25,7 @@
     waitForCore(() => {
         const TravelTrackerModule = {
             name: 'TravelTracker',
-            version: '3.3.1',
+            version: '3.3.2',
             isActive: false,
             isMarkingMode: false,
             currentTracker: null,
@@ -51,7 +51,7 @@
             },
 
             init() {
-                console.log('✈️ Initializing Travel Tracker Module v3.3.1...');
+                console.log('✈️ Initializing Travel Tracker Module v3.3.2...');
                 this.core = window.SidekickModules.Core;
                 
                 if (!this.core) {
@@ -703,9 +703,10 @@
                     }
                 }
                 
+                // If element not found, just skip this check cycle (don't cancel tracking!)
+                // The element might be temporarily hidden or the DOM might be updating
                 if (!element) {
-                    console.warn('Tracked element no longer found');
-                    this.removeCurrentTracker();
+                    console.log('⏸️ Tracked element temporarily not found - will retry next cycle');
                     return;
                 }
                 
