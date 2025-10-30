@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.18.1
+// @version      1.19.0
 // @description  SLEEK WARNING: Visual badge alerts when tracked shares mismatch actual holdings
 // @author       Machiacelli
 // @match        https://www.torn.com/*
@@ -503,114 +503,62 @@
                 leftSection.appendChild(icon);
                 leftSection.appendChild(title);
 
-                // MIDDLE: Sort button with dropdown menu
+                // RIGHT SIDE: Sort and Close buttons
+                const rightSection = document.createElement('div');
+                rightSection.style.cssText = 'display: flex; align-items: center; gap: 4px;';
+
+                // Sort toggle button (Name ⇅ / Profit $⇅)
                 const sortButton = document.createElement('button');
-                sortButton.innerHTML = '⇅';
-                sortButton.title = 'Sort stocks';
+                
+                // Load saved sort preference (default to name)
+                const savedSort = this.core.loadState('stockticker_sort_preference') || 'name-asc';
+                this.currentSortOption = savedSort;
+                
+                // Determine if we're in profit mode
+                const isProfitMode = savedSort.includes('profit');
+                sortButton.innerHTML = isProfitMode ? '$⇅' : '⇅';
+                sortButton.title = isProfitMode ? 'Sorting by Profit (click to sort by Name)' : 'Sorting by Name (click to sort by Profit)';
                 sortButton.style.cssText = `
-                    background: #2a2a2a;
-                    border: 1px solid #444;
-                    border-radius: 4px;
-                    color: #888;
+                    background: none;
+                    border: none;
+                    color: #bbb;
                     cursor: pointer;
                     font-size: 16px;
-                    padding: 2px 8px;
+                    padding: 0 6px;
                     line-height: 1;
-                    margin-left: 12px;
                     transition: all 0.2s;
-                    height: 24px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
                 `;
-
-                // Sort dropdown menu (hidden by default)
-                const sortMenu = document.createElement('div');
-                sortMenu.style.cssText = `
-                    position: fixed;
-                    background: #2a2a2a;
-                    border: 1px solid #444;
-                    border-radius: 6px;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                    z-index: 999999;
-                    display: none;
-                    min-width: 160px;
-                    overflow: hidden;
-                `;
-
-                const sortOptions = [
-                    { value: 'value-desc', label: 'Value ↓' },
-                    { value: 'value-asc', label: 'Value ↑' },
-                    { value: 'name-asc', label: 'Name A→Z' },
-                    { value: 'name-desc', label: 'Name Z→A' },
-                    { value: 'profit-desc', label: 'Profit ↓' },
-                    { value: 'profit-asc', label: 'Profit ↑' }
-                ];
-
-                sortOptions.forEach(option => {
-                    const optionBtn = document.createElement('button');
-                    optionBtn.textContent = option.label;
-                    optionBtn.style.cssText = `
-                        background: none;
-                        border: none;
-                        color: #ccc;
-                        padding: 8px 12px;
-                        width: 100%;
-                        text-align: left;
-                        cursor: pointer;
-                        font-size: 12px;
-                        transition: background 0.2s;
-                    `;
-                    optionBtn.onmouseover = () => optionBtn.style.background = '#333';
-                    optionBtn.onmouseout = () => optionBtn.style.background = 'none';
-                    optionBtn.onclick = (e) => {
-                        e.stopPropagation();
-                        this.currentSortOption = option.value;
-                        this.core.saveState('stockticker_sort_preference', option.value);
-                        console.log(`📊 Sort changed to: ${option.value}`);
-                        sortMenu.style.display = 'none';
-                        this.fetchStockData();
-                    };
-                    sortMenu.appendChild(optionBtn);
-                });
-
-                // Load saved sort preference
-                const savedSort = this.core.loadState('stockticker_sort_preference') || 'value-desc';
-                this.currentSortOption = savedSort;
-
-                // Toggle menu on button click
+                
+                // Toggle between name and profit sorting
                 sortButton.onclick = (e) => {
                     e.stopPropagation();
-                    const isVisible = sortMenu.style.display === 'block';
-                    sortMenu.style.display = isVisible ? 'none' : 'block';
+                    const currentlyProfitMode = this.currentSortOption.includes('profit');
                     
-                    if (!isVisible) {
-                        const rect = sortButton.getBoundingClientRect();
-                        sortMenu.style.left = rect.left + 'px';
-                        sortMenu.style.top = (rect.bottom + 4) + 'px';
+                    if (currentlyProfitMode) {
+                        // Switch to name sorting
+                        this.currentSortOption = 'name-asc';
+                        sortButton.innerHTML = '⇅';
+                        sortButton.title = 'Sorting by Name (click to sort by Profit)';
+                    } else {
+                        // Switch to profit sorting
+                        this.currentSortOption = 'profit-desc';
+                        sortButton.innerHTML = '$⇅';
+                        sortButton.title = 'Sorting by Profit (click to sort by Name)';
                     }
+                    
+                    this.core.saveState('stockticker_sort_preference', this.currentSortOption);
+                    console.log(`📊 Sort changed to: ${this.currentSortOption}`);
+                    this.fetchStockData();
+                };
+                
+                sortButton.onmouseover = () => { 
+                    sortButton.style.color = '#fff'; 
+                };
+                sortButton.onmouseout = () => { 
+                    sortButton.style.color = '#bbb'; 
                 };
 
-                sortButton.onmouseover = () => {
-                    sortButton.style.background = '#333';
-                    sortButton.style.borderColor = '#666';
-                    sortButton.style.color = '#fff';
-                };
-                sortButton.onmouseout = () => {
-                    sortButton.style.background = '#2a2a2a';
-                    sortButton.style.borderColor = '#444';
-                    sortButton.style.color = '#888';
-                };
-
-                // Close menu when clicking outside
-                document.addEventListener('click', () => {
-                    sortMenu.style.display = 'none';
-                });
-
-                leftSection.appendChild(sortButton);
-                document.body.appendChild(sortMenu);
-
-                // RIGHT SIDE: Close button
+                // Close button (matching other panels)
                 const closeBtn = document.createElement('button');
                 closeBtn.innerHTML = '×';
                 closeBtn.title = 'Close';
@@ -632,8 +580,11 @@
                     this.hide();
                 };
 
+                rightSection.appendChild(sortButton);
+                rightSection.appendChild(closeBtn);
+
                 header.appendChild(leftSection);
-                header.appendChild(closeBtn);
+                header.appendChild(rightSection);
 
                 // Content area
                 const content = document.createElement('div');
@@ -948,11 +899,11 @@
                 let totalValue = 0;
                 const stocksHTML = [];
 
-                // Get current sort option (default to value descending)
-                const sortOption = this.currentSortOption || 'value-desc';
+                // Get current sort option (default to name ascending)
+                const sortOption = this.currentSortOption || 'name-asc';
                 console.log(`📊 Sorting stocks by: ${sortOption}`);
 
-                // Sort stocks based on selected option
+                // Sort stocks based on selected option (name or profit only)
                 const sortedStocks = Object.entries(filteredStocks).sort((a, b) => {
                     const stockA = a[1];
                     const stockB = b[1];
@@ -983,30 +934,18 @@
                         profitB = valueB - estimatedInvestmentB;
                     }
                     
-                    // Sort based on selected option
-                    switch(sortOption) {
-                        case 'value-desc':
-                            return valueB - valueA; // High to low
-                        case 'value-asc':
-                            return valueA - valueB; // Low to high
-                        case 'name-asc':
-                            return (stockA.name || '').localeCompare(stockB.name || ''); // A to Z
-                        case 'name-desc':
-                            return (stockB.name || '').localeCompare(stockA.name || ''); // Z to A
-                        case 'profit-desc':
-                            // Sort by profit (high to low), put untracked at end
-                            if (profitA === null && profitB === null) return 0;
-                            if (profitA === null) return 1; // Move untracked to end
-                            if (profitB === null) return -1;
-                            return profitB - profitA;
-                        case 'profit-asc':
-                            // Sort by profit (low to high), put untracked at end
-                            if (profitA === null && profitB === null) return 0;
-                            if (profitA === null) return 1; // Move untracked to end
-                            if (profitB === null) return -1;
-                            return profitA - profitB;
-                        default:
-                            return valueB - valueA; // Default to value descending
+                    // Sort based on selected option (name or profit)
+                    if (sortOption === 'name-asc') {
+                        return (stockA.name || '').localeCompare(stockB.name || ''); // A to Z
+                    } else if (sortOption === 'profit-desc') {
+                        // Sort by profit (high to low), put untracked at end
+                        if (profitA === null && profitB === null) return 0;
+                        if (profitA === null) return 1; // Move untracked to end
+                        if (profitB === null) return -1;
+                        return profitB - profitA; // High to low
+                    } else {
+                        // Default to name ascending
+                        return (stockA.name || '').localeCompare(stockB.name || '');
                     }
                 });
 
@@ -1674,13 +1613,20 @@
                         if (input.checked) {
                             if (!this.selectedStocks.includes(stock.id)) {
                                 this.selectedStocks.push(stock.id);
+                                console.log(`✅ Added stock ${stock.id} to selection`);
                             }
                         } else {
                             this.selectedStocks = this.selectedStocks.filter(id => id !== stock.id);
+                            console.log(`❌ Removed stock ${stock.id} from selection`);
                         }
                         this.core.saveState('stockticker_selected_stocks', this.selectedStocks);
-                        this.core.saveState('stockticker_has_selection', true); // Mark that user has made a selection
-                        this.fetchStockData(); // Refresh display
+                        this.core.saveState('stockticker_has_selection', true);
+                        console.log(`📊 Updated selected stocks:`, this.selectedStocks);
+                        
+                        // Force immediate refresh of the panel
+                        if (this.panel && document.body.contains(this.panel)) {
+                            this.fetchStockData();
+                        }
                     };
 
                     const label = document.createElement('span');
