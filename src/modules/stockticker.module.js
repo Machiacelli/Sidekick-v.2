@@ -919,76 +919,47 @@
 
             // Transaction Tracking System
             startTransactionMonitoring() {
-                // Only monitor on stocks page
-                if (!window.location.href.includes('/stockexchange.php')) {
+                // Monitor on stocks page - updated to match actual Torn URL pattern
+                const isStocksPage = window.location.href.includes('sid=stocks') || 
+                                   window.location.href.includes('/stockexchange.php');
+                
+                if (!isStocksPage) {
                     console.log('📈 Stock Ticker: Not on stocks page, skipping transaction monitoring');
+                    console.log('📍 Current URL:', window.location.href);
                     return;
                 }
 
                 console.log('📈 Stock Ticker: Starting transaction monitoring...');
+                console.log('📍 Monitoring URL:', window.location.href);
                 console.log('💡 Stock Ticker: Will log ALL detected messages for debugging');
+                console.log('🔍 Stock Ticker: Watching for transaction messages in page updates...');
 
                 // Monitor for stock purchase/sale confirmations
                 const observer = new MutationObserver((mutations) => {
                     for (const mutation of mutations) {
                         for (const node of mutation.addedNodes) {
                             if (node.nodeType === 1) { // Element node
-                                // Look for success messages
-                                const message = node.textContent || '';
-                                
-                                // Log any message that contains "bought" or "sold" for debugging
-                                if (message.toLowerCase().includes('bought') || message.toLowerCase().includes('sold')) {
-                                    console.log('🔍 Transaction message detected:', message);
-                                }
-                                
-                                // Try multiple patterns to match Torn's transaction messages
-                                
-                                // Pattern 1: "You bought 1,000 shares of Stock Name for $5,000.00"
-                                let buyMatch = message.match(/You bought ([\d,]+) shares of (.+?) for \$([\d,]+\.?\d*)/i);
-                                
-                                // Pattern 2: "You have bought 1,000 shares of Stock Name for $5,000.00"
-                                if (!buyMatch) {
-                                    buyMatch = message.match(/You have bought ([\d,]+) shares of (.+?) for \$([\d,]+\.?\d*)/i);
-                                }
-                                
-                                // Pattern 3: Using acronym instead of full name
-                                if (!buyMatch) {
-                                    buyMatch = message.match(/You (?:have )?bought ([\d,]+) shares of ([A-Z]{2,5}) for \$([\d,]+\.?\d*)/i);
-                                }
-                                
-                                if (buyMatch) {
-                                    const shares = parseInt(buyMatch[1].replace(/,/g, ''));
-                                    const stockName = buyMatch[2].trim();
-                                    const totalCost = parseFloat(buyMatch[3].replace(/,/g, ''));
-                                    const pricePerShare = totalCost / shares;
+                                // Check both the node itself and its descendants for messages
+                                const checkNode = (element) => {
+                                    const message = element.textContent || '';
                                     
-                                    console.log(`💰 BUY detected: ${shares} shares of "${stockName}" at $${pricePerShare.toFixed(2)}/share (total: $${totalCost.toFixed(2)})`);
-                                    this.recordTransaction('buy', stockName, shares, pricePerShare);
-                                }
-                                
-                                // Try multiple patterns for SELL messages
-                                
-                                // Pattern 1: "You sold 1,000 shares of Stock Name for $6,000.00"
-                                let sellMatch = message.match(/You sold ([\d,]+) shares of (.+?) for \$([\d,]+\.?\d*)/i);
-                                
-                                // Pattern 2: "You have sold 1,000 shares of Stock Name for $6,000.00"
-                                if (!sellMatch) {
-                                    sellMatch = message.match(/You have sold ([\d,]+) shares of (.+?) for \$([\d,]+\.?\d*)/i);
-                                }
-                                
-                                // Pattern 3: Using acronym instead of full name
-                                if (!sellMatch) {
-                                    sellMatch = message.match(/You (?:have )?sold ([\d,]+) shares of ([A-Z]{2,5}) for \$([\d,]+\.?\d*)/i);
-                                }
-                                
-                                if (sellMatch) {
-                                    const shares = parseInt(sellMatch[1].replace(/,/g, ''));
-                                    const stockName = sellMatch[2].trim();
-                                    const totalRevenue = parseFloat(sellMatch[3].replace(/,/g, ''));
-                                    const pricePerShare = totalRevenue / shares;
+                                    // Log any message that contains "bought", "sold", "share", or stock-related keywords
+                                    if (message.toLowerCase().includes('bought') || 
+                                        message.toLowerCase().includes('sold') ||
+                                        (message.toLowerCase().includes('share') && message.length < 500)) {
+                                        console.log('🔍 Transaction message detected:', message.substring(0, 200));
+                                    }
                                     
-                                    console.log(`💸 SELL detected: ${shares} shares of "${stockName}" at $${pricePerShare.toFixed(2)}/share (total: $${totalRevenue.toFixed(2)})`);
-                                    this.recordTransaction('sell', stockName, shares, pricePerShare);
+                                    // Try multiple patterns to match Torn's transaction messages
+                                    this.checkForTransaction(message);
+                                };
+                                
+                                // Check the added node
+                                checkNode(node);
+                                
+                                // Also check all child elements (for nested messages)
+                                if (node.querySelectorAll) {
+                                    node.querySelectorAll('*').forEach(child => checkNode(child));
                                 }
                             }
                         }
@@ -1003,6 +974,60 @@
 
                 this.transactionObserver = observer;
                 console.log('✅ Stock Ticker: Transaction monitoring started');
+                console.log('💡 TIP: Try buying or selling 1 share to test detection');
+            },
+
+            checkForTransaction(message) {
+                // Try multiple patterns to match Torn's transaction messages
+                
+                // Pattern 1: "You bought 1,000 shares in Stock Name for $5,000.00"
+                let buyMatch = message.match(/You bought ([\d,]+) shares? (?:in|of) (.+?) for \$([\d,]+\.?\d*)/i);
+                
+                // Pattern 2: "You have bought 1,000 shares in Stock Name for $5,000.00"
+                if (!buyMatch) {
+                    buyMatch = message.match(/You have bought ([\d,]+) shares? (?:in|of) (.+?) for \$([\d,]+\.?\d*)/i);
+                }
+                
+                // Pattern 3: Using acronym instead of full name
+                if (!buyMatch) {
+                    buyMatch = message.match(/You (?:have )?bought ([\d,]+) shares? (?:in|of) ([A-Z]{2,5}) for \$([\d,]+\.?\d*)/i);
+                }
+                
+                if (buyMatch) {
+                    const shares = parseInt(buyMatch[1].replace(/,/g, ''));
+                    const stockName = buyMatch[2].trim();
+                    const totalCost = parseFloat(buyMatch[3].replace(/,/g, ''));
+                    const pricePerShare = totalCost / shares;
+                    
+                    console.log(`💰 BUY detected: ${shares} shares of "${stockName}" at $${pricePerShare.toFixed(2)}/share (total: $${totalCost.toFixed(2)})`);
+                    this.recordTransaction('buy', stockName, shares, pricePerShare);
+                    return;
+                }
+                
+                // Try multiple patterns for SELL messages
+                
+                // Pattern 1: "You sold 1,000 shares in Stock Name for $6,000.00"
+                let sellMatch = message.match(/You sold ([\d,]+) shares? (?:in|of) (.+?) for \$([\d,]+\.?\d*)/i);
+                
+                // Pattern 2: "You have sold 1,000 shares in Stock Name for $6,000.00"
+                if (!sellMatch) {
+                    sellMatch = message.match(/You have sold ([\d,]+) shares? (?:in|of) (.+?) for \$([\d,]+\.?\d*)/i);
+                }
+                
+                // Pattern 3: Using acronym instead of full name
+                if (!sellMatch) {
+                    sellMatch = message.match(/You (?:have )?sold ([\d,]+) shares? (?:in|of) ([A-Z]{2,5}) for \$([\d,]+\.?\d*)/i);
+                }
+                
+                if (sellMatch) {
+                    const shares = parseInt(sellMatch[1].replace(/,/g, ''));
+                    const stockName = sellMatch[2].trim();
+                    const totalRevenue = parseFloat(sellMatch[3].replace(/,/g, ''));
+                    const pricePerShare = totalRevenue / shares;
+                    
+                    console.log(`💸 SELL detected: ${shares} shares of "${stockName}" at $${pricePerShare.toFixed(2)}/share (total: $${totalRevenue.toFixed(2)})`);
+                    this.recordTransaction('sell', stockName, shares, pricePerShare);
+                }
             },
 
             recordTransaction(type, stockName, shares, pricePerShare) {
