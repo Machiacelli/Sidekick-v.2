@@ -741,6 +741,8 @@
                 const stocks = this.stockData;
                 
                 console.log('📈 Stock Ticker: Rendering stocks...', stocks);
+                console.log('📊 Stock Ticker: Tracked transactions available:', this.trackedTransactions);
+                console.log('📊 Stock Ticker: Number of tracked stocks:', Object.keys(this.trackedTransactions).length);
                 
                 if (!stocks || Object.keys(stocks).length === 0) {
                     content.innerHTML = `
@@ -835,6 +837,15 @@
                     
                     const trackedStock = this.trackedTransactions[stockId];
                     
+                    // DEBUG: Log tracking data for this stock
+                    console.log(`🔍 Stock ${stockId} tracking check:`, {
+                        shares: shares,
+                        hasTrackedData: !!trackedStock,
+                        trackedShares: trackedStock?.totalShares || 0,
+                        trackedInvested: trackedStock?.totalInvested || 0,
+                        trackedStock: trackedStock
+                    });
+                    
                     // CRITICAL FIX: Only show P/L if you CURRENTLY own shares AND have tracking data
                     if (shares > 0 && trackedStock && trackedStock.totalShares > 0) {
                         // Calculate average buy price from tracked data
@@ -850,7 +861,7 @@
                         console.log(`💰 Stock ${stockId} P/L: $${profitLoss.toFixed(2)} (${profitPercent.toFixed(2)}%) - ${shares} shares owned at avg $${avgBuyPrice.toFixed(2)}`);
                     } else if (shares > 0) {
                         // You own shares but no tracking data
-                        console.log(`📊 Stock ${stockId}: ${shares} shares owned but not tracked`);
+                        console.log(`📊 Stock ${stockId}: ${shares} shares owned but not tracked - trackedStock exists? ${!!trackedStock}, has shares? ${trackedStock?.totalShares > 0}`);
                     } else if (trackedStock && trackedStock.totalShares > 0) {
                         // You have tracking data but don't own shares anymore - clear stale data
                         console.log(`🗑️ Stock ${stockId}: Clearing stale tracking data (0 shares owned)`);
