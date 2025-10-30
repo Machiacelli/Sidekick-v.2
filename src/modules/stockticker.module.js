@@ -801,6 +801,7 @@
                     
                     for (const [stockId, userStock] of Object.entries(userStocks)) {
                         const marketStock = marketStocks[stockId];
+                        console.log(`📈 FULL USER STOCK DATA for ${stockId}:`, JSON.stringify(userStock, null, 2));
                         console.log(`📈 Merging stock ${stockId}:`, {
                             userStock,
                             marketStock,
@@ -1038,7 +1039,7 @@
                                 </div>
                                 ${!isTracked ? `
                                 <div>
-                                    <button onclick="window.SidekickModules.StockTicker.showImportWindow()" style="
+                                    <button onclick="event.stopPropagation(); window.SidekickModules.StockTicker.showImportWindow(${stockId}, '${stockAcronym}')" style="
                                         padding: 4px 12px;
                                         background: linear-gradient(135deg, #4CAF50, #45a049);
                                         border: none;
@@ -1643,7 +1644,8 @@
                 };
             },
 
-            showImportWindow() {
+            showImportWindow(preselectedStockId = null, preselectedAcronym = null) {
+                console.log('📥 Opening import window with preselected stock:', preselectedStockId, preselectedAcronym);
                 const overlay = document.createElement('div');
                 overlay.style.cssText = `
                     position: fixed;
@@ -1850,6 +1852,14 @@
                 const priceInput = content.querySelector('#import-price');
                 const statusDiv = content.querySelector('#import-status');
                 const summaryDiv = content.querySelector('#import-summary');
+
+                // Pre-select stock if provided
+                if (preselectedStockId) {
+                    console.log('📥 Pre-selecting stock ID:', preselectedStockId);
+                    stockSelect.value = preselectedStockId.toString();
+                    // Focus on shares input to help user continue
+                    setTimeout(() => sharesInput.focus(), 100);
+                }
 
                 const updateSummary = () => {
                     let allPurchasesHTML = '';
