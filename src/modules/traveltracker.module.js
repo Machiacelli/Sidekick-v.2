@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Travel Tracker Module
 // @namespace    http://tampermonkey.net/
-// @version      3.3.2
-// @description  Travel tracker with dropdown menu, strict multi-tab isolation, persistent tracking, and private plane terminology
+// @version      3.3.3
+// @description  Travel tracker with dropdown menu, strict multi-tab isolation, persistent tracking, auto-cleanup, and private plane terminology
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -25,7 +25,7 @@
     waitForCore(() => {
         const TravelTrackerModule = {
             name: 'TravelTracker',
-            version: '3.3.2',
+            version: '3.3.3',
             isActive: false,
             isMarkingMode: false,
             currentTracker: null,
@@ -51,7 +51,7 @@
             },
 
             init() {
-                console.log('✈️ Initializing Travel Tracker Module v3.3.2...');
+                console.log('✈️ Initializing Travel Tracker Module v3.3.3...');
                 this.core = window.SidekickModules.Core;
                 
                 if (!this.core) {
@@ -375,6 +375,16 @@
                 this.isTrackingTab = true; // Mark this tab as the tracking tab
                 this.markTabActive(); // Mark as active tracking tab
                 this.saveState();
+                
+                // Exit marking mode since we've successfully created the tracker
+                this.isMarkingMode = false;
+                document.body.style.cursor = '';
+                this.hideInstructions();
+                this.removeEventListeners();
+                
+                // Remove hover effects
+                const highlighted = document.querySelectorAll('.travel-tracker-highlight');
+                highlighted.forEach(el => el.classList.remove('travel-tracker-highlight'));
                 
                 // Create status display
                 this.createStatusDisplay();
