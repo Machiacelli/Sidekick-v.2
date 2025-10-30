@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Travel Tracker Module
 // @namespace    http://tampermonkey.net/
-// @version      3.1.0
-// @description  Travel tracker with improved plane detection and manual selection dialog
+// @version      3.2.0
+// @description  Travel tracker with modern UI, improved plane detection, and manual selection dialog
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -25,7 +25,7 @@
     waitForCore(() => {
         const TravelTrackerModule = {
             name: 'TravelTracker',
-            version: '3.1.0',
+            version: '3.2.0',
             isActive: false,
             isMarkingMode: false,
             currentTracker: null,
@@ -49,7 +49,7 @@
             },
 
             init() {
-                console.log('✈️ Initializing Travel Tracker Module v3.1.0...');
+                console.log('✈️ Initializing Travel Tracker Module v3.2.0...');
                 this.core = window.SidekickModules.Core;
                 
                 if (!this.core) {
@@ -203,7 +203,7 @@
             },
 
             showPlaneTypeDialog(element, destination, detectedType) {
-                // Create modal dialog
+                // Create modal dialog with modern, subtle design
                 const modal = document.createElement('div');
                 modal.style.cssText = `
                     position: fixed;
@@ -211,81 +211,113 @@
                     left: 0;
                     width: 100%;
                     height: 100%;
-                    background: rgba(0, 0, 0, 0.7);
+                    background: rgba(0, 0, 0, 0.4);
+                    backdrop-filter: blur(4px);
                     z-index: 999999;
                     display: flex;
                     align-items: center;
                     justify-content: center;
+                    animation: fadeIn 0.2s ease;
                 `;
                 
                 const dialog = document.createElement('div');
                 dialog.style.cssText = `
-                    background: linear-gradient(135deg, #1976D2, #2196F3);
-                    color: white;
-                    padding: 24px;
-                    border-radius: 12px;
-                    max-width: 400px;
-                    font-family: Arial, sans-serif;
-                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+                    background: #1a1a1a;
+                    color: #e0e0e0;
+                    padding: 28px;
+                    border-radius: 16px;
+                    max-width: 380px;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    animation: slideUp 0.3s ease;
                 `;
                 
                 dialog.innerHTML = `
-                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 16px;">
-                        ✈️ Travel Tracker - Plane Type
+                    <style>
+                        @keyframes fadeIn {
+                            from { opacity: 0; }
+                            to { opacity: 1; }
+                        }
+                        @keyframes slideUp {
+                            from { transform: translateY(20px); opacity: 0; }
+                            to { transform: translateY(0); opacity: 1; }
+                        }
+                    </style>
+                    <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #ffffff;">
+                        ✈️ Confirm Plane Type
                     </div>
-                    <div style="margin-bottom: 20px; font-size: 14px;">
-                        Traveling to: <strong>${destination}</strong><br>
-                        <span style="font-size: 12px; opacity: 0.9;">Please confirm your plane type:</span>
+                    <div style="margin-bottom: 24px; font-size: 13px; color: #b0b0b0;">
+                        Traveling to <strong style="color: #ffffff;">${destination}</strong>
                     </div>
-                    <div style="display: flex; gap: 12px; flex-direction: column;">
+                    <div style="display: flex; gap: 10px; flex-direction: column;">
                         <button id="tt-commercial-btn" style="
-                            background: ${detectedType === 'commercial' ? '#4CAF50' : 'rgba(255, 255, 255, 0.2)'};
-                            border: 2px solid ${detectedType === 'commercial' ? '#4CAF50' : 'rgba(255, 255, 255, 0.3)'};
+                            background: ${detectedType === 'commercial' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#2a2a2a'};
+                            border: 1px solid ${detectedType === 'commercial' ? '#667eea' : 'rgba(255, 255, 255, 0.1)'};
                             color: white;
-                            padding: 12px 20px;
-                            border-radius: 8px;
-                            font-size: 14px;
+                            padding: 14px 18px;
+                            border-radius: 10px;
+                            font-size: 13px;
                             cursor: pointer;
-                            font-weight: bold;
-                            transition: all 0.2s;
-                        " onmouseover="this.style.background='#4CAF50'" onmouseout="this.style.background='${detectedType === 'commercial' ? '#4CAF50' : 'rgba(255, 255, 255, 0.2)'}'">
-                            🛫 Commercial Flight
-                            <div style="font-size: 11px; font-weight: normal; opacity: 0.9; margin-top: 4px;">
-                                Longer travel time, cheaper
+                            font-weight: 500;
+                            transition: all 0.2s ease;
+                            text-align: left;
+                        " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'" 
+                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 20px;">🛫</span>
+                                <div>
+                                    <div style="font-weight: 600;">Commercial Flight</div>
+                                    <div style="font-size: 11px; opacity: 0.8; margin-top: 2px;">
+                                        Standard travel time
+                                    </div>
+                                </div>
                             </div>
                         </button>
                         <button id="tt-private-btn" style="
-                            background: ${detectedType === 'private' ? '#FF9800' : 'rgba(255, 255, 255, 0.2)'};
-                            border: 2px solid ${detectedType === 'private' ? '#FF9800' : 'rgba(255, 255, 255, 0.3)'};
+                            background: ${detectedType === 'private' ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' : '#2a2a2a'};
+                            border: 1px solid ${detectedType === 'private' ? '#f5576c' : 'rgba(255, 255, 255, 0.1)'};
                             color: white;
-                            padding: 12px 20px;
-                            border-radius: 8px;
-                            font-size: 14px;
+                            padding: 14px 18px;
+                            border-radius: 10px;
+                            font-size: 13px;
                             cursor: pointer;
-                            font-weight: bold;
-                            transition: all 0.2s;
-                        " onmouseover="this.style.background='#FF9800'" onmouseout="this.style.background='${detectedType === 'private' ? '#FF9800' : 'rgba(255, 255, 255, 0.2)'}'">
-                            ✈️ Private Jet
-                            <div style="font-size: 11px; font-weight: normal; opacity: 0.9; margin-top: 4px;">
-                                Faster travel time, more expensive
+                            font-weight: 500;
+                            transition: all 0.2s ease;
+                            text-align: left;
+                        " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(245, 87, 108, 0.4)'" 
+                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 20px;">✈️</span>
+                                <div>
+                                    <div style="font-weight: 600;">Private Jet</div>
+                                    <div style="font-size: 11px; opacity: 0.8; margin-top: 2px;">
+                                        Faster travel time
+                                    </div>
+                                </div>
                             </div>
                         </button>
-                        <button id="tt-cancel-btn" style="
-                            background: rgba(255, 255, 255, 0.1);
-                            border: 1px solid rgba(255, 255, 255, 0.3);
-                            color: white;
-                            padding: 8px 16px;
-                            border-radius: 6px;
-                            font-size: 12px;
-                            cursor: pointer;
-                            margin-top: 8px;
-                        " onmouseover="this.style.background='rgba(255, 255, 255, 0.2)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'">
-                            Cancel
-                        </button>
                     </div>
-                    ${detectedType !== 'commercial' && detectedType !== 'private' ? 
-                        '<div style="margin-top: 12px; font-size: 11px; opacity: 0.8;">⚠️ Could not auto-detect plane type</div>' : 
-                        `<div style="margin-top: 12px; font-size: 11px; opacity: 0.8;">✓ Auto-detected: ${detectedType}</div>`
+                    <button id="tt-cancel-btn" style="
+                        background: transparent;
+                        border: none;
+                        color: #888;
+                        padding: 12px;
+                        border-radius: 8px;
+                        font-size: 12px;
+                        cursor: pointer;
+                        margin-top: 12px;
+                        width: 100%;
+                        transition: all 0.2s;
+                    " onmouseover="this.style.background='rgba(255, 255, 255, 0.05)'; this.style.color='#aaa'" 
+                       onmouseout="this.style.background='transparent'; this.style.color='#888'">
+                        Cancel
+                    </button>
+                    ${detectedType === 'commercial' || detectedType === 'private' ? 
+                        `<div style="margin-top: 16px; font-size: 11px; color: #666; text-align: center;">
+                            <span style="color: #4CAF50;">✓</span> Auto-detected: ${detectedType}
+                        </div>` : 
+                        '<div style="margin-top: 16px; font-size: 11px; color: #888; text-align: center;">⚠️ Could not auto-detect</div>'
                     }
                 `;
                 
