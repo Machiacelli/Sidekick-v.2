@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.89.0
-// @description  Stock Ticker v1.12.0: CRITICAL FIX - Updated regex to match Torn's new transaction format!
+// @version      5.90.0
+// @description  Stock Ticker v1.13.0: FIX - Pass stock ID directly to prevent lookup failures
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -27,18 +27,18 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/traveltracker.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2218142/src/modules/stockticker.module.js?v=20250130
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@406cbd5/src/modules/stockticker.module.js?v=20250130
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/todolist.module.js?v=20250129
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v5.89.0 - Stock Ticker Transaction Format Fix!');
-    console.log('✅ Stock Ticker v1.12.0: Now matches "You have bought 1 shares at $1,197.06 each" format');
-    console.log('🔧 CRITICAL: Updated regex patterns to match Torn\'s current transaction messages');
-    console.log('📍 Stock name extracted from URL (stockID parameter) since it\'s not in the message');
-    console.log('💡 TIP: Buy/sell 1 share again to test the FULL detection + recording');
+    console.log('🚀 Sidekick Modular CDN v5.90.0 - Stock Ticker Lookup Fix!');
+    console.log('✅ Stock Ticker v1.13.0: Fixed stock ID lookup by passing it directly');
+    console.log('🔧 FIX: Resolves "Could not find stock ID for Stock_2" error');
+    console.log('📍 Stock ID from URL now passed directly to recordTransaction()');
+    console.log('💡 TIP: Buy/sell shares to test - transactions should now record successfully!');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
