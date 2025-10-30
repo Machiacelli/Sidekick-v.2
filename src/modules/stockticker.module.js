@@ -715,8 +715,10 @@
                             current_price: marketStock?.current_price
                         });
                         
+                        // CRITICAL FIX: Torn API uses 'total_shares', not 'shares'
                         this.stockData[stockId] = {
                             ...userStock,
+                            shares: userStock.total_shares || 0, // ← Extract total_shares and rename to shares
                             current_price: marketStock?.current_price || 0,
                             name: marketStock?.name || userStock.name || `Stock #${stockId}`,
                             acronym: marketStock?.acronym || `#${stockId}` // Store acronym from API
