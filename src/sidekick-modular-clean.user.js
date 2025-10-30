@@ -9,8 +9,8 @@
 // @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/cb04349/src/sidekick-modular-clean.user.js?v=20251030
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/cb04349/src/sidekick-modular-clean.user.js?v=20251030
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/8493fa2/src/sidekick-modular-clean.user.js?v=20251030
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/8493fa2/src/sidekick-modular-clean.user.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/core.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/ui.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/settings.module.js?v=20251030
