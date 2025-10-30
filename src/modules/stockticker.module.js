@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.19.0
-// @description  SLEEK WARNING: Visual badge alerts when tracked shares mismatch actual holdings
+// @version      1.20.0
+// @description  SMOOTH HOVER: Close button fades to red instead of red background box
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -570,11 +570,10 @@
                     font-size: 20px;
                     padding: 0 6px;
                     line-height: 1;
-                    border-radius: 4px;
-                    transition: all 0.2s;
+                    transition: color 0.3s ease;
                 `;
-                closeBtn.onmouseover = () => { closeBtn.style.background = '#d32f2f'; closeBtn.style.color = '#fff'; };
-                closeBtn.onmouseout = () => { closeBtn.style.background = 'none'; closeBtn.style.color = '#bbb'; };
+                closeBtn.onmouseover = () => { closeBtn.style.color = '#ff4444'; };
+                closeBtn.onmouseout = () => { closeBtn.style.color = '#bbb'; };
                 closeBtn.onclick = (e) => {
                     e.stopPropagation();
                     this.hide();
