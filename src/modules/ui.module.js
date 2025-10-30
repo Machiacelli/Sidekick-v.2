@@ -39,8 +39,8 @@
                 background: linear-gradient(135deg, #262626, #5e5c5cff) !important;
                 color: white !important;
                 border: 1px solid rgba(255,255,255,0.6) !important;
-                width: 32px !important;
-                height: 32px !important;
+                width: 31px !important;
+                height: 31px !important;
                 border-radius: 8px !important;
                 cursor: pointer !important;
                 font-size: 16px !important;
