@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.6.1
-// @description  Travel Tracker v3.3.1: Strict tab isolation + Time on Tab v1.0.1: Fixed URL matching
+// @version      6.6.2
+// @description  Travel Tracker v3.3.2: Persistent tracking (no cancellation) + Time on Tab v1.0.1: Fixed URL matching
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -26,7 +26,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/blocktraining.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@78a5175/src/modules/traveltracker.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@0885d6d/src/modules/traveltracker.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@b789c1c/src/modules/stockticker.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@78a5175/src/modules/timeontab.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/todolist.module.js?v=20251030
@@ -35,9 +35,9 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.6.1 - Tab Isolation & Timer Fixes!');
-    console.log('✅ FIXED: Travel Tracker strict tab isolation - no more UI appearing in other tabs');
-    console.log('✅ FIXED: Time on Tab URL matching - now works on travel/hospital/raceway pages');
+    console.log('🚀 Sidekick Modular CDN v6.6.2 - Persistent Travel Tracking!');
+    console.log('✅ FIXED: Travel Tracker now persists - no cancellation when minimizing sidebar');
+    console.log('✅ FIXED: Time on Tab URL matching - works on travel/hospital/raceway pages');
     console.log('✅ Travel Tracker dropdown menu for plane type selection');
     console.log('✅ "Private Jet" → "Private Plane" terminology');
     console.log('📝 Stock Ticker: Fixed stock IDs, UI cleanup, enhanced debugging');
