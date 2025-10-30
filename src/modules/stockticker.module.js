@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.21.0
-// @description  FIXED: Stock card now shows all details + track button for untracked stocks
+// @version      1.22.0
+// @description  Simplified display: Current Price + P/L only, removed data mismatch warnings
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -1006,50 +1006,23 @@
                         totalValue += currentValue;
                     }
 
-                    // Check for mismatch between tracked shares and actual shares
-                    const hasDataMismatch = trackedStock && trackedStock.totalShares > 0 && 
-                                          shares > 0 && 
-                                          Math.abs(shares - trackedStock.totalShares) / shares > 0.1; // >10% difference
-                    
                     // Build stock card with profit/loss if tracked
                     const profitColor = profitLoss === null ? '#888' : (profitLoss >= 0 ? '#4CAF50' : '#f44336');
                     const profitDisplay = profitLoss === null 
                         ? 'Not tracked' 
                         : this.formatCurrency(profitLoss);
 
-                    // Warning badge for data mismatch
-                    const warningBadge = hasDataMismatch ? `
-                        <div style="
-                            position: absolute;
-                            top: 8px;
-                            right: 8px;
-                            background: linear-gradient(135deg, #ff9800, #f57c00);
-                            color: white;
-                            padding: 4px 8px;
-                            border-radius: 12px;
-                            font-size: 10px;
-                            font-weight: 600;
-                            cursor: help;
-                            box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
-                            animation: pulse-warning 2s ease-in-out infinite;
-                        " title="Warning: Tracked shares (${trackedStock.totalShares.toLocaleString()}) don't match current holdings (${shares.toLocaleString()}). P/L may be inaccurate. Click 'Manual Input' to update.">
-                            ⚠️ Data Mismatch
-                        </div>
-                    ` : '';
-
                     stocksHTML.push(`
                         <div style="
                             position: relative;
                             background: #2a2a2a;
-                            border: 1px solid ${hasDataMismatch ? '#ff9800' : '#3a3a3a'};
+                            border: 1px solid #3a3a3a;
                             border-radius: 6px;
                             padding: 12px;
                             margin-bottom: 8px;
                             transition: all 0.2s;
-                            ${hasDataMismatch ? 'box-shadow: 0 0 0 1px rgba(255, 152, 0, 0.2);' : ''}
-                        " onmouseover="this.style.background='#333'; this.style.borderColor='${hasDataMismatch ? '#ffa726' : '#444'}';" 
-                           onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='${hasDataMismatch ? '#ff9800' : '#3a3a3a'}';">
-                            ${warningBadge}
+                        " onmouseover="this.style.background='#333'; this.style.borderColor='#444';" 
+                           onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#3a3a3a';">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                 <div style="font-weight: 600; color: #fff; font-size: 14px;">
                                     [${stockAcronym}] ${stockName}
@@ -1058,29 +1031,15 @@
                                     ${profitDisplay}
                                 </div>
                             </div>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 12px;">
                                 <div>
                                     <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Current Price</div>
                                     <div style="color: #fff;">$${currentPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                                 </div>
+                                ${!isTracked ? `
                                 <div>
-                                    <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Shares Owned</div>
-                                    <div style="color: #fff;">${shares.toLocaleString()}</div>
-                                </div>
-                                <div>
-                                    <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Current Value</div>
-                                    <div style="color: #fff;">$${currentValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                                </div>
-                                ${isTracked ? `
-                                <div>
-                                    <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Avg. Buy Price</div>
-                                    <div style="color: #fff;">$${avgBuyPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                                </div>
-                                ` : `
-                                <div style="grid-column: 1 / -1;">
                                     <button onclick="window.SidekickModules.StockTicker.showImportWindow()" style="
-                                        width: 100%;
-                                        padding: 6px;
+                                        padding: 4px 12px;
                                         background: linear-gradient(135deg, #4CAF50, #45a049);
                                         border: none;
                                         border-radius: 4px;
@@ -1089,11 +1048,11 @@
                                         font-weight: 600;
                                         cursor: pointer;
                                         transition: all 0.2s;
-                                    " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                                        📥 Track This Stock
+                                    " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                        📥 Track
                                     </button>
                                 </div>
-                                `}
+                                ` : ''}
                             </div>
                         </div>
                     `);
