@@ -80,6 +80,10 @@
                 // Load tracked transactions
                 this.trackedTransactions = this.core.loadState('stockticker_transactions', {});
                 console.log('📊 Stock Ticker: Loaded tracked transactions:', this.trackedTransactions);
+                console.log('📊 Stock Ticker: Tracked stock IDs:', Object.keys(this.trackedTransactions));
+                Object.entries(this.trackedTransactions).forEach(([stockId, data]) => {
+                    console.log(`  📈 Stock ID ${stockId}: ${data.totalShares} shares, $${data.totalInvested.toFixed(2)} invested, avg $${(data.totalInvested / data.totalShares).toFixed(2)}`);
+                });
                 
                 // Start monitoring stock transactions if on stocks page
                 this.startTransactionMonitoring();
@@ -332,53 +336,6 @@
                     this.fetchStockData();
                 };
                 
-                // Reset size & position option
-                const resetSizeOption = document.createElement('button');
-                resetSizeOption.innerHTML = '<span style="margin-right: 8px;">🔧</span>Reset Size & Position';
-                resetSizeOption.style.cssText = `
-                    background: none;
-                    border: none;
-                    color: #fff;
-                    padding: 8px 12px;
-                    width: 100%;
-                    text-align: left;
-                    cursor: pointer;
-                    font-size: 12px;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    transition: background 0.2s ease;
-                `;
-                resetSizeOption.onmouseover = () => resetSizeOption.style.background = '#444';
-                resetSizeOption.onmouseout = () => resetSizeOption.style.background = 'none';
-                resetSizeOption.onclick = (e) => {
-                    e.stopPropagation();
-                    dropdown.style.display = 'none';
-                    
-                    // Reset to default size
-                    const defaultSize = { width: 320, height: 400 };
-                    panel.style.width = defaultSize.width + 'px';
-                    panel.style.height = defaultSize.height + 'px';
-                    
-                    // Reset to default position (centered)
-                    const sidebar = document.getElementById('sidekick-sidebar');
-                    if (sidebar) {
-                        const centerX = (sidebar.offsetWidth - defaultSize.width) / 2;
-                        const centerY = (sidebar.offsetHeight - defaultSize.height) / 2;
-                        panel.style.left = Math.max(0, centerX) + 'px';
-                        panel.style.top = Math.max(0, centerY) + 'px';
-                    }
-                    
-                    // Save the reset values
-                    this.core.saveState('stockticker_size', defaultSize);
-                    this.core.saveState('stockticker_position', { 
-                        x: parseInt(panel.style.left) || 0, 
-                        y: parseInt(panel.style.top) || 0 
-                    });
-                    
-                    console.log('✅ Stock Ticker: Size and position reset to defaults');
-                };
-                
                 // Settings option
                 const settingsOption = document.createElement('button');
                 settingsOption.innerHTML = '<span style="margin-right: 8px;">⚙️</span>Select Stocks';
@@ -402,37 +359,6 @@
                     e.stopPropagation();
                     this.showSettingsWindow();
                     dropdown.style.display = 'none';
-                };
-                
-                // Clear tracking data option
-                const clearDataOption = document.createElement('button');
-                clearDataOption.innerHTML = '<span style="margin-right: 8px;">🗑️</span>Clear Tracking Data';
-                clearDataOption.style.cssText = `
-                    background: none;
-                    border: none;
-                    color: #f44336;
-                    padding: 8px 12px;
-                    width: 100%;
-                    text-align: left;
-                    cursor: pointer;
-                    font-size: 12px;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    transition: background 0.2s ease;
-                `;
-                clearDataOption.onmouseover = () => clearDataOption.style.background = '#444';
-                clearDataOption.onmouseout = () => clearDataOption.style.background = 'none';
-                clearDataOption.onclick = (e) => {
-                    e.stopPropagation();
-                    dropdown.style.display = 'none';
-                    
-                    if (confirm('⚠️ This will delete all tracked transaction data.\n\nProfit/Loss calculations will reset.\n\nContinue?')) {
-                        this.trackedTransactions = {};
-                        this.core.saveState('stockticker_transactions', {});
-                        console.log('🗑️ Cleared all transaction tracking data');
-                        this.fetchStockData(); // Refresh display
-                    }
                 };
                 
                 // Import historical data option
@@ -460,13 +386,44 @@
                     this.showImportWindow();
                 };
                 
+                // Clear stocks selection option
+                const clearStocksOption = document.createElement('button');
+                clearStocksOption.innerHTML = '<span style="margin-right: 8px;">🗑️</span>Clear Stock Selection';
+                clearStocksOption.style.cssText = `
+                    background: none;
+                    border: none;
+                    color: #ff9800;
+                    padding: 8px 12px;
+                    width: 100%;
+                    text-align: left;
+                    cursor: pointer;
+                    font-size: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: background 0.2s ease;
+                `;
+                clearStocksOption.onmouseover = () => clearStocksOption.style.background = '#444';
+                clearStocksOption.onmouseout = () => clearStocksOption.style.background = 'none';
+                clearStocksOption.onclick = (e) => {
+                    e.stopPropagation();
+                    dropdown.style.display = 'none';
+                    
+                    if (confirm('Clear stock selection and show all owned stocks?')) {
+                        this.selectedStocks = [];
+                        this.core.saveState('stockticker_selected_stocks', []);
+                        this.core.saveState('stockticker_has_selection', false);
+                        console.log('🗑️ Cleared stock selection - showing all stocks');
+                        this.fetchStockData(); // Refresh display
+                    }
+                };
+                
                 dropdown.appendChild(refreshOption);
                 dropdown.appendChild(pinOption);
                 dropdown.appendChild(autoAddOption);
-                dropdown.appendChild(resetSizeOption);
                 dropdown.appendChild(settingsOption);
                 dropdown.appendChild(importDataOption);
-                dropdown.appendChild(clearDataOption);
+                dropdown.appendChild(clearStocksOption);
                 
                 dropdownContainer.appendChild(dropdownBtn);
                 dropdownContainer.appendChild(dropdown);
@@ -1520,43 +1477,43 @@
                     gap: 8px;
                 `;
 
-                // All available Torn stocks with short names (alphabetically sorted by acronym)
+                // All available Torn stocks - MUST match exact Torn API stock IDs
                 const allStocks = [
-                    { id: 15, short: 'ASS', name: 'Alcoholics Synonymous' },
-                    { id: 20, short: 'BAG', name: 'Big Al\'s Gun Shop' },
-                    { id: 17, short: 'CBD', name: 'Herbal Releaf Co.' },
-                    { id: 2, short: 'CNC', name: 'Crude & Co' },
-                    { id: 14, short: 'ELT', name: 'Empty Lunchbox Traders' },
-                    { id: 16, short: 'EVL', name: 'Evil Ducks Candy Corp' },
-                    { id: 24, short: 'EWM', name: 'Eaglewood Mercenary' },
-                    { id: 6, short: 'FHG', name: 'Feathery Hotels Group' },
-                    { id: 12, short: 'GRN', name: 'Grain' },
-                    { id: 32, short: 'HRG', name: 'Home Retail Group' },
-                    { id: 8, short: 'IIL', name: 'I Industries Ltd.' },
-                    { id: 5, short: 'IOU', name: 'Insured On Us' },
-                    { id: 3, short: 'IST', name: 'International School TC' },
-                    { id: 30, short: 'LAG', name: 'Legal Authorities Group' },
-                    { id: 29, short: 'LOS', name: 'Lo Squalo Waste Management' },
-                    { id: 25, short: 'LSC', name: 'Lucky Shots Casino' },
-                    { id: 35, short: 'MCS', name: 'Mc Smoogle Corp' },
-                    { id: 9, short: 'MSG', name: 'Messaging Inc.' },
-                    { id: 27, short: 'MUN', name: 'Munster Beverage Corp.' },
-                    { id: 31, short: 'PRN', name: 'Performance Ribaldry Network' },
-                    { id: 23, short: 'PTS', name: 'PointLess' },
-                    { id: 26, short: 'SYM', name: 'Symbiotic Ltd.' },
-                    { id: 4, short: 'SYS', name: 'Syscore MFG' },
-                    { id: 18, short: 'TCC', name: 'Torn City Clothing' },
                     { id: 1, short: 'TCI', name: 'Torn City Investments' },
-                    { id: 34, short: 'TCM', name: 'Torn City Motors' },
-                    { id: 13, short: 'TCP', name: 'TC Media Productions' },
-                    { id: 19, short: 'TCT', name: 'The Torn City Times' },
-                    { id: 33, short: 'TGP', name: 'Tell Group Plc.' },
-                    { id: 11, short: 'THS', name: 'Torn City Health Service' },
-                    { id: 10, short: 'TMI', name: 'TC Music Industries' },
+                    { id: 2, short: 'CNC', name: 'Crude & Co' },
+                    { id: 3, short: 'IST', name: 'International School TC' },
+                    { id: 4, short: 'SYS', name: 'Syscore MFG' },
+                    { id: 5, short: 'IOU', name: 'Insured On Us' },
+                    { id: 6, short: 'FHG', name: 'Feathery Hotels Group' },
                     { id: 7, short: 'TSB', name: 'Torn & Shanghai Banking' },
+                    { id: 8, short: 'IIL', name: 'I Industries Ltd.' },
+                    { id: 9, short: 'MSG', name: 'Messaging Inc.' },
+                    { id: 10, short: 'TMI', name: 'TC Music Industries' },
+                    { id: 11, short: 'THS', name: 'Torn City Health Service' },
+                    { id: 12, short: 'GRN', name: 'Grain' },
+                    { id: 13, short: 'TCP', name: 'TC Media Productions' },
+                    { id: 14, short: 'ELT', name: 'Empty Lunchbox Traders' },
+                    { id: 15, short: 'ASS', name: 'Alcoholics Synonymous' },
+                    { id: 16, short: 'EVL', name: 'Evil Ducks Candy Corp' },
+                    { id: 17, short: 'CBD', name: 'Herbal Releaf Co.' },
+                    { id: 18, short: 'TCC', name: 'Torn City Clothing' },
+                    { id: 19, short: 'TCT', name: 'The Torn City Times' },
+                    { id: 20, short: 'BAG', name: 'Big Al\'s Gun Shop' },
                     { id: 21, short: 'WLT', name: 'Wind Lines Travel' },
+                    { id: 22, short: 'YAZ', name: 'Yazoo' },
+                    { id: 23, short: 'PTS', name: 'PointLess' },
+                    { id: 24, short: 'EWM', name: 'Eaglewood Mercenary' },
+                    { id: 25, short: 'LSC', name: 'Lucky Shots Casino' },
+                    { id: 26, short: 'SYM', name: 'Symbiotic Ltd.' },
+                    { id: 27, short: 'MUN', name: 'Munster Beverage Corp.' },
                     { id: 28, short: 'WSU', name: 'West Side University' },
-                    { id: 22, short: 'YAZ', name: 'Yazoo' }
+                    { id: 29, short: 'LOS', name: 'Lo Squalo Waste Management' },
+                    { id: 30, short: 'LAG', name: 'Legal Authorities Group' },
+                    { id: 31, short: 'PRN', name: 'Performance Ribaldry Network' },
+                    { id: 32, short: 'HRG', name: 'Home Retail Group' },
+                    { id: 33, short: 'TGP', name: 'Tell Group Plc.' },
+                    { id: 34, short: 'TCM', name: 'Torn City Motors' },
+                    { id: 35, short: 'MCS', name: 'Mc Smoogle Corp' }
                 ];
 
                 allStocks.forEach(stock => {
@@ -1915,9 +1872,24 @@
                                 📊 Your Tracked Purchases
                             </strong>
                             ${allPurchasesHTML}
+                            <button id="clear-all-data-btn" style="
+                                width: 100%;
+                                padding: 10px;
+                                margin-top: 16px;
+                                background: #d32f2f;
+                                border: none;
+                                border-radius: 4px;
+                                color: white;
+                                font-weight: 600;
+                                cursor: pointer;
+                                font-size: 12px;
+                                transition: all 0.2s;
+                            " onmouseover="this.style.background='#b71c1c'; this.style.transform='scale(1.02)'" onmouseout="this.style.background='#d32f2f'; this.style.transform='scale(1)'">
+                                🗑️ Clear All Tracking Data
+                            </button>
                         `;
 
-                        // Add delete button event listeners
+                        // Add delete button event listeners for individual purchases
                         summaryDiv.querySelectorAll('button[data-stock-id]').forEach(btn => {
                             btn.onclick = () => {
                                 const stockId = btn.getAttribute('data-stock-id');
@@ -1965,6 +1937,35 @@
                                 }
                             };
                         });
+                        
+                        // Add event listener for Clear All Data button
+                        const clearAllBtn = summaryDiv.querySelector('#clear-all-data-btn');
+                        if (clearAllBtn) {
+                            clearAllBtn.onclick = () => {
+                                if (confirm('⚠️ This will delete ALL tracked transaction data.\n\nProfit/Loss calculations will reset for all stocks.\n\nContinue?')) {
+                                    this.trackedTransactions = {};
+                                    this.core.saveState('stockticker_transactions', {});
+                                    console.log('🗑️ Cleared all transaction tracking data');
+                                    
+                                    // Update summary display
+                                    updateSummary();
+                                    
+                                    // Refresh ticker display if open
+                                    if (this.panel && document.body.contains(this.panel)) {
+                                        this.fetchStockData();
+                                    }
+                                    
+                                    // Show success message
+                                    statusDiv.style.display = 'block';
+                                    statusDiv.style.background = '#4CAF50';
+                                    statusDiv.style.color = '#fff';
+                                    statusDiv.textContent = '✅ All tracking data cleared';
+                                    setTimeout(() => {
+                                        statusDiv.style.display = 'none';
+                                    }, 3000);
+                                }
+                            };
+                        }
                     } else {
                         summaryDiv.innerHTML = '<em style="color: #888;">No purchases imported yet</em>';
                     }
