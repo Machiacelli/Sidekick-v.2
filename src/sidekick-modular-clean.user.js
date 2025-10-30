@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.8.0
-// @description  Xanax Viewer v1.0.0 + UI: 31px hamburger button + Travel Tracker v3.3.3 + NPC Attack Timer v1.0.0
+// @version      6.8.1
+// @description  FIX: Xanax Viewer settings tab structure + Xanax Viewer v1.0.0 + UI: 31px hamburger
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -10,12 +10,12 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/ae80b08/src/sidekick-modular-clean.user.js?v=20251030
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/ae80b08/src/sidekick-modular-clean.user.js?v=20251030
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/1792296/src/sidekick-modular-clean.user.js?v=20251030
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/1792296/src/sidekick-modular-clean.user.js?v=20251030
 // @connect      api.lzpt.io
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/core.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@df3d5af/src/modules/ui.module.js?v=20251030
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@9385acc/src/modules/settings.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1792296/src/modules/settings.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/content.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/global-functions.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/notepad.module.js?v=20251030
@@ -39,8 +39,9 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.8.0 - Xanax Viewer + UI Improvements!');
-    console.log('✅ NEW: Xanax Viewer v1.0.0 - View Xanax usage on faction/profile pages with dedicated settings tab');
+    console.log('🚀 Sidekick Modular CDN v6.8.1 - Xanax Viewer Tab Fix!');
+    console.log('🔧 FIXED: Xanax Viewer settings tab HTML structure - tab content now properly displays');
+    console.log('✅ Xanax Viewer v1.0.0 - View Xanax usage on faction/profile pages with dedicated settings tab');
     console.log('✅ UPDATED: Hamburger button reduced to 31px (1px smaller)');
     console.log('✅ NPC Attack Timer - Shows Loot Rangers attack times in news ticker');
     console.log('✅ Travel Tracker v3.3.3 - No more "cancelled" notification when minimizing sidebar');
