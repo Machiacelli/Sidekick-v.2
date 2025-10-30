@@ -641,7 +641,7 @@
                 
                 header.innerHTML = `
                     <span>${title}</span>
-                    <button style="background: none; border: none; color: #ccc; font-size: 20px; cursor: pointer; padding: 0; line-height: 1;">×</button>
+                    <button style="background: none; border: none; color: #bbb; font-size: 20px; cursor: pointer; padding: 0; line-height: 1; transition: color 0.3s ease;" onmouseover="this.style.color='#ff4444'" onmouseout="this.style.color='#bbb'">×</button>
                 `;
                 
                 // Modal content

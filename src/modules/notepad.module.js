@@ -405,13 +405,14 @@
                                     <button class="close-btn" style="
                                         background: none;
                                         border: none;
-                                        color: #f44336;
+                                        color: #bbb;
                                         cursor: pointer;
                                         font-size: 14px;
                                         padding: 0;
                                         width: 16px;
                                         height: 16px;
-                                    ">×</button>
+                                        transition: color 0.3s ease;
+                                    " onmouseover="this.style.color='#ff4444'" onmouseout="this.style.color='#bbb'">×</button>
                                 </div>
                                 ` : ''}
                             </div>
@@ -617,7 +618,7 @@
                         <button class="close-btn" style="
                             background: none;
                             border: none;
-                            color: #f44336;
+                            color: #bbb;
                             cursor: pointer;
                             font-size: 14px;
                             padding: 0;
@@ -626,8 +627,9 @@
                             display: flex;
                             align-items: center;
                             justify-content: center;
-                            opacity: 0.7;
-                        " title="Delete notepad">×</button>
+                            opacity: 0.9;
+                            transition: color 0.3s ease, opacity 0.3s ease;
+                        " onmouseover="this.style.color='#ff4444'; this.style.opacity='1'" onmouseout="this.style.color='#bbb'; this.style.opacity='0.9'" title="Delete notepad">×</button>
                     </div>
                     <textarea placeholder="Write your notes here..." data-notepad-id="${notepad.id}" style="
                         flex: 1;

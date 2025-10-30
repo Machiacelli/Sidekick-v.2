@@ -342,7 +342,7 @@
                     <button class="close-btn" style="
                         background: none;
                         border: none;
-                        color: #f44336;
+                        color: #bbb;
                         cursor: pointer;
                         font-size: 14px;
                         padding: 0;
@@ -351,8 +351,9 @@
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        opacity: 0.7;
-                    " title="Close todo panel">×</button>
+                        opacity: 0.9;
+                        transition: color 0.3s ease, opacity 0.3s ease;
+                    " onmouseover="this.style.color='#ff4444'; this.style.opacity='1'" onmouseout="this.style.color='#bbb'; this.style.opacity='0.9'" title="Close todo panel">×</button>
                 `;
 
                 const content = document.createElement('div');
@@ -1379,14 +1380,6 @@
                 // Close button functionality
                 closeBtn.addEventListener('click', () => {
                     this.hideTodoPanel();
-                });
-
-                closeBtn.addEventListener('mouseenter', () => {
-                    closeBtn.style.background = 'rgba(244, 67, 54, 0.2)';
-                });
-
-                closeBtn.addEventListener('mouseleave', () => {
-                    closeBtn.style.background = 'none';
                 });
             },
 

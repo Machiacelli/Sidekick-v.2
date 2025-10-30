@@ -1824,7 +1824,8 @@
                             font-weight: 600;
                             cursor: pointer;
                             font-size: 13px;
-                        ">✅ Add Purchase</button>
+                            transition: background 0.3s ease, transform 0.2s ease;
+                        " onmouseover="this.style.background='#45a049'; this.style.transform='scale(1.02)'" onmouseout="this.style.background='#4CAF50'; this.style.transform='scale(1)'">✅ Add Purchase</button>
                     </div>
 
                     <div id="import-status" style="
