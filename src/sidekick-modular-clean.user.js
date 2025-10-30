@@ -1,16 +1,16 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.97.0
-// @description  Stock Ticker v1.19.0: Sort toggle button (⇅/$⇅), improved deselection
+// @version      5.98.0
+// @description  Stock Ticker v1.20.0: Smooth fade-out hover effect on close button
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
 // @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/3b9db9c/src/sidekick-modular-clean.user.js?v=20251029
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/3b9db9c/src/sidekick-modular-clean.user.js?v=20251029
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/bca5720/src/sidekick-modular-clean.user.js?v=20251030
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/bca5720/src/sidekick-modular-clean.user.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/core.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/ui.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2c075e4/src/modules/settings.module.js?v=20250128
@@ -27,18 +27,18 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/traveltracker.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@f1ba9db/src/modules/stockticker.module.js?v=20250130
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@bca5720/src/modules/stockticker.module.js?v=20250130
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/todolist.module.js?v=20250129
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v5.90.0 - Stock Ticker Lookup Fix!');
-    console.log('✅ Stock Ticker v1.13.0: Fixed stock ID lookup by passing it directly');
-    console.log('🔧 FIX: Resolves "Could not find stock ID for Stock_2" error');
-    console.log('📍 Stock ID from URL now passed directly to recordTransaction()');
-    console.log('💡 TIP: Buy/sell shares to test - transactions should now record successfully!');
+    console.log('🚀 Sidekick Modular CDN v5.98.0 - Stock Ticker Smooth Hover!');
+    console.log('✅ Stock Ticker v1.20.0: Smooth fade-out hover effect on close button');
+    console.log('🎨 Close button × now fades to red instead of showing red background box');
+    console.log('✨ Smoother, cleaner hover experience with 0.3s transition');
+    console.log('💡 TIP: Hover over the close button to see the smooth red fade effect!');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
