@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Travel Tracker Module
 // @namespace    http://tampermonkey.net/
-// @version      3.2.0
-// @description  Travel tracker with modern UI, improved plane detection, and manual selection dialog
+// @version      3.3.0
+// @description  Travel tracker with dropdown menu selection, improved multi-tab handling, and private plane terminology
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -25,11 +25,12 @@
     waitForCore(() => {
         const TravelTrackerModule = {
             name: 'TravelTracker',
-            version: '3.2.0',
+            version: '3.3.0',
             isActive: false,
             isMarkingMode: false,
             currentTracker: null,
             statusDisplay: null,
+            tabId: null, // Unique identifier for this tab
             
             // Travel times table (in minutes) - based on Torn Wiki
             travelTimes: {
@@ -49,7 +50,7 @@
             },
 
             init() {
-                console.log('✈️ Initializing Travel Tracker Module v3.2.0...');
+                console.log('✈️ Initializing Travel Tracker Module v3.3.0...');
                 this.core = window.SidekickModules.Core;
                 
                 if (!this.core) {
@@ -57,8 +58,15 @@
                     return false;
                 }
 
+                // Generate unique tab ID for this session
+                this.tabId = 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                console.log('🆔 Tab ID:', this.tabId);
+
                 // Load any saved tracking data
                 this.loadState();
+                
+                // Mark this tab as active
+                this.markTabActive();
                 
                 console.log('✅ Travel Tracker module initialized successfully');
                 return true;
@@ -203,144 +211,113 @@
             },
 
             showPlaneTypeDialog(element, destination, detectedType) {
-                // Create modal dialog with modern, subtle design
-                const modal = document.createElement('div');
-                modal.style.cssText = `
+                // Create compact dropdown menu instead of modal
+                const dropdown = document.createElement('div');
+                dropdown.id = 'travel-tracker-plane-dropdown';
+                dropdown.style.cssText = `
                     position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 0, 0, 0.4);
-                    backdrop-filter: blur(4px);
-                    z-index: 999999;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    animation: fadeIn 0.2s ease;
-                `;
-                
-                const dialog = document.createElement('div');
-                dialog.style.cssText = `
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
                     background: #1a1a1a;
                     color: #e0e0e0;
-                    padding: 28px;
-                    border-radius: 16px;
-                    max-width: 380px;
+                    padding: 16px;
+                    border-radius: 12px;
                     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    animation: slideUp 0.3s ease;
+                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+                    border: 1px solid rgba(255, 255, 255, 0.15);
+                    z-index: 999999;
+                    min-width: 280px;
+                    animation: dropdownSlide 0.2s ease;
                 `;
                 
-                dialog.innerHTML = `
+                dropdown.innerHTML = `
                     <style>
-                        @keyframes fadeIn {
-                            from { opacity: 0; }
-                            to { opacity: 1; }
+                        @keyframes dropdownSlide {
+                            from { transform: translate(-50%, -55%); opacity: 0; }
+                            to { transform: translate(-50%, -50%); opacity: 1; }
                         }
-                        @keyframes slideUp {
-                            from { transform: translateY(20px); opacity: 0; }
-                            to { transform: translateY(0); opacity: 1; }
+                        .tt-dropdown-option {
+                            padding: 10px 14px;
+                            margin: 4px 0;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            transition: all 0.15s ease;
+                            border: 1px solid transparent;
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                            font-size: 13px;
+                        }
+                        .tt-dropdown-option:hover {
+                            background: rgba(255, 255, 255, 0.08);
+                            border-color: rgba(255, 255, 255, 0.2);
+                        }
+                        .tt-dropdown-option.detected {
+                            background: rgba(76, 175, 80, 0.15);
+                            border-color: rgba(76, 175, 80, 0.3);
+                        }
+                        .tt-dropdown-header {
+                            font-size: 13px;
+                            font-weight: 600;
+                            margin-bottom: 12px;
+                            padding-bottom: 8px;
+                            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                            color: #ffffff;
+                        }
+                        .tt-dropdown-cancel {
+                            margin-top: 8px;
+                            padding: 8px;
+                            text-align: center;
+                            font-size: 11px;
+                            color: #888;
+                            cursor: pointer;
+                            border-radius: 6px;
+                            transition: all 0.15s;
+                        }
+                        .tt-dropdown-cancel:hover {
+                            background: rgba(255, 255, 255, 0.05);
+                            color: #aaa;
                         }
                     </style>
-                    <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #ffffff;">
-                        ✈️ Confirm Plane Type
+                    <div class="tt-dropdown-header">
+                        ✈️ Select Plane Type → ${destination}
                     </div>
-                    <div style="margin-bottom: 24px; font-size: 13px; color: #b0b0b0;">
-                        Traveling to <strong style="color: #ffffff;">${destination}</strong>
+                    <div class="tt-dropdown-option ${detectedType === 'commercial' ? 'detected' : ''}" data-type="commercial">
+                        <span style="font-size: 18px;">🛫</span>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 500;">Commercial Flight</div>
+                            <div style="font-size: 11px; opacity: 0.7;">Standard travel time</div>
+                        </div>
+                        ${detectedType === 'commercial' ? '<span style="color: #4CAF50; font-size: 16px;">✓</span>' : ''}
                     </div>
-                    <div style="display: flex; gap: 10px; flex-direction: column;">
-                        <button id="tt-commercial-btn" style="
-                            background: ${detectedType === 'commercial' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#2a2a2a'};
-                            border: 1px solid ${detectedType === 'commercial' ? '#667eea' : 'rgba(255, 255, 255, 0.1)'};
-                            color: white;
-                            padding: 14px 18px;
-                            border-radius: 10px;
-                            font-size: 13px;
-                            cursor: pointer;
-                            font-weight: 500;
-                            transition: all 0.2s ease;
-                            text-align: left;
-                        " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'" 
-                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <span style="font-size: 20px;">🛫</span>
-                                <div>
-                                    <div style="font-weight: 600;">Commercial Flight</div>
-                                    <div style="font-size: 11px; opacity: 0.8; margin-top: 2px;">
-                                        Standard travel time
-                                    </div>
-                                </div>
-                            </div>
-                        </button>
-                        <button id="tt-private-btn" style="
-                            background: ${detectedType === 'private' ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' : '#2a2a2a'};
-                            border: 1px solid ${detectedType === 'private' ? '#f5576c' : 'rgba(255, 255, 255, 0.1)'};
-                            color: white;
-                            padding: 14px 18px;
-                            border-radius: 10px;
-                            font-size: 13px;
-                            cursor: pointer;
-                            font-weight: 500;
-                            transition: all 0.2s ease;
-                            text-align: left;
-                        " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(245, 87, 108, 0.4)'" 
-                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <span style="font-size: 20px;">✈️</span>
-                                <div>
-                                    <div style="font-weight: 600;">Private Jet</div>
-                                    <div style="font-size: 11px; opacity: 0.8; margin-top: 2px;">
-                                        Faster travel time
-                                    </div>
-                                </div>
-                            </div>
-                        </button>
+                    <div class="tt-dropdown-option ${detectedType === 'private' ? 'detected' : ''}" data-type="private">
+                        <span style="font-size: 18px;">✈️</span>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 500;">Private Plane</div>
+                            <div style="font-size: 11px; opacity: 0.7;">Faster travel time</div>
+                        </div>
+                        ${detectedType === 'private' ? '<span style="color: #4CAF50; font-size: 16px;">✓</span>' : ''}
                     </div>
-                    <button id="tt-cancel-btn" style="
-                        background: transparent;
-                        border: none;
-                        color: #888;
-                        padding: 12px;
-                        border-radius: 8px;
-                        font-size: 12px;
-                        cursor: pointer;
-                        margin-top: 12px;
-                        width: 100%;
-                        transition: all 0.2s;
-                    " onmouseover="this.style.background='rgba(255, 255, 255, 0.05)'; this.style.color='#aaa'" 
-                       onmouseout="this.style.background='transparent'; this.style.color='#888'">
-                        Cancel
-                    </button>
-                    ${detectedType === 'commercial' || detectedType === 'private' ? 
-                        `<div style="margin-top: 16px; font-size: 11px; color: #666; text-align: center;">
-                            <span style="color: #4CAF50;">✓</span> Auto-detected: ${detectedType}
-                        </div>` : 
-                        '<div style="margin-top: 16px; font-size: 11px; color: #888; text-align: center;">⚠️ Could not auto-detect</div>'
-                    }
+                    <div class="tt-dropdown-cancel">Cancel (or click outside)</div>
                 `;
                 
-                modal.appendChild(dialog);
-                document.body.appendChild(modal);
+                document.body.appendChild(dropdown);
                 
-                // Button handlers
-                const commercialBtn = dialog.querySelector('#tt-commercial-btn');
-                const privateBtn = dialog.querySelector('#tt-private-btn');
-                const cancelBtn = dialog.querySelector('#tt-cancel-btn');
+                // Option click handlers
+                const options = dropdown.querySelectorAll('.tt-dropdown-option');
+                options.forEach(option => {
+                    option.onclick = () => {
+                        const planeType = option.getAttribute('data-type');
+                        dropdown.remove();
+                        this.finalizeTracker(element, destination, planeType);
+                    };
+                });
                 
-                commercialBtn.onclick = () => {
-                    modal.remove();
-                    this.finalizeTracker(element, destination, 'commercial');
-                };
-                
-                privateBtn.onclick = () => {
-                    modal.remove();
-                    this.finalizeTracker(element, destination, 'private');
-                };
-                
+                // Cancel button
+                const cancelBtn = dropdown.querySelector('.tt-dropdown-cancel');
                 cancelBtn.onclick = () => {
-                    modal.remove();
+                    dropdown.remove();
                     this.core.NotificationSystem.show(
                         'Travel Tracker',
                         'Tracking cancelled',
@@ -348,10 +325,11 @@
                     );
                 };
                 
-                // Close on background click
-                modal.onclick = (e) => {
-                    if (e.target === modal) {
-                        modal.remove();
+                // Click outside to close
+                const closeOnOutsideClick = (e) => {
+                    if (!dropdown.contains(e.target)) {
+                        dropdown.remove();
+                        document.removeEventListener('click', closeOnOutsideClick);
                         this.core.NotificationSystem.show(
                             'Travel Tracker',
                             'Tracking cancelled',
@@ -359,6 +337,26 @@
                         );
                     }
                 };
+                
+                // Add listener after a small delay to prevent immediate closing
+                setTimeout(() => {
+                    document.addEventListener('click', closeOnOutsideClick);
+                }, 100);
+                
+                // ESC key to close
+                const closeOnEscape = (e) => {
+                    if (e.key === 'Escape') {
+                        dropdown.remove();
+                        document.removeEventListener('keydown', closeOnEscape);
+                        document.removeEventListener('click', closeOnOutsideClick);
+                        this.core.NotificationSystem.show(
+                            'Travel Tracker',
+                            'Tracking cancelled',
+                            'info'
+                        );
+                    }
+                };
+                document.addEventListener('keydown', closeOnEscape);
             },
 
             finalizeTracker(element, destination, planeType) {
@@ -371,7 +369,8 @@
                     createdAt: Date.now(),
                     destination: destination,
                     planeType: planeType,
-                    status: 'monitoring'
+                    status: 'monitoring',
+                    tabId: this.tabId // Associate with this specific tab
                 };
                 
                 this.currentTracker = tracker;
@@ -385,7 +384,7 @@
                 
                 this.core.NotificationSystem.show(
                     'Travel Tracker', 
-                    `Now tracking ${planeType} flight to ${destination}!`, 
+                    `Now tracking ${planeType} ${planeType === 'private' ? 'plane' : 'flight'} to ${destination}!`, 
                     'success'
                 );
                 
@@ -459,13 +458,12 @@
                 
                 // Look for private plane indicators
                 const privateIndicators = [
-                    'private jet',
                     'private plane',
                     'private flight',
                     'cessna',
                     'learjet',
                     'your private',
-                    'business jet'
+                    'business plane'
                 ];
                 
                 for (const indicator of privateIndicators) {
@@ -661,10 +659,35 @@
                 }
                 
                 this.monitoringInterval = setInterval(() => {
+                    // Only monitor if this is still the active tab
+                    if (!this.isActiveTab()) {
+                        console.log('⏸️ No longer active tab, stopping monitoring');
+                        this.stopMonitoringOnly();
+                        return;
+                    }
+                    
+                    // Update tab activity timestamp
+                    this.markTabActive();
+                    
                     this.checkForChanges();
                 }, 10000); // Check every 10 seconds
                 
                 console.log('🔄 Started monitoring travel status changes');
+            },
+
+            stopMonitoringOnly() {
+                // Stop monitoring without removing the tracker
+                if (this.monitoringInterval) {
+                    clearInterval(this.monitoringInterval);
+                    this.monitoringInterval = null;
+                    console.log('🔄 Monitoring stopped (tracker preserved)');
+                }
+                
+                // Remove status display from this tab
+                if (this.statusDisplay) {
+                    this.statusDisplay.remove();
+                    this.statusDisplay = null;
+                }
             },
 
             checkForChanges() {
@@ -795,9 +818,57 @@
                 if (instructions) instructions.remove();
             },
 
+            // Multi-tab management
+            markTabActive() {
+                try {
+                    // Store this tab's ID and timestamp
+                    const activeTabData = {
+                        tabId: this.tabId,
+                        lastActiveTime: Date.now()
+                    };
+                    localStorage.setItem('travel_tracker_active_tab', JSON.stringify(activeTabData));
+                    console.log('✅ Tab marked as active:', this.tabId);
+                } catch (error) {
+                    console.error('❌ Failed to mark tab as active:', error);
+                }
+            },
+
+            isActiveTab() {
+                try {
+                    const activeTabData = localStorage.getItem('travel_tracker_active_tab');
+                    if (!activeTabData) return true; // If no active tab, assume this is it
+                    
+                    const data = JSON.parse(activeTabData);
+                    
+                    // Check if this tab is the active one
+                    if (data.tabId === this.tabId) {
+                        return true;
+                    }
+                    
+                    // Check if the active tab is stale (more than 5 seconds old without update)
+                    const timeSinceLastActive = Date.now() - data.lastActiveTime;
+                    if (timeSinceLastActive > 5000) {
+                        console.log('⚠️ Active tab appears stale, claiming tracking rights');
+                        this.markTabActive();
+                        return true;
+                    }
+                    
+                    return false;
+                } catch (error) {
+                    console.error('❌ Failed to check active tab:', error);
+                    return true;
+                }
+            },
+
             // State management
             saveState() {
                 try {
+                    // Only save if this is the active tracking tab
+                    if (!this.isActiveTab() && this.currentTracker) {
+                        console.log('⏸️ Not saving state - another tab is actively tracking');
+                        return;
+                    }
+
                     const state = {
                         currentTracker: this.currentTracker ? {
                             id: this.currentTracker.id,
@@ -807,12 +878,13 @@
                             createdAt: this.currentTracker.createdAt,
                             destination: this.currentTracker.destination,
                             planeType: this.currentTracker.planeType,
-                            status: this.currentTracker.status
+                            status: this.currentTracker.status,
+                            tabId: this.currentTracker.tabId
                         } : null
                     };
                     
                     this.core.saveState('travel_tracker_state', state);
-                    console.log('💾 Travel tracker state saved');
+                    console.log('💾 Travel tracker state saved for tab:', this.tabId);
                 } catch (error) {
                     console.error('❌ Failed to save travel tracker state:', error);
                 }
@@ -823,11 +895,24 @@
                     const state = this.core.loadState('travel_tracker_state', {});
                     
                     if (state.currentTracker) {
-                        this.currentTracker = state.currentTracker;
-                        console.log('📂 Restored travel tracker state:', state.currentTracker);
+                        // Check if the tracker belongs to this tab or if we should claim it
+                        const savedTabId = state.currentTracker.tabId;
                         
-                        // Restore the status display and monitoring
-                        this.restoreTracker();
+                        if (savedTabId === this.tabId) {
+                            // This is our tracker, restore it
+                            this.currentTracker = state.currentTracker;
+                            console.log('📂 Restored own tracker:', state.currentTracker);
+                            this.restoreTracker();
+                        } else if (this.isActiveTab()) {
+                            // We're the active tab, claim the tracker
+                            console.log('🔄 Claiming tracker from another tab');
+                            this.currentTracker = state.currentTracker;
+                            this.currentTracker.tabId = this.tabId;
+                            this.restoreTracker();
+                        } else {
+                            // Another tab is tracking, don't interfere
+                            console.log('⏸️ Another tab is actively tracking, not restoring here');
+                        }
                     }
                 } catch (error) {
                     console.error('❌ Failed to load travel tracker state:', error);
@@ -836,6 +921,12 @@
 
             restoreTracker() {
                 if (!this.currentTracker) return;
+                
+                // Only restore if this is the active tab
+                if (!this.isActiveTab()) {
+                    console.log('⏸️ Not restoring tracker - another tab is active');
+                    return;
+                }
                 
                 console.log('🔄 Restoring tracker display and monitoring...');
                 
