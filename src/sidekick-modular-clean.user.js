@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.87.0
-// @description  Stock Ticker v1.10.0: Enhanced transaction detection with debugging!
+// @version      5.88.0
+// @description  Stock Ticker v1.11.0: Fixed dropdown-based transaction detection!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -27,17 +27,17 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/traveltracker.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d77095b/src/modules/stockticker.module.js?v=20250129
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@c3a386f/src/modules/stockticker.module.js?v=20250130
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/todolist.module.js?v=20250129
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v5.87.0 - Stock Ticker Transaction Detection!');
-    console.log('✅ Stock Ticker v1.10.0: Enhanced pattern matching for transaction messages');
-    console.log('� Now detecting multiple message formats (bought/have bought, names/acronyms)');
-    console.log('📊 Check console for debug logs showing detected transactions');
+    console.log('🚀 Sidekick Modular CDN v5.88.0 - Stock Ticker Dropdown Detection!');
+    console.log('✅ Stock Ticker v1.11.0: Now detects transactions on dropdown-based stocks page');
+    console.log('🔧 Fixed: URL pattern now matches /page.php?sid=stocks (actual Torn stocks page)');
+    console.log('� Fixed: Enhanced detection to check all added elements and their descendants');
     console.log('💡 TIP: Open console (F12) when buying/selling to see transaction detection in action');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);

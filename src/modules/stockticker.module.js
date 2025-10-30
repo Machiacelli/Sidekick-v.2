@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.10.0
-// @description  Enhanced transaction detection with multiple message patterns and improved name matching
+// @version      1.11.0
+// @description  Fixed transaction detection for dropdown-based stocks page with enhanced element scanning
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
