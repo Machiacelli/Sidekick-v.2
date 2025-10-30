@@ -1,16 +1,16 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.1.0
-// @description  Stock Ticker v1.22.0: Clean display with Current Price + P/L only
+// @version      6.2.0
+// @description  Stock Ticker v1.23.0: Fixed Track button + detailed API logging for debugging
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
 // @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/42cbe9a/src/sidekick-modular-clean.user.js?v=20251030
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/42cbe9a/src/sidekick-modular-clean.user.js?v=20251030
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/c1f7ca3/src/sidekick-modular-clean.user.js?v=20251030
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/c1f7ca3/src/sidekick-modular-clean.user.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/core.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/ui.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/settings.module.js?v=20251030
@@ -27,18 +27,18 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/traveltracker.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@42cbe9a/src/modules/stockticker.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@c1f7ca3/src/modules/stockticker.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/todolist.module.js?v=20251030
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.1.0 - Stock Ticker Simplified!');
-    console.log('🎯 CLEAN DISPLAY: Current Price + P/L only (no extra clutter)');
-    console.log('🗑️ REMOVED: Data mismatch warnings, shares owned, current value, avg buy price');
-    console.log('📥 Track button available for untracked stocks');
-    console.log('💡 Sorted by P/L or Name with simple toggle button');
+    console.log('🚀 Sidekick Modular CDN v6.2.0 - Track Button Fixed!');
+    console.log('✅ FIX: Track button now properly opens import window');
+    console.log('� DEBUG: Added detailed API response logging to identify bought_price field');
+    console.log('📥 FEATURE: Track button pre-selects the stock for quick entry');
+    console.log('� INVESTIGATING: Why only some stocks calculate P/L correctly');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
