@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Travel Tracker Module
 // @namespace    http://tampermonkey.net/
-// @version      3.0.0
-// @description  Travel tracker with DOM selection, plane detection, and countdown timers - modular approach
+// @version      3.1.0
+// @description  Travel tracker with improved plane detection and manual selection dialog
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -25,7 +25,7 @@
     waitForCore(() => {
         const TravelTrackerModule = {
             name: 'TravelTracker',
-            version: '3.0.0',
+            version: '3.1.0',
             isActive: false,
             isMarkingMode: false,
             currentTracker: null,
@@ -49,7 +49,7 @@
             },
 
             init() {
-                console.log('✈️ Initializing Travel Tracker Module v3.0.0...');
+                console.log('✈️ Initializing Travel Tracker Module v3.1.0...');
                 this.core = window.SidekickModules.Core;
                 
                 if (!this.core) {
@@ -192,6 +192,144 @@
                 // Remove any existing tracker
                 this.removeCurrentTracker();
                 
+                const destination = this.extractDestination(element.textContent);
+                const detectedPlaneType = this.detectPlaneType();
+                
+                console.log('📍 Destination:', destination);
+                console.log('✈️ Detected plane type:', detectedPlaneType);
+                
+                // Show plane type confirmation dialog
+                this.showPlaneTypeDialog(element, destination, detectedPlaneType);
+            },
+
+            showPlaneTypeDialog(element, destination, detectedType) {
+                // Create modal dialog
+                const modal = document.createElement('div');
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 999999;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                `;
+                
+                const dialog = document.createElement('div');
+                dialog.style.cssText = `
+                    background: linear-gradient(135deg, #1976D2, #2196F3);
+                    color: white;
+                    padding: 24px;
+                    border-radius: 12px;
+                    max-width: 400px;
+                    font-family: Arial, sans-serif;
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+                `;
+                
+                dialog.innerHTML = `
+                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 16px;">
+                        ✈️ Travel Tracker - Plane Type
+                    </div>
+                    <div style="margin-bottom: 20px; font-size: 14px;">
+                        Traveling to: <strong>${destination}</strong><br>
+                        <span style="font-size: 12px; opacity: 0.9;">Please confirm your plane type:</span>
+                    </div>
+                    <div style="display: flex; gap: 12px; flex-direction: column;">
+                        <button id="tt-commercial-btn" style="
+                            background: ${detectedType === 'commercial' ? '#4CAF50' : 'rgba(255, 255, 255, 0.2)'};
+                            border: 2px solid ${detectedType === 'commercial' ? '#4CAF50' : 'rgba(255, 255, 255, 0.3)'};
+                            color: white;
+                            padding: 12px 20px;
+                            border-radius: 8px;
+                            font-size: 14px;
+                            cursor: pointer;
+                            font-weight: bold;
+                            transition: all 0.2s;
+                        " onmouseover="this.style.background='#4CAF50'" onmouseout="this.style.background='${detectedType === 'commercial' ? '#4CAF50' : 'rgba(255, 255, 255, 0.2)'}'">
+                            🛫 Commercial Flight
+                            <div style="font-size: 11px; font-weight: normal; opacity: 0.9; margin-top: 4px;">
+                                Longer travel time, cheaper
+                            </div>
+                        </button>
+                        <button id="tt-private-btn" style="
+                            background: ${detectedType === 'private' ? '#FF9800' : 'rgba(255, 255, 255, 0.2)'};
+                            border: 2px solid ${detectedType === 'private' ? '#FF9800' : 'rgba(255, 255, 255, 0.3)'};
+                            color: white;
+                            padding: 12px 20px;
+                            border-radius: 8px;
+                            font-size: 14px;
+                            cursor: pointer;
+                            font-weight: bold;
+                            transition: all 0.2s;
+                        " onmouseover="this.style.background='#FF9800'" onmouseout="this.style.background='${detectedType === 'private' ? '#FF9800' : 'rgba(255, 255, 255, 0.2)'}'">
+                            ✈️ Private Jet
+                            <div style="font-size: 11px; font-weight: normal; opacity: 0.9; margin-top: 4px;">
+                                Faster travel time, more expensive
+                            </div>
+                        </button>
+                        <button id="tt-cancel-btn" style="
+                            background: rgba(255, 255, 255, 0.1);
+                            border: 1px solid rgba(255, 255, 255, 0.3);
+                            color: white;
+                            padding: 8px 16px;
+                            border-radius: 6px;
+                            font-size: 12px;
+                            cursor: pointer;
+                            margin-top: 8px;
+                        " onmouseover="this.style.background='rgba(255, 255, 255, 0.2)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'">
+                            Cancel
+                        </button>
+                    </div>
+                    ${detectedType !== 'commercial' && detectedType !== 'private' ? 
+                        '<div style="margin-top: 12px; font-size: 11px; opacity: 0.8;">⚠️ Could not auto-detect plane type</div>' : 
+                        `<div style="margin-top: 12px; font-size: 11px; opacity: 0.8;">✓ Auto-detected: ${detectedType}</div>`
+                    }
+                `;
+                
+                modal.appendChild(dialog);
+                document.body.appendChild(modal);
+                
+                // Button handlers
+                const commercialBtn = dialog.querySelector('#tt-commercial-btn');
+                const privateBtn = dialog.querySelector('#tt-private-btn');
+                const cancelBtn = dialog.querySelector('#tt-cancel-btn');
+                
+                commercialBtn.onclick = () => {
+                    modal.remove();
+                    this.finalizeTracker(element, destination, 'commercial');
+                };
+                
+                privateBtn.onclick = () => {
+                    modal.remove();
+                    this.finalizeTracker(element, destination, 'private');
+                };
+                
+                cancelBtn.onclick = () => {
+                    modal.remove();
+                    this.core.NotificationSystem.show(
+                        'Travel Tracker',
+                        'Tracking cancelled',
+                        'info'
+                    );
+                };
+                
+                // Close on background click
+                modal.onclick = (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                        this.core.NotificationSystem.show(
+                            'Travel Tracker',
+                            'Tracking cancelled',
+                            'info'
+                        );
+                    }
+                };
+            },
+
+            finalizeTracker(element, destination, planeType) {
                 const tracker = {
                     id: 'travel-tracker-' + Date.now(),
                     element: element,
@@ -199,8 +337,8 @@
                     initialText: element.textContent,
                     lastText: element.textContent,
                     createdAt: Date.now(),
-                    destination: this.extractDestination(element.textContent),
-                    planeType: this.detectPlaneType(),
+                    destination: destination,
+                    planeType: planeType,
                     status: 'monitoring'
                 };
                 
@@ -215,7 +353,7 @@
                 
                 this.core.NotificationSystem.show(
                     'Travel Tracker', 
-                    `Now tracking travel to ${tracker.destination}!`, 
+                    `Now tracking ${planeType} flight to ${destination}!`, 
                     'success'
                 );
                 
@@ -268,21 +406,110 @@
             },
 
             detectPlaneType() {
-                // Look for plane images to determine type
-                const images = document.querySelectorAll('img[src*="plane"], img[src*="flight"], img[src*="travel"]');
+                console.log('🔍 Detecting plane type...');
+                
+                // Method 1: Check URL parameters (most reliable)
+                const urlParams = new URLSearchParams(window.location.search);
+                const step = urlParams.get('step');
+                if (step) {
+                    if (step.includes('private') || step.includes('PI')) {
+                        console.log('✈️ Detected PRIVATE plane from URL parameter:', step);
+                        return 'private';
+                    }
+                    if (step.includes('commercial') || step.includes('airstrip')) {
+                        console.log('✈️ Detected COMMERCIAL plane from URL parameter:', step);
+                        return 'commercial';
+                    }
+                }
+                
+                // Method 2: Check travel page content for plane type indicators
+                const pageContent = document.body.textContent.toLowerCase();
+                
+                // Look for private plane indicators
+                const privateIndicators = [
+                    'private jet',
+                    'private plane',
+                    'private flight',
+                    'cessna',
+                    'learjet',
+                    'your private',
+                    'business jet'
+                ];
+                
+                for (const indicator of privateIndicators) {
+                    if (pageContent.includes(indicator)) {
+                        console.log('✈️ Detected PRIVATE plane from page content:', indicator);
+                        return 'private';
+                    }
+                }
+                
+                // Look for commercial indicators
+                const commercialIndicators = [
+                    'commercial flight',
+                    'airline',
+                    'airbus',
+                    'boeing',
+                    'economy class',
+                    'business class',
+                    'first class'
+                ];
+                
+                for (const indicator of commercialIndicators) {
+                    if (pageContent.includes(indicator)) {
+                        console.log('✈️ Detected COMMERCIAL plane from page content:', indicator);
+                        return 'commercial';
+                    }
+                }
+                
+                // Method 3: Check for specific image patterns (Torn uses specific images)
+                const images = document.querySelectorAll('img');
                 
                 for (const img of images) {
                     const src = img.src.toLowerCase();
                     const alt = (img.alt || '').toLowerCase();
+                    const title = (img.title || '').toLowerCase();
                     
-                    if (src.includes('commercial') || src.includes('airline') || alt.includes('commercial')) {
-                        return 'commercial';
-                    }
-                    
-                    if (src.includes('private') || src.includes('propeller') || alt.includes('private')) {
+                    // Torn's private plane images often contain these patterns
+                    if (src.includes('privjet') || 
+                        src.includes('private') || 
+                        src.includes('cessna') ||
+                        src.includes('learjet') ||
+                        alt.includes('private') ||
+                        title.includes('private')) {
+                        console.log('✈️ Detected PRIVATE plane from image:', src);
                         return 'private';
                     }
+                    
+                    // Commercial plane patterns
+                    if (src.includes('commercial') || 
+                        src.includes('airline') || 
+                        src.includes('airbus') ||
+                        src.includes('boeing') ||
+                        alt.includes('commercial') ||
+                        title.includes('commercial')) {
+                        console.log('✈️ Detected COMMERCIAL plane from image:', src);
+                        return 'commercial';
+                    }
                 }
+                
+                // Method 4: Check localStorage or sessionStorage for recent travel data
+                try {
+                    const recentTravel = localStorage.getItem('torn_recent_travel');
+                    if (recentTravel) {
+                        const travelData = JSON.parse(recentTravel);
+                        if (travelData.planeType) {
+                            console.log('✈️ Detected plane type from storage:', travelData.planeType);
+                            return travelData.planeType;
+                        }
+                    }
+                } catch (e) {
+                    // Ignore storage errors
+                }
+                
+                // Default: Ask the user or use commercial as fallback
+                console.warn('⚠️ Could not detect plane type, defaulting to commercial');
+                console.log('🔍 Page URL:', window.location.href);
+                console.log('🔍 Available images:', Array.from(images).map(img => img.src));
                 
                 return 'commercial'; // Default assumption
             },
