@@ -1,16 +1,16 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.3.0
-// @description  Stock Ticker v1.24.0: Clean UI locked in - Track button removed
+// @version      6.4.0
+// @description  Stock Ticker v1.25.0: Fixed stock IDs, improved UI, enhanced debugging
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
 // @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/986b610/src/sidekick-modular-clean.user.js?v=20251030
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/986b610/src/sidekick-modular-clean.user.js?v=20251030
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/b789c1c/src/sidekick-modular-clean.user.js?v=20251030
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/b789c1c/src/sidekick-modular-clean.user.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/core.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/ui.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/settings.module.js?v=20251030
@@ -27,17 +27,19 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/traveltracker.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@986b610/src/modules/stockticker.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@b789c1c/src/modules/stockticker.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/todolist.module.js?v=20251030
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.3.0 - Stock Ticker UI Locked In!');
-    console.log('🎨 CLEAN UI: Track button removed - simple Current Price + P/L display');
-    console.log('📊 READY: Use settings gear to import historical stock purchases');
-    console.log('� Stock data will persist across sessions automatically');
+    console.log('🚀 Sidekick Modular CDN v6.4.0 - Stock Ticker Fully Fixed!');
+    console.log('✅ FIXED: Stock selection checkboxes now match correct stocks (TSB=TSB, not THC)');
+    console.log('✅ REMOVED: Reset Size & Position button (unused)');
+    console.log('✅ MOVED: Clear Data button now inside Import window for safety');
+    console.log('✅ ADDED: Clear Stock Selection option in dropdown menu');
+    console.log('🔍 ENHANCED: Detailed console logging to debug tracking data');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
