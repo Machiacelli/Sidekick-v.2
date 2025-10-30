@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.85.0
-// @description  Stock Ticker v1.8.0: MAJOR FIX - Transaction tracking now works for ALL stocks!
+// @version      5.86.0
+// @description  Stock Ticker v1.9.0: CRITICAL FIX - Panel size validation and reset option!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -27,16 +27,17 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/traveltracker.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2007dce/src/modules/stockticker.module.js?v=20250129
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@43ed8dd/src/modules/stockticker.module.js?v=20250129
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/todolist.module.js?v=20250129
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v5.85.0 - Stock Ticker MAJOR FIX!');
-    console.log('✅ Stock Ticker v1.8.0: Transaction tracking now uses dynamic API mapping');
-    console.log('✅ ALL stocks should now be tracked correctly - no more missing data!');
+    console.log('🚀 Sidekick Modular CDN v5.86.0 - Stock Ticker CRITICAL FIX!');
+    console.log('✅ Stock Ticker v1.9.0: Panel size validation and reset option added');
+    console.log('🔧 Panel now validates size on load and resize - prevents becoming unusable');
+    console.log('💡 TIP: Use dropdown menu → "Reset Size & Position" if panel is stuck!');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
