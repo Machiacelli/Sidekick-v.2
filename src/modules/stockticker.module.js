@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.20.0
-// @description  SMOOTH HOVER: Close button fades to red instead of red background box
+// @version      1.21.0
+// @description  FIXED: Stock card now shows all details + track button for untracked stocks
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -1058,11 +1058,42 @@
                                     ${profitDisplay}
                                 </div>
                             </div>
-                            <div style="font-size: 12px;">
-                                <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Current Price</div>
-                                <div style="color: #fff;">$${currentPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; margin-bottom: 8px;">
+                                <div>
+                                    <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Current Price</div>
+                                    <div style="color: #fff;">$${currentPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                                 </div>
+                                <div>
+                                    <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Shares Owned</div>
+                                    <div style="color: #fff;">${shares.toLocaleString()}</div>
+                                </div>
+                                <div>
+                                    <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Current Value</div>
+                                    <div style="color: #fff;">$${currentValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                                </div>
+                                ${isTracked ? `
+                                <div>
+                                    <div style="color: #888; font-size: 10px; margin-bottom: 2px;">Avg. Buy Price</div>
+                                    <div style="color: #fff;">$${avgBuyPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                                </div>
+                                ` : `
+                                <div style="grid-column: 1 / -1;">
+                                    <button onclick="window.SidekickModules.StockTicker.showImportWindow()" style="
+                                        width: 100%;
+                                        padding: 6px;
+                                        background: linear-gradient(135deg, #4CAF50, #45a049);
+                                        border: none;
+                                        border-radius: 4px;
+                                        color: white;
+                                        font-size: 11px;
+                                        font-weight: 600;
+                                        cursor: pointer;
+                                        transition: all 0.2s;
+                                    " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                                        📥 Track This Stock
+                                    </button>
+                                </div>
+                                `}
                             </div>
                         </div>
                     `);
