@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.5.0
-// @description  Travel Tracker v3.2.0: Modern UI design + Time on Tab v1.0.0 module added
+// @version      6.6.0
+// @description  Travel Tracker v3.3.0: Dropdown menu + multi-tab fix + Time on Tab v1.0.0
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -26,7 +26,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/blocktraining.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3e383d3/src/modules/traveltracker.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@530248f/src/modules/traveltracker.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@b789c1c/src/modules/stockticker.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3e383d3/src/modules/timeontab.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/todolist.module.js?v=20251030
@@ -35,9 +35,11 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.5.0 - Modern UI & Time on Tab!');
-    console.log('✅ NEW: Time on Tab module - shows timers in browser tab title');
-    console.log('✅ UPDATED: Travel Tracker with modern, subtle dialog design');
+    console.log('🚀 Sidekick Modular CDN v6.6.0 - Dropdown Menu & Multi-Tab Fix!');
+    console.log('✅ NEW: Travel Tracker dropdown menu for plane type selection');
+    console.log('✅ FIXED: Multi-tab tracking issue - tracker stays in correct tab');
+    console.log('✅ UPDATED: "Private Jet" → "Private Plane" terminology');
+    console.log('⏰ Time on Tab: Shows timers in browser tab title');
     console.log('📝 Stock Ticker: Fixed stock IDs, UI cleanup, enhanced debugging');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
