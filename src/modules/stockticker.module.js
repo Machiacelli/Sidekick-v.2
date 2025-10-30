@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.8.0
-// @description  MAJOR FIX: Transaction tracking now uses dynamic API mapping - all stocks tracked correctly!
+// @version      1.9.0
+// @description  CRITICAL FIX: Added size validation and reset option to prevent panel from becoming unusable
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -109,8 +109,23 @@
                 const panel = document.createElement('div');
                 panel.className = 'stockticker-panel';
                 
-                // Load saved size or use defaults
+                // Load saved size or use defaults, with validation
                 const savedSize = this.core.loadState('stockticker_size', { width: 320, height: 400 });
+                
+                // Validate and constrain saved size
+                const minWidth = 250;
+                const minHeight = 150;
+                const maxWidth = 600;
+                const maxHeight = 800;
+                
+                const validWidth = Math.max(minWidth, Math.min(maxWidth, savedSize.width || 320));
+                const validHeight = Math.max(minHeight, Math.min(maxHeight, savedSize.height || 400));
+                
+                // If saved size was invalid, reset it
+                if (validWidth !== savedSize.width || validHeight !== savedSize.height) {
+                    console.warn('⚠️ Stock Ticker: Invalid saved size detected, using constrained values');
+                    this.core.saveState('stockticker_size', { width: validWidth, height: validHeight });
+                }
                 
                 panel.style.cssText = `
                     position: absolute;
@@ -120,12 +135,12 @@
                     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
                     display: flex;
                     flex-direction: column;
-                    width: ${savedSize.width}px;
-                    height: ${savedSize.height}px;
-                    min-width: 250px;
-                    min-height: 150px;
-                    max-width: 600px;
-                    max-height: 800px;
+                    width: ${validWidth}px;
+                    height: ${validHeight}px;
+                    min-width: ${minWidth}px;
+                    min-height: ${minHeight}px;
+                    max-width: ${maxWidth}px;
+                    max-height: ${maxHeight}px;
                     z-index: 1000;
                     resize: both;
                     overflow: hidden;
@@ -282,6 +297,53 @@
                     this.fetchStockData();
                 };
                 
+                // Reset size & position option
+                const resetSizeOption = document.createElement('button');
+                resetSizeOption.innerHTML = '<span style="margin-right: 8px;">🔧</span>Reset Size & Position';
+                resetSizeOption.style.cssText = `
+                    background: none;
+                    border: none;
+                    color: #fff;
+                    padding: 8px 12px;
+                    width: 100%;
+                    text-align: left;
+                    cursor: pointer;
+                    font-size: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: background 0.2s ease;
+                `;
+                resetSizeOption.onmouseover = () => resetSizeOption.style.background = '#444';
+                resetSizeOption.onmouseout = () => resetSizeOption.style.background = 'none';
+                resetSizeOption.onclick = (e) => {
+                    e.stopPropagation();
+                    dropdown.style.display = 'none';
+                    
+                    // Reset to default size
+                    const defaultSize = { width: 320, height: 400 };
+                    panel.style.width = defaultSize.width + 'px';
+                    panel.style.height = defaultSize.height + 'px';
+                    
+                    // Reset to default position (centered)
+                    const sidebar = document.getElementById('sidekick-sidebar');
+                    if (sidebar) {
+                        const centerX = (sidebar.offsetWidth - defaultSize.width) / 2;
+                        const centerY = (sidebar.offsetHeight - defaultSize.height) / 2;
+                        panel.style.left = Math.max(0, centerX) + 'px';
+                        panel.style.top = Math.max(0, centerY) + 'px';
+                    }
+                    
+                    // Save the reset values
+                    this.core.saveState('stockticker_size', defaultSize);
+                    this.core.saveState('stockticker_position', { 
+                        x: parseInt(panel.style.left) || 0, 
+                        y: parseInt(panel.style.top) || 0 
+                    });
+                    
+                    console.log('✅ Stock Ticker: Size and position reset to defaults');
+                };
+                
                 // Settings option
                 const settingsOption = document.createElement('button');
                 settingsOption.innerHTML = '<span style="margin-right: 8px;">⚙️</span>Select Stocks';
@@ -366,6 +428,7 @@
                 dropdown.appendChild(refreshOption);
                 dropdown.appendChild(pinOption);
                 dropdown.appendChild(autoAddOption);
+                dropdown.appendChild(resetSizeOption);
                 dropdown.appendChild(settingsOption);
                 dropdown.appendChild(importDataOption);
                 dropdown.appendChild(clearDataOption);
@@ -466,13 +529,30 @@
                 // Add dragging functionality
                 this.addDragging(panel, header);
                 
-                // Add resize observer to save size
+                // Add resize observer to save size with validation
                 const resizeObserver = new ResizeObserver(() => {
-                    const size = {
-                        width: panel.offsetWidth,
-                        height: panel.offsetHeight
-                    };
-                    this.core.saveState('stockticker_size', size);
+                    const width = panel.offsetWidth;
+                    const height = panel.offsetHeight;
+                    
+                    // Validate and constrain dimensions
+                    const minWidth = 250;
+                    const minHeight = 150;
+                    const maxWidth = 600;
+                    const maxHeight = 800;
+                    
+                    const validWidth = Math.max(minWidth, Math.min(maxWidth, width));
+                    const validHeight = Math.max(minHeight, Math.min(maxHeight, height));
+                    
+                    // Only save if dimensions are valid
+                    if (validWidth === width && validHeight === height) {
+                        const size = { width, height };
+                        this.core.saveState('stockticker_size', size);
+                    } else {
+                        // Reset to valid size if invalid dimensions detected
+                        console.warn('⚠️ Stock Ticker: Invalid size detected, resetting to valid dimensions');
+                        panel.style.width = validWidth + 'px';
+                        panel.style.height = validHeight + 'px';
+                    }
                 });
                 resizeObserver.observe(panel);
 
