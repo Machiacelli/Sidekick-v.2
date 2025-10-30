@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.14.0
-// @description  FIX: P/L now calculated on actual shares owned (API), not tracked shares - prevents showing P/L for stocks you've sold
+// @version      1.16.0
+// @description  VISUAL FIX: Use K/M/B notation for P/L display, remove percentages
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -35,6 +35,22 @@
             settingsWindow: null,
             transactionObserver: null, // MutationObserver for tracking transactions
             trackedTransactions: {}, // Store tracked purchase data
+            
+            // Format large numbers with K/M/B notation
+            formatCurrency(value) {
+                const absValue = Math.abs(value);
+                const sign = value >= 0 ? '+' : '-';
+                
+                if (absValue >= 1000000000) {
+                    return `${sign}$${(absValue / 1000000000).toFixed(2)}B`;
+                } else if (absValue >= 1000000) {
+                    return `${sign}$${(absValue / 1000000).toFixed(2)}M`;
+                } else if (absValue >= 1000) {
+                    return `${sign}$${(absValue / 1000).toFixed(2)}K`;
+                } else {
+                    return `${sign}$${absValue.toFixed(2)}`;
+                }
+            },
             
             init() {
                 console.log('📈 Stock Ticker: Initializing...');
@@ -876,13 +892,9 @@
 
                     // Build stock card with profit/loss if tracked
                     const profitColor = profitLoss === null ? '#888' : (profitLoss >= 0 ? '#4CAF50' : '#f44336');
-                    const profitSign = profitLoss > 0 ? '+' : '';
                     const profitDisplay = profitLoss === null 
                         ? 'Not tracked' 
-                        : `${profitSign}$${profitLoss.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                    const percentDisplay = profitPercent === null 
-                        ? '' 
-                        : ` (${profitSign}${profitPercent.toFixed(2)}%)`;
+                        : this.formatCurrency(profitLoss);
 
                     stocksHTML.push(`
                         <div style="
@@ -899,7 +911,7 @@
                                     [${stockAcronym}] ${stockName}
                                 </div>
                                 <div style="color: ${profitColor}; font-weight: 600; font-size: 13px;">
-                                    ${profitDisplay}${percentDisplay}
+                                    ${profitDisplay}
                                 </div>
                             </div>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
