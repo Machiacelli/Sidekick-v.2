@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Stock Ticker Module
 // @namespace    http://tampermonkey.net/
-// @version      1.11.0
-// @description  Fixed transaction detection for dropdown-based stocks page with enhanced element scanning
+// @version      1.12.0
+// @description  CRITICAL FIX: Updated transaction detection to match new Torn format - "at $X each" instead of "for $X total"
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -980,25 +980,56 @@
             checkForTransaction(message) {
                 // Try multiple patterns to match Torn's transaction messages
                 
-                // Pattern 1: "You bought 1,000 shares in Stock Name for $5,000.00"
-                let buyMatch = message.match(/You bought ([\d,]+) shares? (?:in|of) (.+?) for \$([\d,]+\.?\d*)/i);
+                // NEW PATTERN (2025): "You have bought 1 shares at $1,197.06 each"
+                let buyMatch = message.match(/You (?:have )?bought ([\d,]+) shares? at \$([\d,]+\.?\d*) each/i);
                 
-                // Pattern 2: "You have bought 1,000 shares in Stock Name for $5,000.00"
+                // LEGACY Pattern 1: "You bought 1,000 shares in Stock Name for $5,000.00"
+                if (!buyMatch) {
+                    buyMatch = message.match(/You bought ([\d,]+) shares? (?:in|of) (.+?) for \$([\d,]+\.?\d*)/i);
+                }
+                
+                // LEGACY Pattern 2: "You have bought 1,000 shares in Stock Name for $5,000.00"
                 if (!buyMatch) {
                     buyMatch = message.match(/You have bought ([\d,]+) shares? (?:in|of) (.+?) for \$([\d,]+\.?\d*)/i);
                 }
                 
-                // Pattern 3: Using acronym instead of full name
+                // LEGACY Pattern 3: Using acronym instead of full name
                 if (!buyMatch) {
                     buyMatch = message.match(/You (?:have )?bought ([\d,]+) shares? (?:in|of) ([A-Z]{2,5}) for \$([\d,]+\.?\d*)/i);
                 }
                 
                 if (buyMatch) {
                     const shares = parseInt(buyMatch[1].replace(/,/g, ''));
-                    const stockName = buyMatch[2].trim();
-                    const totalCost = parseFloat(buyMatch[3].replace(/,/g, ''));
-                    const pricePerShare = totalCost / shares;
                     
+                    // Check if using new format (at $X each) or legacy format (for $X total)
+                    let pricePerShare, stockName;
+                    
+                    if (message.includes('at $') && message.includes('each')) {
+                        // NEW FORMAT: "at $1,197.06 each"
+                        pricePerShare = parseFloat(buyMatch[2].replace(/,/g, ''));
+                        
+                        // Stock name must be extracted from URL since it's not in the message
+                        const urlMatch = window.location.href.match(/stockID=(\d+)/);
+                        if (urlMatch) {
+                            const stockId = parseInt(urlMatch[1]);
+                            // Find stock name from our combined data
+                            if (this.combinedStocks && this.combinedStocks[stockId]) {
+                                stockName = this.combinedStocks[stockId].acronym || this.combinedStocks[stockId].name;
+                            } else {
+                                stockName = `Stock_${stockId}`;
+                            }
+                        } else {
+                            console.warn('⚠️ Could not determine stock from URL');
+                            return;
+                        }
+                    } else {
+                        // LEGACY FORMAT: "in Stock Name for $5,000.00"
+                        stockName = buyMatch[2].trim();
+                        const totalCost = parseFloat(buyMatch[3].replace(/,/g, ''));
+                        pricePerShare = totalCost / shares;
+                    }
+                    
+                    const totalCost = pricePerShare * shares;
                     console.log(`💰 BUY detected: ${shares} shares of "${stockName}" at $${pricePerShare.toFixed(2)}/share (total: $${totalCost.toFixed(2)})`);
                     this.recordTransaction('buy', stockName, shares, pricePerShare);
                     return;
@@ -1006,25 +1037,56 @@
                 
                 // Try multiple patterns for SELL messages
                 
-                // Pattern 1: "You sold 1,000 shares in Stock Name for $6,000.00"
-                let sellMatch = message.match(/You sold ([\d,]+) shares? (?:in|of) (.+?) for \$([\d,]+\.?\d*)/i);
+                // NEW PATTERN (2025): "You have sold 1 shares at $1,197.06 each"
+                let sellMatch = message.match(/You (?:have )?sold ([\d,]+) shares? at \$([\d,]+\.?\d*) each/i);
                 
-                // Pattern 2: "You have sold 1,000 shares in Stock Name for $6,000.00"
+                // LEGACY Pattern 1: "You sold 1,000 shares in Stock Name for $6,000.00"
+                if (!sellMatch) {
+                    sellMatch = message.match(/You sold ([\d,]+) shares? (?:in|of) (.+?) for \$([\d,]+\.?\d*)/i);
+                }
+                
+                // LEGACY Pattern 2: "You have sold 1,000 shares in Stock Name for $6,000.00"
                 if (!sellMatch) {
                     sellMatch = message.match(/You have sold ([\d,]+) shares? (?:in|of) (.+?) for \$([\d,]+\.?\d*)/i);
                 }
                 
-                // Pattern 3: Using acronym instead of full name
+                // LEGACY Pattern 3: Using acronym instead of full name
                 if (!sellMatch) {
                     sellMatch = message.match(/You (?:have )?sold ([\d,]+) shares? (?:in|of) ([A-Z]{2,5}) for \$([\d,]+\.?\d*)/i);
                 }
                 
                 if (sellMatch) {
                     const shares = parseInt(sellMatch[1].replace(/,/g, ''));
-                    const stockName = sellMatch[2].trim();
-                    const totalRevenue = parseFloat(sellMatch[3].replace(/,/g, ''));
-                    const pricePerShare = totalRevenue / shares;
                     
+                    // Check if using new format (at $X each) or legacy format (for $X total)
+                    let pricePerShare, stockName;
+                    
+                    if (message.includes('at $') && message.includes('each')) {
+                        // NEW FORMAT: "at $1,197.06 each"
+                        pricePerShare = parseFloat(sellMatch[2].replace(/,/g, ''));
+                        
+                        // Stock name must be extracted from URL since it's not in the message
+                        const urlMatch = window.location.href.match(/stockID=(\d+)/);
+                        if (urlMatch) {
+                            const stockId = parseInt(urlMatch[1]);
+                            // Find stock name from our combined data
+                            if (this.combinedStocks && this.combinedStocks[stockId]) {
+                                stockName = this.combinedStocks[stockId].acronym || this.combinedStocks[stockId].name;
+                            } else {
+                                stockName = `Stock_${stockId}`;
+                            }
+                        } else {
+                            console.warn('⚠️ Could not determine stock from URL');
+                            return;
+                        }
+                    } else {
+                        // LEGACY FORMAT: "in Stock Name for $6,000.00"
+                        stockName = sellMatch[2].trim();
+                        const totalRevenue = parseFloat(sellMatch[3].replace(/,/g, ''));
+                        pricePerShare = totalRevenue / shares;
+                    }
+                    
+                    const totalRevenue = pricePerShare * shares;
                     console.log(`💸 SELL detected: ${shares} shares of "${stockName}" at $${pricePerShare.toFixed(2)}/share (total: $${totalRevenue.toFixed(2)})`);
                     this.recordTransaction('sell', stockName, shares, pricePerShare);
                 }

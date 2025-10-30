@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.88.0
-// @description  Stock Ticker v1.11.0: Fixed dropdown-based transaction detection!
+// @version      5.89.0
+// @description  Stock Ticker v1.12.0: CRITICAL FIX - Updated regex to match Torn's new transaction format!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -34,11 +34,11 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v5.88.0 - Stock Ticker Dropdown Detection!');
-    console.log('✅ Stock Ticker v1.11.0: Now detects transactions on dropdown-based stocks page');
-    console.log('🔧 Fixed: URL pattern now matches /page.php?sid=stocks (actual Torn stocks page)');
-    console.log('� Fixed: Enhanced detection to check all added elements and their descendants');
-    console.log('💡 TIP: Open console (F12) when buying/selling to see transaction detection in action');
+    console.log('🚀 Sidekick Modular CDN v5.89.0 - Stock Ticker Transaction Format Fix!');
+    console.log('✅ Stock Ticker v1.12.0: Now matches "You have bought 1 shares at $1,197.06 each" format');
+    console.log('🔧 CRITICAL: Updated regex patterns to match Torn\'s current transaction messages');
+    console.log('📍 Stock name extracted from URL (stockID parameter) since it\'s not in the message');
+    console.log('💡 TIP: Buy/sell 1 share again to test the FULL detection + recording');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
