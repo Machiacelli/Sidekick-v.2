@@ -406,12 +406,6 @@
                                     🗑️ Clear Cache
                                 </button>
                             </div>
-
-                            <div style="margin-top: 20px; padding: 16px; background: #1e1e1e; border-left: 4px solid #ff9800; border-radius: 6px;">
-                                <p style="margin: 0; color: #fff; font-size: 13px; line-height: 1.6;">
-                                    <strong>💡 Tip:</strong> Use a separate Public API key for Xanax Viewer to keep it independent from combat API calls. This prevents hitting API limits during important fights.
-                                </p>
-                            </div>
                         </div>
                     </div>
                 `, 'settings_modal');

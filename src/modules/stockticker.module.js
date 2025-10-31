@@ -154,11 +154,9 @@
                 // Validate and constrain saved size
                 const minWidth = 250;
                 const minHeight = 150;
-                const maxWidth = 600;
-                const maxHeight = 800;
                 
-                const validWidth = Math.max(minWidth, Math.min(maxWidth, savedSize.width || 320));
-                const validHeight = Math.max(minHeight, Math.min(maxHeight, savedSize.height || 400));
+                const validWidth = Math.max(minWidth, savedSize.width || 320);
+                const validHeight = Math.max(minHeight, savedSize.height || 400);
                 
                 // If saved size was invalid, reset it
                 if (validWidth !== savedSize.width || validHeight !== savedSize.height) {
@@ -178,8 +176,6 @@
                     height: ${validHeight}px;
                     min-width: ${minWidth}px;
                     min-height: ${minHeight}px;
-                    max-width: ${maxWidth}px;
-                    max-height: ${maxHeight}px;
                     z-index: 1000;
                     resize: both;
                     overflow: hidden;
@@ -515,7 +511,7 @@
                     sortButton.style.color = '#bbb'; 
                 };
 
-                // Close button (matching other panels)
+                // Close button (matching other panels with hover effect)
                 const closeBtn = document.createElement('button');
                 closeBtn.innerHTML = '×';
                 closeBtn.title = 'Close';
@@ -527,10 +523,17 @@
                     font-size: 20px;
                     padding: 0 6px;
                     line-height: 1;
-                    transition: color 0.3s ease;
+                    opacity: 0.9;
+                    transition: color 0.3s ease, opacity 0.3s ease;
                 `;
-                closeBtn.onmouseover = () => { closeBtn.style.color = '#ff4444'; };
-                closeBtn.onmouseout = () => { closeBtn.style.color = '#bbb'; };
+                closeBtn.onmouseover = () => { 
+                    closeBtn.style.color = '#ff4444';
+                    closeBtn.style.opacity = '1';
+                };
+                closeBtn.onmouseout = () => { 
+                    closeBtn.style.color = '#bbb';
+                    closeBtn.style.opacity = '0.9';
+                };
                 closeBtn.onclick = (e) => {
                     e.stopPropagation();
                     this.hide();
@@ -583,14 +586,12 @@
                     const width = panel.offsetWidth;
                     const height = panel.offsetHeight;
                     
-                    // Validate and constrain dimensions
+                    // Validate minimum dimensions only (no max limits)
                     const minWidth = 250;
                     const minHeight = 150;
-                    const maxWidth = 600;
-                    const maxHeight = 800;
                     
-                    const validWidth = Math.max(minWidth, Math.min(maxWidth, width));
-                    const validHeight = Math.max(minHeight, Math.min(maxHeight, height));
+                    const validWidth = Math.max(minWidth, width);
+                    const validHeight = Math.max(minHeight, height);
                     
                     // Only save if dimensions are valid
                     if (validWidth === width && validHeight === height) {
