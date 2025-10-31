@@ -77,8 +77,9 @@
                 // Load selected stocks from storage
                 this.selectedStocks = this.core.loadState('stockticker_selected_stocks', []);
                 
-                // Load tracked transactions
-                this.trackedTransactions = this.core.loadState('stockticker_transactions', {});
+                // Load tracked transactions and normalize keys (handle both 'stock_17' and '17' formats)
+                const rawTransactions = this.core.loadState('stockticker_transactions', {});
+                this.trackedTransactions = this.normalizeTransactionKeys(rawTransactions);
                 console.log('📊 Stock Ticker: Loaded tracked transactions:', this.trackedTransactions);
                 console.log('📊 Stock Ticker: Tracked stock IDs:', Object.keys(this.trackedTransactions));
                 Object.entries(this.trackedTransactions).forEach(([stockId, data]) => {
@@ -95,6 +96,20 @@
                 }
                 
                 console.log('✅ Stock Ticker: Initialized');
+            },
+            
+            // Normalize transaction keys to remove 'stock_' prefix and ensure numeric IDs
+            normalizeTransactionKeys(transactions) {
+                const normalized = {};
+                Object.entries(transactions).forEach(([key, value]) => {
+                    // Extract numeric ID from keys like 'stock_17' or use the key as-is if already numeric
+                    const numericId = key.replace(/^stock_/, '');
+                    normalized[numericId] = value;
+                    if (key !== numericId) {
+                        console.log(`📊 Stock Ticker: Normalized key '${key}' to '${numericId}'`);
+                    }
+                });
+                return normalized;
             },
 
             toggle() {

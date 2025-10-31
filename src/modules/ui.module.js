@@ -75,6 +75,7 @@
                 border-right: 2px solid #444 !important;
                 z-index: 999999 !important;
                 overflow: hidden !important;
+                overscroll-behavior: contain !important;
                 transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
                 box-shadow: 4px 0 20px rgba(0,0,0,0.3) !important;
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
@@ -482,6 +483,7 @@
                     flex: 1;
                     overflow-y: auto;
                     overflow-x: hidden;
+                    overscroll-behavior: contain;
                     padding-bottom: 60px;
                     position: relative;
                     scrollbar-width: thin;
