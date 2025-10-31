@@ -202,9 +202,6 @@
                             <button id="chain-timer-tab" class="settings-tab" style="flex: 1; padding: 15px 20px; background: #333; border: none; color: #aaa; font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; font-size: 14px;">
                                 ⏱️ Chain Timer
                             </button>
-                            <button id="shoplifting-tab" class="settings-tab" style="flex: 1; padding: 15px 20px; background: #333; border: none; color: #aaa; font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; font-size: 14px;">
-                                🏪 Shoplifting Alert
-                            </button>
                             <button id="xanax-viewer-tab" class="settings-tab" style="flex: 1; padding: 15px 20px; background: #333; border: none; color: #aaa; font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; font-size: 14px;">
                                 💊 Xanax Viewer
                             </button>
@@ -285,69 +282,6 @@
                         <!-- Chain Timer Tab Content -->
                         <div id="chain-timer-content" class="tab-content" style="padding: 20px; display: none;">
                             <!-- Content will be populated by Chain Timer module -->
-                        </div>
-                        
-                        <!-- Shoplifting Tab Content -->
-                        <div id="shoplifting-content" class="tab-content" style="padding: 20px; display: none;">
-                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin-bottom: 20px;">
-                                <div style="display: flex; flex-direction: column;">
-                                    <span style="color: #fff; font-weight: bold; font-size: 14px;">🚨 Security Alerts</span>
-                                    <span style="color: #aaa; font-size: 12px;">Get notified when shop security goes down</span>
-                                </div>
-                                <label class="shoplifting-monitor-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
-                                    <input type="checkbox" id="shoplifting-monitor-toggle" style="opacity: 0; width: 0; height: 0;">
-                                    <span class="shoplifting-monitor-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
-                                </label>
-                            </div>
-                            
-                            <div id="shoplifting-config" style="display: none;">
-                                <div style="background: #333; border-radius: 6px; padding: 15px; margin: 12px 0;">
-                                    <label style="display: block; margin-bottom: 8px; color: #aaa; font-weight: bold; font-size: 14px;">Shoplifting API Key:</label>
-                                    <input type="text" id="shoplifting-api-key-input" value=""
-                                           placeholder="Enter API key for shoplifting data..."
-                                           style="width: 100%; background: #2a2a2a; border: 1px solid #555; color: #fff; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 14px; box-sizing: border-box;">
-                                    <div style="font-size: 12px; color: #666; margin-top: 6px;">
-                                        <a href="https://www.torn.com/preferences.php#tab=api?step=addNewKey&title=ShopliftingAPI&torn=shoplifting" target="_blank" style="color: #4CAF50; text-decoration: none;">🔗 Create Shoplifting API Key</a><br>
-                                        <span style="color: #ff9800; font-size: 11px;">⚠️ Must enable "shoplifting" selection when creating the API key</span>
-                                    </div>
-                                    <button id="test-shoplifting-api-btn" style="width: 100%; margin-top: 10px; padding: 10px; background: linear-gradient(135deg, #2196F3, #1976D2); border: none; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
-                                        🧪 Test Shoplifting API
-                                    </button>
-                                </div>
-                                <div style="background: #333; border-radius: 6px; padding: 15px; margin: 12px 0;">
-                                    <h5 style="color: #aaa; margin: 0 0 12px 0; font-size: 13px; font-weight: bold;">📍 Shop Monitoring Settings</h5>
-                                    <div style="font-size: 12px; color: #666; margin-bottom: 15px; padding: 10px; background: #2a2a2a; border-radius: 4px; border-left: 3px solid #4CAF50;">
-                                        <strong>How to use:</strong><br>
-                                        • Click shop name for "all security down" alerts<br>
-                                        • Click individual security icons (📹 cameras, 👮 guards, 🔒 locks) for specific alerts
-                                    </div>
-                                    <div id="shop-alert-settings" style="display: grid; gap: 8px;">
-                                        <!-- Shop settings will be dynamically generated -->
-                                    </div>
-                                </div>
-                                <div style="background: #333; border-radius: 6px; padding: 15px; margin: 12px 0;">
-                                    <h5 style="color: #aaa; margin: 0 0 12px 0; font-size: 13px; font-weight: bold;">🔔 Notification Settings</h5>
-                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0;">
-                                        <span style="color: #ccc; font-size: 13px;">Play Sound</span>
-                                        <label class="notification-sound-switch" style="position: relative; display: inline-block; width: 40px; height: 20px;">
-                                            <input type="checkbox" id="notification-sound-toggle" style="opacity: 0; width: 0; height: 0;">
-                                            <span class="notification-sound-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 20px;"></span>
-                                        </label>
-                                    </div>
-                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0;">
-                                        <span style="color: #ccc; font-size: 13px;">Auto-redirect to Crimes</span>
-                                        <label class="auto-redirect-switch" style="position: relative; display: inline-block; width: 40px; height: 20px;">
-                                            <input type="checkbox" id="auto-redirect-toggle" style="opacity: 0; width: 0; height: 0;">
-                                            <span class="auto-redirect-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 20px;"></span>
-                                        </label>
-                                    </div>
-                                    <div style="margin: 12px 0;">
-                                        <label style="display: block; margin-bottom: 6px; color: #aaa; font-size: 12px;">Check Interval (minutes):</label>
-                                        <input type="number" id="check-interval-input" min="1" max="10" value="1"
-                                               style="width: 100%; background: #2a2a2a; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 4px; font-size: 13px; box-sizing: border-box;">
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                         
                         <!-- Xanax Viewer Tab Content -->
@@ -647,9 +581,6 @@
                         modal.appendChild(blockBtn);
                     }
                     
-                    // Initialize shoplifting monitor
-                    this.initShopliftingMonitor();
-                    
                     // Initialize xanax viewer
                     this.initXanaxViewer();
 
@@ -794,16 +725,12 @@
             },
 
             exportData() {
-                const ShopliftingModule = window.SidekickModules?.Shoplifting;
-                const shopliftingSettings = ShopliftingModule ? ShopliftingModule.getSettings() : {};
-                
                 const data = {
                     settings: {
                         apiKey: loadState(STORAGE_KEYS.API_KEY, ''),
                         blockTraining: loadState('blockTraining', false),
                         travelBlocker: loadState('travelBlocker', false),
-                        randomTarget: loadState('randomTarget', false),
-                        shoplifting: shopliftingSettings
+                        randomTarget: loadState('randomTarget', false)
                     },
                     todoList: loadState('sidekick_todos', []),
                     timerData: loadState('timers', []),
@@ -821,195 +748,6 @@
                 NotificationSystem.show('Success', 'Data exported successfully!', 'info');
             },
             
-            // Shoplifting Monitor UI Interface Functions
-            initShopliftingMonitor() {
-                const toggle = document.getElementById('shoplifting-monitor-toggle');
-                const config = document.getElementById('shoplifting-config');
-                const apiKeyInput = document.getElementById('shoplifting-api-key-input');
-                const testBtn = document.getElementById('test-shoplifting-api-btn');
-                const soundToggle = document.getElementById('notification-sound-toggle');
-                const redirectToggle = document.getElementById('auto-redirect-toggle');
-                const intervalInput = document.getElementById('check-interval-input');
-                
-                if (!toggle) return;
-                
-                // Wait for Shoplifting module to be available
-                if (!window.SidekickModules?.Shoplifting) {
-                    setTimeout(() => this.initShopliftingMonitor(), 100);
-                    return;
-                }
-                
-                const ShopliftingModule = window.SidekickModules.Shoplifting;
-                const settings = ShopliftingModule.getSettings();
-                
-                // Load current settings from shoplifting module
-                toggle.checked = settings.enabled;
-                if (config) config.style.display = settings.enabled ? 'block' : 'none';
-                if (apiKeyInput) apiKeyInput.value = settings.apiKey;
-                if (soundToggle) soundToggle.checked = settings.soundEnabled;
-                if (redirectToggle) redirectToggle.checked = settings.autoRedirect;
-                if (intervalInput) intervalInput.value = settings.checkInterval;
-                
-                // Update slider appearance
-                this.updateShopliftingSlider(toggle, settings.enabled);
-                this.updateShopliftingSlider(soundToggle, settings.soundEnabled);
-                this.updateShopliftingSlider(redirectToggle, settings.autoRedirect);
-                
-                // Generate shop alert settings
-                this.generateShopAlertSettings();
-                
-                // Event listeners
-                if (toggle) {
-                    toggle.addEventListener('change', (e) => {
-                        const isEnabled = e.target.checked;
-                        ShopliftingModule.setEnabled(isEnabled);
-                        if (config) config.style.display = isEnabled ? 'block' : 'none';
-                        this.updateShopliftingSlider(toggle, isEnabled);
-                    });
-                }
-                
-                if (apiKeyInput) {
-                    apiKeyInput.addEventListener('change', (e) => {
-                        ShopliftingModule.setApiKey(e.target.value.trim());
-                    });
-                }
-                
-                if (testBtn) {
-                    testBtn.addEventListener('click', () => this.testShopliftingApi());
-                }
-                
-                if (soundToggle) {
-                    soundToggle.addEventListener('change', (e) => {
-                        const currentSettings = ShopliftingModule.getSettings();
-                        ShopliftingModule.updateSettings({
-                            ...currentSettings,
-                            soundEnabled: e.target.checked
-                        });
-                        this.updateShopliftingSlider(soundToggle, e.target.checked);
-                    });
-                }
-                
-                if (redirectToggle) {
-                    redirectToggle.addEventListener('change', (e) => {
-                        const currentSettings = ShopliftingModule.getSettings();
-                        ShopliftingModule.updateSettings({
-                            ...currentSettings,
-                            autoRedirect: e.target.checked
-                        });
-                        this.updateShopliftingSlider(redirectToggle, e.target.checked);
-                    });
-                }
-                
-                if (intervalInput) {
-                    intervalInput.addEventListener('change', (e) => {
-                        const value = Math.max(1, Math.min(10, parseInt(e.target.value) || 1));
-                        e.target.value = value;
-                        const currentSettings = ShopliftingModule.getSettings();
-                        ShopliftingModule.updateSettings({
-                            ...currentSettings,
-                            checkInterval: value
-                        });
-                    });
-                }
-            },
-            
-            updateShopliftingSlider(toggle, isChecked) {
-                if (!toggle) return;
-                const slider = toggle.nextElementSibling;
-                if (slider) {
-                    slider.style.backgroundColor = isChecked ? '#4CAF50' : '#ccc';
-                    slider.style.boxShadow = isChecked ? '0 0 10px rgba(76, 175, 80, 0.5)' : 'none';
-                }
-            },
-            
-            generateShopAlertSettings() {
-                const container = document.getElementById('shop-alert-settings');
-                if (!container || !window.SidekickModules?.Shoplifting) return;
-                
-                const ShopliftingModule = window.SidekickModules.Shoplifting;
-                const shops = ShopliftingModule.getShopList();
-                const savedAlerts = ShopliftingModule.getShopAlerts();
-                const securityIcons = ShopliftingModule.getSecurityIcons();
-                
-                container.innerHTML = shops.map(shop => {
-                    const shopAlerts = savedAlerts[shop.id] || {};
-                    
-                    return `
-                        <div style="background: #2a2a2a; border-radius: 8px; padding: 12px; margin: 8px 0;">
-                            <!-- Shop Name (clickable for all alerts) -->
-                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                                <span class="shop-name-btn" data-shop="${shop.id}" 
-                                      style="color: #fff; font-weight: bold; font-size: 13px; cursor: pointer; padding: 4px 8px; border-radius: 4px; background: ${shopAlerts.all ? '#4CAF50' : '#555'}; transition: all 0.3s;">
-                                    ${shop.name}
-                                </span>
-                                <small style="color: #888; font-size: 11px;">${shop.district}</small>
-                            </div>
-                            
-                            <!-- Individual Security Controls -->
-                            <div style="display: flex; gap: 8px; justify-content: center;">
-                                ${shop.securities.map(security => `
-                                    <div class="security-btn" data-shop="${shop.id}" data-security="${security}"
-                                         style="display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 6px; border-radius: 4px; background: ${shopAlerts[security] ? '#4CAF50' : '#555'}; transition: all 0.3s; min-width: 40px;">
-                                        <span style="font-size: 16px;">${securityIcons[security]}</span>
-                                        <span style="font-size: 9px; color: #ccc; text-transform: capitalize;">${security}</span>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-                
-                // Add event listeners for shop name buttons (all security)
-                container.querySelectorAll('.shop-name-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const shopId = e.target.getAttribute('data-shop');
-                        const currentState = savedAlerts[shopId]?.all || false;
-                        const newState = !currentState;
-                        
-                        ShopliftingModule.setShopAlert(shopId, 'all', newState);
-                        
-                        // Update visual state
-                        e.target.style.background = newState ? '#4CAF50' : '#555';
-                        
-                        // Update the saved alerts reference
-                        this.generateShopAlertSettings(); // Refresh the display
-                    });
-                });
-                
-                // Add event listeners for individual security buttons
-                container.querySelectorAll('.security-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const shopId = e.currentTarget.getAttribute('data-shop');
-                        const security = e.currentTarget.getAttribute('data-security');
-                        const currentState = savedAlerts[shopId]?.[security] || false;
-                        const newState = !currentState;
-                        
-                        ShopliftingModule.setShopAlert(shopId, security, newState);
-                        
-                        // Update visual state
-                        e.currentTarget.style.background = newState ? '#4CAF50' : '#555';
-                    });
-                });
-            },
-            
-            async testShopliftingApi() {
-                if (!window.SidekickModules?.Shoplifting) {
-                    NotificationSystem.show('Error', 'Shoplifting module not loaded', 'error');
-                    return;
-                }
-                
-                try {
-                    const result = await window.SidekickModules.Shoplifting.testApiConnection();
-                    if (result.warning) {
-                        NotificationSystem.show('Success', result.message, 'warning');
-                    } else {
-                        NotificationSystem.show('Success', result.message, 'info');
-                    }
-                } catch (error) {
-                    NotificationSystem.show('Error', error.message, 'error');
-                }
-            },
-
             // Xanax Viewer UI Interface Functions
             initXanaxViewer() {
                 const enabledToggle = document.getElementById('xanax-viewer-enabled-toggle');

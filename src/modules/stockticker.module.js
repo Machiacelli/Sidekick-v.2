@@ -151,12 +151,14 @@
                 // Load saved size or use defaults, with validation
                 const savedSize = this.core.loadState('stockticker_size', { width: 320, height: 400 });
                 
-                // Validate and constrain saved size
+                // Validate and constrain saved size (with max limits to prevent resize bug)
                 const minWidth = 250;
                 const minHeight = 150;
+                const maxWidth = 500;  // Maximum width to keep close button accessible
+                const maxHeight = 700; // Maximum height to fit within sidebar
                 
-                const validWidth = Math.max(minWidth, savedSize.width || 320);
-                const validHeight = Math.max(minHeight, savedSize.height || 400);
+                const validWidth = Math.max(minWidth, Math.min(maxWidth, savedSize.width || 320));
+                const validHeight = Math.max(minHeight, Math.min(maxHeight, savedSize.height || 400));
                 
                 // If saved size was invalid, reset it
                 if (validWidth !== savedSize.width || validHeight !== savedSize.height) {
@@ -176,6 +178,8 @@
                     height: ${validHeight}px;
                     min-width: ${minWidth}px;
                     min-height: ${minHeight}px;
+                    max-width: ${maxWidth}px;
+                    max-height: ${maxHeight}px;
                     z-index: 1000;
                     resize: both;
                     overflow: hidden;
@@ -586,12 +590,14 @@
                     const width = panel.offsetWidth;
                     const height = panel.offsetHeight;
                     
-                    // Validate minimum dimensions only (no max limits)
+                    // Validate dimensions with both min and max limits
                     const minWidth = 250;
                     const minHeight = 150;
+                    const maxWidth = 500;
+                    const maxHeight = 700;
                     
-                    const validWidth = Math.max(minWidth, width);
-                    const validHeight = Math.max(minHeight, height);
+                    const validWidth = Math.max(minWidth, Math.min(maxWidth, width));
+                    const validHeight = Math.max(minHeight, Math.min(maxHeight, height));
                     
                     // Only save if dimensions are valid
                     if (validWidth === width && validHeight === height) {
@@ -599,9 +605,10 @@
                         this.core.saveState('stockticker_size', size);
                     } else {
                         // Reset to valid size if invalid dimensions detected
-                        console.warn('⚠️ Stock Ticker: Invalid size detected, resetting to valid dimensions');
+                        console.warn('⚠️ Stock Ticker: Size exceeded limits, resetting to valid dimensions');
                         panel.style.width = validWidth + 'px';
                         panel.style.height = validHeight + 'px';
+                        this.core.saveState('stockticker_size', { width: validWidth, height: validHeight });
                     }
                 });
                 resizeObserver.observe(panel);
