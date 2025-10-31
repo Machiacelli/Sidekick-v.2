@@ -80,6 +80,15 @@
                 // Load tracked transactions and normalize keys (handle both 'stock_17' and '17' formats)
                 const rawTransactions = this.core.loadState('stockticker_transactions', {});
                 this.trackedTransactions = this.normalizeTransactionKeys(rawTransactions);
+                
+                // MIGRATION: If we normalized any keys, save the normalized version back to storage
+                const hadOldFormat = Object.keys(rawTransactions).some(key => key.startsWith('stock_'));
+                if (hadOldFormat) {
+                    console.log('🔄 Stock Ticker: Migrating old "stock_X" format to numeric IDs...');
+                    this.core.saveState('stockticker_transactions', this.trackedTransactions);
+                    console.log('✅ Stock Ticker: Migration complete - data saved in new format');
+                }
+                
                 console.log('📊 Stock Ticker: Loaded tracked transactions:', this.trackedTransactions);
                 console.log('📊 Stock Ticker: Tracked stock IDs:', Object.keys(this.trackedTransactions));
                 Object.entries(this.trackedTransactions).forEach(([stockId, data]) => {
