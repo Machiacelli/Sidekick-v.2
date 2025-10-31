@@ -1157,7 +1157,8 @@
                             if (this.combinedStocks && this.combinedStocks[stockId]) {
                                 stockName = this.combinedStocks[stockId].acronym || this.combinedStocks[stockId].name;
                             } else {
-                                stockName = `Stock_${stockId}`;
+                                // Use numeric ID directly without "Stock_" prefix
+                                stockName = stockId.toString();
                             }
                         } else {
                             console.warn('⚠️ Could not determine stock from URL');
@@ -1215,7 +1216,8 @@
                             if (this.combinedStocks && this.combinedStocks[stockId]) {
                                 stockName = this.combinedStocks[stockId].acronym || this.combinedStocks[stockId].name;
                             } else {
-                                stockName = `Stock_${stockId}`;
+                                // Use numeric ID directly without "Stock_" prefix
+                                stockName = stockId.toString();
                             }
                         } else {
                             console.warn('⚠️ Could not determine stock from URL');
