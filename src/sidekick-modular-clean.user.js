@@ -10,8 +10,8 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/0e333d9/src/sidekick-modular-clean.user.js?v=20251031-2
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/0e333d9/src/sidekick-modular-clean.user.js?v=20251031-2
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/85eb578/src/sidekick-modular-clean.user.js?v=20251031-3
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/85eb578/src/sidekick-modular-clean.user.js?v=20251031-3
 // @connect      api.lzpt.io
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/core.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3b4dfc4/src/modules/ui.module.js?v=20251031-2
