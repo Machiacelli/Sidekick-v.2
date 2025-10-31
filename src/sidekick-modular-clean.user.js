@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.8.1
-// @description  FIX: Xanax Viewer settings tab structure + Xanax Viewer v1.0.0 + UI: 31px hamburger
+// @version      6.8.2
+// @description  Fixed Stock Ticker size constraints + Removed Xanax tip + Enhanced button hover effects
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -10,12 +10,12 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/560188a/src/sidekick-modular-clean.user.js?v=20251030
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/560188a/src/sidekick-modular-clean.user.js?v=20251030
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/4a99bf5/src/sidekick-modular-clean.user.js?v=20251031
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/4a99bf5/src/sidekick-modular-clean.user.js?v=20251031
 // @connect      api.lzpt.io
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/core.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@df3d5af/src/modules/ui.module.js?v=20251030
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1792296/src/modules/settings.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@4a99bf5/src/modules/settings.module.js?v=20251031
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/content.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/global-functions.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/notepad.module.js?v=20251030
@@ -29,7 +29,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@05edd8b/src/modules/traveltracker.module.js?v=20251030
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@b789c1c/src/modules/stockticker.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@4a99bf5/src/modules/stockticker.module.js?v=20251031
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@78a5175/src/modules/timeontab.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@552a4bb/src/modules/npc-attack-timer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@9385acc/src/modules/xanax-viewer.module.js?v=20251030
@@ -39,8 +39,10 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.8.1 - Xanax Viewer Tab Fix!');
-    console.log('🔧 FIXED: Xanax Viewer settings tab HTML structure - tab content now properly displays');
+    console.log('🚀 Sidekick Modular CDN v6.8.2 - UI Polish & Fixes!');
+    console.log('🔧 FIXED: Stock Ticker size constraints removed - panel now fully resizable');
+    console.log('✨ IMPROVED: Stock Ticker close button hover effects for consistency');
+    console.log('🗑️ REMOVED: Xanax Viewer tip text for cleaner settings UI');
     console.log('✅ Xanax Viewer v1.0.0 - View Xanax usage on faction/profile pages with dedicated settings tab');
     console.log('✅ UPDATED: Hamburger button reduced to 31px (1px smaller)');
     console.log('✅ NPC Attack Timer - Shows Loot Rangers attack times in news ticker');
