@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.8.3
-// @description  Fixed Stock Ticker max size constraints + Removed Shoplifting module
+// @version      6.8.4
+// @description  Fixed Stock Ticker tracking + Sidebar scroll lock
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -10,11 +10,11 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/8863046/src/sidekick-modular-clean.user.js?v=20251031
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/8863046/src/sidekick-modular-clean.user.js?v=20251031
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/3b4dfc4/src/sidekick-modular-clean.user.js?v=20251031
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/3b4dfc4/src/sidekick-modular-clean.user.js?v=20251031
 // @connect      api.lzpt.io
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/core.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@df3d5af/src/modules/ui.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3b4dfc4/src/modules/ui.module.js?v=20251031
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@7166eec/src/modules/settings.module.js?v=20251031
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/content.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/global-functions.module.js?v=20251029
@@ -29,7 +29,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@05edd8b/src/modules/traveltracker.module.js?v=20251030
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@7166eec/src/modules/stockticker.module.js?v=20251031
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3b4dfc4/src/modules/stockticker.module.js?v=20251031
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@78a5175/src/modules/timeontab.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@552a4bb/src/modules/npc-attack-timer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@9385acc/src/modules/xanax-viewer.module.js?v=20251030
@@ -39,9 +39,9 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.8.3 - Stock Ticker Fix & Module Cleanup!');
-    console.log('🔧 FIXED: Stock Ticker max constraints (500x700) - panel can no longer grow beyond close button reach');
-    console.log('🗑️ REMOVED: Shoplifting Alert module - cleaned up settings UI and codebase');
+    console.log('🚀 Sidekick Modular CDN v6.8.4 - Stock Tracker Fix & Scroll Lock!');
+    console.log('🔧 FIXED: Stock Ticker now normalizes old "stock_17" format to "17" - your tracked stocks will appear!');
+    console.log('� FIXED: Sidebar scroll now locked - page behind no longer scrolls');
     console.log('✅ Xanax Viewer v1.0.0 - View Xanax usage on faction/profile pages with dedicated settings tab');
     console.log('✅ UPDATED: Hamburger button reduced to 31px (1px smaller)');
     console.log('✅ NPC Attack Timer - Shows Loot Rangers attack times in news ticker');
