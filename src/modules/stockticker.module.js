@@ -975,14 +975,14 @@
                         // Calculate average buy price from tracked data
                         avgBuyPrice = trackedStock.totalInvested / trackedStock.totalShares;
                         
-                        // Calculate P/L based on ACTUAL shares owned (from API), not tracked shares
-                        // This handles the case where you've sold some shares or bought more outside tracking
-                        const estimatedInvestment = shares * avgBuyPrice;
-                        profitLoss = currentValue - estimatedInvestment;
-                        profitPercent = (profitLoss / estimatedInvestment) * 100;
+                        // CORRECT P/L CALCULATION:
+                        // Use actual totalInvested from tracked data (adjusted by FIFO when selling)
+                        // This accounts for shares sold and their cost basis removal
+                        profitLoss = currentValue - trackedStock.totalInvested;
+                        profitPercent = (profitLoss / trackedStock.totalInvested) * 100;
                         isTracked = true;
                         
-                        console.log(`💰 Stock ${stockId} P/L: $${profitLoss.toFixed(2)} (${profitPercent.toFixed(2)}%) - ${shares} shares owned at avg $${avgBuyPrice.toFixed(2)}`);
+                        console.log(`💰 Stock ${stockId} P/L: $${profitLoss.toFixed(2)} (${profitPercent.toFixed(2)}%) - ${shares} shares owned, invested $${trackedStock.totalInvested.toFixed(2)}`);
                     } else if (shares > 0) {
                         // You own shares but no tracking data
                         console.log(`📊 Stock ${stockId}: ${shares} shares owned but not tracked - trackedStock exists? ${!!trackedStock}, has shares? ${trackedStock?.totalShares > 0}`);
