@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.8.5
-// @description  CDN cache-bust fix - Stock Tracker & Scroll Lock with forced refresh
+// @version      6.8.6
+// @description  Auto-migration fix - Converts stock_X format to numeric IDs automatically
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -29,7 +29,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@05edd8b/src/modules/traveltracker.module.js?v=20251030
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3b4dfc4/src/modules/stockticker.module.js?v=20251031-2
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@b2205d0/src/modules/stockticker.module.js?v=20251031-3
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@78a5175/src/modules/timeontab.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@552a4bb/src/modules/npc-attack-timer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@9385acc/src/modules/xanax-viewer.module.js?v=20251030
@@ -39,11 +39,11 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.8.5 - CDN Cache-Bust Update!');
-    console.log('🔄 UPDATED: Cache-busting query params added - forces fresh module load');
-    console.log('🔧 FIXED: Stock Ticker now normalizes old "stock_17" format to "17" - your tracked stocks will appear!');
+    console.log('🚀 Sidekick Modular CDN v6.8.6 - Auto-Migration Update!');
+    console.log('🔄 NEW: Automatic data migration - converts "stock_17" to "17" and saves it back!');
+    console.log('🔧 FIXED: Stock Ticker now normalizes AND SAVES old format - permanent fix');
     console.log('🔒 FIXED: Sidebar scroll now locked - page behind no longer scrolls');
-    console.log('📌 NOTE: If issues persist, do a HARD REFRESH (Ctrl+Shift+R) to clear browser cache');
+    console.log('📌 NOTE: After refresh, check console for "Migration complete" message');
     console.log('✅ Xanax Viewer v1.0.0 - View Xanax usage on faction/profile pages with dedicated settings tab');
     console.log('✅ UPDATED: Hamburger button reduced to 31px (1px smaller)');
     console.log('✅ NPC Attack Timer - Shows Loot Rangers attack times in news ticker');
