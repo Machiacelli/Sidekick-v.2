@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.8.7
-// @description  Fixes 'stock_17' issue - new transactions now save with numeric ID
+// @version      6.8.8
+// @description  Critical P/L fix - now uses actual investment instead of estimation
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -29,7 +29,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@05edd8b/src/modules/traveltracker.module.js?v=20251030
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@4bd0778/src/modules/stockticker.module.js?v=20251031-4
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3b8e855/src/modules/stockticker.module.js?v=20251031-5
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@78a5175/src/modules/timeontab.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@552a4bb/src/modules/npc-attack-timer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@9385acc/src/modules/xanax-viewer.module.js?v=20251030
@@ -39,12 +39,15 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.8.7 - Stock Ticker Fix!');
-    console.log('� FIXED: New stock purchases no longer create "stock_17" format');
-    console.log('✅ FIXED: All new transactions now save with numeric ID directly');
+    console.log('🚀 Sidekick Modular CDN v6.8.8 - P/L Calculation Fix!');
+    console.log('🐛 CRITICAL FIX: P/L now uses actual totalInvested, not estimated value');
+    console.log('✅ FIXED: Correct profit/loss after selling shares (FIFO adjusted)');
+    console.log('✅ FIXED: New stock purchases no longer create "stock_17" format');
     console.log('🔄 NOTE: Old "stock_17" data still auto-migrates on load');
     console.log('🔒 FIXED: Sidebar scroll locked - page behind no longer scrolls');
-    console.log('📌 Recommended: Clear localStorage and start fresh for best results');
+    console.log('📌 Explanation: When you sell shares, totalInvested is reduced by cost basis');
+    console.log('   The old calculation used (shares * avgPrice) which gave wrong results');
+    console.log('   Now using actual totalInvested from tracked data for accurate P/L');
     console.log('✅ Xanax Viewer v1.0.0 - View Xanax usage on faction/profile pages with dedicated settings tab');
     console.log('✅ NPC Attack Timer - Shows Loot Rangers attack times in news ticker');
     console.log('✅ Travel Tracker v3.3.3 - No more "cancelled" notification when minimizing sidebar');
