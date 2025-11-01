@@ -10,11 +10,11 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/980a8c7/src/sidekick-modular-clean.user.js?v=20251101-3
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/980a8c7/src/sidekick-modular-clean.user.js?v=20251101-3
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/c65196b/src/sidekick-modular-clean.user.js?v=20251101-4
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/c65196b/src/sidekick-modular-clean.user.js?v=20251101-4
 // @connect      api.lzpt.io
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/core.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3b4dfc4/src/modules/ui.module.js?v=20251031-2
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a4937bf/src/modules/ui.module.js?v=20251101-4
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@7166eec/src/modules/settings.module.js?v=20251031
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/content.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/global-functions.module.js?v=20251029
@@ -34,19 +34,21 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@552a4bb/src/modules/npc-attack-timer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@9385acc/src/modules/xanax-viewer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/todolist.module.js?v=20251030
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@980a8c7/src/modules/event-ticker.module.js?v=20251101-3
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a4937bf/src/modules/event-ticker.module.js?v=20251101-4
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.9.2 - Torn Birthday Celebration!');
-    console.log('� NEW: Birthday celebration shows your Torn account anniversary');
+    console.log('🚀 Sidekick Modular CDN v6.9.3 - Event Ticker in top bar!');
+    console.log('📍 NEW: Event ticker seamlessly integrated into top bar between logo and clock');
+    console.log('👆 IMPROVED: Add button now fades in on hover and stays on top of all panels');
+    console.log('🎂 Birthday celebration shows your Torn account anniversary');
     console.log('🎪 Event Ticker: Shows live events, upcoming events, and your Torn birthday');
     console.log('🎨 Event Ticker: Horizontal scrolling ticker animation');
     console.log('✨ FEATURES: Smart date handling with leap years and year boundaries');
     console.log('🔄 AUTO-ROTATE: Cycles through multiple active events every 8 seconds');
-    console.log('� FIXED: P/L now uses actual totalInvested, not estimated value');
+    console.log('💰 FIXED: P/L now uses actual totalInvested, not estimated value');
     console.log('✅ FIXED: Correct profit/loss after selling shares (FIFO adjusted)');
     console.log('✅ FIXED: New stock purchases no longer create "stock_17" format');
     console.log('✅ Xanax Viewer v1.0.0 - View Xanax usage on faction/profile pages with dedicated settings tab');
