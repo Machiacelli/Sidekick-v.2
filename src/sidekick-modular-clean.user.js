@@ -10,8 +10,8 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/344859d/src/sidekick-modular-clean.user.js?v=20251101-10
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/344859d/src/sidekick-modular-clean.user.js?v=20251101-10
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/d2a0083/src/sidekick-modular-clean.user.js?v=20251101-11
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/d2a0083/src/sidekick-modular-clean.user.js?v=20251101-11
 // @connect      api.lzpt.io
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/core.module.js?v=20251101-5
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/ui.module.js?v=20251101-5
@@ -34,7 +34,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@552a4bb/src/modules/npc-attack-timer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@9385acc/src/modules/xanax-viewer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/todolist.module.js?v=20251030
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@344859d/src/modules/event-ticker.module.js?v=20251101-10
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@d2a0083/src/modules/event-ticker.module.js?v=20251101-11
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/attack-button-mover.module.js?v=20251101-5
 // ==/UserScript==
 
