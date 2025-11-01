@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.0
-// @description  New: Event Ticker - rolling notifications for Torn events in top bar
+// @version      6.9.1
+// @description  Event Ticker: Trick or Treat extended to Nov 1 + horizontal scrolling ticker animation
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*

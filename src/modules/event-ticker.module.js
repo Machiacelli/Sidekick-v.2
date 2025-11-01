@@ -111,7 +111,7 @@
             },
             {
                 startMonth: 10, startDay: 24,
-                endMonth: 10, endDay: 31,
+                endMonth: 11, endDay: 1,
                 name: "Trick or Treat",
                 feature: "Treat trade for basket upgrades/prizes",
                 notification: "Basket's empty. Go beat someone up for candy."
@@ -184,6 +184,27 @@
             const sidebar = document.getElementById('sidekick-sidebar');
             if (!sidebar) return;
 
+            // Add CSS keyframes for scrolling animation
+            if (!document.getElementById('sidekick-ticker-styles')) {
+                const style = document.createElement('style');
+                style.id = 'sidekick-ticker-styles';
+                style.textContent = `
+                    @keyframes sidekick-ticker-scroll {
+                        0% {
+                            transform: translateX(100%);
+                        }
+                        100% {
+                            transform: translateX(-100%);
+                        }
+                    }
+                    
+                    .sidekick-ticker-scrolling {
+                        animation: sidekick-ticker-scroll 20s linear infinite;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
             // Create ticker container
             const ticker = document.createElement('div');
             ticker.id = 'sidekick-event-ticker';
@@ -213,21 +234,29 @@
             `;
             iconContainer.innerHTML = '🎪';
 
-            // Text container with sliding animation
+            // Scrolling wrapper for overflow control
+            const scrollWrapper = document.createElement('div');
+            scrollWrapper.style.cssText = `
+                flex: 1;
+                overflow: hidden;
+                position: relative;
+            `;
+
+            // Text container with scrolling animation
             const textContainer = document.createElement('div');
             textContainer.id = 'sidekick-ticker-text';
+            textContainer.className = 'sidekick-ticker-scrolling';
             textContainer.style.cssText = `
-                flex: 1;
                 color: #fff;
                 font-size: 12px;
                 white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                transition: opacity 0.3s ease;
+                display: inline-block;
+                padding-left: 100%;
             `;
 
+            scrollWrapper.appendChild(textContainer);
             ticker.appendChild(iconContainer);
-            ticker.appendChild(textContainer);
+            ticker.appendChild(scrollWrapper);
 
             // Insert at the top of sidebar (after the hamburger button area)
             const contentArea = document.getElementById('sidekick-content');
@@ -238,7 +267,7 @@
             }
 
             this.tickerElement = textContainer;
-            console.log('✅ Event Ticker: Created');
+            console.log('✅ Event Ticker: Created with scrolling animation');
 
             // Show initial message
             this.updateTickerDisplay();
@@ -337,12 +366,8 @@
                 if (iconContainer) iconContainer.innerHTML = iconEmoji;
             }
 
-            // Fade out, change text, fade in
-            this.tickerElement.style.opacity = '0';
-            setTimeout(() => {
-                this.tickerElement.textContent = displayText;
-                this.tickerElement.style.opacity = '1';
-            }, 300);
+            // Update text (animation restarts automatically)
+            this.tickerElement.textContent = displayText;
         },
 
         getDaysUntil(event) {
