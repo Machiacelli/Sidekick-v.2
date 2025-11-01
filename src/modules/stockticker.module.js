@@ -1080,6 +1080,23 @@
                     for (const mutation of mutations) {
                         for (const node of mutation.addedNodes) {
                             if (node.nodeType === 1) { // Element node
+                                // CRITICAL FIX: Only check messages in notifications/popups, not in main page content
+                                // Torn shows transaction confirmations in specific elements
+                                const isNotification = node.classList?.contains('msg') || 
+                                                      node.classList?.contains('message') ||
+                                                      node.closest?.('.msg') ||
+                                                      node.closest?.('.message') ||
+                                                      node.closest?.('#userMessages') ||
+                                                      // Also check for Torn's success/info message containers
+                                                      node.classList?.contains('success') ||
+                                                      node.classList?.contains('info-msg') ||
+                                                      node.classList?.contains('notification');
+                                
+                                // Skip if this is just regular page content loading
+                                if (!isNotification) {
+                                    continue;
+                                }
+                                
                                 // Check both the node itself and its descendants for messages
                                 const checkNode = (element) => {
                                     const message = element.textContent || '';
@@ -1088,7 +1105,7 @@
                                     if (message.toLowerCase().includes('bought') || 
                                         message.toLowerCase().includes('sold') ||
                                         (message.toLowerCase().includes('share') && message.length < 500)) {
-                                        console.log('🔍 Transaction message detected:', message.substring(0, 200));
+                                        console.log('🔍 Transaction message detected in notification:', message.substring(0, 200));
                                     }
                                     
                                     // Try multiple patterns to match Torn's transaction messages
@@ -1114,7 +1131,7 @@
                 });
 
                 this.transactionObserver = observer;
-                console.log('✅ Stock Ticker: Transaction monitoring started');
+                console.log('✅ Stock Ticker: Transaction monitoring started (notifications only)');
                 console.log('💡 TIP: Try buying or selling 1 share to test detection');
             },
 

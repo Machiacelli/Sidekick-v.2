@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.7
-// @description  Event Ticker: Fixed positioning - no gaps on either side
+// @version      6.9.8
+// @description  Fixed: Reverted ticker positioning, fixed stock tracker duplicate transactions bug
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -41,9 +41,10 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.9.7 - Event Ticker Perfect Layout!');
-    console.log('📍 FIXED: Used transform instead of margin - no gaps on either side');
-    console.log('✅ RESULT: Ticker close to logo AND maintains position next to clock');
+    console.log('🚀 Sidekick Modular CDN v6.9.8 - Bug Fixes!');
+    console.log('📍 REVERTED: Event ticker positioning back to normal size');
+    console.log('� FIXED: Stock tracker no longer adds duplicate transactions when opening stocks');
+    console.log('✅ IMPROVED: Transaction detection now only monitors notification popups, not page content');
     console.log('⏰ FEATURE: Live countdown to next Torn event with API integration');
     console.log('🔄 FEATURE: Ticker animation synced across all tabs');
     console.log('⚡ RENAMED: "Attack Button Mover" → "Fast Attack" for cleaner UI');
