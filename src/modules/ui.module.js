@@ -87,7 +87,32 @@
                 transform: translateX(-100%) !important;
             }
 
-            /* ADD BUTTON STYLES */
+            /* ADD BUTTON STYLES - High z-index and hover fade */
+            .sidekick-add-component-btn {
+                background: linear-gradient(135deg, #4CAF50, #45a049) !important;
+                color: white !important;
+                border: none !important;
+                border-radius: 50% !important;
+                width: 36px !important;
+                height: 36px !important;
+                font-size: 20px !important;
+                cursor: pointer !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                box-shadow: 0 2px 8px rgba(76,175,80,0.4) !important;
+                transition: opacity 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease !important;
+                z-index: 999999 !important; /* Ensure it's above all panels */
+                position: relative !important;
+                opacity: 0.3 !important; /* Start faded */
+            }
+
+            .sidekick-add-component-btn:hover {
+                opacity: 1 !important; /* Fade in on hover */
+                transform: scale(1.05) !important;
+                box-shadow: 0 4px 12px rgba(76,175,80,0.6) !important;
+            }
+
             #sidekick-add-btn {
                 position: fixed !important;
                 bottom: 30px !important;
@@ -230,32 +255,34 @@
             }
 
             .sidekick-add-component-btn {
-                width: 32px !important;
-                height: 32px !important;
-                border-radius: 8px !important;
-                background: linear-gradient(135deg, #262626, #5e5c5cff) !important;
-                border: 1px solid rgba(255,255,255,0.6) !important;
+                background: linear-gradient(135deg, #4CAF50, #45a049) !important;
                 color: white !important;
-                font-size: 16px !important;
-                font-weight: bold !important;
+                border: none !important;
+                border-radius: 50% !important;
+                width: 36px !important;
+                height: 36px !important;
+                font-size: 20px !important;
                 cursor: pointer !important;
-                transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
-                box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5) !important;
+                box-shadow: 0 2px 8px rgba(76,175,80,0.4) !important;
+                transition: opacity 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease !important;
+                z-index: 999999 !important;
+                position: relative !important;
+                opacity: 0.3 !important;
                 user-select: none !important;
                 outline: none !important;
             }
 
             .sidekick-add-component-btn:hover {
-                transform: scale(1.15) !important;
-                box-shadow: 0 4px 16px #000000ff !important;
-                background: linear-gradient(135deg, #66BB6A, #ffad5a) !important;
+                opacity: 1 !important;
+                transform: scale(1.05) !important;
+                box-shadow: 0 4px 12px rgba(76,175,80,0.6) !important;
             }
 
             .sidekick-add-component-btn:active {
-                transform: scale(0.9) !important;
+                transform: scale(0.95) !important;
             }
 
             .sidekick-page-dot {
@@ -434,6 +461,7 @@
                               </text>
                             </svg>
                         </div>
+                        <div id="sidekick-ticker-placeholder" style="flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0; overflow: hidden;"></div>
                         <div style="display: flex; gap: 6px; align-items: center; margin-right: 2px;">
                             <div id="sidekick-custom-clock" style="font-family: monospace; font-size: 12px; text-align: center; line-height: 1.1; cursor: pointer; min-width: 70px;" title="Click to toggle points pricing">
                                 <div id="sidekick-clock-time">--:--:--</div>

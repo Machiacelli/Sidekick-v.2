@@ -275,8 +275,13 @@
                 return;
             }
 
-            const sidebar = document.getElementById('sidekick-sidebar');
-            if (!sidebar) return;
+            // Wait for ticker placeholder
+            const placeholder = document.getElementById('sidekick-ticker-placeholder');
+            if (!placeholder) {
+                console.warn('⚠️ Event Ticker: Placeholder not found, retrying...');
+                setTimeout(() => this.createTicker(), 200);
+                return;
+            }
 
             // Add CSS keyframes for scrolling animation
             if (!document.getElementById('sidekick-ticker-styles')) {
@@ -299,21 +304,17 @@
                 document.head.appendChild(style);
             }
 
-            // Create ticker container
+            // Create seamless ticker container (no borders, background matches topbar)
             const ticker = document.createElement('div');
             ticker.id = 'sidekick-event-ticker';
             ticker.style.cssText = `
-                width: 100%;
-                background: linear-gradient(90deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%);
-                border-bottom: 1px solid #444;
-                padding: 8px 16px;
-                box-sizing: border-box;
-                overflow: hidden;
-                position: relative;
-                min-height: 36px;
                 display: flex;
                 align-items: center;
-                gap: 8px;
+                gap: 6px;
+                width: 100%;
+                overflow: hidden;
+                position: relative;
+                min-height: 20px;
             `;
 
             // Icon container
@@ -323,8 +324,9 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                width: 20px;
-                height: 20px;
+                width: 16px;
+                height: 16px;
+                font-size: 14px;
             `;
             iconContainer.innerHTML = '🎪';
 
@@ -341,8 +343,8 @@
             textContainer.id = 'sidekick-ticker-text';
             textContainer.className = 'sidekick-ticker-scrolling';
             textContainer.style.cssText = `
-                color: #fff;
-                font-size: 12px;
+                color: #ccc;
+                font-size: 11px;
                 white-space: nowrap;
                 display: inline-block;
                 padding-left: 100%;
@@ -352,16 +354,11 @@
             ticker.appendChild(iconContainer);
             ticker.appendChild(scrollWrapper);
 
-            // Insert at the top of sidebar (after the hamburger button area)
-            const contentArea = document.getElementById('sidekick-content');
-            if (contentArea) {
-                sidebar.insertBefore(ticker, contentArea);
-            } else {
-                sidebar.insertBefore(ticker, sidebar.firstChild);
-            }
+            // Insert into placeholder (seamless integration)
+            placeholder.appendChild(ticker);
 
             this.tickerElement = textContainer;
-            console.log('✅ Event Ticker: Created with scrolling animation');
+            console.log('✅ Event Ticker: Created seamlessly in top bar');
 
             // Show initial message
             this.updateTickerDisplay();
