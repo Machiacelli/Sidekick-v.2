@@ -448,32 +448,43 @@
         },
 
         waitForSidebar() {
+            let attempts = 0;
+            const maxAttempts = 100; // 10 seconds
+            
             const checkSidebar = setInterval(() => {
-                const sidebar = document.getElementById('sidekick-sidebar');
-                if (sidebar) {
+                attempts++;
+                const placeholder = document.getElementById('sidekick-ticker-placeholder');
+                
+                if (placeholder) {
+                    console.log('✅ Event Ticker: Found placeholder, creating ticker...');
                     clearInterval(checkSidebar);
                     this.createTicker();
                     this.startRotation();
+                } else if (attempts >= maxAttempts) {
+                    console.error('❌ Event Ticker: Timeout waiting for placeholder after 10 seconds');
+                    console.log('🔍 Event Ticker: Checking if sidebar exists:', !!document.getElementById('sidekick-sidebar'));
+                    console.log('🔍 Event Ticker: Checking document body:', !!document.body);
+                    clearInterval(checkSidebar);
                 }
             }, 100);
-
-            // Timeout after 10 seconds
-            setTimeout(() => clearInterval(checkSidebar), 10000);
         },
 
         createTicker() {
             // Check if ticker already exists
             if (document.getElementById('sidekick-event-ticker')) {
+                console.log('⚠️ Event Ticker: Ticker already exists, skipping creation');
                 return;
             }
 
             // Wait for ticker placeholder
             const placeholder = document.getElementById('sidekick-ticker-placeholder');
             if (!placeholder) {
-                console.warn('⚠️ Event Ticker: Placeholder not found, retrying...');
+                console.warn('⚠️ Event Ticker: Placeholder not found, retrying in 200ms...');
                 setTimeout(() => this.createTicker(), 200);
                 return;
             }
+
+            console.log('🎪 Event Ticker: Creating ticker element...');
 
             // Add CSS keyframes for scrolling animation
             if (!document.getElementById('sidekick-ticker-styles')) {
@@ -640,13 +651,22 @@
         },
 
         updateTickerDisplay() {
-            if (!this.tickerElement) return;
+            if (!this.tickerElement) {
+                console.warn('⚠️ Event Ticker: tickerElement not ready, skipping update');
+                return;
+            }
 
             const activeEvents = this.getActiveEvents();
             const upcomingEvents = this.getUpcomingEvents(3);
 
             let displayText = '';
             let iconEmoji = '🎪';
+
+            console.log('🔄 Event Ticker: Updating display...', {
+                nearestEvent: !!this.nearestEvent,
+                activeCount: activeEvents.length,
+                upcomingCount: upcomingEvents.length
+            });
 
             // Priority 1: Show nearest API event countdown if available
             if (this.nearestEvent) {
@@ -657,6 +677,7 @@
                     displayText = `⏰ Next Event: ${this.nearestEvent.title} in ${this.formatCountdown(timeUntil)}`;
                     iconEmoji = '⏰';
                     
+                    console.log('✅ Event Ticker: Showing API countdown:', displayText);
                     // Update text
                     this.tickerElement.textContent = displayText;
                     return;
@@ -698,9 +719,11 @@
                 // Priority 4: No active or upcoming events - show placeholder
                 displayText = '✨ No events currently scheduled - Stay sharp, stay violent';
                 iconEmoji = '✨';
+                console.log('📭 Event Ticker: No events, showing fallback message');
             }
 
             // Update text (animation restarts automatically)
+            console.log('✅ Event Ticker: Setting text to:', displayText);
             this.tickerElement.textContent = displayText;
         },
 
