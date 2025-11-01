@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.11
-// @description  Fixed: Ticker now shows next upcoming event when current event period ends, never empty
+// @version      6.9.12
+// @description  Debug: Added extensive logging to diagnose event ticker display issues
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -34,14 +34,16 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@552a4bb/src/modules/npc-attack-timer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@9385acc/src/modules/xanax-viewer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/todolist.module.js?v=20251030
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@b187d49/src/modules/event-ticker.module.js?v=20251101-12
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@81e9efc/src/modules/event-ticker.module.js?v=20251101-13
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/attack-button-mover.module.js?v=20251101-5
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.9.10 - Animation & Event Filtering Fixed!');
+    console.log('🚀 Sidekick Modular CDN v6.9.12 - Event Ticker Debug Version!');
+    console.log('🐛 DEBUG: Added extensive logging to diagnose ticker display issues');
+    console.log('🔍 FEATURE: Enhanced error reporting in ticker creation and update');
     console.log('🎬 FIXED: Ticker animation now ends at logo instead of scrolling too far left');
     console.log('⏰ FEATURE: Added personal event END time - filters out events that ended for you');
     console.log('🎃 FIXED: Events like Halloween won\'t show after YOUR personal event period ends');
