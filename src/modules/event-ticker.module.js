@@ -10,6 +10,14 @@
         rotationInterval: null,
         playerSignupDate: null,
         playerBirthdayChecked: false,
+        
+        // Nearest event timer data
+        tornEvents: null,
+        nearestEvent: null,
+        userEventStartTime: null,
+        lastApiUpdate: 0,
+        apiUpdateInterval: 1800, // 30 minutes in seconds
+        countdownInterval: null,
 
         // Event data from events.txt
         events: [
@@ -162,6 +170,12 @@
             // Fetch player's Torn birthday
             this.fetchPlayerBirthday();
             
+            // Fetch nearest event from Torn calendar
+            this.fetchNearestEvent();
+            
+            // Start countdown timer
+            this.startCountdown();
+            
             // Wait for sidebar to be created
             this.waitForSidebar();
         },
@@ -195,8 +209,13 @@
                     
                     const yearsInTorn = this.getYearsInTorn();
                     console.log(`🎉 Event Ticker: Player has been in Torn for ${yearsInTorn} years!`);
-                } else {
-                    console.log('⚠️ Event Ticker: No signup date found in API response');
+                }
+                
+                // Also fetch user's event start time for countdown
+                if (data.calendar && data.calendar.start_time) {
+                    this.userEventStartTime = data.calendar.start_time.toLowerCase().split(" tct")[0];
+                    GM_setValue('userEventStartTime', this.userEventStartTime);
+                    console.log('⏰ Event Ticker: User event start time:', this.userEventStartTime);
                 }
                 
                 this.playerBirthdayChecked = true;
@@ -204,6 +223,109 @@
                 console.error('❌ Event Ticker: Failed to fetch player birthday:', error);
                 this.playerBirthdayChecked = true;
             }
+        },
+
+        async fetchNearestEvent() {
+            try {
+                const currentTime = Math.round(Date.now() / 1000);
+                const cachedEvents = GM_getValue('torn_events', null);
+                const lastUpdate = GM_getValue('torn_events_update', 0);
+                
+                // Check if we need to update (30 min interval)
+                if (cachedEvents && (currentTime - lastUpdate) < this.apiUpdateInterval) {
+                    this.tornEvents = cachedEvents;
+                    this.calculateNearestEvent();
+                    return;
+                }
+                
+                console.log('🔄 Event Ticker: Fetching Torn calendar from API...');
+                const apiKey = await this.core.getApiKey();
+                
+                if (!apiKey) {
+                    console.log('⚠️ Event Ticker: No API key for calendar fetch');
+                    return;
+                }
+                
+                const response = await fetch(`https://api.torn.com/v2/torn/?selections=calendar&key=${apiKey}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('❌ Event Ticker: Calendar API error:', data.error);
+                    return;
+                }
+                
+                if (data.calendar) {
+                    let events = data.calendar.events || [];
+                    if (data.calendar.competitions) {
+                        events = events.concat(data.calendar.competitions);
+                    }
+                    
+                    this.tornEvents = events;
+                    GM_setValue('torn_events', events);
+                    GM_setValue('torn_events_update', currentTime);
+                    
+                    console.log(`✅ Event Ticker: Fetched ${events.length} Torn events`);
+                    this.calculateNearestEvent();
+                }
+            } catch (error) {
+                console.error('❌ Event Ticker: Failed to fetch calendar:', error);
+            }
+        },
+
+        calculateNearestEvent() {
+            if (!this.tornEvents || this.tornEvents.length === 0) return;
+            
+            const currentTime = Math.round(Date.now() / 1000);
+            let upcomingEvents = [];
+            
+            for (let event of this.tornEvents) {
+                const diff = event.start - currentTime;
+                if (diff >= 0) {
+                    upcomingEvents.push({...event, diff: diff});
+                }
+            }
+            
+            if (upcomingEvents.length === 0) {
+                this.nearestEvent = null;
+                return;
+            }
+            
+            // Sort by time difference
+            upcomingEvents.sort((a, b) => a.diff - b.diff);
+            this.nearestEvent = upcomingEvents[0];
+            
+            console.log('⏱️ Event Ticker: Next event:', this.nearestEvent.title, 'in', this.formatCountdown(this.nearestEvent.diff));
+        },
+
+        formatCountdown(seconds) {
+            const days = Math.floor(seconds / 86400);
+            const hours = Math.floor((seconds % 86400) / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            if (days > 0) {
+                return `${days}d ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        },
+
+        startCountdown() {
+            // Update countdown every second
+            if (this.countdownInterval) {
+                clearInterval(this.countdownInterval);
+            }
+            
+            this.countdownInterval = setInterval(() => {
+                if (this.nearestEvent) {
+                    const currentTime = Math.round(Date.now() / 1000);
+                    const timeUntil = this.nearestEvent.start - currentTime;
+                    
+                    if (timeUntil <= 0) {
+                        // Event started, fetch new data
+                        this.fetchNearestEvent();
+                    }
+                }
+            }, 1000);
         },
 
         getYearsInTorn() {
@@ -304,6 +426,13 @@
                 document.head.appendChild(style);
             }
 
+            // Calculate animation delay to sync across tabs
+            // Sync to the minute so all tabs start at the same point in the 20s cycle
+            const now = new Date();
+            const secondsIntoMinute = now.getSeconds() + (now.getMilliseconds() / 1000);
+            const cyclePosition = secondsIntoMinute % 20; // Position within 20s cycle
+            const animationDelay = -cyclePosition; // Negative delay to sync
+
             // Create seamless ticker container (no borders, background matches topbar)
             const ticker = document.createElement('div');
             ticker.id = 'sidekick-event-ticker';
@@ -314,7 +443,7 @@
                 overflow: hidden;
                 position: relative;
                 min-height: 20px;
-                margin-left: -30px;
+                margin-left: -60px;
             `;
 
             // Scrolling wrapper for overflow control (no icon, just text)
@@ -335,6 +464,7 @@
                 white-space: nowrap;
                 display: inline-block;
                 padding-left: 100%;
+                animation-delay: ${animationDelay}s;
             `;
 
             scrollWrapper.appendChild(textContainer);
@@ -344,7 +474,7 @@
             placeholder.appendChild(ticker);
 
             this.tickerElement = textContainer;
-            console.log('✅ Event Ticker: Created seamlessly in top bar');
+            console.log('✅ Event Ticker: Created seamlessly in top bar (synced animation)');
 
             // Show initial message
             this.updateTickerDisplay();
@@ -448,6 +578,22 @@
             let displayText = '';
             let iconEmoji = '🎪';
 
+            // Priority 1: Show nearest API event countdown if available
+            if (this.nearestEvent) {
+                const currentTime = Math.round(Date.now() / 1000);
+                const timeUntil = this.nearestEvent.start - currentTime;
+                
+                if (timeUntil > 0) {
+                    displayText = `⏰ Next Event: ${this.nearestEvent.title} in ${this.formatCountdown(timeUntil)}`;
+                    iconEmoji = '⏰';
+                    
+                    // Update text
+                    this.tickerElement.textContent = displayText;
+                    return;
+                }
+            }
+
+            // Priority 2: Active events
             if (activeEvents.length > 0) {
                 // Show active event with notification text
                 const event = activeEvents[this.currentEventIndex % activeEvents.length];
@@ -461,12 +607,8 @@
                     iconEmoji = '🔴';
                 }
                 
-                // Update icon
-                const iconContainer = this.tickerElement.parentElement.querySelector('div');
-                if (iconContainer) iconContainer.innerHTML = iconEmoji;
-                
             } else if (upcomingEvents.length > 0) {
-                // Show upcoming event
+                // Priority 3: Show upcoming event
                 const event = upcomingEvents[0];
                 
                 // Special handling for birthday events
@@ -482,18 +624,10 @@
                     iconEmoji = '📅';
                 }
                 
-                // Update icon
-                const iconContainer = this.tickerElement.parentElement.querySelector('div');
-                if (iconContainer) iconContainer.innerHTML = iconEmoji;
-                
             } else {
                 // No events - show generic message
                 displayText = '✨ No events active - Stay sharp, stay violent';
                 iconEmoji = '✨';
-                
-                // Update icon
-                const iconContainer = this.tickerElement.parentElement.querySelector('div');
-                if (iconContainer) iconContainer.innerHTML = iconEmoji;
             }
 
             // Update text (animation restarts automatically)

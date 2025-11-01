@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.4
-// @description  Event Ticker refinements + Attack Button Mover module
+// @version      6.9.5
+// @description  Event Ticker: Next event countdown + synced animation + Fast Attack rename
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*

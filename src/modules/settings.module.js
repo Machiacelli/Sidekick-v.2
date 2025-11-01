@@ -270,7 +270,7 @@
                             </div>
                             <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin: 12px 0;">
                                 <div style="display: flex; flex-direction: column;">
-                                    <span style="color: #fff; font-weight: bold; font-size: 14px;">⚔️ Attack Button Mover</span>
+                                    <span style="color: #fff; font-weight: bold; font-size: 14px;">⚔️ Fast Attack</span>
                                     <span style="color: #aaa; font-size: 12px;">Moves "Start Fight" button over weapon for faster attacks</span>
                                 </div>
                                 <label class="attack-button-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
@@ -566,9 +566,9 @@
                         console.error('❌ Auto Gym toggle element not found in DOM');
                     }
 
-                    // Attack Button Mover toggle
+                    // Fast Attack toggle
                     const attackButtonToggle = document.getElementById('attack-button-toggle');
-                    console.log('🔍 Looking for Attack Button Mover toggle:', attackButtonToggle);
+                    console.log('🔍 Looking for Fast Attack toggle:', attackButtonToggle);
                     console.log('🔍 AttackButtonMover module available:', !!window.SidekickModules?.AttackButtonMover);
                     
                     if (attackButtonToggle) {
@@ -577,7 +577,7 @@
                             const enabled = loadState(STORAGE_KEYS.ATTACK_BUTTON_ENABLED, true);
                             attackButtonToggle.checked = enabled;
                             
-                            console.log('✅ Attack Button Mover toggle initialized:', enabled);
+                            console.log('✅ Fast Attack toggle initialized:', enabled);
                             
                             // Update toggle appearance
                             if (enabled) {
@@ -592,15 +592,15 @@
                         }
                         
                         attackButtonToggle.addEventListener('change', () => {
-                            console.log('⚔️ Attack Button Mover toggle changed to:', attackButtonToggle.checked);
+                            console.log('⚔️ Fast Attack toggle changed to:', attackButtonToggle.checked);
                             if (window.SidekickModules?.AttackButtonMover) {
                                 window.SidekickModules.AttackButtonMover.setEnabled(attackButtonToggle.checked);
                                 
                                 // Show notification
                                 if (window.SidekickModules?.Core?.NotificationSystem) {
                                     window.SidekickModules.Core.NotificationSystem.show(
-                                        'Attack Button Mover',
-                                        attackButtonToggle.checked ? 'Attack button will move over weapon on attack pages' : 'Attack button mover disabled',
+                                        'Fast Attack',
+                                        attackButtonToggle.checked ? 'Attack button will move over weapon on attack pages' : 'Fast Attack disabled',
                                         attackButtonToggle.checked ? 'success' : 'info'
                                     );
                                 }
@@ -609,7 +609,7 @@
                             }
                         });
                     } else {
-                        console.error('❌ Attack Button Mover toggle element not found in DOM');
+                        console.error('❌ Fast Attack toggle element not found in DOM');
                     }
 
                     // Add Block Training button after other buttons
