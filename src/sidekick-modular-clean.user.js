@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.8.8
-// @description  Critical P/L fix - now uses actual investment instead of estimation
+// @version      6.9.0
+// @description  New: Event Ticker - rolling notifications for Torn events in top bar
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -34,20 +34,20 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@552a4bb/src/modules/npc-attack-timer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@9385acc/src/modules/xanax-viewer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/todolist.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@0637562/src/modules/event-ticker.module.js?v=20251101
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.8.8 - P/L Calculation Fix!');
-    console.log('🐛 CRITICAL FIX: P/L now uses actual totalInvested, not estimated value');
+    console.log('🚀 Sidekick Modular CDN v6.9.0 - Event Ticker!');
+    console.log('🎪 NEW: Event Ticker - Rolling notifications for active Torn events');
+    console.log('✨ FEATURES: Shows live events, upcoming events, and counts down to next event');
+    console.log('� SMART: Handles leap years and year boundaries automatically');
+    console.log('� AUTO-ROTATE: Cycles through multiple active events every 8 seconds');
+    console.log('� FIXED: P/L now uses actual totalInvested, not estimated value');
     console.log('✅ FIXED: Correct profit/loss after selling shares (FIFO adjusted)');
     console.log('✅ FIXED: New stock purchases no longer create "stock_17" format');
-    console.log('🔄 NOTE: Old "stock_17" data still auto-migrates on load');
-    console.log('🔒 FIXED: Sidebar scroll locked - page behind no longer scrolls');
-    console.log('📌 Explanation: When you sell shares, totalInvested is reduced by cost basis');
-    console.log('   The old calculation used (shares * avgPrice) which gave wrong results');
-    console.log('   Now using actual totalInvested from tracked data for accurate P/L');
     console.log('✅ Xanax Viewer v1.0.0 - View Xanax usage on faction/profile pages with dedicated settings tab');
     console.log('✅ NPC Attack Timer - Shows Loot Rangers attack times in news ticker');
     console.log('✅ Travel Tracker v3.3.3 - No more "cancelled" notification when minimizing sidebar');
@@ -359,6 +359,17 @@
                     console.log('✅ Xanax Viewer initialized successfully');
                 } catch (error) {
                     console.error('❌ Xanax Viewer init failed:', error);
+                }
+            }
+            
+            // Initialize Event Ticker module
+            if (window.SidekickModules.EventTicker?.init) {
+                console.log('🎪 Initializing Event Ticker module...');
+                try {
+                    window.SidekickModules.EventTicker.init();
+                    console.log('✅ Event Ticker initialized successfully');
+                } catch (error) {
+                    console.error('❌ Event Ticker init failed:', error);
                 }
             }
             
