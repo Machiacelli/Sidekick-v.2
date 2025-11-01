@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.9
-// @description  Fixed: Event ticker now uses user's personal competition start time, increased left padding
+// @version      6.9.10
+// @description  Fixed: Ticker animation endpoint, added personal event end time filtering
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -41,12 +41,12 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.9.9 - Personal Event Timing!');
+    console.log('🚀 Sidekick Modular CDN v6.9.10 - Animation & Event Filtering Fixed!');
+    console.log('🎬 FIXED: Ticker animation now ends at logo instead of scrolling too far left');
+    console.log('⏰ FEATURE: Added personal event END time - filters out events that ended for you');
+    console.log('🎃 FIXED: Events like Halloween won\'t show after YOUR personal event period ends');
     console.log('⏰ FEATURE: Event ticker now uses YOUR personal competition start time');
     console.log('📍 IMPROVED: Increased left padding for better visual balance');
-    console.log('📍 REVERTED: Event ticker positioning back to normal size');
-    console.log('🐛 FIXED: Stock tracker no longer adds duplicate transactions when opening stocks');
-    console.log('✅ IMPROVED: Transaction detection now only monitors notification popups, not page content');
     console.log('⏰ FEATURE: Live countdown to next Torn event with API integration');
     console.log('🔄 FEATURE: Ticker animation synced across all tabs');
     console.log('⚡ RENAMED: "Attack Button Mover" → "Fast Attack" for cleaner UI');

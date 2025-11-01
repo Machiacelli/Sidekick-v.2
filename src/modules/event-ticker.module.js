@@ -15,6 +15,7 @@
         tornEvents: null,
         nearestEvent: null,
         userEventStartTime: null,
+        userEventEndTime: null,
         lastApiUpdate: 0,
         apiUpdateInterval: 1800, // 30 minutes in seconds
         countdownInterval: null,
@@ -174,6 +175,13 @@
                 console.log('📦 Event Ticker: Loaded cached user event start time:', this.userEventStartTime);
             }
             
+            // Load cached user event end time
+            const cachedEndTime = GM_getValue('userEventEndTime', null);
+            if (cachedEndTime) {
+                this.userEventEndTime = cachedEndTime;
+                console.log('📦 Event Ticker: Loaded cached user event end time:', this.userEventEndTime);
+            }
+            
             // Fetch player's Torn birthday
             this.fetchPlayerBirthday();
             
@@ -262,6 +270,13 @@
                         console.log('⏰ Event Ticker: User personal event start time:', this.userEventStartTime);
                     }
                     
+                    // Fetch user's personal event end time from calendar
+                    if (data.calendar.end_time) {
+                        this.userEventEndTime = data.calendar.end_time.toLowerCase().split(" tct")[0];
+                        GM_setValue('userEventEndTime', this.userEventEndTime);
+                        console.log('⏰ Event Ticker: User personal event end time:', this.userEventEndTime);
+                    }
+                    
                     let events = data.calendar.events || [];
                     if (data.calendar.competitions) {
                         events = events.concat(data.calendar.competitions);
@@ -285,7 +300,28 @@
             const currentTime = Math.round(Date.now() / 1000);
             let upcomingEvents = [];
             
+            // Check if user's personal event has ended
+            let userEventEnded = false;
+            if (this.userEventEndTime) {
+                try {
+                    const userEndDate = new Date(this.userEventEndTime);
+                    const userEndTimestamp = Math.round(userEndDate.getTime() / 1000);
+                    if (currentTime >= userEndTimestamp) {
+                        userEventEnded = true;
+                        console.log('⏰ Event Ticker: User\'s personal event period has ended');
+                    }
+                } catch (e) {
+                    console.warn('Failed to parse user event end time:', e);
+                }
+            }
+            
             for (let event of this.tornEvents) {
+                // Skip events if user's personal event period has ended
+                if (userEventEnded && event.title && event.title.toLowerCase().includes('competition')) {
+                    console.log(`⏰ Skipping ${event.title} - user's event period ended`);
+                    continue;
+                }
+                
                 // Use user's personal event start time if available, otherwise use event.start
                 let eventStartTime = event.start;
                 
@@ -442,7 +478,7 @@
                             transform: translateX(100%);
                         }
                         100% {
-                            transform: translateX(-100%);
+                            transform: translateX(-10px);
                         }
                     }
                     
