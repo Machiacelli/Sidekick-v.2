@@ -227,9 +227,16 @@ MIT License - See [LICENSE.txt](LICENSE.txt) for details
 
 ## 📊 Version History
 
-Current Version: **6.9.5**
-- Latest Commit: `ea0778e`
+Current Version: **6.9.6**
+- Latest Commit: `6ed9d72`
 - Last Updated: November 1, 2025
+
+### v6.9.6 - Perfect Ticker Positioning (Nov 1, 2025)
+- 📍 **FIXED**: Removed ~2cm empty space between logo and ticker
+  - Changed margin from -60px to -100px
+  - Ticker now directly adjacent to "Sidekick" text
+  - Accounts for SVG logo's empty right padding
+- ✅ **RESULT**: True seamless integration with zero visible gap
 
 ### v6.9.5 - Next Event Countdown + Synced Animation + Fast Attack (Nov 1, 2025)
 - ⏰ **NEW**: Live countdown to next Torn event with API integration
