@@ -1,0 +1,401 @@
+// Event Ticker Module - Shows rolling notifications for Torn events
+(function() {
+    'use strict';
+
+    const EventTicker = {
+        name: 'EventTicker',
+        core: null,
+        tickerElement: null,
+        currentEventIndex: 0,
+        rotationInterval: null,
+
+        // Event data from events.txt
+        events: [
+            {
+                startMonth: 1, startDay: 19,
+                endMonth: 1, endDay: 25,
+                name: "Awareness Week",
+                feature: "+Awareness boost",
+                notification: "City map looking like a garage sale – Awareness Week is live."
+            },
+            {
+                startMonth: 1, startDay: 30,
+                endMonth: 1, endDay: 31,
+                name: "Weekend Road Trip",
+                feature: "2× racing points & Racing skill",
+                notification: "Engines loud, egos louder – Weekend Road Trip live."
+            },
+            {
+                startMonth: 2, startDay: 14,
+                endMonth: 2, endDay: 15,
+                name: "Valentine's Day",
+                feature: "Love Juice drug",
+                notification: "Nothing says love like questionable liquid in a syringe. Happy V-Day."
+            },
+            {
+                startMonth: 3, startDay: 6,
+                endMonth: 3, endDay: 7,
+                name: "Employee Appreciation Day",
+                feature: "3× company training stats & job points",
+                notification: "Your boss suddenly cares. Enjoy it—it'll wear off Monday."
+            },
+            {
+                startMonth: 3, startDay: 17,
+                endMonth: 3, endDay: 18,
+                name: "St. Patrick's Day",
+                feature: "2× alcohol effects; Green Stout item",
+                notification: "Drink up – St. Patrick's Day bonuses live."
+            },
+            {
+                startMonth: 4, startDay: 18,
+                endMonth: 4, endDay: 24,
+                name: "Easter Egg Hunt",
+                feature: "Eggs spawn on Torn pages",
+                notification: "Crack eggs, not skulls… or both. Easter in Torn."
+            },
+            {
+                startMonth: 4, startDay: 20,
+                endMonth: 4, endDay: 21,
+                name: "420 Day",
+                feature: "3× cannabis nerve; 5× overdose risk",
+                notification: "The city smells funny. Must be April 20th again."
+            },
+            {
+                startMonth: 5, startDay: 17,
+                endMonth: 5, endDay: 18,
+                name: "Museum Day",
+                feature: "10% bonus on museum exchange points",
+                notification: "Museum Day: plushies finally worth something."
+            },
+            {
+                startMonth: 6, startDay: 13,
+                endMonth: 6, endDay: 14,
+                name: "World Blood Donor Day",
+                feature: "50% medical cooldown & life loss reduction",
+                notification: "Half-price blood loss today. Go stab someone to celebrate."
+            },
+            {
+                startMonth: 7, startDay: 6,
+                endMonth: 7, endDay: 7,
+                name: "World Population Day",
+                feature: "2× XP from attacks",
+                notification: "Double XP for attacks – Population Day active."
+            },
+            {
+                startMonth: 7, startDay: 28,
+                endMonth: 7, endDay: 29,
+                name: "World Tiger Day",
+                feature: "5× hunting experience",
+                notification: "Tiger Day: hunt like it owes you money."
+            },
+            {
+                startMonth: 7, startDay: 31,
+                endMonth: 8, endDay: 1,
+                name: "International Beer Day",
+                feature: "5× nerve from beer items",
+                notification: "Cheers! Every pint is five crimes closer to jail."
+            },
+            {
+                startMonth: 9, startDay: 26,
+                endMonth: 9, endDay: 27,
+                name: "Tourism Day",
+                feature: "Double travel item capacity",
+                notification: "Smuggling limit doubled. Customs is crying."
+            },
+            {
+                startMonth: 10, startDay: 10,
+                endMonth: 10, endDay: 11,
+                name: "CaffeineCon 2025",
+                feature: "2× energy drink effects",
+                notification: "Stock the Red Cow, it's CaffeineCon time."
+            },
+            {
+                startMonth: 10, startDay: 24,
+                endMonth: 10, endDay: 31,
+                name: "Trick or Treat",
+                feature: "Treat trade for basket upgrades/prizes",
+                notification: "Basket's empty. Go beat someone up for candy."
+            },
+            {
+                startMonth: 11, startDay: 15,
+                endMonth: 11, endDay: 16,
+                name: "Torn Anniversary",
+                feature: "",
+                notification: "Torn is celebrating its birthday today!"
+            },
+            {
+                startMonth: 11, startDay: 14,
+                endMonth: 11, endDay: 15,
+                name: "World Diabetes Day",
+                feature: "3× happy from candy",
+                notification: "World Diabetes Day: Torn's running on pure sugar highs."
+            },
+            {
+                startMonth: 11, startDay: 27,
+                endMonth: 11, endDay: 28,
+                name: "Black Friday",
+                feature: "$1 bazaar \"dollar sale\" community frenzy",
+                notification: "Black Friday: $1 bazaar chaos, refresh or cry."
+            },
+            {
+                startMonth: 12, startDay: 4,
+                endMonth: 12, endDay: 5,
+                name: "Slash Wednesday",
+                feature: "Hospital times reduced by 75%",
+                notification: "Slash Wednesday live: ER now with a fast lane."
+            },
+            {
+                startMonth: 12, startDay: 15,
+                endMonth: 12, endDay: 31,
+                name: "Christmas Town",
+                feature: "Seasonal map-based event with treasure",
+                notification: "Christmas Town: snow, loot, and sketchy Santa."
+            }
+        ],
+
+        init() {
+            console.log('🎪 Event Ticker: Initializing...');
+            this.core = window.SidekickModules.Core;
+            
+            // Wait for sidebar to be created
+            this.waitForSidebar();
+        },
+
+        waitForSidebar() {
+            const checkSidebar = setInterval(() => {
+                const sidebar = document.getElementById('sidekick-sidebar');
+                if (sidebar) {
+                    clearInterval(checkSidebar);
+                    this.createTicker();
+                    this.startRotation();
+                }
+            }, 100);
+
+            // Timeout after 10 seconds
+            setTimeout(() => clearInterval(checkSidebar), 10000);
+        },
+
+        createTicker() {
+            // Check if ticker already exists
+            if (document.getElementById('sidekick-event-ticker')) {
+                return;
+            }
+
+            const sidebar = document.getElementById('sidekick-sidebar');
+            if (!sidebar) return;
+
+            // Create ticker container
+            const ticker = document.createElement('div');
+            ticker.id = 'sidekick-event-ticker';
+            ticker.style.cssText = `
+                width: 100%;
+                background: linear-gradient(90deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%);
+                border-bottom: 1px solid #444;
+                padding: 8px 16px;
+                box-sizing: border-box;
+                overflow: hidden;
+                position: relative;
+                min-height: 36px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            `;
+
+            // Icon container
+            const iconContainer = document.createElement('div');
+            iconContainer.style.cssText = `
+                flex-shrink: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 20px;
+                height: 20px;
+            `;
+            iconContainer.innerHTML = '🎪';
+
+            // Text container with sliding animation
+            const textContainer = document.createElement('div');
+            textContainer.id = 'sidekick-ticker-text';
+            textContainer.style.cssText = `
+                flex: 1;
+                color: #fff;
+                font-size: 12px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                transition: opacity 0.3s ease;
+            `;
+
+            ticker.appendChild(iconContainer);
+            ticker.appendChild(textContainer);
+
+            // Insert at the top of sidebar (after the hamburger button area)
+            const contentArea = document.getElementById('sidekick-content');
+            if (contentArea) {
+                sidebar.insertBefore(ticker, contentArea);
+            } else {
+                sidebar.insertBefore(ticker, sidebar.firstChild);
+            }
+
+            this.tickerElement = textContainer;
+            console.log('✅ Event Ticker: Created');
+
+            // Show initial message
+            this.updateTickerDisplay();
+        },
+
+        // Check if a date is within an event's range (handles leap years and year boundaries)
+        isEventActive(event, now = new Date()) {
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth() + 1; // JS months are 0-indexed
+            const currentDay = now.getDate();
+
+            // Create Date objects for start and end
+            let startDate = new Date(currentYear, event.startMonth - 1, event.startDay);
+            let endDate = new Date(currentYear, event.endMonth - 1, event.endDay);
+
+            // Handle events that span year boundary (e.g., Dec 15 - Dec 31)
+            if (event.endMonth < event.startMonth) {
+                // If current month is >= start month, use current year for start and next year for end
+                if (currentMonth >= event.startMonth) {
+                    endDate = new Date(currentYear + 1, event.endMonth - 1, event.endDay);
+                } else {
+                    // Otherwise, use previous year for start and current year for end
+                    startDate = new Date(currentYear - 1, event.startMonth - 1, event.startDay);
+                }
+            }
+
+            // Set time to start/end of day for accurate comparison
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setHours(23, 59, 59, 999);
+            now.setHours(0, 0, 0, 0);
+
+            return now >= startDate && now <= endDate;
+        },
+
+        // Get all currently active events
+        getActiveEvents() {
+            const now = new Date();
+            return this.events.filter(event => this.isEventActive(event, now));
+        },
+
+        // Get upcoming events (within next 7 days)
+        getUpcomingEvents(daysAhead = 7) {
+            const now = new Date();
+            const future = new Date(now.getTime() + (daysAhead * 24 * 60 * 60 * 1000));
+            
+            return this.events.filter(event => {
+                const currentYear = now.getFullYear();
+                let eventStart = new Date(currentYear, event.startMonth - 1, event.startDay);
+                
+                // Handle year boundary
+                if (eventStart < now) {
+                    eventStart = new Date(currentYear + 1, event.startMonth - 1, event.startDay);
+                }
+                
+                return eventStart > now && eventStart <= future;
+            });
+        },
+
+        updateTickerDisplay() {
+            if (!this.tickerElement) return;
+
+            const activeEvents = this.getActiveEvents();
+            const upcomingEvents = this.getUpcomingEvents(3);
+
+            let displayText = '';
+            let iconEmoji = '🎪';
+
+            if (activeEvents.length > 0) {
+                // Show active event with notification text
+                const event = activeEvents[this.currentEventIndex % activeEvents.length];
+                displayText = `🔴 LIVE: ${event.notification}`;
+                iconEmoji = '🔴';
+                
+                // Update icon
+                const iconContainer = this.tickerElement.parentElement.querySelector('div');
+                if (iconContainer) iconContainer.innerHTML = iconEmoji;
+                
+            } else if (upcomingEvents.length > 0) {
+                // Show upcoming event
+                const event = upcomingEvents[0];
+                const daysUntil = this.getDaysUntil(event);
+                displayText = `📅 Coming ${daysUntil === 0 ? 'tomorrow' : `in ${daysUntil + 1} days`}: ${event.name} - ${event.feature}`;
+                iconEmoji = '📅';
+                
+                // Update icon
+                const iconContainer = this.tickerElement.parentElement.querySelector('div');
+                if (iconContainer) iconContainer.innerHTML = iconEmoji;
+                
+            } else {
+                // No events - show generic message
+                displayText = '✨ No events active - Stay sharp, stay violent';
+                iconEmoji = '✨';
+                
+                // Update icon
+                const iconContainer = this.tickerElement.parentElement.querySelector('div');
+                if (iconContainer) iconContainer.innerHTML = iconEmoji;
+            }
+
+            // Fade out, change text, fade in
+            this.tickerElement.style.opacity = '0';
+            setTimeout(() => {
+                this.tickerElement.textContent = displayText;
+                this.tickerElement.style.opacity = '1';
+            }, 300);
+        },
+
+        getDaysUntil(event) {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            let eventStart = new Date(currentYear, event.startMonth - 1, event.startDay);
+            
+            // Handle year boundary
+            if (eventStart < now) {
+                eventStart = new Date(currentYear + 1, event.startMonth - 1, event.startDay);
+            }
+            
+            const diffTime = eventStart - now;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays;
+        },
+
+        startRotation() {
+            // Update ticker every 8 seconds
+            this.rotationInterval = setInterval(() => {
+                const activeEvents = this.getActiveEvents();
+                
+                if (activeEvents.length > 1) {
+                    // Rotate through active events
+                    this.currentEventIndex++;
+                }
+                
+                this.updateTickerDisplay();
+            }, 8000);
+
+            console.log('✅ Event Ticker: Rotation started (8s interval)');
+        },
+
+        stopRotation() {
+            if (this.rotationInterval) {
+                clearInterval(this.rotationInterval);
+                this.rotationInterval = null;
+            }
+        },
+
+        destroy() {
+            this.stopRotation();
+            if (this.tickerElement && this.tickerElement.parentElement) {
+                this.tickerElement.parentElement.remove();
+            }
+        }
+    };
+
+    // Register module
+    if (!window.SidekickModules) {
+        window.SidekickModules = {};
+    }
+    window.SidekickModules.EventTicker = EventTicker;
+
+    console.log('✅ Event Ticker Module loaded');
+})();
