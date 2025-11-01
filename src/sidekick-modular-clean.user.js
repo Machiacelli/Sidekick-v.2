@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.1
-// @description  Event Ticker: Trick or Treat extended to Nov 1 + horizontal scrolling ticker animation
+// @version      6.9.2
+// @description  Event Ticker: Added Torn Birthday celebration - shows your account anniversary!
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -40,11 +40,12 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.9.0 - Event Ticker!');
-    console.log('🎪 NEW: Event Ticker - Rolling notifications for active Torn events');
-    console.log('✨ FEATURES: Shows live events, upcoming events, and counts down to next event');
-    console.log('� SMART: Handles leap years and year boundaries automatically');
-    console.log('� AUTO-ROTATE: Cycles through multiple active events every 8 seconds');
+    console.log('🚀 Sidekick Modular CDN v6.9.2 - Torn Birthday Celebration!');
+    console.log('� NEW: Birthday celebration shows your Torn account anniversary');
+    console.log('🎪 Event Ticker: Shows live events, upcoming events, and your Torn birthday');
+    console.log('🎨 Event Ticker: Horizontal scrolling ticker animation');
+    console.log('✨ FEATURES: Smart date handling with leap years and year boundaries');
+    console.log('🔄 AUTO-ROTATE: Cycles through multiple active events every 8 seconds');
     console.log('� FIXED: P/L now uses actual totalInvested, not estimated value');
     console.log('✅ FIXED: Correct profit/loss after selling shares (FIFO adjusted)');
     console.log('✅ FIXED: New stock purchases no longer create "stock_17" format');

@@ -8,6 +8,8 @@
         tickerElement: null,
         currentEventIndex: 0,
         rotationInterval: null,
+        playerSignupDate: null,
+        playerBirthdayChecked: false,
 
         // Event data from events.txt
         events: [
@@ -157,8 +159,100 @@
             console.log('🎪 Event Ticker: Initializing...');
             this.core = window.SidekickModules.Core;
             
+            // Fetch player's Torn birthday
+            this.fetchPlayerBirthday();
+            
             // Wait for sidebar to be created
             this.waitForSidebar();
+        },
+
+        async fetchPlayerBirthday() {
+            if (this.playerBirthdayChecked) return;
+            
+            try {
+                console.log('🎂 Event Ticker: Fetching player birthday from Torn API...');
+                const apiKey = await this.core.getApiKey();
+                
+                if (!apiKey) {
+                    console.log('⚠️ Event Ticker: No API key found, skipping birthday check');
+                    this.playerBirthdayChecked = true;
+                    return;
+                }
+                
+                const response = await fetch(`https://api.torn.com/user/?selections=profile&key=${apiKey}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('❌ Event Ticker: API error:', data.error);
+                    this.playerBirthdayChecked = true;
+                    return;
+                }
+                
+                if (data.signup) {
+                    // Parse signup date (format: "yyyy-MM-dd HH:mm:ss")
+                    this.playerSignupDate = new Date(data.signup);
+                    console.log('✅ Event Ticker: Player joined Torn on', data.signup);
+                    
+                    const yearsInTorn = this.getYearsInTorn();
+                    console.log(`🎉 Event Ticker: Player has been in Torn for ${yearsInTorn} years!`);
+                } else {
+                    console.log('⚠️ Event Ticker: No signup date found in API response');
+                }
+                
+                this.playerBirthdayChecked = true;
+            } catch (error) {
+                console.error('❌ Event Ticker: Failed to fetch player birthday:', error);
+                this.playerBirthdayChecked = true;
+            }
+        },
+
+        getYearsInTorn() {
+            if (!this.playerSignupDate) return 0;
+            
+            const now = new Date();
+            const years = now.getFullYear() - this.playerSignupDate.getFullYear();
+            
+            // Check if birthday has passed this year
+            const thisYearBirthday = new Date(
+                now.getFullYear(),
+                this.playerSignupDate.getMonth(),
+                this.playerSignupDate.getDate()
+            );
+            
+            if (now < thisYearBirthday) {
+                return years - 1;
+            }
+            
+            return years;
+        },
+
+        isTornBirthdayToday() {
+            if (!this.playerSignupDate) return false;
+            
+            const now = new Date();
+            const signupMonth = this.playerSignupDate.getMonth();
+            const signupDay = this.playerSignupDate.getDate();
+            
+            return now.getMonth() === signupMonth && now.getDate() === signupDay;
+        },
+
+        isTornBirthdaySoon(daysAhead = 7) {
+            if (!this.playerSignupDate) return false;
+            
+            const now = new Date();
+            const signupMonth = this.playerSignupDate.getMonth();
+            const signupDay = this.playerSignupDate.getDate();
+            
+            // Create birthday date for this year
+            let birthdayThisYear = new Date(now.getFullYear(), signupMonth, signupDay);
+            
+            // If birthday already passed this year, check next year
+            if (birthdayThisYear < now) {
+                birthdayThisYear = new Date(now.getFullYear() + 1, signupMonth, signupDay);
+            }
+            
+            const daysUntil = Math.floor((birthdayThisYear - now) / (1000 * 60 * 60 * 24));
+            return daysUntil >= 0 && daysUntil <= daysAhead;
         },
 
         waitForSidebar() {
@@ -305,7 +399,20 @@
         // Get all currently active events
         getActiveEvents() {
             const now = new Date();
-            return this.events.filter(event => this.isEventActive(event, now));
+            const activeEvents = this.events.filter(event => this.isEventActive(event, now));
+            
+            // Add Torn birthday if it's today
+            if (this.isTornBirthdayToday()) {
+                const years = this.getYearsInTorn();
+                activeEvents.push({
+                    name: "Your Torn Birthday",
+                    feature: "Personal celebration",
+                    notification: `🎂 Happy Torn Birthday! ${years} year${years !== 1 ? 's' : ''} of mayhem and counting!`,
+                    isBirthday: true
+                });
+            }
+            
+            return activeEvents;
         },
 
         // Get upcoming events (within next 7 days)
@@ -313,7 +420,7 @@
             const now = new Date();
             const future = new Date(now.getTime() + (daysAhead * 24 * 60 * 60 * 1000));
             
-            return this.events.filter(event => {
+            const upcomingEvents = this.events.filter(event => {
                 const currentYear = now.getFullYear();
                 let eventStart = new Date(currentYear, event.startMonth - 1, event.startDay);
                 
@@ -324,6 +431,29 @@
                 
                 return eventStart > now && eventStart <= future;
             });
+            
+            // Add Torn birthday if it's coming soon
+            if (this.isTornBirthdaySoon(daysAhead) && !this.isTornBirthdayToday()) {
+                const signupMonth = this.playerSignupDate.getMonth();
+                const signupDay = this.playerSignupDate.getDate();
+                const birthdayThisYear = new Date(now.getFullYear(), signupMonth, signupDay);
+                const birthdayDate = birthdayThisYear < now 
+                    ? new Date(now.getFullYear() + 1, signupMonth, signupDay)
+                    : birthdayThisYear;
+                
+                const daysUntil = Math.floor((birthdayDate - now) / (1000 * 60 * 60 * 24));
+                const years = this.getYearsInTorn() + 1; // Next anniversary
+                
+                upcomingEvents.push({
+                    name: "Your Torn Birthday",
+                    feature: `${years} years in Torn`,
+                    notification: `Your Torn anniversary is coming up!`,
+                    isBirthday: true,
+                    daysUntil: daysUntil
+                });
+            }
+            
+            return upcomingEvents;
         },
 
         updateTickerDisplay() {
@@ -338,8 +468,15 @@
             if (activeEvents.length > 0) {
                 // Show active event with notification text
                 const event = activeEvents[this.currentEventIndex % activeEvents.length];
-                displayText = `🔴 LIVE: ${event.notification}`;
-                iconEmoji = '🔴';
+                
+                // Special handling for birthday events
+                if (event.isBirthday) {
+                    displayText = event.notification;
+                    iconEmoji = '🎂';
+                } else {
+                    displayText = `🔴 LIVE: ${event.notification}`;
+                    iconEmoji = '🔴';
+                }
                 
                 // Update icon
                 const iconContainer = this.tickerElement.parentElement.querySelector('div');
@@ -348,9 +485,19 @@
             } else if (upcomingEvents.length > 0) {
                 // Show upcoming event
                 const event = upcomingEvents[0];
-                const daysUntil = this.getDaysUntil(event);
-                displayText = `📅 Coming ${daysUntil === 0 ? 'tomorrow' : `in ${daysUntil + 1} days`}: ${event.name} - ${event.feature}`;
-                iconEmoji = '📅';
+                
+                // Special handling for birthday events
+                if (event.isBirthday && event.daysUntil !== undefined) {
+                    const daysText = event.daysUntil === 0 ? 'tomorrow' : 
+                                    event.daysUntil === 1 ? 'in 1 day' : 
+                                    `in ${event.daysUntil} days`;
+                    displayText = `🎂 Your Torn Birthday is ${daysText}! (${event.feature})`;
+                    iconEmoji = '🎂';
+                } else {
+                    const daysUntil = this.getDaysUntil(event);
+                    displayText = `📅 Coming ${daysUntil === 0 ? 'tomorrow' : `in ${daysUntil + 1} days`}: ${event.name} - ${event.feature}`;
+                    iconEmoji = '📅';
+                }
                 
                 // Update icon
                 const iconContainer = this.tickerElement.parentElement.querySelector('div');
