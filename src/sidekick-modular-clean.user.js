@@ -10,12 +10,12 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/c65196b/src/sidekick-modular-clean.user.js?v=20251101-4
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/c65196b/src/sidekick-modular-clean.user.js?v=20251101-4
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/ea0778e/src/sidekick-modular-clean.user.js?v=20251101-6
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/ea0778e/src/sidekick-modular-clean.user.js?v=20251101-6
 // @connect      api.lzpt.io
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/core.module.js?v=20251101-5
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/ui.module.js?v=20251101-5
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/settings.module.js?v=20251101-5
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@ea0778e/src/modules/settings.module.js?v=20251101-6
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/content.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/global-functions.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/notepad.module.js?v=20251030
@@ -34,18 +34,20 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@552a4bb/src/modules/npc-attack-timer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@9385acc/src/modules/xanax-viewer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/todolist.module.js?v=20251030
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/event-ticker.module.js?v=20251101-5
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@ea0778e/src/modules/event-ticker.module.js?v=20251101-6
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/attack-button-mover.module.js?v=20251101-5
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.9.4 - Attack Button Mover + Ticker Refinements!');
-    console.log('⚔️ NEW: Attack Button Mover - Positions "Start Fight" over your weapon for faster attacks');
-    console.log('🎪 IMPROVED: Event ticker now closer to logo, static emoji removed');
-    console.log('⚙️ ADDED: Attack Button Mover toggle in General settings tab');
-    console.log('📍 Event ticker seamlessly integrated into top bar between logo and clock');
+    console.log('🚀 Sidekick Modular CDN v6.9.5 - Next Event Countdown + Synced Animation + Fast Attack!');
+    console.log('⏰ NEW: Live countdown to next Torn event with API integration');
+    console.log('🔄 NEW: Ticker animation synced across all tabs');
+    console.log('⚡ RENAMED: "Attack Button Mover" → "Fast Attack" for cleaner UI');
+    console.log('📍 IMPROVED: Event ticker now directly adjacent to logo (no gap)');
+    console.log('⚔️ FEATURE: Fast Attack - Positions "Start Fight" over your weapon for faster attacks');
+    console.log('🎪 IMPROVED: Event ticker seamlessly integrated into top bar between logo and clock');
     console.log('👆 Add button fades in on hover and stays on top of all panels');
     console.log('🎂 Birthday celebration shows your Torn account anniversary');
     console.log('🎪 Event Ticker: Shows live events, upcoming events, and your Torn birthday');
