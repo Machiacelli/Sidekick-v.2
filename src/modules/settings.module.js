@@ -268,6 +268,16 @@
                                     <span class="auto-gym-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
                                 </label>
                             </div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #2a2a2a; border-radius: 6px; margin: 12px 0;">
+                                <div style="display: flex; flex-direction: column;">
+                                    <span style="color: #fff; font-weight: bold; font-size: 14px;">⚔️ Attack Button Mover</span>
+                                    <span style="color: #aaa; font-size: 12px;">Moves "Start Fight" button over weapon for faster attacks</span>
+                                </div>
+                                <label class="attack-button-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
+                                    <input type="checkbox" id="attack-button-toggle" style="opacity: 0; width: 0; height: 0;">
+                                    <span class="attack-button-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px;"></span>
+                                </label>
+                            </div>
                             
                             <div style="border-top: 1px solid #444; margin: 20px 0; padding-top: 20px;">
                                 <h4 style="color: #aaa; margin: 0 0 12px 0; font-size: 14px; font-weight: bold;">Data Management</h4>
@@ -554,6 +564,52 @@
                         }
                     } else {
                         console.error('❌ Auto Gym toggle element not found in DOM');
+                    }
+
+                    // Attack Button Mover toggle
+                    const attackButtonToggle = document.getElementById('attack-button-toggle');
+                    console.log('🔍 Looking for Attack Button Mover toggle:', attackButtonToggle);
+                    console.log('🔍 AttackButtonMover module available:', !!window.SidekickModules?.AttackButtonMover);
+                    
+                    if (attackButtonToggle) {
+                        // Set initial state
+                        if (window.SidekickModules?.AttackButtonMover) {
+                            const enabled = loadState(STORAGE_KEYS.ATTACK_BUTTON_ENABLED, true);
+                            attackButtonToggle.checked = enabled;
+                            
+                            console.log('✅ Attack Button Mover toggle initialized:', enabled);
+                            
+                            // Update toggle appearance
+                            if (enabled) {
+                                const slider = attackButtonToggle.nextElementSibling;
+                                if (slider && slider.classList.contains('attack-button-slider')) {
+                                    slider.style.backgroundColor = '#4CAF50';
+                                    slider.style.boxShadow = '0 0 10px rgba(76, 175, 80, 0.5)';
+                                }
+                            }
+                        } else {
+                            console.warn('⚠️ AttackButtonMover module not available for toggle initialization');
+                        }
+                        
+                        attackButtonToggle.addEventListener('change', () => {
+                            console.log('⚔️ Attack Button Mover toggle changed to:', attackButtonToggle.checked);
+                            if (window.SidekickModules?.AttackButtonMover) {
+                                window.SidekickModules.AttackButtonMover.setEnabled(attackButtonToggle.checked);
+                                
+                                // Show notification
+                                if (window.SidekickModules?.Core?.NotificationSystem) {
+                                    window.SidekickModules.Core.NotificationSystem.show(
+                                        'Attack Button Mover',
+                                        attackButtonToggle.checked ? 'Attack button will move over weapon on attack pages' : 'Attack button mover disabled',
+                                        attackButtonToggle.checked ? 'success' : 'info'
+                                    );
+                                }
+                            } else {
+                                console.error('❌ AttackButtonMover module not available');
+                            }
+                        });
+                    } else {
+                        console.error('❌ Attack Button Mover toggle element not found in DOM');
                     }
 
                     // Add Block Training button after other buttons
@@ -980,7 +1036,7 @@
                     }
                     
                     /* All slider backgrounds */
-                    .travel-blocker-slider, .block-training-slider, .random-target-slider, .chain-timer-slider, .auto-gym-slider,
+                    .travel-blocker-slider, .block-training-slider, .random-target-slider, .chain-timer-slider, .auto-gym-slider, .attack-button-slider,
                     .shoplifting-monitor-slider, .notification-sound-slider, .auto-redirect-slider, .xanax-viewer-slider, .xanax-relative-slider {
                         position: absolute !important;
                         cursor: pointer !important;
@@ -994,7 +1050,7 @@
                     }
 
                     /* White dots on all sliders */
-                    .travel-blocker-slider:before, .block-training-slider:before, .random-target-slider:before, .chain-timer-slider:before, .auto-gym-slider:before,
+                    .travel-blocker-slider:before, .block-training-slider:before, .random-target-slider:before, .chain-timer-slider:before, .auto-gym-slider:before, .attack-button-slider:before,
                     .shoplifting-monitor-slider:before, .notification-sound-slider:before, .auto-redirect-slider:before, .xanax-viewer-slider:before, .xanax-relative-slider:before {
                         position: absolute !important;
                         content: "" !important;
@@ -1022,6 +1078,7 @@
                     #random-target-toggle:checked + .random-target-slider,
                     #chain-timer-toggle:checked + .chain-timer-slider,
                     #auto-gym-toggle:checked + .auto-gym-slider,
+                    #attack-button-toggle:checked + .attack-button-slider,
                     #shoplifting-monitor-toggle:checked + .shoplifting-monitor-slider,
                     #notification-sound-toggle:checked + .notification-sound-slider,
                     #auto-redirect-toggle:checked + .auto-redirect-slider,
@@ -1036,6 +1093,7 @@
                     #random-target-toggle:checked + .random-target-slider:before,
                     #chain-timer-toggle:checked + .chain-timer-slider:before,
                     #auto-gym-toggle:checked + .auto-gym-slider:before,
+                    #attack-button-toggle:checked + .attack-button-slider:before,
                     #shoplifting-monitor-toggle:checked + .shoplifting-monitor-slider:before,
                     #xanax-viewer-enabled-toggle:checked + .xanax-viewer-slider:before,
                     #xanax-relative-toggle:checked + .xanax-relative-slider:before {
@@ -1049,7 +1107,7 @@
                     }
 
                     /* Hover effects */
-                    .travel-blocker-slider:hover, .block-training-slider:hover, .random-target-slider:hover, .chain-timer-slider:hover, .auto-gym-slider:hover,
+                    .travel-blocker-slider:hover, .block-training-slider:hover, .random-target-slider:hover, .chain-timer-slider:hover, .auto-gym-slider:hover, .attack-button-slider:hover,
                     .shoplifting-monitor-slider:hover, .notification-sound-slider:hover, .auto-redirect-slider:hover, .xanax-viewer-slider:hover, .xanax-relative-slider:hover {
                         box-shadow: 0 0 1px rgba(255,255,255,0.5) !important;
                     }

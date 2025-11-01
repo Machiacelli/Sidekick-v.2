@@ -310,27 +310,14 @@
             ticker.style.cssText = `
                 display: flex;
                 align-items: center;
-                gap: 6px;
                 width: 100%;
                 overflow: hidden;
                 position: relative;
                 min-height: 20px;
+                margin-left: -30px;
             `;
 
-            // Icon container
-            const iconContainer = document.createElement('div');
-            iconContainer.style.cssText = `
-                flex-shrink: 0;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 16px;
-                height: 16px;
-                font-size: 14px;
-            `;
-            iconContainer.innerHTML = '🎪';
-
-            // Scrolling wrapper for overflow control
+            // Scrolling wrapper for overflow control (no icon, just text)
             const scrollWrapper = document.createElement('div');
             scrollWrapper.style.cssText = `
                 flex: 1;
@@ -351,7 +338,6 @@
             `;
 
             scrollWrapper.appendChild(textContainer);
-            ticker.appendChild(iconContainer);
             ticker.appendChild(scrollWrapper);
 
             // Insert into placeholder (seamless integration)

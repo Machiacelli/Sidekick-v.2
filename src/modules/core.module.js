@@ -27,7 +27,9 @@
         CURRENT_PAGE: 'sidekick_current_page',
         PAGE_STATES: 'sidekick_page_states',
         TIMERS: 'sidekick_timers',
-        TRAVEL_TRACKERS: 'sidekick_travel_trackers'
+        TRAVEL_TRACKERS: 'sidekick_travel_trackers',
+        ATTACK_BUTTON_ENABLED: 'sidekick_attack_button_enabled',
+        ATTACK_BUTTON_LOCATION: 'sidekick_attack_button_location'
     };
 
     // Enhanced storage with consistent global keys
