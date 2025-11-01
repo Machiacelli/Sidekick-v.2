@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.10
-// @description  Fixed: Ticker animation endpoint, added personal event end time filtering
+// @version      6.9.11
+// @description  Fixed: Ticker now shows next upcoming event when current event period ends, never empty
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*

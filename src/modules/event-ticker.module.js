@@ -302,10 +302,11 @@
             
             // Check if user's personal event has ended
             let userEventEnded = false;
+            let userEndTimestamp = null;
             if (this.userEventEndTime) {
                 try {
                     const userEndDate = new Date(this.userEventEndTime);
-                    const userEndTimestamp = Math.round(userEndDate.getTime() / 1000);
+                    userEndTimestamp = Math.round(userEndDate.getTime() / 1000);
                     if (currentTime >= userEndTimestamp) {
                         userEventEnded = true;
                         console.log('⏰ Event Ticker: User\'s personal event period has ended');
@@ -316,12 +317,6 @@
             }
             
             for (let event of this.tornEvents) {
-                // Skip events if user's personal event period has ended
-                if (userEventEnded && event.title && event.title.toLowerCase().includes('competition')) {
-                    console.log(`⏰ Skipping ${event.title} - user's event period ended`);
-                    continue;
-                }
-                
                 // Use user's personal event start time if available, otherwise use event.start
                 let eventStartTime = event.start;
                 
@@ -342,6 +337,17 @@
                     }
                 }
                 
+                // Skip ACTIVE competitions (started but not ended) if user's personal event period has ended
+                // But still show FUTURE competitions that haven't started yet
+                if (userEventEnded && event.title && event.title.toLowerCase().includes('competition')) {
+                    // If event has already started (diff < 0), skip it
+                    const diff = eventStartTime - currentTime;
+                    if (diff < 0) {
+                        console.log(`⏰ Skipping active ${event.title} - user's event period ended`);
+                        continue;
+                    }
+                }
+                
                 const diff = eventStartTime - currentTime;
                 if (diff >= 0) {
                     upcomingEvents.push({...event, start: eventStartTime, diff: diff});
@@ -350,6 +356,7 @@
             
             if (upcomingEvents.length === 0) {
                 this.nearestEvent = null;
+                console.log('⏰ Event Ticker: No upcoming events found');
                 return;
             }
             
@@ -688,8 +695,8 @@
                 }
                 
             } else {
-                // No events - show generic message
-                displayText = '✨ No events active - Stay sharp, stay violent';
+                // Priority 4: No active or upcoming events - show placeholder
+                displayText = '✨ No events currently scheduled - Stay sharp, stay violent';
                 iconEmoji = '✨';
             }
 
