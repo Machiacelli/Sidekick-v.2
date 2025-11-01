@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.5
-// @description  Event Ticker: Next event countdown + synced animation + Fast Attack rename
+// @version      6.9.6
+// @description  Event Ticker: Removed empty space - now truly adjacent to logo
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -41,9 +41,10 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.9.5 - Next Event Countdown + Synced Animation + Fast Attack!');
-    console.log('⏰ NEW: Live countdown to next Torn event with API integration');
-    console.log('🔄 NEW: Ticker animation synced across all tabs');
+    console.log('🚀 Sidekick Modular CDN v6.9.6 - Event Ticker Perfect Positioning!');
+    console.log('📍 FIXED: Removed 2cm empty space - ticker now directly next to logo text');
+    console.log('⏰ FEATURE: Live countdown to next Torn event with API integration');
+    console.log('🔄 FEATURE: Ticker animation synced across all tabs');
     console.log('⚡ RENAMED: "Attack Button Mover" → "Fast Attack" for cleaner UI');
     console.log('📍 IMPROVED: Event ticker now directly adjacent to logo (no gap)');
     console.log('⚔️ FEATURE: Fast Attack - Positions "Start Fight" over your weapon for faster attacks');
