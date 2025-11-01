@@ -167,6 +167,13 @@
             console.log('🎪 Event Ticker: Initializing...');
             this.core = window.SidekickModules.Core;
             
+            // Load cached user event start time
+            const cachedStartTime = GM_getValue('userEventStartTime', null);
+            if (cachedStartTime) {
+                this.userEventStartTime = cachedStartTime;
+                console.log('📦 Event Ticker: Loaded cached user event start time:', this.userEventStartTime);
+            }
+            
             // Fetch player's Torn birthday
             this.fetchPlayerBirthday();
             
@@ -211,13 +218,6 @@
                     console.log(`🎉 Event Ticker: Player has been in Torn for ${yearsInTorn} years!`);
                 }
                 
-                // Also fetch user's event start time for countdown
-                if (data.calendar && data.calendar.start_time) {
-                    this.userEventStartTime = data.calendar.start_time.toLowerCase().split(" tct")[0];
-                    GM_setValue('userEventStartTime', this.userEventStartTime);
-                    console.log('⏰ Event Ticker: User event start time:', this.userEventStartTime);
-                }
-                
                 this.playerBirthdayChecked = true;
             } catch (error) {
                 console.error('❌ Event Ticker: Failed to fetch player birthday:', error);
@@ -255,6 +255,13 @@
                 }
                 
                 if (data.calendar) {
+                    // Fetch user's personal event start time from calendar
+                    if (data.calendar.start_time) {
+                        this.userEventStartTime = data.calendar.start_time.toLowerCase().split(" tct")[0];
+                        GM_setValue('userEventStartTime', this.userEventStartTime);
+                        console.log('⏰ Event Ticker: User personal event start time:', this.userEventStartTime);
+                    }
+                    
                     let events = data.calendar.events || [];
                     if (data.calendar.competitions) {
                         events = events.concat(data.calendar.competitions);
@@ -279,9 +286,29 @@
             let upcomingEvents = [];
             
             for (let event of this.tornEvents) {
-                const diff = event.start - currentTime;
+                // Use user's personal event start time if available, otherwise use event.start
+                let eventStartTime = event.start;
+                
+                // If we have the user's personal start time and this is a competition
+                if (this.userEventStartTime && event.title && event.title.toLowerCase().includes('competition')) {
+                    // Parse the user's start time (format: "Nov 01, 2025 12:00:00")
+                    try {
+                        const userStartDate = new Date(this.userEventStartTime);
+                        const userStartTimestamp = Math.round(userStartDate.getTime() / 1000);
+                        
+                        // Only use user start time if it's for the same event (within reasonable range)
+                        if (Math.abs(userStartTimestamp - event.start) < 86400) { // Within 24 hours
+                            eventStartTime = userStartTimestamp;
+                            console.log(`⏰ Using personal start time for ${event.title}: ${this.userEventStartTime}`);
+                        }
+                    } catch (e) {
+                        console.warn('Failed to parse user event start time:', e);
+                    }
+                }
+                
+                const diff = eventStartTime - currentTime;
                 if (diff >= 0) {
-                    upcomingEvents.push({...event, diff: diff});
+                    upcomingEvents.push({...event, start: eventStartTime, diff: diff});
                 }
             }
             
@@ -443,6 +470,7 @@
                 overflow: hidden;
                 position: relative;
                 min-height: 20px;
+                padding-left: 8px;
             `;
 
             // Scrolling wrapper for overflow control (no icon, just text)
