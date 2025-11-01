@@ -10,8 +10,8 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/cc97853/src/sidekick-modular-clean.user.js?v=20251101-8
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/cc97853/src/sidekick-modular-clean.user.js?v=20251101-8
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/3d0e606/src/sidekick-modular-clean.user.js?v=20251101-9
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/3d0e606/src/sidekick-modular-clean.user.js?v=20251101-9
 // @connect      api.lzpt.io
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/core.module.js?v=20251101-5
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/ui.module.js?v=20251101-5
@@ -29,12 +29,12 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@05edd8b/src/modules/traveltracker.module.js?v=20251030
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3b8e855/src/modules/stockticker.module.js?v=20251031-5
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3d0e606/src/modules/stockticker.module.js?v=20251101-9
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@78a5175/src/modules/timeontab.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@552a4bb/src/modules/npc-attack-timer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@9385acc/src/modules/xanax-viewer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/todolist.module.js?v=20251030
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@cc97853/src/modules/event-ticker.module.js?v=20251101-8
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3d0e606/src/modules/event-ticker.module.js?v=20251101-9
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/attack-button-mover.module.js?v=20251101-5
 // ==/UserScript==
 
