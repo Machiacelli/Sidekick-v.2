@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.6
-// @description  Event Ticker: Removed empty space - now truly adjacent to logo
+// @version      6.9.7
+// @description  Event Ticker: Fixed positioning - no gaps on either side
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -41,8 +41,9 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.9.6 - Event Ticker Perfect Positioning!');
-    console.log('📍 FIXED: Removed 2cm empty space - ticker now directly next to logo text');
+    console.log('🚀 Sidekick Modular CDN v6.9.7 - Event Ticker Perfect Layout!');
+    console.log('📍 FIXED: Used transform instead of margin - no gaps on either side');
+    console.log('✅ RESULT: Ticker close to logo AND maintains position next to clock');
     console.log('⏰ FEATURE: Live countdown to next Torn event with API integration');
     console.log('🔄 FEATURE: Ticker animation synced across all tabs');
     console.log('⚡ RENAMED: "Attack Button Mover" → "Fast Attack" for cleaner UI');

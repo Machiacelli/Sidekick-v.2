@@ -443,7 +443,7 @@
                 overflow: hidden;
                 position: relative;
                 min-height: 20px;
-                margin-left: -100px;
+                transform: translateX(-100px);
             `;
 
             // Scrolling wrapper for overflow control (no icon, just text)
