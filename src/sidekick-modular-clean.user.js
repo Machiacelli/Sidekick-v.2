@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.3
-// @description  Event Ticker in top bar + Add button hover fade + z-index fix
+// @version      6.9.4
+// @description  Event Ticker refinements + Attack Button Mover module
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -13,9 +13,9 @@
 // @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/c65196b/src/sidekick-modular-clean.user.js?v=20251101-4
 // @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/c65196b/src/sidekick-modular-clean.user.js?v=20251101-4
 // @connect      api.lzpt.io
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/core.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a4937bf/src/modules/ui.module.js?v=20251101-4
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@7166eec/src/modules/settings.module.js?v=20251031
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/core.module.js?v=20251101-5
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/ui.module.js?v=20251101-5
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/settings.module.js?v=20251101-5
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/content.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/global-functions.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/notepad.module.js?v=20251030
@@ -34,15 +34,19 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@552a4bb/src/modules/npc-attack-timer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@9385acc/src/modules/xanax-viewer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/todolist.module.js?v=20251030
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a4937bf/src/modules/event-ticker.module.js?v=20251101-4
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/event-ticker.module.js?v=20251101-5
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/attack-button-mover.module.js?v=20251101-5
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.9.3 - Event Ticker in top bar!');
-    console.log('📍 NEW: Event ticker seamlessly integrated into top bar between logo and clock');
-    console.log('👆 IMPROVED: Add button now fades in on hover and stays on top of all panels');
+    console.log('🚀 Sidekick Modular CDN v6.9.4 - Attack Button Mover + Ticker Refinements!');
+    console.log('⚔️ NEW: Attack Button Mover - Positions "Start Fight" over your weapon for faster attacks');
+    console.log('🎪 IMPROVED: Event ticker now closer to logo, static emoji removed');
+    console.log('⚙️ ADDED: Attack Button Mover toggle in General settings tab');
+    console.log('📍 Event ticker seamlessly integrated into top bar between logo and clock');
+    console.log('👆 Add button fades in on hover and stays on top of all panels');
     console.log('🎂 Birthday celebration shows your Torn account anniversary');
     console.log('🎪 Event Ticker: Shows live events, upcoming events, and your Torn birthday');
     console.log('🎨 Event Ticker: Horizontal scrolling ticker animation');
@@ -387,6 +391,17 @@
                     }, 2000);
                 } catch (error) {
                     console.error('❌ Training Blocker restoration failed:', error);
+                }
+            }
+            
+            // Initialize Attack Button Mover module
+            if (window.SidekickModules.AttackButtonMover?.init) {
+                console.log('⚔️ Initializing Attack Button Mover module...');
+                try {
+                    window.SidekickModules.AttackButtonMover.init();
+                    console.log('✅ Attack Button Mover initialized successfully');
+                } catch (error) {
+                    console.error('❌ Attack Button Mover init failed:', error);
                 }
             }
             
