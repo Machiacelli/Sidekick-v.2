@@ -227,9 +227,30 @@ MIT License - See [LICENSE.txt](LICENSE.txt) for details
 
 ## 📊 Version History
 
-Current Version: **5.44.0**
-- Latest Commit: `b72300b`
-- Last Updated: October 28, 2025
+Current Version: **6.9.5**
+- Latest Commit: `ea0778e`
+- Last Updated: November 1, 2025
+
+### v6.9.5 - Next Event Countdown + Synced Animation + Fast Attack (Nov 1, 2025)
+- ⏰ **NEW**: Live countdown to next Torn event with API integration
+  - Real-time countdown updates every second
+  - Fetches events from Torn API v2 (`/v2/torn/?selections=calendar`)
+  - 30-minute smart caching to reduce API calls
+  - Priority display: Live countdown > Active events > Upcoming events
+- 🔄 **NEW**: Event ticker animation synced across all tabs
+  - All tabs show same position in scrolling animation
+  - Uses time-based animation-delay calculation
+  - Seamless 20-second cycle
+- ⚡ **IMPROVED**: Renamed "Attack Button Mover" to "Fast Attack"
+  - Cleaner, shorter name in settings
+  - All UI and console logs updated
+- 📍 **IMPROVED**: Event ticker moved even closer to logo
+  - Changed from -30px to -60px margin
+  - Zero empty space between logo and ticker
+- ✨ **TECHNICAL**: Enhanced event ticker architecture
+  - New state management for API events
+  - Real-time countdown formatting (days + HH:MM:SS)
+  - Automatic refresh when events start
 
 For detailed changelog, see [GitHub Commits](https://github.com/Machiacelli/Sidekick-v.2/commits/master)
 
