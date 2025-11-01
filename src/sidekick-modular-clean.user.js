@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.2
-// @description  Event Ticker: Added Torn Birthday celebration - shows your account anniversary!
+// @version      6.9.3
+// @description  Event Ticker in top bar + Add button hover fade + z-index fix
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
