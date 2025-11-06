@@ -1125,16 +1125,25 @@
                             size: loadState('todo_panel_size', { width: 320, height: 400 }),
                             isPinned: loadState('todo_panel_pinned', false)
                         },
+                        timer: {
+                            isOpen: !!document.getElementById('sidekick-timer-panel'),
+                            position: loadState('timer_panel_position', { x: 60, y: 60 }),
+                            size: loadState('timer_panel_size', { width: 300, height: 200 })
+                        },
+                        stockTicker: {
+                            isOpen: !!document.getElementById('sidekick-stock-panel')
+                        },
+                        travelTracker: {
+                            isOpen: !!document.getElementById('sidekick-travel-tracker-panel')
+                        },
                         notepad: {
                             openPads: []
                         },
                         attackList: {
                             openLists: []
                         },
-                        timer: {
-                            isOpen: !!document.getElementById('sidekick-timer-panel'),
-                            position: loadState('timer_panel_position', { x: 60, y: 60 }),
-                            size: loadState('timer_panel_size', { width: 300, height: 200 })
+                        linkGroup: {
+                            openGroups: []
                         }
                     }
                 };
@@ -1171,6 +1180,20 @@
                     }
                 });
                 
+                // Save open link group IDs
+                document.querySelectorAll('[id^="sidekick-linkgroup-panel-"]').forEach(panel => {
+                    const linkGroupId = panel.id.replace('sidekick-linkgroup-panel-', '');
+                    if (linkGroupId) {
+                        pageStates[pageIndex].panels.linkGroup.openGroups.push({
+                            id: linkGroupId,
+                            position: {
+                                x: parseInt(panel.style.left) || 20,
+                                y: parseInt(panel.style.top) || 20
+                            }
+                        });
+                    }
+                });
+                
                 saveState(STORAGE_KEYS.PAGE_STATES, pageStates);
                 console.log('💾 Page state saved for page', pageIndex, ':', pageStates[pageIndex]);
             },
@@ -1188,6 +1211,21 @@
                     window.SidekickModules.Timer.hideTimerPanel();
                 }
                 
+                // Close Stock Ticker panels
+                if (window.SidekickModules?.StockTicker?.hide) {
+                    window.SidekickModules.StockTicker.hide();
+                }
+                
+                // Close Travel Tracker panels
+                if (window.SidekickModules?.TravelTracker?.deactivate) {
+                    window.SidekickModules.TravelTracker.deactivate();
+                }
+                
+                // Close Link Group panels - remove all link group panels
+                document.querySelectorAll('[id^="sidekick-linkgroup-panel-"]').forEach(panel => {
+                    panel.remove();
+                });
+                
                 // Close all notepad panels
                 document.querySelectorAll('.sidekick-notepad-panel').forEach(panel => {
                     panel.remove();
@@ -1196,6 +1234,16 @@
                 // Close all attack list panels
                 document.querySelectorAll('.sidekick-attacklist-panel').forEach(panel => {
                     panel.remove();
+                });
+                
+                // Generic cleanup: remove any panel that has class containing 'panel'
+                document.querySelectorAll('[class*="sidekick"][class*="panel"]').forEach(panel => {
+                    // Skip the main sidebar and content panels
+                    if (panel.id !== 'sidekick-sidebar' && 
+                        panel.id !== 'sidekick-content' && 
+                        !panel.closest('#sidekick-sidebar')) {
+                        panel.remove();
+                    }
                 });
                 
                 console.log('🧹 All panels cleared');
@@ -1227,6 +1275,18 @@
                         window.SidekickModules.Timer.showTimerPanel();
                     }
                     
+                    // Restore Stock Ticker panel
+                    if (panels.stockTicker?.isOpen && window.SidekickModules?.StockTicker) {
+                        console.log('📈 Restoring Stock Ticker panel...');
+                        window.SidekickModules.StockTicker.show();
+                    }
+                    
+                    // Restore Travel Tracker panel
+                    if (panels.travelTracker?.isOpen && window.SidekickModules?.TravelTracker) {
+                        console.log('✈️ Restoring Travel Tracker panel...');
+                        window.SidekickModules.TravelTracker.activate();
+                    }
+                    
                     // Restore Notepad panels
                     if (panels.notepad?.openPads && window.SidekickModules?.Notepad) {
                         panels.notepad.openPads.forEach(padData => {
@@ -1245,6 +1305,17 @@
                             // Note: Actual restoration depends on attack list module implementation
                             if (window.SidekickModules.AttackList.showListById) {
                                 window.SidekickModules.AttackList.showListById(listData.id, listData.position);
+                            }
+                        });
+                    }
+                    
+                    // Restore Link Group panels
+                    if (panels.linkGroup?.openGroups && window.SidekickModules?.LinkGroup) {
+                        panels.linkGroup.openGroups.forEach(groupData => {
+                            console.log('🔗 Restoring Link Group:', groupData.id);
+                            // Note: Actual restoration depends on link group module implementation
+                            if (window.SidekickModules.LinkGroup.showGroupById) {
+                                window.SidekickModules.LinkGroup.showGroupById(groupData.id, groupData.position);
                             }
                         });
                     }
