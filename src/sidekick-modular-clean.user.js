@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.26
-// @description  Fixed page system - Stock Ticker and Travel Tracker now persist across pages
+// @version      6.9.27
+// @description  Fixed page system - floating panels properly clear, sidebar buttons remain
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -10,13 +10,13 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/8f39a8a/src/sidekick-modular-clean.user.js?v=20251106-18
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/8f39a8a/src/sidekick-modular-clean.user.js?v=20251106-18
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/538be9a/src/sidekick-modular-clean.user.js?v=20251106-19
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/538be9a/src/sidekick-modular-clean.user.js?v=20251106-19
 // @connect      api.lzpt.io
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/core.module.js?v=20251101-5
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8f39a8a/src/modules/ui.module.js?v=20251106-18
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@ea0778e/src/modules/settings.module.js?v=20251101-6
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8f39a8a/src/modules/content.module.js?v=20251106-18
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@538be9a/src/modules/content.module.js?v=20251106-19
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/global-functions.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/notepad.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/linkgroup.module.js?v=20251030
@@ -41,14 +41,14 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.9.26 - Page System Fixes!');
-    console.log('✅ FIXED: Stock Ticker and Travel Tracker now persist across all pages');
+    console.log('🚀 Sidekick Modular CDN v6.9.27 - Critical Page System Fix!');
+    console.log('✅ FIXED: Floating panels (Stock Ticker, Travel Tracker, etc.) now properly clear when switching pages');
+    console.log('✅ FIXED: Sidebar buttons remain visible - only FLOATING panels are page-specific');
+    console.log('✅ FIXED: Page system correctly distinguishes between sidebar buttons and floating windows');
+    console.log('🔧 IMPROVED: Stock Ticker/Travel Tracker floating panels clear on page switch, sidebar icons persist');
+    console.log('⚠️ IMPORTANT: Clear browser cache (Ctrl+Shift+Delete) to load latest CDN modules');
     console.log('✅ FIXED: Deleting a page dot updates UI immediately (no refresh needed)');
     console.log('✅ FIXED: Page system only manages page-specific panels (TodoList, Timer, Notepads, etc.)');
-    console.log('� IMPROVED: Sidebar feature toggles (Stock Ticker, Travel Tracker) are independent of pages');
-    console.log('🗑️ IMPROVED: Page deletion properly reindexes page states and updates dots instantly');
-    console.log('🔒 FIXED: All panels now properly isolate per page (Stock Ticker, Travel Tracker, Link Groups)');
-    console.log('📄 FIXED: Each page now has completely independent panel visibility');
     console.log('🎨 IMPROVED: Logo clears hamburger menu at 50px margin');
     console.log('✈️ FIXED: Plane size and positioning - no more flash or misalignment');
     console.log('✅ FIXED: Event Ticker now scrolls smoothly without vanishing - continuous loop animation');
