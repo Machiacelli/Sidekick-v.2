@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.14
-// @description  Fixed Event Ticker visibility issue
+// @version      6.9.15
+// @description  Fixed Event Ticker smooth scrolling animation
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -34,14 +34,17 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@552a4bb/src/modules/npc-attack-timer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@9385acc/src/modules/xanax-viewer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/todolist.module.js?v=20251030
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a1b32e0/src/modules/event-ticker.module.js?v=20251106-2
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@25fc2c5/src/modules/event-ticker.module.js?v=20251106-3
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/attack-button-mover.module.js?v=20251101-5
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.9.14 - Event Ticker Now Visible!');
+    console.log('🚀 Sidekick Modular CDN v6.9.15 - Event Ticker Smooth Scrolling!');
+    console.log('✅ FIXED: Event Ticker now scrolls smoothly without vanishing - continuous loop animation');
+    console.log('✅ FIXED: Removed animation sync - ticker now always starts fresh on page load');
+    console.log('✅ IMPROVED: Ticker scrolls all the way to the left edge near Sidekick logo');
     console.log('✅ FIXED: Event Ticker now visible - removed conflicting padding that hid the ticker');
     console.log('✅ FIXED: Event Ticker API errors - Birthday and calendar now load correctly');
     console.log('✅ FIXED: Stock Ticker resize loop - Panel no longer grows out of control');
