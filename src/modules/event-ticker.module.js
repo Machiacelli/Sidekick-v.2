@@ -544,7 +544,6 @@
                 font-size: 11px;
                 white-space: nowrap;
                 display: inline-block;
-                padding-left: 100%;
                 animation-delay: ${animationDelay}s;
             `;
 
