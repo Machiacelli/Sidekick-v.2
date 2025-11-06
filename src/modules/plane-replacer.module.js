@@ -421,6 +421,9 @@
                         dimensions: `${img.offsetWidth}x${img.offsetHeight}`
                     });
 
+                    // IMMEDIATELY hide original to prevent flash
+                    img.style.opacity = '0';
+
                     // Detect travel direction
                     const isFromTorn = this.detectTravelDirection(originalSrc, originalAlt);
                     
@@ -435,14 +438,40 @@
                     img.dataset.originalSrc = originalSrc;
                     img.dataset.sidekickReplaced = 'true';
                     
-                    // DIRECTLY REPLACE the src attribute - simple and effective!
+                    // CRITICAL: Apply styling to match original plane dimensions and center it
+                    img.style.cssText = `
+                        opacity: 0;
+                        transition: opacity 0.3s ease-in;
+                        object-fit: contain;
+                        width: 100%;
+                        height: 100%;
+                        max-width: 400px;
+                        max-height: 200px;
+                        margin: 0 auto;
+                        display: block;
+                    `;
+                    
+                    // DIRECTLY REPLACE the src attribute
                     img.src = newSrc;
                     img.alt = isFromTorn ? 'Custom Sidekick Plane (Leaving Torn)' : 'Custom Sidekick Plane (Returning to Torn)';
                     
-                    console.log(`✅ Plane image replaced successfully! Direction: ${isFromTorn ? 'FROM Torn (→)' : 'TO Torn (←)'}`);
+                    // Fade in once loaded
+                    img.onload = () => {
+                        img.style.opacity = '1';
+                        console.log(`✅ Plane image replaced successfully! Direction: ${isFromTorn ? 'FROM Torn (→)' : 'TO Torn (←)'}`);
+                    };
+                    
+                    // Fallback in case onload doesn't fire
+                    setTimeout(() => {
+                        if (img.style.opacity === '0') {
+                            img.style.opacity = '1';
+                        }
+                    }, 500);
                     
                 } catch (error) {
                     console.error('❌ Error in direct plane replacement:', error);
+                    // Show original on error
+                    img.style.opacity = '1';
                 }
             },
 
