@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.13
-// @description  Fixed Event Ticker API errors and Stock Ticker resize loop
+// @version      6.9.14
+// @description  Fixed Event Ticker visibility issue
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -34,17 +34,17 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@552a4bb/src/modules/npc-attack-timer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@9385acc/src/modules/xanax-viewer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/todolist.module.js?v=20251030
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1b0f5a9/src/modules/event-ticker.module.js?v=20251106-1
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@a1b32e0/src/modules/event-ticker.module.js?v=20251106-2
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/attack-button-mover.module.js?v=20251101-5
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.9.13 - Event Ticker & Stock Ticker Fixes!');
+    console.log('🚀 Sidekick Modular CDN v6.9.14 - Event Ticker Now Visible!');
+    console.log('✅ FIXED: Event Ticker now visible - removed conflicting padding that hid the ticker');
     console.log('✅ FIXED: Event Ticker API errors - Birthday and calendar now load correctly');
     console.log('✅ FIXED: Stock Ticker resize loop - Panel no longer grows out of control');
-    console.log('🎬 FIXED: Ticker animation now ends at logo instead of scrolling too far left');
     console.log('⏰ FEATURE: Added personal event END time - filters out events that ended for you');
     console.log('🎃 FIXED: Events like Halloween won\'t show after YOUR personal event period ends');
     console.log('⏰ FEATURE: Event ticker now uses YOUR personal competition start time');
