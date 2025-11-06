@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.23
-// @description  Reduced event ticker gap - compact logo SVG
+// @version      6.9.24
+// @description  Fixed page system - pages now save properly
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -10,11 +10,11 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/eecc642/src/sidekick-modular-clean.user.js?v=20251106-15
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/eecc642/src/sidekick-modular-clean.user.js?v=20251106-15
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/8c1dd3a/src/sidekick-modular-clean.user.js?v=20251106-16
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/8c1dd3a/src/sidekick-modular-clean.user.js?v=20251106-16
 // @connect      api.lzpt.io
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/core.module.js?v=20251101-5
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@eecc642/src/modules/ui.module.js?v=20251106-15
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8c1dd3a/src/modules/ui.module.js?v=20251106-16
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@ea0778e/src/modules/settings.module.js?v=20251101-6
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/content.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/global-functions.module.js?v=20251029
@@ -41,10 +41,11 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.9.23 - Event Ticker Spacing Optimized!');
-    console.log('📍 FIXED: Reduced logo SVG width from 120px to 75px - eliminates wasted space');
-    console.log('📏 FIXED: Reduced ticker margin from 12px to 4px - ticker much closer to logo');
-    console.log('✨ IMPROVED: Event ticker now directly adjacent to logo with minimal gap');
+    console.log('🚀 Sidekick Modular CDN v6.9.24 - Page System Fixed!');
+    console.log('� FIXED: Pages now save properly - added missing centered-container class');
+    console.log('� FIXED: New pages now create correctly with the + button');
+    console.log('📄 FIXED: Page switching now works smoothly between pages');
+    console.log('✨ IMPROVED: Event ticker spacing - logo reduced to 75px, margin to 4px');
     console.log('🎨 IMPROVED: Logo clears hamburger menu at 50px margin');
     console.log('✈️ FIXED: Plane size and positioning - no more flash or misalignment');
     console.log('✅ FIXED: Event Ticker now scrolls smoothly without vanishing - continuous loop animation');
