@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sidekick Plane Replacer Module v2.0
 // @namespace    http://tampermonkey.net/
-// @version      2.0.0
+// @version      2.0.1
 // @description  Replaces the plane with custom overlay on Torn travel page + spinning propeller
 // @author       Machiacelli
 // @match        https://www.torn.com/page.php?sid=travel
@@ -25,7 +25,7 @@
     waitForCore(() => {
         const PlaneReplacerModule = {
             name: 'PlaneReplacer',
-            version: '2.0.0',
+            version: '2.0.1',
             isActive: false,
             customPlaneImage: null,
             
@@ -68,6 +68,9 @@
                     return false;
                 }
 
+                // Add CSS to hide original planes immediately (before JS runs)
+                this.addHidingCSS();
+
                 // Check if we're on the travel page
                 if (window.location.href.includes('/page.php?sid=travel')) {
                     this.activate();
@@ -75,6 +78,22 @@
 
                 console.log('✅ Plane Replacer v2.0 module initialized successfully (Overlay + Spinning Propeller)');
                 return true;
+            },
+
+            addHidingCSS() {
+                const style = document.createElement('style');
+                style.id = 'sidekick-plane-hider';
+                style.textContent = `
+                    /* Hide original plane images immediately to prevent flash */
+                    .planeImageKbn3b,
+                    img[src*="/images/v2/travel_agency/planes/"],
+                    img[src*="travel_agency/planes"] {
+                        opacity: 0 !important;
+                        transition: opacity 0.3s ease-in !important;
+                    }
+                `;
+                document.head.appendChild(style);
+                console.log('🎨 Added CSS to hide original planes immediately');
             },
 
             activate() {
@@ -421,9 +440,6 @@
                         dimensions: `${img.offsetWidth}x${img.offsetHeight}`
                     });
 
-                    // IMMEDIATELY hide original to prevent flash
-                    img.style.opacity = '0';
-
                     // Detect travel direction
                     const isFromTorn = this.detectTravelDirection(originalSrc, originalAlt);
                     
@@ -438,17 +454,13 @@
                     img.dataset.originalSrc = originalSrc;
                     img.dataset.sidekickReplaced = 'true';
                     
-                    // CRITICAL: Apply styling to match original plane dimensions and center it
+                    // CRITICAL: Apply minimal styling - preserve original layout, just hide/fade
                     img.style.cssText = `
-                        opacity: 0;
+                        opacity: 0 !important;
                         transition: opacity 0.3s ease-in;
                         object-fit: contain;
                         width: 100%;
-                        height: 100%;
-                        max-width: 400px;
-                        max-height: 200px;
-                        margin: 0 auto;
-                        display: block;
+                        height: auto;
                     `;
                     
                     // DIRECTLY REPLACE the src attribute
