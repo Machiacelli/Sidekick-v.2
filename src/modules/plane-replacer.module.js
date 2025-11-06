@@ -431,6 +431,10 @@
                     backgroundImg.parentNode.insertBefore(container, backgroundImg);
                     container.appendChild(backgroundImg);
 
+                    // Hide or dim the original background plane
+                    backgroundImg.style.opacity = '0.05';  // Make original nearly invisible
+                    backgroundImg.style.zIndex = '1';       // Ensure it's behind our plane
+                    
                     // Create our custom plane element
                     const customPlane = document.createElement('img');
                     customPlane.className = 'sidekick-custom-plane';
@@ -442,7 +446,7 @@
                         transform: ${this.config.planePosition.transform};
                         width: ${this.config.planeSize.width};
                         height: ${this.config.planeSize.height};
-                        z-index: 10;
+                        z-index: 999;
                         pointer-events: none;
                         background: transparent;
                         object-fit: contain;
