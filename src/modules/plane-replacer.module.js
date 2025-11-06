@@ -329,25 +329,51 @@
                 console.log('🔍 Image alt text:', originalAlt);
                 console.log('🔍 Image src:', originalSrc);
                 
-                // Check if URL contains specific travel parameters that indicate returning
+                // PRIORITY 1: Check the original plane image filename for direction indicators
+                // Torn uses different plane images based on direction
+                const lowerSrc = originalSrc.toLowerCase();
+                
+                // Check for "left" or "return" or "back" in filename (indicating returning to Torn)
+                if (lowerSrc.includes('left') || 
+                    lowerSrc.includes('return') || 
+                    lowerSrc.includes('back') || 
+                    lowerSrc.includes('_l.') || 
+                    lowerSrc.includes('-l.') ||
+                    lowerSrc.includes('_reverse') ||
+                    lowerSrc.includes('-reverse')) {
+                    isFromTorn = false;
+                    console.log('🏠 Detected via image filename (left/return): Returning TO Torn');
+                    return isFromTorn;
+                }
+                
+                // Check for "right" or "forward" or "departure" in filename (leaving Torn)
+                if (lowerSrc.includes('right') || 
+                    lowerSrc.includes('forward') || 
+                    lowerSrc.includes('depart') || 
+                    lowerSrc.includes('_r.') || 
+                    lowerSrc.includes('-r.')) {
+                    isFromTorn = true;
+                    console.log('✈️ Detected via image filename (right/depart): Leaving FROM Torn');
+                    return isFromTorn;
+                }
+                
+                // PRIORITY 2: Check URL parameters
                 if (currentUrl.includes('step=returning') || currentUrl.includes('step=return')) {
                     isFromTorn = false;
                     console.log('🏠 Detected via URL parameter: Returning TO Torn');
                     return isFromTorn;
                 }
                 
-                // Check for specific text indicators of returning to Torn in the page content
+                // PRIORITY 3: Check for specific text indicators in page content
                 const returnIndicators = [
                     'returning to torn',
                     'return to torn',
                     'back to torn', 
-                    'torn city',
                     'arriving in torn'
                 ];
                 
                 const lowerPageContent = pageContent.toLowerCase();
                 const lowerAlt = originalAlt.toLowerCase();
-                const lowerSrc = originalSrc.toLowerCase();
                 
                 for (const indicator of returnIndicators) {
                     if (lowerPageContent.includes(indicator) || 
@@ -359,7 +385,7 @@
                     }
                 }
                 
-                // Check for travel destination indicators - if destination is Torn, we're returning
+                // PRIORITY 4: Check for travel destination indicators
                 const travelDestinations = document.querySelectorAll('[class*="destination"], [class*="travel"]');
                 travelDestinations.forEach(element => {
                     const text = element.textContent.toLowerCase();
@@ -369,7 +395,7 @@
                     }
                 });
                 
-                // Check current location vs destination to determine direction
+                // PRIORITY 5: Check current location vs destination
                 const locationText = document.querySelector('[class*="location"]')?.textContent || '';
                 if (locationText && !locationText.toLowerCase().includes('torn')) {
                     // If current location is NOT Torn, and we're traveling, we must be returning
