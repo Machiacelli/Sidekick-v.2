@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.21
-// @description  Fixed event ticker spacing - closer to logo
+// @version      6.9.22
+// @description  Fixed logo position - clears hamburger menu
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -10,11 +10,11 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/e97ccef/src/sidekick-modular-clean.user.js?v=20251106-13
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/e97ccef/src/sidekick-modular-clean.user.js?v=20251106-13
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/1af6fb8/src/sidekick-modular-clean.user.js?v=20251106-14
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/1af6fb8/src/sidekick-modular-clean.user.js?v=20251106-14
 // @connect      api.lzpt.io
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/core.module.js?v=20251101-5
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@e97ccef/src/modules/ui.module.js?v=20251106-13
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1af6fb8/src/modules/ui.module.js?v=20251106-14
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@ea0778e/src/modules/settings.module.js?v=20251101-6
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/content.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/global-functions.module.js?v=20251029
@@ -41,11 +41,10 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.9.21 - Event Ticker Spacing Fixed!');
-    console.log('📍 FIXED: Event ticker now closer to logo - reduced empty space');
-    console.log('🎨 IMPROVED: Logo margin reduced from 50px to 8px for compact layout');
-    console.log('� IMPROVED: Ticker placeholder has controlled 12px margin from logo');
-    console.log('✨ IMPROVED: Ticker text left-aligned instead of centered');
+    console.log('🚀 Sidekick Modular CDN v6.9.22 - Logo Position Fixed!');
+    console.log('📍 FIXED: Logo restored to 50px margin - clears hamburger menu icon');
+    console.log('📏 IMPROVED: Event ticker maintains 12px spacing from logo');
+    console.log('✨ IMPROVED: Ticker scrolls properly with left-aligned text');
     console.log('✈️ FIXED: Plane size and positioning - no more flash or misalignment');
     console.log('✅ FIXED: Event Ticker now scrolls smoothly without vanishing - continuous loop animation');
     console.log('✅ FIXED: Removed animation sync - ticker now always starts fresh on page load');
