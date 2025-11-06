@@ -145,20 +145,16 @@
                     return;
                 }
 
-                console.log(`🎯 Found ${planeImages.length} plane background image(s) to enhance with directional detection`);
+                console.log(`🎯 Found ${planeImages.length} plane image(s) to replace directly`);
 
                 planeImages.forEach((img, index) => {
                     // Skip if already processed
-                    if (img.dataset.sidekickProcessed === 'true') {
+                    if (img.dataset.sidekickReplaced === 'true') {
                         return;
                     }
                     
-                    // Enhanced version with directional detection and seamless integration
-                    if (this.config.enableDirectionalDetection) {
-                        this.addDirectionalPlaneOverlay(img, index);
-                    } else {
-                        this.addPlaneOverlay(img, index);
-                    }
+                    // NEW APPROACH: Directly replace the image src instead of overlaying
+                    this.directlyReplacePlaneImage(img, index);
                 });
             },
 
@@ -413,111 +409,40 @@
                 return isFromTorn;
             },
 
-            addPlaneOverlay(backgroundImg, index) {
+            // NEW SIMPLE APPROACH: Directly replace the image src
+            directlyReplacePlaneImage(img, index) {
                 try {
-                    console.log(`✈️ Adding custom plane overlay to background image ${index + 1}:`, {
-                        src: backgroundImg.src,
-                        dimensions: `${backgroundImg.offsetWidth}x${backgroundImg.offsetHeight}`,
-                        classes: backgroundImg.className
+                    const originalSrc = img.src;
+                    const originalAlt = img.alt || '';
+                    
+                    console.log(`✈️ Direct replacement ${index + 1}:`, {
+                        originalSrc: originalSrc,
+                        alt: originalAlt,
+                        dimensions: `${img.offsetWidth}x${img.offsetHeight}`
                     });
 
-                    // Mark the background image as processed
-                    backgroundImg.dataset.sidekickProcessed = 'true';
-
-                    // REVERSE APPROACH: Just replace the src directly and keep Torn's positioning
-                    // Store original src for debugging
-                    const originalSrc = backgroundImg.src;
+                    // Detect travel direction
+                    const isFromTorn = this.detectTravelDirection(originalSrc, originalAlt);
                     
-                    // Get parent element's computed style to understand the layout
-                    const parent = backgroundImg.parentElement;
-                    const parentStyle = window.getComputedStyle(parent);
+                    // Select the correct replacement image
+                    const newSrc = isFromTorn 
+                        ? this.config.customPlaneUrls.fromTorn  // Leaving Torn (right-facing)
+                        : this.config.customPlaneUrls.toTorn;   // Returning to Torn (left-facing)
                     
-                    console.log('🔍 Parent element:', parent.tagName, parent.className);
-                    console.log('🔍 Parent position:', parentStyle.position);
-                    console.log('🔍 Parent z-index:', parentStyle.zIndex);
-                    console.log('🔍 Original image z-index:', window.getComputedStyle(backgroundImg).zIndex);
+                    console.log(`✈️ Replacing with: ${isFromTorn ? 'PlaneReplacerFromTorn.png (→)' : 'PlaneReplacerToTorn.png (←)'}`);
                     
-                    // Create our custom plane element (same approach as before)
-                    const customPlane = document.createElement('img');
-                    customPlane.className = 'sidekick-custom-plane';
-                    customPlane.alt = 'Custom Sidekick Plane';
+                    // Store original src in dataset before replacing
+                    img.dataset.originalSrc = originalSrc;
+                    img.dataset.sidekickReplaced = 'true';
                     
-                    // CRITICAL: Insert AFTER the original image in DOM, with higher z-index
-                    backgroundImg.parentNode.insertBefore(customPlane, backgroundImg.nextSibling);
+                    // DIRECTLY REPLACE the src attribute - simple and effective!
+                    img.src = newSrc;
+                    img.alt = isFromTorn ? 'Custom Sidekick Plane (Leaving Torn)' : 'Custom Sidekick Plane (Returning to Torn)';
                     
-                    // Copy ALL positioning from original image
-                    const imgStyle = window.getComputedStyle(backgroundImg);
-                    customPlane.style.cssText = `
-                        position: ${imgStyle.position};
-                        left: ${imgStyle.left};
-                        top: ${imgStyle.top};
-                        right: ${imgStyle.right};
-                        bottom: ${imgStyle.bottom};
-                        width: ${imgStyle.width};
-                        height: ${imgStyle.height};
-                        margin: ${imgStyle.margin};
-                        transform: ${imgStyle.transform};
-                        z-index: 999999 !important;
-                        pointer-events: none;
-                        background: transparent;
-                        object-fit: contain;
-                    `;
-                    
-                    // Hide original by making it invisible
-                    backgroundImg.style.visibility = 'hidden';
-
-                    // Set the custom plane image source
-                    customPlane.src = this.config.customPlaneUrl;
-                    
-                    // Add error handling
-                    customPlane.onerror = () => {
-                        console.warn('⚠️ Custom plane image failed to load, using fallback...');
-                        customPlane.src = this.config.fallbackPlaneUrl;
-                    };
-                    
-                    customPlane.onload = () => {
-                        console.log('✅ Custom plane overlay loaded successfully');
-                        
-                        // Apply white background removal for JPEG images
-                        if (this.config.removeWhiteBackground) {
-                            // Very strong filters to completely remove white background
-                            const filters = [
-                                'contrast(2.5)',           // Very high contrast
-                                'saturate(2.0)',          // Boost colors significantly
-                                'brightness(0.7)',        // Darken to remove white
-                                'hue-rotate(10deg)',      // Slight hue adjustment
-                                'drop-shadow(0 3px 8px rgba(0,0,0,0.6))'  // Strong shadow
-                            ];
-                            
-                            customPlane.style.filter = filters.join(' ');
-                            customPlane.style.mixBlendMode = 'multiply';  // Strong white removal
-                            customPlane.style.backgroundColor = 'transparent';
-                            
-                            // Additional CSS to ensure white pixels become transparent
-                            customPlane.style.isolation = 'isolate';
-                            
-                            console.log('🎨 Applied strong white background removal filters');
-                        }
-                        
-                        // Add spinning propeller animation if enabled
-                        if (this.config.enableSpinningPropeller) {
-                            this.addSpinningPropeller(customPlane);
-                        }
-                    };
-
-                    // Add data attributes for tracking
-                    customPlane.dataset.sidekickReplaced = 'true';
-                    customPlane.dataset.originalSrc = originalSrc;
-                    customPlane.dataset.overlayIndex = index;
-
-                    console.log(`✅ Successfully added custom plane overlay ${index + 1} using reverse method`);
-                    console.log(`🔍 Custom plane z-index: 999999, Original hidden with visibility`);
-                    
-                    // Store reference to custom plane
-                    this.customPlaneImage = customPlane;
+                    console.log(`✅ Plane image replaced successfully! Direction: ${isFromTorn ? 'FROM Torn (→)' : 'TO Torn (←)'}`);
                     
                 } catch (error) {
-                    console.error(`❌ Failed to add plane overlay ${index + 1}:`, error);
+                    console.error('❌ Error in direct plane replacement:', error);
                 }
             },
 
