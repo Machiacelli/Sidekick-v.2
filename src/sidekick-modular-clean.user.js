@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.15
-// @description  Fixed Event Ticker smooth scrolling animation
+// @version      6.9.16
+// @description  Fixed plane direction when returning to Torn
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -27,7 +27,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@affc546/src/modules/chain-timer.module.js?v=20250129
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/blocktraining.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@da90812/src/modules/plane-replacer.module.js?v=20251106-4
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@05edd8b/src/modules/traveltracker.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1b0f5a9/src/modules/stockticker.module.js?v=20251106-1
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@78a5175/src/modules/timeontab.module.js?v=20251030
@@ -41,7 +41,9 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.9.15 - Event Ticker Smooth Scrolling!');
+    console.log('🚀 Sidekick Modular CDN v6.9.16 - Plane Direction Fixed!');
+    console.log('✈️ FIXED: Plane now faces left (←) when returning TO Torn');
+    console.log('✈️ IMPROVED: Enhanced direction detection with multiple indicators');
     console.log('✅ FIXED: Event Ticker now scrolls smoothly without vanishing - continuous loop animation');
     console.log('✅ FIXED: Removed animation sync - ticker now always starts fresh on page load');
     console.log('✅ IMPROVED: Ticker scrolls all the way to the left edge near Sidekick logo');
