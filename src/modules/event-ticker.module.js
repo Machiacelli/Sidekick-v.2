@@ -200,7 +200,7 @@
             
             try {
                 console.log('🎂 Event Ticker: Fetching player birthday from Torn API...');
-                const apiKey = await this.core.getApiKey();
+                const apiKey = this.core.loadState(this.core.STORAGE_KEYS.API_KEY, '');
                 
                 if (!apiKey) {
                     console.log('⚠️ Event Ticker: No API key found, skipping birthday check');
@@ -247,7 +247,7 @@
                 }
                 
                 console.log('🔄 Event Ticker: Fetching Torn calendar from API...');
-                const apiKey = await this.core.getApiKey();
+                const apiKey = this.core.loadState(this.core.STORAGE_KEYS.API_KEY, '');
                 
                 if (!apiKey) {
                     console.log('⚠️ Event Ticker: No API key for calendar fetch');

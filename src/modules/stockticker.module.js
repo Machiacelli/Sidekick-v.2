@@ -609,31 +609,46 @@
                 // Add dragging functionality
                 this.addDragging(panel, header);
                 
-                // Add resize observer to save size with validation
+                // Add resize observer to save size with validation and debouncing
+                let resizeTimeout;
+                let isResizing = false;
+                
                 const resizeObserver = new ResizeObserver(() => {
-                    const width = panel.offsetWidth;
-                    const height = panel.offsetHeight;
+                    // Skip if we're programmatically resizing to prevent loops
+                    if (isResizing) return;
                     
-                    // Validate dimensions with both min and max limits
-                    const minWidth = 250;
-                    const minHeight = 150;
-                    const maxWidth = 500;
-                    const maxHeight = 700;
-                    
-                    const validWidth = Math.max(minWidth, Math.min(maxWidth, width));
-                    const validHeight = Math.max(minHeight, Math.min(maxHeight, height));
-                    
-                    // Only save if dimensions are valid
-                    if (validWidth === width && validHeight === height) {
-                        const size = { width, height };
-                        this.core.saveState('stockticker_size', size);
-                    } else {
-                        // Reset to valid size if invalid dimensions detected
-                        console.warn('⚠️ Stock Ticker: Size exceeded limits, resetting to valid dimensions');
-                        panel.style.width = validWidth + 'px';
-                        panel.style.height = validHeight + 'px';
-                        this.core.saveState('stockticker_size', { width: validWidth, height: validHeight });
-                    }
+                    clearTimeout(resizeTimeout);
+                    resizeTimeout = setTimeout(() => {
+                        const width = panel.offsetWidth;
+                        const height = panel.offsetHeight;
+                        
+                        // Validate dimensions with both min and max limits
+                        const minWidth = 250;
+                        const minHeight = 150;
+                        const maxWidth = 500;
+                        const maxHeight = 700;
+                        
+                        const validWidth = Math.max(minWidth, Math.min(maxWidth, width));
+                        const validHeight = Math.max(minHeight, Math.min(maxHeight, height));
+                        
+                        // Only save if dimensions are valid
+                        if (validWidth === width && validHeight === height) {
+                            const size = { width, height };
+                            this.core.saveState('stockticker_size', size);
+                        } else {
+                            // Reset to valid size if invalid dimensions detected
+                            console.warn('⚠️ Stock Ticker: Size exceeded limits, resetting to valid dimensions');
+                            isResizing = true;
+                            panel.style.width = validWidth + 'px';
+                            panel.style.height = validHeight + 'px';
+                            this.core.saveState('stockticker_size', { width: validWidth, height: validHeight });
+                            
+                            // Allow resize observer to work again after brief delay
+                            setTimeout(() => {
+                                isResizing = false;
+                            }, 100);
+                        }
+                    }, 150); // Debounce resize events by 150ms
                 });
                 resizeObserver.observe(panel);
 
