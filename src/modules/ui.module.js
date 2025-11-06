@@ -448,7 +448,7 @@
                 topBar.className = 'sidekick-topbar';
                 topBar.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0px 4px;">
-                        <div style="display: flex; align-items: center; margin-left: 8px;">
+                        <div style="display: flex; align-items: center; margin-left: 50px;">
                             <svg width="120" height="24" viewBox="0 0 120 24" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sidekick logo">
                               <defs>
                                 <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="0%">
