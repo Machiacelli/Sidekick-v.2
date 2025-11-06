@@ -496,7 +496,7 @@
                             transform: translateX(100%);
                         }
                         100% {
-                            transform: translateX(-10px);
+                            transform: translateX(-100%);
                         }
                     }
                     
@@ -506,13 +506,6 @@
                 `;
                 document.head.appendChild(style);
             }
-
-            // Calculate animation delay to sync across tabs
-            // Sync to the minute so all tabs start at the same point in the 20s cycle
-            const now = new Date();
-            const secondsIntoMinute = now.getSeconds() + (now.getMilliseconds() / 1000);
-            const cyclePosition = secondsIntoMinute % 20; // Position within 20s cycle
-            const animationDelay = -cyclePosition; // Negative delay to sync
 
             // Create seamless ticker container (no borders, background matches topbar)
             const ticker = document.createElement('div');
@@ -544,7 +537,6 @@
                 font-size: 11px;
                 white-space: nowrap;
                 display: inline-block;
-                animation-delay: ${animationDelay}s;
             `;
 
             scrollWrapper.appendChild(textContainer);
