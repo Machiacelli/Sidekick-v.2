@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.18
-// @description  Direct plane image replacement - no overlay complexity
+// @version      6.9.19
+// @description  Fixed plane flash and sizing - smoother replacement
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -27,7 +27,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@affc546/src/modules/chain-timer.module.js?v=20250129
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/blocktraining.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@04c4282/src/modules/plane-replacer.module.js?v=20251106-10
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@585f71c/src/modules/plane-replacer.module.js?v=20251106-11
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@05edd8b/src/modules/traveltracker.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1b0f5a9/src/modules/stockticker.module.js?v=20251106-1
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@78a5175/src/modules/timeontab.module.js?v=20251030
@@ -41,10 +41,11 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.9.18 - Direct Plane Image Replacement!');
-    console.log('✈️ NEW APPROACH: Directly replaces the image src instead of overlaying');
-    console.log('✨ SIMPLER: No z-index or layering complexity - just swap the image');
-    console.log('🎯 CLEAN: Uses Torn\'s original positioning and styling');
+    console.log('🚀 Sidekick Modular CDN v6.9.19 - Smooth Plane Replacement!');
+    console.log('✈️ FIXED: No more flash of original plane - hides immediately');
+    console.log('📏 FIXED: Plane size constrained to 400x200px max - better fit');
+    console.log('📍 FIXED: Plane centered with auto margins - proper positioning');
+    console.log('✨ SMOOTH: Fade-in transition when custom plane loads');
     console.log('✅ FIXED: Event Ticker now scrolls smoothly without vanishing - continuous loop animation');
     console.log('✅ FIXED: Removed animation sync - ticker now always starts fresh on page load');
     console.log('✅ IMPROVED: Ticker scrolls all the way to the left edge near Sidekick logo');
