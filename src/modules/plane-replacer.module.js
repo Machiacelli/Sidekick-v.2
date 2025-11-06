@@ -420,20 +420,27 @@
 
                     // Create a container to hold both the background and our custom plane
                     const container = document.createElement('div');
+                    container.className = 'sidekick-plane-container';
                     container.style.cssText = `
                         position: relative;
                         display: inline-block;
                         width: ${backgroundImg.offsetWidth}px;
                         height: ${backgroundImg.offsetHeight}px;
+                        z-index: 1000;
                     `;
 
                     // Wrap the original background image
                     backgroundImg.parentNode.insertBefore(container, backgroundImg);
                     container.appendChild(backgroundImg);
 
-                    // Hide or dim the original background plane
-                    backgroundImg.style.opacity = '0.05';  // Make original nearly invisible
-                    backgroundImg.style.zIndex = '1';       // Ensure it's behind our plane
+                    // Hide the original background plane completely
+                    backgroundImg.style.cssText = `
+                        position: relative;
+                        width: 100%;
+                        height: 100%;
+                        opacity: 0;
+                        z-index: 1;
+                    `;
                     
                     // Create our custom plane element
                     const customPlane = document.createElement('img');
