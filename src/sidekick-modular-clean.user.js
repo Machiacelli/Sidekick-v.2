@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.12
-// @description  Debug: Added extensive logging to diagnose event ticker display issues
+// @version      6.9.13
+// @description  Fixed Event Ticker API errors and Stock Ticker resize loop
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -29,21 +29,21 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@05edd8b/src/modules/traveltracker.module.js?v=20251030
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3d0e606/src/modules/stockticker.module.js?v=20251101-9
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1b0f5a9/src/modules/stockticker.module.js?v=20251106-1
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@78a5175/src/modules/timeontab.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@552a4bb/src/modules/npc-attack-timer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@9385acc/src/modules/xanax-viewer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/todolist.module.js?v=20251030
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@81e9efc/src/modules/event-ticker.module.js?v=20251101-13
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1b0f5a9/src/modules/event-ticker.module.js?v=20251106-1
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/attack-button-mover.module.js?v=20251101-5
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.9.12 - Event Ticker Debug Version!');
-    console.log('🐛 DEBUG: Added extensive logging to diagnose ticker display issues');
-    console.log('🔍 FEATURE: Enhanced error reporting in ticker creation and update');
+    console.log('🚀 Sidekick Modular CDN v6.9.13 - Event Ticker & Stock Ticker Fixes!');
+    console.log('✅ FIXED: Event Ticker API errors - Birthday and calendar now load correctly');
+    console.log('✅ FIXED: Stock Ticker resize loop - Panel no longer grows out of control');
     console.log('🎬 FIXED: Ticker animation now ends at logo instead of scrolling too far left');
     console.log('⏰ FEATURE: Added personal event END time - filters out events that ended for you');
     console.log('🎃 FIXED: Events like Halloween won\'t show after YOUR personal event period ends');
