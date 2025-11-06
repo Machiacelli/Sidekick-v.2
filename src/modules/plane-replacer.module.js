@@ -252,14 +252,15 @@
                     }
 
                     // Use appropriate image based on travel direction
+                    // NOTE: Images were swapped - FromTorn shows plane facing left, ToTorn shows plane facing right
                     if (isFromTorn) {
-                        // Traveling FROM Torn to another country
-                        customPlane.src = this.config.customPlaneUrls.fromTorn;
-                        console.log('✈️ Using PlaneReplacerFromTorn.png (leaving Torn)');
-                    } else {
-                        // Traveling TO Torn (returning home)
+                        // Traveling FROM Torn to another country (plane should face RIGHT →)
                         customPlane.src = this.config.customPlaneUrls.toTorn;
-                        console.log('🏠 Using PlaneReplacerToTorn.png (returning to Torn)');
+                        console.log('✈️ Using PlaneReplacerToTorn.png (leaving Torn - facing right)');
+                    } else {
+                        // Traveling TO Torn (returning home, plane should face LEFT ←)
+                        customPlane.src = this.config.customPlaneUrls.fromTorn;
+                        console.log('🏠 Using PlaneReplacerFromTorn.png (returning to Torn - facing left)');
                     }
                     
                     // Add error handling with fallback
@@ -324,43 +325,59 @@
                 let isFromTorn = true; // Default to leaving Torn
                 
                 console.log('🔍 Detecting travel direction...');
+                console.log('🔍 Current URL:', currentUrl);
+                console.log('🔍 Image alt text:', originalAlt);
+                console.log('🔍 Image src:', originalSrc);
                 
-                // Smart detection of travel direction based on multiple indicators
-                if (currentUrl.includes('travel.php') || currentUrl.includes('city.php')) {
-                    // Check for specific text indicators of returning to Torn
-                    const returnIndicators = [
-                        'Return to Torn',
-                        'Back to Torn', 
-                        'Torn City',
-                        'return',
-                        'back',
-                        'home'
-                    ];
-                    
-                    const hasReturnIndicator = returnIndicators.some(indicator => 
-                        pageContent.toLowerCase().includes(indicator.toLowerCase()) ||
-                        originalAlt.toLowerCase().includes(indicator.toLowerCase()) ||
-                        originalSrc.toLowerCase().includes(indicator.toLowerCase())
-                    );
-                    
-                    if (hasReturnIndicator) {
-                        isFromTorn = false; // Returning to Torn
-                        console.log('🏠 Detected: Returning TO Torn');
-                    } else {
-                        console.log('✈️ Detected: Traveling FROM Torn');
+                // Check if URL contains specific travel parameters that indicate returning
+                if (currentUrl.includes('step=returning') || currentUrl.includes('step=return')) {
+                    isFromTorn = false;
+                    console.log('🏠 Detected via URL parameter: Returning TO Torn');
+                    return isFromTorn;
+                }
+                
+                // Check for specific text indicators of returning to Torn in the page content
+                const returnIndicators = [
+                    'returning to torn',
+                    'return to torn',
+                    'back to torn', 
+                    'torn city',
+                    'arriving in torn'
+                ];
+                
+                const lowerPageContent = pageContent.toLowerCase();
+                const lowerAlt = originalAlt.toLowerCase();
+                const lowerSrc = originalSrc.toLowerCase();
+                
+                for (const indicator of returnIndicators) {
+                    if (lowerPageContent.includes(indicator) || 
+                        lowerAlt.includes(indicator) || 
+                        lowerSrc.includes(indicator)) {
+                        isFromTorn = false;
+                        console.log(`🏠 Detected via text "${indicator}": Returning TO Torn`);
+                        return isFromTorn;
                     }
                 }
                 
-                // Additional detection based on page elements
-                const returnLinks = document.querySelectorAll('a[href*="travel"], a[href*="city"]');
-                returnLinks.forEach(link => {
-                    const linkText = link.textContent.toLowerCase();
-                    if (linkText.includes('torn') || linkText.includes('home')) {
+                // Check for travel destination indicators - if destination is Torn, we're returning
+                const travelDestinations = document.querySelectorAll('[class*="destination"], [class*="travel"]');
+                travelDestinations.forEach(element => {
+                    const text = element.textContent.toLowerCase();
+                    if (text.includes('torn') && (text.includes('destination') || text.includes('arriving'))) {
                         isFromTorn = false;
+                        console.log('🏠 Detected via destination element: Returning TO Torn');
                     }
                 });
-
-                console.log(`🧭 Travel direction determined: ${isFromTorn ? 'FROM Torn' : 'TO Torn'}`);
+                
+                // Check current location vs destination to determine direction
+                const locationText = document.querySelector('[class*="location"]')?.textContent || '';
+                if (locationText && !locationText.toLowerCase().includes('torn')) {
+                    // If current location is NOT Torn, and we're traveling, we must be returning
+                    isFromTorn = false;
+                    console.log('🏠 Detected via location: Currently abroad, returning TO Torn');
+                }
+                
+                console.log(`🧭 Travel direction determined: ${isFromTorn ? 'FROM Torn (→)' : 'TO Torn (←)'}`);
                 return isFromTorn;
             },
 
