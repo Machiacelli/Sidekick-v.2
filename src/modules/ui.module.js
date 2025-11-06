@@ -640,6 +640,7 @@
                 
                 // 2. Centered page dots and add page button
                 const centeredContainer = document.createElement('div');
+                centeredContainer.className = 'centered-container';
                 centeredContainer.style.cssText = `
                     display: flex !important;
                     align-items: center !important;
