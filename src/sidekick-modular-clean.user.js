@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.20
-// @description  Fixed plane size and position - CSS prevents flash
+// @version      6.9.21
+// @description  Fixed event ticker spacing - closer to logo
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -10,11 +10,11 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/62f7359/src/sidekick-modular-clean.user.js?v=20251101-12
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/62f7359/src/sidekick-modular-clean.user.js?v=20251101-12
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/e97ccef/src/sidekick-modular-clean.user.js?v=20251106-13
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/e97ccef/src/sidekick-modular-clean.user.js?v=20251106-13
 // @connect      api.lzpt.io
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/core.module.js?v=20251101-5
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/ui.module.js?v=20251101-5
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@e97ccef/src/modules/ui.module.js?v=20251106-13
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@ea0778e/src/modules/settings.module.js?v=20251101-6
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/content.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/global-functions.module.js?v=20251029
@@ -34,18 +34,19 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@552a4bb/src/modules/npc-attack-timer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@9385acc/src/modules/xanax-viewer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/todolist.module.js?v=20251030
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@25fc2c5/src/modules/event-ticker.module.js?v=20251106-3
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@e97ccef/src/modules/event-ticker.module.js?v=20251106-13
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/attack-button-mover.module.js?v=20251101-5
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.9.19 - Smooth Plane Replacement!');
-    console.log('✈️ FIXED: No more flash of original plane - hides immediately');
-    console.log('📏 FIXED: Plane size constrained to 400x200px max - better fit');
-    console.log('📍 FIXED: Plane centered with auto margins - proper positioning');
-    console.log('✨ SMOOTH: Fade-in transition when custom plane loads');
+    console.log('🚀 Sidekick Modular CDN v6.9.21 - Event Ticker Spacing Fixed!');
+    console.log('📍 FIXED: Event ticker now closer to logo - reduced empty space');
+    console.log('🎨 IMPROVED: Logo margin reduced from 50px to 8px for compact layout');
+    console.log('� IMPROVED: Ticker placeholder has controlled 12px margin from logo');
+    console.log('✨ IMPROVED: Ticker text left-aligned instead of centered');
+    console.log('✈️ FIXED: Plane size and positioning - no more flash or misalignment');
     console.log('✅ FIXED: Event Ticker now scrolls smoothly without vanishing - continuous loop animation');
     console.log('✅ FIXED: Removed animation sync - ticker now always starts fresh on page load');
     console.log('✅ IMPROVED: Ticker scrolls all the way to the left edge near Sidekick logo');
