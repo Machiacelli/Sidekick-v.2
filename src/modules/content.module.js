@@ -1117,6 +1117,8 @@
                 const pageStates = loadState(STORAGE_KEYS.PAGE_STATES, {});
                 
                 // Save panel states for current page
+                // NOTE: Only save FLOATING panels that are page-specific
+                // Do NOT save sidebar feature toggles like Stock Ticker or Travel Tracker
                 pageStates[pageIndex] = {
                     panels: {
                         todoList: {
@@ -1129,12 +1131,6 @@
                             isOpen: !!document.getElementById('sidekick-timer-panel'),
                             position: loadState('timer_panel_position', { x: 60, y: 60 }),
                             size: loadState('timer_panel_size', { width: 300, height: 200 })
-                        },
-                        stockTicker: {
-                            isOpen: !!document.getElementById('sidekick-stock-panel')
-                        },
-                        travelTracker: {
-                            isOpen: !!document.getElementById('sidekick-travel-tracker-panel')
                         },
                         notepad: {
                             openPads: []
@@ -1201,6 +1197,9 @@
             clearAllPanels() {
                 console.log('🧹 Clearing all panels...');
                 
+                // ONLY clear page-specific floating panels
+                // Do NOT touch sidebar feature toggles (Stock Ticker, Travel Tracker, etc.)
+                
                 // Close TodoList panels
                 if (window.SidekickModules?.TodoList?.hideTodoPanel) {
                     window.SidekickModules.TodoList.hideTodoPanel();
@@ -1209,16 +1208,6 @@
                 // Close Timer panels
                 if (window.SidekickModules?.Timer?.hideTimerPanel) {
                     window.SidekickModules.Timer.hideTimerPanel();
-                }
-                
-                // Close Stock Ticker panels
-                if (window.SidekickModules?.StockTicker?.hide) {
-                    window.SidekickModules.StockTicker.hide();
-                }
-                
-                // Close Travel Tracker panels
-                if (window.SidekickModules?.TravelTracker?.deactivate) {
-                    window.SidekickModules.TravelTracker.deactivate();
                 }
                 
                 // Close Link Group panels - remove all link group panels
@@ -1236,17 +1225,7 @@
                     panel.remove();
                 });
                 
-                // Generic cleanup: remove any panel that has class containing 'panel'
-                document.querySelectorAll('[class*="sidekick"][class*="panel"]').forEach(panel => {
-                    // Skip the main sidebar and content panels
-                    if (panel.id !== 'sidekick-sidebar' && 
-                        panel.id !== 'sidekick-content' && 
-                        !panel.closest('#sidekick-sidebar')) {
-                        panel.remove();
-                    }
-                });
-                
-                console.log('🧹 All panels cleared');
+                console.log('🧹 Page-specific panels cleared (Stock Ticker and Travel Tracker remain unaffected)');
             },
 
             restorePageState(pageIndex) {
@@ -1275,17 +1254,8 @@
                         window.SidekickModules.Timer.showTimerPanel();
                     }
                     
-                    // Restore Stock Ticker panel
-                    if (panels.stockTicker?.isOpen && window.SidekickModules?.StockTicker) {
-                        console.log('📈 Restoring Stock Ticker panel...');
-                        window.SidekickModules.StockTicker.show();
-                    }
-                    
-                    // Restore Travel Tracker panel
-                    if (panels.travelTracker?.isOpen && window.SidekickModules?.TravelTracker) {
-                        console.log('✈️ Restoring Travel Tracker panel...');
-                        window.SidekickModules.TravelTracker.activate();
-                    }
+                    // NOTE: Stock Ticker and Travel Tracker are NOT restored here
+                    // They are sidebar feature toggles, not page-specific panels
                     
                     // Restore Notepad panels
                     if (panels.notepad?.openPads && window.SidekickModules?.Notepad) {

@@ -920,6 +920,22 @@
                 // Remove the page
                 pages.splice(pageIndex, 1);
                 
+                // Remove page state for deleted page
+                const pageStates = loadState(STORAGE_KEYS.PAGE_STATES, {});
+                delete pageStates[pageIndex];
+                
+                // Reindex page states (shift down all pages after deleted one)
+                const newPageStates = {};
+                Object.keys(pageStates).forEach(key => {
+                    const index = parseInt(key);
+                    if (index < pageIndex) {
+                        newPageStates[index] = pageStates[index];
+                    } else if (index > pageIndex) {
+                        newPageStates[index - 1] = pageStates[index];
+                    }
+                });
+                saveState(STORAGE_KEYS.PAGE_STATES, newPageStates);
+                
                 // Adjust current page if necessary
                 let newCurrentPage = currentPage;
                 if (pageIndex <= currentPage) {
@@ -933,9 +949,17 @@
                 saveState(STORAGE_KEYS.SIDEBAR_PAGES, pages);
                 saveState(STORAGE_KEYS.CURRENT_PAGE, newCurrentPage);
                 
-                // Refresh the sidebar
-                if (window.SidekickModules?.Content?.refreshSidebarContent) {
-                    window.SidekickModules.Content.refreshSidebarContent();
+                // Update page dots immediately - no refresh needed
+                this.updatePageDots();
+                
+                // If we deleted the current page or a page before current, switch to the adjusted page
+                if (pageIndex <= currentPage && window.SidekickModules?.Content?.switchToPage) {
+                    window.SidekickModules.Content.switchToPage(newCurrentPage);
+                } else {
+                    // Just refresh sidebar content if we deleted a different page
+                    if (window.SidekickModules?.Content?.refreshSidebarContent) {
+                        window.SidekickModules.Content.refreshSidebarContent();
+                    }
                 }
                 
                 NotificationSystem.show('Success', `Page ${pageIndex + 1} removed`, 'info');
