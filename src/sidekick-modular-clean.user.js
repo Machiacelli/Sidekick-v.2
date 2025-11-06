@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.19
-// @description  Fixed plane flash and sizing - smoother replacement
+// @version      6.9.20
+// @description  Fixed plane size and position - CSS prevents flash
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -10,8 +10,8 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/d2a0083/src/sidekick-modular-clean.user.js?v=20251101-11
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/d2a0083/src/sidekick-modular-clean.user.js?v=20251101-11
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/62f7359/src/sidekick-modular-clean.user.js?v=20251101-12
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/62f7359/src/sidekick-modular-clean.user.js?v=20251101-12
 // @connect      api.lzpt.io
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/core.module.js?v=20251101-5
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/ui.module.js?v=20251101-5
@@ -27,7 +27,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@affc546/src/modules/chain-timer.module.js?v=20250129
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/blocktraining.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@585f71c/src/modules/plane-replacer.module.js?v=20251106-11
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@62f7359/src/modules/plane-replacer.module.js?v=20251106-12
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@05edd8b/src/modules/traveltracker.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1b0f5a9/src/modules/stockticker.module.js?v=20251106-1
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@78a5175/src/modules/timeontab.module.js?v=20251030
