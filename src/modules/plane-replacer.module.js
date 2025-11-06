@@ -333,27 +333,33 @@
                 // Torn uses different plane images based on direction
                 const lowerSrc = originalSrc.toLowerCase();
                 
-                // Check for "left" or "return" or "back" in filename (indicating returning to Torn)
-                if (lowerSrc.includes('left') || 
+                // CRITICAL FIX: Torn's naming convention:
+                // "plane-airstrip-from.png" = coming FROM airstrip (returning TO Torn) ← LEFT
+                // "plane-airstrip-to.png" = going TO airstrip (leaving FROM Torn) → RIGHT
+                
+                // Check for "from" in filename (plane coming FROM airstrip = returning TO Torn)
+                if (lowerSrc.includes('from') ||
+                    lowerSrc.includes('left') || 
                     lowerSrc.includes('return') || 
                     lowerSrc.includes('back') || 
                     lowerSrc.includes('_l.') || 
                     lowerSrc.includes('-l.') ||
                     lowerSrc.includes('_reverse') ||
                     lowerSrc.includes('-reverse')) {
-                    isFromTorn = false;
-                    console.log('🏠 Detected via image filename (left/return): Returning TO Torn');
+                    isFromTorn = false; // Returning TO Torn (left-facing)
+                    console.log('🏠 Detected via filename "from": Plane coming FROM airstrip → Returning TO Torn (←)');
                     return isFromTorn;
                 }
                 
-                // Check for "right" or "forward" or "departure" in filename (leaving Torn)
-                if (lowerSrc.includes('right') || 
+                // Check for "to" in filename (plane going TO airstrip = leaving FROM Torn)
+                if (lowerSrc.includes('to') ||
+                    lowerSrc.includes('right') || 
                     lowerSrc.includes('forward') || 
                     lowerSrc.includes('depart') || 
                     lowerSrc.includes('_r.') || 
                     lowerSrc.includes('-r.')) {
-                    isFromTorn = true;
-                    console.log('✈️ Detected via image filename (right/depart): Leaving FROM Torn');
+                    isFromTorn = true; // Leaving FROM Torn (right-facing)
+                    console.log('✈️ Detected via filename "to": Plane going TO airstrip → Leaving FROM Torn (→)');
                     return isFromTorn;
                 }
                 
