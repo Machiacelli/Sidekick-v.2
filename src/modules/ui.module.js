@@ -448,7 +448,7 @@
                 topBar.className = 'sidekick-topbar';
                 topBar.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0px 4px;">
-                        <div style="display: flex; align-items: center; margin-left: 50px;">
+                        <div style="display: flex; align-items: center; margin-left: 8px;">
                             <svg width="120" height="24" viewBox="0 0 120 24" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sidekick logo">
                               <defs>
                                 <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -461,7 +461,7 @@
                               </text>
                             </svg>
                         </div>
-                        <div id="sidekick-ticker-placeholder" style="flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0; overflow: hidden;"></div>
+                        <div id="sidekick-ticker-placeholder" style="flex: 1; display: flex; align-items: center; justify-content: flex-start; min-width: 0; overflow: hidden; margin-left: 12px;"></div>
                         <div style="display: flex; gap: 6px; align-items: center; margin-right: 2px;">
                             <div id="sidekick-custom-clock" style="font-family: monospace; font-size: 12px; text-align: center; line-height: 1.1; cursor: pointer; min-width: 70px;" title="Click to toggle points pricing">
                                 <div id="sidekick-clock-time">--:--:--</div>

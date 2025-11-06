@@ -517,7 +517,6 @@
                 overflow: hidden;
                 position: relative;
                 min-height: 20px;
-                padding-left: 8px;
             `;
 
             // Scrolling wrapper for overflow control (no icon, just text)
