@@ -418,46 +418,47 @@
                     // Mark the background image as processed
                     backgroundImg.dataset.sidekickProcessed = 'true';
 
-                    // Create a container to hold both the background and our custom plane
-                    const container = document.createElement('div');
-                    container.className = 'sidekick-plane-container';
-                    container.style.cssText = `
-                        position: relative;
-                        display: inline-block;
-                        width: ${backgroundImg.offsetWidth}px;
-                        height: ${backgroundImg.offsetHeight}px;
-                        z-index: 1000;
-                    `;
-
-                    // Wrap the original background image
-                    backgroundImg.parentNode.insertBefore(container, backgroundImg);
-                    container.appendChild(backgroundImg);
-
-                    // Hide the original background plane completely
-                    backgroundImg.style.cssText = `
-                        position: relative;
-                        width: 100%;
-                        height: 100%;
-                        opacity: 0;
-                        z-index: 1;
-                    `;
+                    // REVERSE APPROACH: Just replace the src directly and keep Torn's positioning
+                    // Store original src for debugging
+                    const originalSrc = backgroundImg.src;
                     
-                    // Create our custom plane element
+                    // Get parent element's computed style to understand the layout
+                    const parent = backgroundImg.parentElement;
+                    const parentStyle = window.getComputedStyle(parent);
+                    
+                    console.log('🔍 Parent element:', parent.tagName, parent.className);
+                    console.log('🔍 Parent position:', parentStyle.position);
+                    console.log('🔍 Parent z-index:', parentStyle.zIndex);
+                    console.log('🔍 Original image z-index:', window.getComputedStyle(backgroundImg).zIndex);
+                    
+                    // Create our custom plane element (same approach as before)
                     const customPlane = document.createElement('img');
                     customPlane.className = 'sidekick-custom-plane';
                     customPlane.alt = 'Custom Sidekick Plane';
+                    
+                    // CRITICAL: Insert AFTER the original image in DOM, with higher z-index
+                    backgroundImg.parentNode.insertBefore(customPlane, backgroundImg.nextSibling);
+                    
+                    // Copy ALL positioning from original image
+                    const imgStyle = window.getComputedStyle(backgroundImg);
                     customPlane.style.cssText = `
-                        position: absolute;
-                        left: ${this.config.planePosition.left};
-                        top: ${this.config.planePosition.top};
-                        transform: ${this.config.planePosition.transform};
-                        width: ${this.config.planeSize.width};
-                        height: ${this.config.planeSize.height};
-                        z-index: 999;
+                        position: ${imgStyle.position};
+                        left: ${imgStyle.left};
+                        top: ${imgStyle.top};
+                        right: ${imgStyle.right};
+                        bottom: ${imgStyle.bottom};
+                        width: ${imgStyle.width};
+                        height: ${imgStyle.height};
+                        margin: ${imgStyle.margin};
+                        transform: ${imgStyle.transform};
+                        z-index: 999999 !important;
                         pointer-events: none;
                         background: transparent;
                         object-fit: contain;
                     `;
+                    
+                    // Hide original by making it invisible
+                    backgroundImg.style.visibility = 'hidden';
 
                     // Set the custom plane image source
                     customPlane.src = this.config.customPlaneUrl;
@@ -500,13 +501,11 @@
 
                     // Add data attributes for tracking
                     customPlane.dataset.sidekickReplaced = 'true';
-                    customPlane.dataset.originalSrc = backgroundImg.src;
+                    customPlane.dataset.originalSrc = originalSrc;
                     customPlane.dataset.overlayIndex = index;
 
-                    // Add the custom plane to the container
-                    container.appendChild(customPlane);
-                    
-                    console.log(`✅ Successfully added custom plane overlay ${index + 1}`);
+                    console.log(`✅ Successfully added custom plane overlay ${index + 1} using reverse method`);
+                    console.log(`🔍 Custom plane z-index: 999999, Original hidden with visibility`);
                     
                     // Store reference to custom plane
                     this.customPlaneImage = customPlane;
