@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      6.9.27
-// @description  Fixed page system - floating panels properly clear, sidebar buttons remain
+// @version      6.9.28
+// @description  Fixed Stock Ticker resize bug + page system now saves/restores panel positions and sizes
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
@@ -10,13 +10,13 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/01f6e5e/src/sidekick-modular-clean.user.js?v=20251106-20
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/01f6e5e/src/sidekick-modular-clean.user.js?v=20251106-20
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/91ab02a/src/sidekick-modular-clean.user.js?v=20251106-21
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/91ab02a/src/sidekick-modular-clean.user.js?v=20251106-21
 // @connect      api.lzpt.io
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/core.module.js?v=20251101-5
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8f39a8a/src/modules/ui.module.js?v=20251106-18
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@ea0778e/src/modules/settings.module.js?v=20251101-6
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@538be9a/src/modules/content.module.js?v=20251106-19
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@91ab02a/src/modules/content.module.js?v=20251106-21
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/global-functions.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/notepad.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/linkgroup.module.js?v=20251030
@@ -29,7 +29,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@62f7359/src/modules/plane-replacer.module.js?v=20251106-12
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@05edd8b/src/modules/traveltracker.module.js?v=20251030
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1b0f5a9/src/modules/stockticker.module.js?v=20251106-1
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@91ab02a/src/modules/stockticker.module.js?v=20251106-21
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@78a5175/src/modules/timeontab.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@552a4bb/src/modules/npc-attack-timer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@9385acc/src/modules/xanax-viewer.module.js?v=20251030
@@ -41,12 +41,16 @@
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v6.9.27 - Critical Page System Fix!');
+    console.log('🚀 Sidekick Modular CDN v6.9.28 - Stock Ticker + Page System Fixes!');
+    console.log('✅ FIXED: Stock Ticker resize loop bug - improved debouncing and flag management');
+    console.log('✅ FIXED: Page system now saves/restores exact panel positions and sizes per page');
+    console.log('✅ FIXED: Each page maintains independent window layouts with size/position memory');
+    console.log('🔧 IMPROVED: Stock Ticker resize observer now prevents infinite loops');
+    console.log('🔧 IMPROVED: Page system captures actual panel dimensions when saving state');
+    console.log('⚠️ IMPORTANT: Clear browser cache (Ctrl+Shift+Delete) to load latest CDN modules');
     console.log('✅ FIXED: Floating panels (Stock Ticker, Travel Tracker, etc.) now properly clear when switching pages');
     console.log('✅ FIXED: Sidebar buttons remain visible - only FLOATING panels are page-specific');
     console.log('✅ FIXED: Page system correctly distinguishes between sidebar buttons and floating windows');
-    console.log('🔧 IMPROVED: Stock Ticker/Travel Tracker floating panels clear on page switch, sidebar icons persist');
-    console.log('⚠️ IMPORTANT: Clear browser cache (Ctrl+Shift+Delete) to load latest CDN modules');
     console.log('✅ FIXED: Deleting a page dot updates UI immediately (no refresh needed)');
     console.log('✅ FIXED: Page system only manages page-specific panels (TodoList, Timer, Notepads, etc.)');
     console.log('🎨 IMPROVED: Logo clears hamburger menu at 50px margin');
