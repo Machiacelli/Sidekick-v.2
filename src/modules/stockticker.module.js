@@ -610,12 +610,17 @@
                 this.addDragging(panel, header);
                 
                 // Add resize observer to save size with validation and debouncing
+                // CRITICAL FIX: Improved resize handling to prevent infinite loops
                 let resizeTimeout;
                 let isResizing = false;
+                let lastSavedSize = { width: validWidth, height: validHeight };
                 
                 const resizeObserver = new ResizeObserver(() => {
                     // Skip if we're programmatically resizing to prevent loops
-                    if (isResizing) return;
+                    if (isResizing) {
+                        console.log('⏸️ Stock Ticker: Skipping resize event (programmatic resize in progress)');
+                        return;
+                    }
                     
                     clearTimeout(resizeTimeout);
                     resizeTimeout = setTimeout(() => {
@@ -631,25 +636,44 @@
                         const validWidth = Math.max(minWidth, Math.min(maxWidth, width));
                         const validHeight = Math.max(minHeight, Math.min(maxHeight, height));
                         
+                        // CRITICAL: Only take action if size actually changed (prevents loops)
+                        if (lastSavedSize.width === validWidth && lastSavedSize.height === validHeight) {
+                            console.log('⏸️ Stock Ticker: Size unchanged, skipping save');
+                            return;
+                        }
+                        
                         // Only save if dimensions are valid
                         if (validWidth === width && validHeight === height) {
                             const size = { width, height };
                             this.core.saveState('stockticker_size', size);
+                            lastSavedSize = size;
+                            console.log(`💾 Stock Ticker: Saved valid size ${width}×${height}`);
                         } else {
                             // Reset to valid size if invalid dimensions detected
-                            console.warn('⚠️ Stock Ticker: Size exceeded limits, resetting to valid dimensions');
+                            console.warn(`⚠️ Stock Ticker: Size ${width}×${height} exceeded limits, resetting to ${validWidth}×${validHeight}`);
                             isResizing = true;
                             panel.style.width = validWidth + 'px';
                             panel.style.height = validHeight + 'px';
                             this.core.saveState('stockticker_size', { width: validWidth, height: validHeight });
+                            lastSavedSize = { width: validWidth, height: validHeight };
                             
                             // Allow resize observer to work again after brief delay
                             setTimeout(() => {
                                 isResizing = false;
-                            }, 100);
+                                console.log('✅ Stock Ticker: Resize flag cleared, observer active again');
+                            }, 200); // Increased delay to ensure browser finishes rendering
                         }
-                    }, 150); // Debounce resize events by 150ms
+                    }, 250); // Increased debounce to 250ms for more stability
                 });
+                
+                // Disconnect observer when panel is removed to prevent memory leaks
+                panel.addEventListener('DOMNodeRemoved', () => {
+                    if (resizeObserver) {
+                        resizeObserver.disconnect();
+                        console.log('🧹 Stock Ticker: Resize observer disconnected');
+                    }
+                });
+                
                 resizeObserver.observe(panel);
 
                 return panel;

@@ -1116,25 +1116,69 @@
                 console.log('💾 Saving state for page:', pageIndex);
                 const pageStates = loadState(STORAGE_KEYS.PAGE_STATES, {});
                 
-                // Save FLOATING panel states for current page (not sidebar buttons)
+                // CRITICAL FIX: Save FLOATING panel states with positions and sizes
                 pageStates[pageIndex] = {
                     panels: {
                         todoList: {
                             isOpen: !!document.getElementById('sidekick-todo-panel'),
-                            position: loadState('todo_panel_position', { x: 20, y: 20 }),
-                            size: loadState('todo_panel_size', { width: 320, height: 400 }),
+                            position: (() => {
+                                const panel = document.getElementById('sidekick-todo-panel');
+                                return panel ? {
+                                    x: parseInt(panel.style.left) || 20,
+                                    y: parseInt(panel.style.top) || 20
+                                } : loadState('todo_panel_position', { x: 20, y: 20 });
+                            })(),
+                            size: (() => {
+                                const panel = document.getElementById('sidekick-todo-panel');
+                                return panel ? {
+                                    width: panel.offsetWidth || 320,
+                                    height: panel.offsetHeight || 400
+                                } : loadState('todo_panel_size', { width: 320, height: 400 });
+                            })(),
                             isPinned: loadState('todo_panel_pinned', false)
                         },
                         timer: {
                             isOpen: !!document.getElementById('sidekick-timer-panel'),
-                            position: loadState('timer_panel_position', { x: 60, y: 60 }),
-                            size: loadState('timer_panel_size', { width: 300, height: 200 })
+                            position: (() => {
+                                const panel = document.getElementById('sidekick-timer-panel');
+                                return panel ? {
+                                    x: parseInt(panel.style.left) || 60,
+                                    y: parseInt(panel.style.top) || 60
+                                } : loadState('timer_panel_position', { x: 60, y: 60 });
+                            })(),
+                            size: (() => {
+                                const panel = document.getElementById('sidekick-timer-panel');
+                                return panel ? {
+                                    width: panel.offsetWidth || 300,
+                                    height: panel.offsetHeight || 200
+                                } : loadState('timer_panel_size', { width: 300, height: 200 });
+                            })()
                         },
                         stockTicker: {
                             // Check if FLOATING panel exists (not sidebar button)
                             isOpen: (() => {
                                 const panel = document.getElementById('sidekick-stock-panel');
                                 return !!(panel && !panel.closest('#sidekick-sidebar'));
+                            })(),
+                            position: (() => {
+                                const panel = document.getElementById('sidekick-stock-panel');
+                                if (panel && !panel.closest('#sidekick-sidebar')) {
+                                    return {
+                                        x: parseInt(panel.style.left) || 10,
+                                        y: parseInt(panel.style.top) || 10
+                                    };
+                                }
+                                return loadState('stockticker_position', { x: 10, y: 10 });
+                            })(),
+                            size: (() => {
+                                const panel = document.getElementById('sidekick-stock-panel');
+                                if (panel && !panel.closest('#sidekick-sidebar')) {
+                                    return {
+                                        width: panel.offsetWidth || 320,
+                                        height: panel.offsetHeight || 400
+                                    };
+                                }
+                                return loadState('stockticker_size', { width: 320, height: 400 });
                             })()
                         },
                         travelTracker: {
@@ -1142,6 +1186,26 @@
                             isOpen: (() => {
                                 const panel = document.getElementById('sidekick-travel-tracker-panel');
                                 return !!(panel && !panel.closest('#sidekick-sidebar'));
+                            })(),
+                            position: (() => {
+                                const panel = document.getElementById('sidekick-travel-tracker-panel');
+                                if (panel && !panel.closest('#sidekick-sidebar')) {
+                                    return {
+                                        x: parseInt(panel.style.left) || 10,
+                                        y: parseInt(panel.style.top) || 10
+                                    };
+                                }
+                                return loadState('traveltracker_position', { x: 10, y: 10 });
+                            })(),
+                            size: (() => {
+                                const panel = document.getElementById('sidekick-travel-tracker-panel');
+                                if (panel && !panel.closest('#sidekick-sidebar')) {
+                                    return {
+                                        width: panel.offsetWidth || 320,
+                                        height: panel.offsetHeight || 400
+                                    };
+                                }
+                                return loadState('traveltracker_size', { width: 320, height: 400 });
                             })()
                         },
                         notepad: {
@@ -1156,7 +1220,7 @@
                     }
                 };
                 
-                // Save open notepad IDs
+                // Save open notepad IDs with positions and sizes
                 document.querySelectorAll('.sidekick-notepad-panel').forEach(panel => {
                     const notepadId = panel.dataset.notepadId;
                     if (notepadId) {
@@ -1174,7 +1238,7 @@
                     }
                 });
                 
-                // Save open attack list IDs  
+                // Save open attack list IDs with positions and sizes
                 document.querySelectorAll('.sidekick-attacklist-panel').forEach(panel => {
                     const listId = panel.dataset.listId;
                     if (listId) {
@@ -1183,12 +1247,16 @@
                             position: {
                                 x: parseInt(panel.style.left) || 20,
                                 y: parseInt(panel.style.top) || 20
+                            },
+                            size: {
+                                width: panel.offsetWidth || 300,
+                                height: panel.offsetHeight || 400
                             }
                         });
                     }
                 });
                 
-                // Save open link group IDs
+                // Save open link group IDs with positions and sizes
                 document.querySelectorAll('[id^="sidekick-linkgroup-panel-"]').forEach(panel => {
                     const linkGroupId = panel.id.replace('sidekick-linkgroup-panel-', '');
                     if (linkGroupId) {
@@ -1197,13 +1265,17 @@
                             position: {
                                 x: parseInt(panel.style.left) || 20,
                                 y: parseInt(panel.style.top) || 20
+                            },
+                            size: {
+                                width: panel.offsetWidth || 300,
+                                height: panel.offsetHeight || 300
                             }
                         });
                     }
                 });
                 
                 saveState(STORAGE_KEYS.PAGE_STATES, pageStates);
-                console.log('💾 Page state saved for page', pageIndex, ':', pageStates[pageIndex]);
+                console.log('💾 Page state saved for page', pageIndex, 'with positions/sizes:', pageStates[pageIndex]);
             },
 
             clearAllPanels() {
@@ -1265,68 +1337,163 @@
                 setTimeout(() => {
                     const panels = pageState.panels;
                     
-                    // Restore TodoList panel
+                    // Restore TodoList panel with saved position and size
                     if (panels.todoList?.isOpen && window.SidekickModules?.TodoList) {
-                        console.log('📋 Restoring TodoList panel...');
+                        console.log('📋 Restoring TodoList panel with position/size:', panels.todoList.position, panels.todoList.size);
+                        
+                        // Temporarily save the desired position and size to storage so the module loads it
+                        if (panels.todoList.position) {
+                            saveState('todo_panel_position', panels.todoList.position);
+                        }
+                        if (panels.todoList.size) {
+                            saveState('todo_panel_size', panels.todoList.size);
+                        }
+                        if (panels.todoList.isPinned !== undefined) {
+                            saveState('todo_panel_pinned', panels.todoList.isPinned);
+                        }
+                        
                         window.SidekickModules.TodoList.showTodoPanel();
+                        
+                        // Apply position and size after panel is created
+                        setTimeout(() => {
+                            const panel = document.getElementById('sidekick-todo-panel');
+                            if (panel && panels.todoList.position) {
+                                panel.style.left = panels.todoList.position.x + 'px';
+                                panel.style.top = panels.todoList.position.y + 'px';
+                            }
+                            if (panel && panels.todoList.size) {
+                                panel.style.width = panels.todoList.size.width + 'px';
+                                panel.style.height = panels.todoList.size.height + 'px';
+                            }
+                        }, 50);
                     }
                     
-                    // Restore Timer panel
+                    // Restore Timer panel with saved position and size
                     if (panels.timer?.isOpen && window.SidekickModules?.Timer) {
-                        console.log('⏰ Restoring Timer panel...');
+                        console.log('⏰ Restoring Timer panel with position/size:', panels.timer.position, panels.timer.size);
+                        
+                        // Temporarily save the desired position and size to storage
+                        if (panels.timer.position) {
+                            saveState('timer_panel_position', panels.timer.position);
+                        }
+                        if (panels.timer.size) {
+                            saveState('timer_panel_size', panels.timer.size);
+                        }
+                        
                         window.SidekickModules.Timer.showTimerPanel();
+                        
+                        // Apply position and size after panel is created
+                        setTimeout(() => {
+                            const panel = document.getElementById('sidekick-timer-panel');
+                            if (panel && panels.timer.position) {
+                                panel.style.left = panels.timer.position.x + 'px';
+                                panel.style.top = panels.timer.position.y + 'px';
+                            }
+                            if (panel && panels.timer.size) {
+                                panel.style.width = panels.timer.size.width + 'px';
+                                panel.style.height = panels.timer.size.height + 'px';
+                            }
+                        }, 50);
                     }
                     
-                    // Restore Stock Ticker FLOATING panel (not sidebar button)
+                    // Restore Stock Ticker FLOATING panel with saved position and size
                     if (panels.stockTicker?.isOpen && window.SidekickModules?.StockTicker) {
-                        console.log('📈 Restoring Stock Ticker floating panel...');
+                        console.log('📈 Restoring Stock Ticker floating panel with position/size:', panels.stockTicker.position, panels.stockTicker.size);
+                        
+                        // Temporarily save the desired position and size to storage
+                        if (panels.stockTicker.position) {
+                            saveState('stockticker_position', panels.stockTicker.position);
+                        }
+                        if (panels.stockTicker.size) {
+                            saveState('stockticker_size', panels.stockTicker.size);
+                        }
+                        
                         if (window.SidekickModules.StockTicker.show) {
                             window.SidekickModules.StockTicker.show();
                         }
+                        
+                        // Apply position and size after panel is created
+                        setTimeout(() => {
+                            const panel = document.getElementById('sidekick-stock-panel');
+                            if (panel && !panel.closest('#sidekick-sidebar')) {
+                                if (panels.stockTicker.position) {
+                                    panel.style.left = panels.stockTicker.position.x + 'px';
+                                    panel.style.top = panels.stockTicker.position.y + 'px';
+                                }
+                                if (panels.stockTicker.size) {
+                                    panel.style.width = panels.stockTicker.size.width + 'px';
+                                    panel.style.height = panels.stockTicker.size.height + 'px';
+                                }
+                            }
+                        }, 50);
                     }
                     
-                    // Restore Travel Tracker FLOATING panel (not sidebar button)
+                    // Restore Travel Tracker FLOATING panel with saved position and size
                     if (panels.travelTracker?.isOpen && window.SidekickModules?.TravelTracker) {
-                        console.log('✈️ Restoring Travel Tracker floating panel...');
+                        console.log('✈️ Restoring Travel Tracker floating panel with position/size:', panels.travelTracker.position, panels.travelTracker.size);
+                        
+                        // Temporarily save the desired position and size to storage
+                        if (panels.travelTracker.position) {
+                            saveState('traveltracker_position', panels.travelTracker.position);
+                        }
+                        if (panels.travelTracker.size) {
+                            saveState('traveltracker_size', panels.travelTracker.size);
+                        }
+                        
                         if (window.SidekickModules.TravelTracker.activate) {
                             window.SidekickModules.TravelTracker.activate();
                         }
+                        
+                        // Apply position and size after panel is created
+                        setTimeout(() => {
+                            const panel = document.getElementById('sidekick-travel-tracker-panel');
+                            if (panel && !panel.closest('#sidekick-sidebar')) {
+                                if (panels.travelTracker.position) {
+                                    panel.style.left = panels.travelTracker.position.x + 'px';
+                                    panel.style.top = panels.travelTracker.position.y + 'px';
+                                }
+                                if (panels.travelTracker.size) {
+                                    panel.style.width = panels.travelTracker.size.width + 'px';
+                                    panel.style.height = panels.travelTracker.size.height + 'px';
+                                }
+                            }
+                        }, 50);
                     }
                     
-                    // Restore Notepad panels
+                    // Restore Notepad panels with saved positions and sizes
                     if (panels.notepad?.openPads && window.SidekickModules?.Notepad) {
                         panels.notepad.openPads.forEach(padData => {
-                            console.log('📄 Restoring Notepad:', padData.id);
+                            console.log('📄 Restoring Notepad with position/size:', padData.id, padData.position, padData.size);
                             // Note: Actual restoration depends on notepad module implementation
                             if (window.SidekickModules.Notepad.showNotepadById) {
-                                window.SidekickModules.Notepad.showNotepadById(padData.id, padData.position);
+                                window.SidekickModules.Notepad.showNotepadById(padData.id, padData.position, padData.size);
                             }
                         });
                     }
                     
-                    // Restore Attack List panels
+                    // Restore Attack List panels with saved positions and sizes
                     if (panels.attackList?.openLists && window.SidekickModules?.AttackList) {
                         panels.attackList.openLists.forEach(listData => {
-                            console.log('⚔️ Restoring Attack List:', listData.id);
+                            console.log('⚔️ Restoring Attack List with position/size:', listData.id, listData.position, listData.size);
                             // Note: Actual restoration depends on attack list module implementation
                             if (window.SidekickModules.AttackList.showListById) {
-                                window.SidekickModules.AttackList.showListById(listData.id, listData.position);
+                                window.SidekickModules.AttackList.showListById(listData.id, listData.position, listData.size);
                             }
                         });
                     }
                     
-                    // Restore Link Group panels
+                    // Restore Link Group panels with saved positions and sizes
                     if (panels.linkGroup?.openGroups && window.SidekickModules?.LinkGroup) {
                         panels.linkGroup.openGroups.forEach(groupData => {
-                            console.log('🔗 Restoring Link Group:', groupData.id);
+                            console.log('🔗 Restoring Link Group with position/size:', groupData.id, groupData.position, groupData.size);
                             // Note: Actual restoration depends on link group module implementation
                             if (window.SidekickModules.LinkGroup.showGroupById) {
-                                window.SidekickModules.LinkGroup.showGroupById(groupData.id, groupData.position);
+                                window.SidekickModules.LinkGroup.showGroupById(groupData.id, groupData.position, groupData.size);
                             }
                         });
                     }
                     
-                    console.log('✅ Page state restoration complete for page', pageIndex);
+                    console.log('✅ Page state restoration complete for page', pageIndex, 'with positions/sizes');
                 }, 100);
             },
 
