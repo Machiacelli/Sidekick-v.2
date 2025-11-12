@@ -1,41 +1,81 @@
 // ==UserScript==
 // @name         Sidekick Modular CDN - Final Version
 // @namespace    http://tampermonkey.net/
-// @version      5.82.0
-// @description  Stock Ticker: CRITICAL FIX - Profit/loss now calculated correctly!
+// @version      6.9.19
+// @description  Fixed plane flash and sizing - smoother replacement
 // @author       Machiacelli
 // @match        https://www.torn.com/*
 // @match        https://*.torn.com/*
 // @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
-// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/3b9db9c/src/sidekick-modular-clean.user.js?v=20251029
-// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/3b9db9c/src/sidekick-modular-clean.user.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/core.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/ui.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@2c075e4/src/modules/settings.module.js?v=20250128
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@706f287/src/modules/content.module.js?v=20250129
+// @grant        GM_xmlhttpRequest
+// @downloadURL  https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/d2a0083/src/sidekick-modular-clean.user.js?v=20251101-11
+// @updateURL    https://raw.githubusercontent.com/Machiacelli/Sidekick-v.2/d2a0083/src/sidekick-modular-clean.user.js?v=20251101-11
+// @connect      api.lzpt.io
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/core.module.js?v=20251101-5
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/ui.module.js?v=20251101-5
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@ea0778e/src/modules/settings.module.js?v=20251101-6
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/content.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/global-functions.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/notepad.module.js?v=20250129
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/linkgroup.module.js?v=20250129
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/attacklist.module.js?v=20250129
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/timer.module.js?v=20250129
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/notepad.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/linkgroup.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/attacklist.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/timer.module.js?v=20251030
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/clock.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/randomtarget.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@e136d9f/src/modules/chain-timer.module.js?v=20250129
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@affc546/src/modules/chain-timer.module.js?v=20250129
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/blocktraining.module.js?v=20251029
 // @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/travel-blocker.module.js?v=20251029  
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/plane-replacer.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@3781930/src/modules/traveltracker.module.js?v=20251029
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@254ee96/src/modules/stockticker.module.js?v=20250129
-// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1604146/src/modules/todolist.module.js?v=20250129
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@585f71c/src/modules/plane-replacer.module.js?v=20251106-11
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@05edd8b/src/modules/traveltracker.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@1b0f5a9/src/modules/stockticker.module.js?v=20251106-1
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@78a5175/src/modules/timeontab.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@552a4bb/src/modules/npc-attack-timer.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@9385acc/src/modules/xanax-viewer.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@86a0f5e/src/modules/todolist.module.js?v=20251030
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@25fc2c5/src/modules/event-ticker.module.js?v=20251106-3
+// @require      https://cdn.jsdelivr.net/gh/Machiacelli/Sidekick-v.2@8247910/src/modules/attack-button-mover.module.js?v=20251101-5
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    console.log('🚀 Sidekick Modular CDN v5.82.0 - Stock Ticker CRITICAL FIX!');
-    console.log('🐛 FIXED: Profit/loss now calculated using tracked shares only, not total portfolio');
+    console.log('🚀 Sidekick Modular CDN v6.9.19 - Smooth Plane Replacement!');
+    console.log('✈️ FIXED: No more flash of original plane - hides immediately');
+    console.log('📏 FIXED: Plane size constrained to 400x200px max - better fit');
+    console.log('📍 FIXED: Plane centered with auto margins - proper positioning');
+    console.log('✨ SMOOTH: Fade-in transition when custom plane loads');
+    console.log('✅ FIXED: Event Ticker now scrolls smoothly without vanishing - continuous loop animation');
+    console.log('✅ FIXED: Removed animation sync - ticker now always starts fresh on page load');
+    console.log('✅ IMPROVED: Ticker scrolls all the way to the left edge near Sidekick logo');
+    console.log('✅ FIXED: Event Ticker now visible - removed conflicting padding that hid the ticker');
+    console.log('✅ FIXED: Event Ticker API errors - Birthday and calendar now load correctly');
+    console.log('✅ FIXED: Stock Ticker resize loop - Panel no longer grows out of control');
+    console.log('⏰ FEATURE: Added personal event END time - filters out events that ended for you');
+    console.log('🎃 FIXED: Events like Halloween won\'t show after YOUR personal event period ends');
+    console.log('⏰ FEATURE: Event ticker now uses YOUR personal competition start time');
+    console.log('📍 IMPROVED: Increased left padding for better visual balance');
+    console.log('⏰ FEATURE: Live countdown to next Torn event with API integration');
+    console.log('🔄 FEATURE: Ticker animation synced across all tabs');
+    console.log('⚡ RENAMED: "Attack Button Mover" → "Fast Attack" for cleaner UI');
+    console.log('📍 IMPROVED: Event ticker now directly adjacent to logo (no gap)');
+    console.log('⚔️ FEATURE: Fast Attack - Positions "Start Fight" over your weapon for faster attacks');
+    console.log('🎪 IMPROVED: Event ticker seamlessly integrated into top bar between logo and clock');
+    console.log('👆 Add button fades in on hover and stays on top of all panels');
+    console.log('🎂 Birthday celebration shows your Torn account anniversary');
+    console.log('🎪 Event Ticker: Shows live events, upcoming events, and your Torn birthday');
+    console.log('🎨 Event Ticker: Horizontal scrolling ticker animation');
+    console.log('✨ FEATURES: Smart date handling with leap years and year boundaries');
+    console.log('🔄 AUTO-ROTATE: Cycles through multiple active events every 8 seconds');
+    console.log('💰 FIXED: P/L now uses actual totalInvested, not estimated value');
+    console.log('✅ FIXED: Correct profit/loss after selling shares (FIFO adjusted)');
+    console.log('✅ FIXED: New stock purchases no longer create "stock_17" format');
+    console.log('✅ Xanax Viewer v1.0.0 - View Xanax usage on faction/profile pages with dedicated settings tab');
+    console.log('✅ NPC Attack Timer - Shows Loot Rangers attack times in news ticker');
+    console.log('✅ Travel Tracker v3.3.3 - No more "cancelled" notification when minimizing sidebar');
+    console.log('✅ Time on Tab URL matching - works on travel/hospital/raceway/faction pages');
+    console.log('📝 Stock Ticker: Fixed stock IDs, UI cleanup, enhanced debugging');
     console.log('🔍 Script identity: Sidekick-Modular-CDN-Final-Version');
     console.log('📍 Running from:', window.location.href);
 
@@ -301,6 +341,61 @@
                 }
             }
             
+            // Initialize Travel Tracker module
+            if (window.SidekickModules.TravelTracker?.init) {
+                console.log('✈️ Initializing Travel Tracker module...');
+                try {
+                    window.SidekickModules.TravelTracker.init();
+                    console.log('✅ Travel Tracker initialized successfully');
+                } catch (error) {
+                    console.error('❌ Travel Tracker init failed:', error);
+                }
+            }
+            
+            // Initialize Time on Tab module
+            if (window.SidekickModules.TimeOnTab?.init) {
+                console.log('⏰ Initializing Time on Tab module...');
+                try {
+                    window.SidekickModules.TimeOnTab.init();
+                    console.log('✅ Time on Tab initialized successfully');
+                } catch (error) {
+                    console.error('❌ Time on Tab init failed:', error);
+                }
+            }
+            
+            // Initialize NPC Attack Timer module
+            if (window.SidekickModules.NPCAttackTimer?.init) {
+                console.log('⚔️ Initializing NPC Attack Timer module...');
+                try {
+                    window.SidekickModules.NPCAttackTimer.init();
+                    console.log('✅ NPC Attack Timer initialized successfully');
+                } catch (error) {
+                    console.error('❌ NPC Attack Timer init failed:', error);
+                }
+            }
+            
+            // Initialize Xanax Viewer module
+            if (window.SidekickModules.XanaxViewer?.init) {
+                console.log('💊 Initializing Xanax Viewer module...');
+                try {
+                    window.SidekickModules.XanaxViewer.init();
+                    console.log('✅ Xanax Viewer initialized successfully');
+                } catch (error) {
+                    console.error('❌ Xanax Viewer init failed:', error);
+                }
+            }
+            
+            // Initialize Event Ticker module
+            if (window.SidekickModules.EventTicker?.init) {
+                console.log('🎪 Initializing Event Ticker module...');
+                try {
+                    window.SidekickModules.EventTicker.init();
+                    console.log('✅ Event Ticker initialized successfully');
+                } catch (error) {
+                    console.error('❌ Event Ticker init failed:', error);
+                }
+            }
+            
             // Check and restore BlockTraining module (Training Blocker)
             if (window.SidekickModules.BlockTraining?.restoreTrainingBlocker) {
                 console.log('🚫 Restoring Training Blocker if previously active...');
@@ -312,6 +407,17 @@
                     }, 2000);
                 } catch (error) {
                     console.error('❌ Training Blocker restoration failed:', error);
+                }
+            }
+            
+            // Initialize Attack Button Mover module
+            if (window.SidekickModules.AttackButtonMover?.init) {
+                console.log('⚔️ Initializing Attack Button Mover module...');
+                try {
+                    window.SidekickModules.AttackButtonMover.init();
+                    console.log('✅ Attack Button Mover initialized successfully');
+                } catch (error) {
+                    console.error('❌ Attack Button Mover init failed:', error);
                 }
             }
             
